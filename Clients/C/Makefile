@@ -1,4 +1,5 @@
 
+# Put your -D variables here, e.g. -DDEBUG
 DEFINES= 
 
 GNULIBS= -lpthread
@@ -7,7 +8,6 @@ GNUOPTS= -pthread -O3
 
 HEADERS= include/ambrosia/internal/spsc_rring.h include/ambrosia/client.h include/ambrosia/internal/bits.h
 
-# SRC = $(wildcard src/*.c)
 SRCS= src/spsc_rring.c src/ambrosia_client.c
 OBJS1= $(patsubst src/%.c,bin/static/%.o, $(SRCS) )
 
@@ -26,7 +26,6 @@ bin/$(LIBNAME).a: $(OBJS1)
 bin/$(LIBNAME).so: $(OBJS2)
 	$(LINK) -shared -o $@ $(OBJS2)
 
-# bin/spsc_rring.o: src/spsc_rring.c $(HEADERS) ./bin
 bin/static/%.o: src/%.c $(HEADERS) ./bin/static
 	$(COMP) -c $< -o $@
 
