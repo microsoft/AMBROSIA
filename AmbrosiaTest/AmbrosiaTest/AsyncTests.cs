@@ -47,7 +47,7 @@ namespace AmbrosiaTest
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
             AMB_Settings AMB1 = new AMB_Settings
             {
-                AMB_ImmCoordName = testName + "immcoord1",
+                AMB_ServiceName = clientJobName,
                 AMB_PortAppReceives = "1000",
                 AMB_PortAMBSends = "1001",
                 AMB_ServiceLogPath = ambrosiaLogDir,
@@ -64,7 +64,7 @@ namespace AmbrosiaTest
             string logOutputFileName_AMB2 = testName + "_AMB2.log";
             AMB_Settings AMB2 = new AMB_Settings
             {
-                AMB_ImmCoordName = testName + "immcoord2",
+                AMB_ServiceName = serverName,
                 AMB_PortAppReceives = "2000",
                 AMB_PortAMBSends = "2001",
                 AMB_ServiceLogPath = ambrosiaLogDir,
@@ -79,11 +79,11 @@ namespace AmbrosiaTest
 
             //ImmCoord1
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
-            int ImmCoordProcessID1 = MyUtils.StartImmCoord(testName + "immcoord1", 1500, logOutputFileName_ImmCoord1);
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
 
             //ImmCoord2
             string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
-            int ImmCoordProcessID2 = MyUtils.StartImmCoord(testName + "immcoord2", 2500, logOutputFileName_ImmCoord2);
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";

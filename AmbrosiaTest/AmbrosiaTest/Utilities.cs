@@ -809,7 +809,7 @@ namespace AmbrosiaTest
             // Launch the server process with these values
             string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"];
             string fileNameExe = "Server.exe";
-            string argString = receivePort + " " + sendPort + " " + perfServerName + " C ";
+            string argString = "-rp="+receivePort + " -sp=" + sendPort + " -s=" + perfServerName + " -c ";
 
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
@@ -857,7 +857,7 @@ namespace AmbrosiaTest
             // Launch the client job process with these values
             string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"];
             string fileNameExe = "Job.exe";
-            string argString = receivePort + " " + sendPort + " " + perfJobName + " " + perfServerName +" C "; // + " " + perfMessageSize + " " + perfNumberRounds + " Y C";  // auto continue should be there for all tests
+            string argString = "-rp="+receivePort + " -sp=" + sendPort + " -j=" + perfJobName + " -s=" + perfServerName +" -c "; 
 
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
