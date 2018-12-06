@@ -3,12 +3,11 @@
 # program generates a project with .NET Framework and .NET Core targets, but UWP apps can only
 # reference UWP or .NET Standard projects.
 
-# Delete any old versions of the generated source files in GeneratedSources, so that we can
-# identify the newly generated source files
-If (Test-Path GeneratedSourceFiles)
-{
-    Get-ChildItem -Path GeneratedSourceFiles | Remove-Item -Recurse
-}
+# Create the dependencies folder for codegen (based on the codegen script in
+# PerformanceTestInterruptible)
+New-Item -ItemType Directory -Force -Path "CodeGenDependencies\net46" | Out-Null
+Get-ChildItem "CodeGenDependencies\net46\" | Remove-Item
+Copy-Item "GraphicalImmortalAPI\bin\x64\Debug\net46\*" -Force -Destination "CodeGenDependencies\net46\"
 
 # Generate the assembly and source files
 $ambrosiaExe = "..\..\Clients\CSharp\AmbrosiaCS\bin\x64\Debug\net46\AmbrosiaCS.exe"
@@ -23,18 +22,18 @@ If (!(Test-Path $inputAssembly))
     Write-Output "Codegen failure: input assembly is missing (should be located at $inputAssembly)."
     exit
 }
-Invoke-Expression "$ambrosiaExe CodeGen -a=`"$inputAssembly`" -o=`"GraphicalImmortalAPIGenerated`""
+Invoke-Expression "$ambrosiaExe CodeGen -a=`"$inputAssembly`" -o=`"GraphicalImmortalAPIGenerated`" -f=`"net46`" -b=`"CodeGenDependencies\net46`""
 
 # Copy the source files into the GraphicalImmortalAPIGeneratedUWP project
 If (!(Test-Path GeneratedSourceFiles))
 {
-    Write-Output "Codegen failure: GeneratedSourceFiles missing (should have been created by Ambrosia.exe)."
+    Write-Output "Codegen failure: GeneratedSourceFiles missing (should have been created by AmbrosiaCS.exe)."
     exit
 }
 $sourceDir = "GeneratedSourceFiles\GraphicalImmortalAPIGenerated\latest"
 If (!$sourceDir)
 {
-    Write-Output "Codegen failure: generated source directory missing (should have been created inside of GeneratedSourceFiles by Ambrosia.exe)."
+    Write-Output "Codegen failure: generated source directory missing (should have been created inside of GeneratedSourceFiles by AmbrosiaCS.exe)."
     exit
 }
 $sourceFiles = Get-ChildItem -Path $sourceDir -Filter "*.cs"
