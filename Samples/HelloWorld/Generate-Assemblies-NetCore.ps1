@@ -14,8 +14,11 @@ Write-Host "Using variant of CodeGen.exe: $env:AMBVARIANT"
 
 Write-Host "Executing codegen command: dotnet $ambrosiaPath\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a=ServerAPI\bin\$env:AMBVARIANT\IServer.dll -o=ServerInterfaces -f=netcoreapp2.0 -b=CodeGenDependencies\netcoreapp2.0"
 
-Write-Host "Executing codegen command: dotnet $ambrosiaPath\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a=IClient\bin\$env:AMBVARIANT\IClient.dll -o=Client1Interfaces -f=netcoreapp2.0 -b=CodeGenDependencies\netcoreapp2.0"
+Write-Host "Executing codegen command: dotnet $ambrosiaPath\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a=IClient1\bin\$env:AMBVARIANT\IClient1.dll -o=Client1Interfaces -f=netcoreapp2.0 -b=CodeGenDependencies\netcoreapp2.0"
+
+Write-Host "Executing codegen command: dotnet $ambrosiaPath\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a=IClient2\bin\$env:AMBVARIANT\IClient2.dll -o=Client2Interfaces -f=netcoreapp2.0 -b=CodeGenDependencies\netcoreapp2.0"
 
 # Generate the assemblies, assumes an .exe which is created by a .Net Framework build:
 & dotnet $ambrosiaPath\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -o=ServerInterfaces -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
-& dotnet $ambrosiaPath\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="IClient\bin\$env:AMBVARIANT\IClient.dll" -o=Client1Interfaces -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
+& dotnet $ambrosiaPath\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="IClient1\bin\$env:AMBVARIANT\IClient1.dll" -o=Client1Interfaces -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
+& dotnet $ambrosiaPath\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="IClient2\bin\$env:AMBVARIANT\IClient2.dll" -o=Client2Interfaces -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"

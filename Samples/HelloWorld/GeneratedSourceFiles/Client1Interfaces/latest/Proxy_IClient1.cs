@@ -6,24 +6,24 @@ using Ambrosia;
 using static Ambrosia.StreamCommunicator;
 
 
-namespace IClient
+namespace IClient1
 {
     /// <summary>
     /// This class is the proxy that runs in the client's process and communicates with the local Ambrosia runtime.
     /// It runs within the client's process, so it is generated in the language that the client is using.
-    /// It is returned from ImmortalFactory.CreateClient when a client requests a container that supports the interface IClientProxy.
+    /// It is returned from ImmortalFactory.CreateClient when a client requests a container that supports the interface IClient1Proxy.
     /// </summary>
     [System.Runtime.Serialization.DataContract]
-    public class IClientProxy_Implementation : Immortal.InstanceProxy, IClientProxy
+    public class IClient1Proxy_Implementation : Immortal.InstanceProxy, IClient1Proxy
     {
 
-        public IClientProxy_Implementation(string remoteAmbrosiaRuntime, bool attachNeeded)
+        public IClient1Proxy_Implementation(string remoteAmbrosiaRuntime, bool attachNeeded)
             : base(remoteAmbrosiaRuntime, attachNeeded)
         {
         }
 
         async Task
-        IClientProxy.SendMessageAsync(System.String p_0)
+        IClient1Proxy.SendMessageAsync(System.String p_0)
         {
 			 await SendMessageAsync(p_0);
         }
@@ -75,7 +75,7 @@ wp.curLength += arg0Bytes.Length;
 			return;
         }
 
-        void IClientProxy.SendMessageFork(System.String p_0)
+        void IClient1Proxy.SendMessageFork(System.String p_0)
         {
             SerializableTaskCompletionSource rpcTask;
 
