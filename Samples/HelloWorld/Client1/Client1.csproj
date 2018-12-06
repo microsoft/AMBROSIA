@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GeneratedSourceFiles\Client1Interfaces\latest\Client1Interfaces.csproj" />
+    <ProjectReference Include="..\GeneratedSourceFiles\ServerInterfaces\latest\ServerInterfaces.csproj" />
   </ItemGroup>
 
 </Project>
