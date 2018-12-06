@@ -40,7 +40,14 @@ bin/shared:
 objclean:
 	rm -rf bin
 
+# Copy to the head of the working copy.
+publish: all
+	rm -rf ../../bin/include ../../bin/libambrosia.*
+	mkdir -p ../../bin/include
+	cp -a bin/libambrosia.*  ../../bin/
+	cp -a include            ../../bin/
+
 clean: objclean
 	rm -f \#* .\#* *~
 
-.PHONY: lin clean objclean
+.PHONY: lin clean objclean publish

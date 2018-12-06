@@ -30,9 +30,8 @@ RUN $BUILDIT Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
 
 # Low-level Native-code network client:
 ADD Clients/C                     /ambrosia/Clients/C
-RUN cd Clients/C && make && \
-    cp -a bin/libambrosia.*   /ambrosia/bin/ && \
-    cp -a include             /ambrosia/bin/include
+# This publishes to the build directory: bin/lib*.* and bin/include
+RUN cd Clients/C && make publish
 
 ADD ./AKS-scripts/ScriptBits/runAmbrosiaService.sh bin/
 RUN cd bin && ln -s Ambrosia ambrosia
