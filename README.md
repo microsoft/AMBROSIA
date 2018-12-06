@@ -1,7 +1,9 @@
 Ambrosia: Highly Robust Distributed Programming Made Easy and Efficient
 =======================================================================
 
-[![Linux Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Linux%20-%20Docker)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=18)
+[![Linux Build status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-LinuxDocker-github?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=21)
+
+[![Windows Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=7)
 
 Ambrosia is a programming language independent approach for authoring
 and deploying highly robust distributed applications. Ambrosia 
