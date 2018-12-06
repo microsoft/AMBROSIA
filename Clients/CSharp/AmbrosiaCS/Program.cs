@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Xml.Linq;
-using AmbrosiaCS.Properties;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+using System.Xml;
+using Ambrosia;
 using Mono.Options;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace Ambrosia
@@ -16,8 +20,6 @@ namespace Ambrosia
         private static AmbrosiaCSRuntimeModes _runtimeMode;
         private static List<string> _assemblyNames;
         private static string _outputAssemblyName;
-        private static string _targetFramework;
-        private static string _binPath;
 
         static void Main(string[] args)
         {
@@ -35,26 +37,6 @@ namespace Ambrosia
 
         private static void RunCodeGen()
         {
-            var directoryName = @"latest\";
-
-            var generatedDirectory = "GeneratedSourceFiles";
-            if (!Directory.Exists(generatedDirectory))
-            {
-                Directory.CreateDirectory(generatedDirectory); // let any exceptions bleed through
-            }
-            var projectDirectory = Path.Combine(generatedDirectory, _outputAssemblyName);
-            if (!Directory.Exists(projectDirectory))
-            {
-                Directory.CreateDirectory(projectDirectory); // let any exceptions bleed through
-            }
-            var directoryPath = Path.Combine(projectDirectory, directoryName);
-            if (Directory.Exists(directoryPath))
-            {
-                var oldDirectoryPath = Path.Combine(projectDirectory, Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
-                Directory.Move(directoryPath, oldDirectoryPath);
-            }
-            Directory.CreateDirectory(directoryPath); // let any exceptions bleed through
-
             // Add references for assemblies referenced by the input assembly
             var sourceFiles = new List<SourceFile>();
             var generatedProxyNames = new List<string>();
@@ -128,122 +110,47 @@ namespace Ambrosia
             }
 
             var immortalSerializerSource = new ImmortalSerializerGenerator(generatedProxyNames, generatedProxyNamespaces).TransformText();
-            sourceFiles.Add(new SourceFile { FileName = $"ImmortalSerializer.cs", SourceCode = immortalSerializerSource, });
+            sourceFiles.Add(new SourceFile() { FileName = $"ImmortalSerializer.cs", SourceCode = immortalSerializerSource, });
 
-            var referenceLocations = new Dictionary<string, string>();
-            var assemblyFileNames = _assemblyNames.Select(Path.GetFileName).ToList();
-            foreach (var fileName in Directory.GetFiles(_binPath, "*.dll", SearchOption.TopDirectoryOnly)
-                .Union(Directory.GetFiles(_binPath, "*.exe", SearchOption.TopDirectoryOnly)))
-            {
-                var assemblyPath = Path.GetFullPath(fileName);
-                if (assemblyFileNames.Contains(Path.GetFileName(assemblyPath)))
-                {
-                    continue;
-                }
-
-                Assembly assembly;
-                try
-                {
-                    assembly = Assembly.LoadFile(assemblyPath);
-                }
-                catch (Exception)
-                {
-                    continue;
-                }
-                var assemblyName = assembly.GetName().Name;
-                var assemblyLocation = assembly.Location;
-
-                var assemblyLocationUri = new Uri(assemblyLocation);
-                var assemblyLocationRelativePath = new Uri(Path.GetFullPath(directoryPath)).MakeRelativeUri(assemblyLocationUri).ToString();
-                referenceLocations.Add(assemblyName, assemblyLocationRelativePath);
-            }
-
-            var conditionToPackageInfo = new Dictionary<string, List<Tuple<string, string, string>>>();
-            var doc = XDocument.Parse(Resources.AmbrosiaCS);
-
-            foreach (var itemGroup in doc.Descendants("ItemGroup"))
-            {
-                var itemGroupCondition = itemGroup.Attributes().FirstOrDefault(a => a.Name == "Condition");
-                var condition = itemGroupCondition == null ? string.Empty : itemGroupCondition.Value;
-
-                foreach (var packageReference in itemGroup.Descendants("PackageReference"))
-                {
-                    var elements = packageReference.Elements();
-                    var attributes = packageReference.Attributes().ToList();
-                    var packageIncludeAttribute = attributes.FirstOrDefault(a => a.Name == "Include");
-                    var packageUpdateAttribute = attributes.FirstOrDefault(a => a.Name == "Update");
-                    if (packageIncludeAttribute == null && packageUpdateAttribute == null) continue;
-
-                    var packageNameAttribute = packageIncludeAttribute ?? packageUpdateAttribute;
-                    var packageName = packageNameAttribute.Value;
-                    var packageMode = packageNameAttribute.Name.ToString();
-
-                    var versionAttribute = attributes.FirstOrDefault(a => a.Name == "Version");
-
-                    string packageVersion;
-                    if (versionAttribute == null)
-                    {
-                        var packageVersionElement = elements.FirstOrDefault(e => e.Name == "Version");
-                        if (packageVersionElement == null) continue;
-                        packageVersion = packageVersionElement.Value;
-                    }
-                    else
-                    {
-                        packageVersion = versionAttribute.Value;
-                    }
-
-                    if (!conditionToPackageInfo.ContainsKey(condition))
-                    {
-                        conditionToPackageInfo.Add(condition, new List<Tuple<string, string, string>>());
-                    }
-                    conditionToPackageInfo[condition].Add(new Tuple<string, string, string>(packageMode, packageName, packageVersion));
-                }
-            }
-
-            var conditionalPackageReferences = new List<string>();
-            foreach (var cpi in conditionToPackageInfo)
-            {
-                var packageReferences = new List<string>();
-                foreach (var pi in cpi.Value)
-                {
-                    packageReferences.Add(
-$@"     <PackageReference {pi.Item1}=""{pi.Item2}"" Version=""{pi.Item3}"" />");
-                }
-
-                if (cpi.Key == String.Empty || cpi.Key == _targetFramework)
-                {
-                    conditionalPackageReferences.Add(
-$@" <ItemGroup>
-{string.Join("\n", packageReferences)}
-    </ItemGroup>
-");
-                }
-            }
-
-            var references = new List<string>();
-            foreach (var rl in referenceLocations)
-            {
-                references.Add(
-                    $@"     <Reference Include=""{rl.Key}"">
-            <HintPath>{rl.Value}</HintPath>
-        </Reference>");
-            }
-
-            var referencesItemGroup =
-                $@" <ItemGroup>
-{string.Join("\n", references)}
-    </ItemGroup>
-";
 
             var projectFileSource =
-$@" <Project Sdk=""Microsoft.NET.Sdk"">
-    <PropertyGroup>
-        <TargetFramework>{_targetFramework}</TargetFramework>
-    </PropertyGroup>
-{referencesItemGroup}{string.Join(string.Empty, conditionalPackageReferences)}</Project>";
+@"
+<Project Sdk=""Microsoft.NET.Sdk"">
+  <PropertyGroup>
+    <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include=""..\..\..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj"" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update=""Microsoft.NETCore.App"" Version=""2.0.0"" />
+  </ItemGroup>
+</Project>
+";
+
             var projectSourceFile =
                 new SourceFile() { FileName = $"{_outputAssemblyName}.csproj", SourceCode = projectFileSource };
             sourceFiles.Add(projectSourceFile);
+
+            var directoryName = "latest";
+
+            var generatedDirectory = "GeneratedSourceFiles";
+            if (!Directory.Exists(generatedDirectory))
+            {
+                Directory.CreateDirectory(generatedDirectory); // let any exceptions bleed through
+            }
+            var projectDirectory = Path.Combine(generatedDirectory, _outputAssemblyName);
+            if (!Directory.Exists(projectDirectory))
+            {
+                Directory.CreateDirectory(projectDirectory); // let any exceptions bleed through
+            }
+            var directoryPath = Path.Combine(projectDirectory, directoryName);
+            if (Directory.Exists(directoryPath))
+            {
+                var oldDirectoryPath = Path.Combine(projectDirectory, Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
+                Directory.Move(directoryPath, oldDirectoryPath);
+            }
+            Directory.CreateDirectory(directoryPath); // let any exceptions bleed through
 
             var trees = sourceFiles
                 .Select(s => CSharpSyntaxTree.ParseText(
@@ -275,10 +182,8 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
             var showHelp = false;
             var assemblyNames = new List<string>();
             var codeGenOptions = new OptionSet {
-                { "a|assembly=", "An input assembly name. [REQUIRED]", assemblyName => assemblyNames.Add(Path.GetFullPath(assemblyName)) },
+                { "a|assembly=", "An input assembly name. [REQUIRED]", assemblyName => assemblyNames.Add(assemblyName) },
                 { "o|outputAssemblyName=", "An output assembly name. [REQUIRED]", outputAssemblyName => _outputAssemblyName = outputAssemblyName },
-                { "f|targetFramework=", "The output assembly target framework. [REQUIRED]", f => _targetFramework = f },
-                { "b|binPath=", "The bin path containing the output assembly dependencies.", b => _binPath = b },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 
@@ -318,14 +223,10 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
             var errorMessage = string.Empty;
             if (_assemblyNames.Count == 0) errorMessage += "At least one input assembly is required.";
             if (_outputAssemblyName == null) errorMessage += "Output assembly name is required.";
-            if (_targetFramework == null) errorMessage += "Target framework is required.";
 
             var assemblyFilesNotFound = _assemblyNames.Where(an => !File.Exists(an)).ToList();
             if (assemblyFilesNotFound.Count > 0)
                 errorMessage += $"Unable to find the following assembly files:\n{string.Join("\n", assemblyFilesNotFound)}";
-
-            if (!Directory.Exists(_binPath))
-                errorMessage += $"Unable to find the dependencies bin path: {_binPath}";
 
             if (errorMessage != string.Empty)
             {

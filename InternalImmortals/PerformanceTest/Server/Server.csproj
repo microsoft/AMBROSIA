@@ -23,10 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
-    <ProjectReference Include="..\GeneratedSourceFiles\PTAmbrosiaGeneratedAPINetCore\latest\PTAmbrosiaGeneratedAPINetCore.csproj" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
-    <ProjectReference Include="..\GeneratedSourceFiles\PTAmbrosiaGeneratedAPINet46\latest\PTAmbrosiaGeneratedAPINet46.csproj" />
+  <ItemGroup>
+    <ProjectReference Include="..\GeneratedSourceFiles\PTIAmbrosiaGeneratedAPI\latest\PTIAmbrosiaGeneratedAPI.csproj" />
   </ItemGroup>
 </Project>
