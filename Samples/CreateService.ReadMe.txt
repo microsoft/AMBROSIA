@@ -1,0 +1,8 @@
+Create projects for interface and service
+Grab AmbrosiaC# nuget
+Compile the interface project
+Write codegen script
+Run codegen
+Include generated project in solution and reference the project in the service
+
+*** Ambrosia shouldn't be a project dependency. Rather a Nuget dependency

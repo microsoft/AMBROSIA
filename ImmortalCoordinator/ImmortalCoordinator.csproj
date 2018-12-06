@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.0;net46</TargetFrameworks>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>ImmortalCoordinator</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <DefineConstants>$(DefineConstants);DOTNETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+  <!-- WARNING: Disabling CMD script for Linux build -->
+  <!-- <Target Name="PostBuild" AfterTargets="PostBuildEvent"> -->
+  <!--   <Exec Command="IF EXIST $(ProjectDir)..\privatesettings.config copy $(ProjectDir)..\privatesettings.config $(ProjectDir)$(OutDir)" /> -->
+  <!-- </Target> -->
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Options.Core" Version="1.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Remote.Linq" Version="5.8.1" />
+    <PackageReference Include="WindowsAzure.Storage" Version="9.3.2" />
+    <PackageReference Include="CRA" Version="2018.11.5.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <PackageReference Include="System.Configuration.ConfigurationManager">
+      <Version>4.5.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ambrosia\Ambrosia\Ambrosia.csproj" />
+  </ItemGroup>
+
+</Project>

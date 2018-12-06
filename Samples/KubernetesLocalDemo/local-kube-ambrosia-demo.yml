@@ -1,0 +1,79 @@
+kind : Deployment
+apiVersion: apps/v1
+#apiVersion : extensions/v1beta1
+metadata :
+    name : local-kube-ambrosia-demo-server
+#    namespace : default
+spec :
+    replicas : 1
+    selector:
+      matchLabels:
+        run: local-kube-ambrosia-demo-server
+    template :
+        metadata :
+            labels:
+                run: local-kube-ambrosia-demo-server
+        spec:
+#            dnsPolicy: Default
+#            dnsPolicy: ClusterFirstWithHostNet
+#            hostNetwork: true
+            containers:            
+            - name : perftest-server 
+              image : ambrosia-perftest
+              imagePullPolicy : "Never"
+              ports:
+              - containerPort: 1500
+              env:
+              - name: AMBROSIA_INSTANCE_NAME
+                value: "perftest-server"
+              - name: AMBROSIA_IMMORTALCOORDINATOR_PORT
+                value: "1500"
+              # FIXME: see VSTS bug 127:
+              - name: AZURE_STORAGE_CONN_STRING
+                value: "#AZURECONNSTRING#"
+
+              command: ["runAmbrosiaService.sh"]
+              args: ["Server", "--rp","1001", "--sp","1000",
+                     "-j","perftest-client", "-s","perftest-server", "-n","1", "-c"]
+              # command: ["/bin/bash"]
+              # args: ["-c", "while true; do sleep 1; echo server `date +%s`; done"]
+
+---
+
+kind : Deployment
+apiVersion: apps/v1
+metadata :
+    name : local-kube-ambrosia-demo-client
+#    namespace : default
+spec :
+    replicas : 1
+    selector:
+      matchLabels:
+        run: local-kube-ambrosia-client
+    template :
+        metadata :
+            labels:
+                run: local-kube-ambrosia-client
+        spec:
+            dnsPolicy: Default
+            containers:            
+            - name : perftest-client
+              image : ambrosia-perftest
+              imagePullPolicy : "Never"
+              ports:
+              - containerPort: 1500
+              env:
+              - name: AMBROSIA_INSTANCE_NAME
+                value: "perftest-client"
+              - name: AMBROSIA_IMMORTALCOORDINATOR_PORT
+                value: "1500"
+              # FIXME: see VSTS bug 127:
+              - name: AZURE_STORAGE_CONN_STRING
+                value: "#AZURECONNSTRING#"
+
+              command: ["runAmbrosiaService.sh"]
+              args: ["Job","--rp","1001", "--sp","1000",
+                     "-j","perftest-client", "-s","perftest-server",
+                     "--mms","65536", "-n","2", "-c" ]
+              # command: ["/bin/bash"]
+              # args: ["-c", "while true; do sleep 1; echo server `date +%s`; done"]

@@ -1,0 +1,11 @@
+FROM ambrosia-dev as dev
+
+# The releasedoes not require dotnet SDK to run Ambrosia binaries:
+FROM ubuntu:18.04
+RUN apt-get update -y && \
+    apt-get install -y libunwind-dev libicu60 apache2-utils
+
+COPY --from=dev /ambrosia/bin /ambrosia/bin
+
+ENV AMBROSIA_BINDIR="/ambrosia/bin"
+ENV PATH="${PATH}:/ambrosia/bin"

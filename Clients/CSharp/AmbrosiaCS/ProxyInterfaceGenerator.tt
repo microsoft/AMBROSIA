@@ -1,0 +1,46 @@
+﻿<#@ template language="C#" visibility="internal" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+
+using System;
+using Ambrosia;
+using System.Threading.Tasks;
+using static Ambrosia.StreamCommunicator;
+
+namespace <#= this.interfaceType.Namespace #>
+{
+    /// <summary>
+    // Generated from <#= this.interfaceType.Name #> by the proxy generation.
+    // This is the API that any immortal implementing the interface must be a subtype of.
+    /// </summary>
+    public interface <#= this.interfaceType.Name #>
+    {
+<#
+    foreach (var M in this.interfaceType.Methods) {
+      var parameterDeclarationString = Utilities.ParameterDeclarationString(M);
+#>
+        <#= "Task" + (M.voidMethod ? "" : "<" + M.ReturnType.Name + ">") #> <#= M.Name #>Async(<#= parameterDeclarationString #>);
+<# } #>
+    }
+
+    /// <summary>
+    // Generated from <#= this.interfaceType.Name #> by the proxy generation.
+    // This is the API that is used to call a immortal that implements
+    /// </summary>
+    [Ambrosia.InstanceProxy(typeof(<#= this.interfaceType.Name #>))]
+    public interface <#= this.interfaceType.Name #>Proxy
+    {
+<#
+    foreach (var M in this.interfaceType.Methods) {
+      var methodName = M.Name;
+      var parameterDeclarationString = Utilities.ParameterDeclarationString(M);
+#>
+<# if (!M.isImpulseHandler) { #>
+        Task<#= M.voidMethod ? "" : "<" + M.ReturnType.Name + ">" #> <#= methodName #>Async(<#= parameterDeclarationString #>);
+<# } #>
+        void <#= methodName #>Fork(<#= parameterDeclarationString #>);
+<# } #>
+    }
+}

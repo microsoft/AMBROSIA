@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.0;net46</TargetFrameworks>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Job</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
+    <DefineConstants>NETFRAMEWORK</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^netstandard\d'))">
+    <DefineConstants>NETSTANDARD</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^netcoreapp\d'))">
+    <DefineConstants>NETCORE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Options.Core" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <ProjectReference Include="..\GeneratedSourceFiles\PTIAmbrosiaGeneratedAPINetCore\latest\PTIAmbrosiaGeneratedAPINetCore.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+    <ProjectReference Include="..\GeneratedSourceFiles\PTIAmbrosiaGeneratedAPINet46\latest\PTIAmbrosiaGeneratedAPINet46.csproj" />
+  </ItemGroup>
+</Project>

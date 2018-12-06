@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+    <RootNamespace>GraphicalImmortalImpl</RootNamespace>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
+    <ProjectReference Include="..\GeneratedSourceFiles\GraphicalImmortalAPIGenerated\latest\GraphicalImmortalAPIGenerated.csproj" />
+  </ItemGroup>
+
+</Project>

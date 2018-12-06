@@ -1,0 +1,1241 @@
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Configuration;
+using System.Threading;
+using System.Windows.Forms; // need this to handle threading issue on sleeps
+
+namespace AmbrosiaTest
+{
+    [TestClass]
+    public class EndToEndStressIntegration_Test
+    {
+
+        //************* Init Code *****************
+        // NOTE: Need this bit of code at the top of every "[TestClass]" (per .cs test file) to get context \ details of the current test running
+        // NOTE: Make sure all names be "Azure Safe". No capital letters and no underscore.
+        [TestInitialize()]
+        public void Initialize()
+        {
+            Utilities MyUtils = new Utilities();
+            MyUtils.TestInitialize();
+        }
+        //************* Init Code *****************
+
+        //** Basic end to end test starts job and server and runs a bunch of bytes through
+        //** Only a few rounds and part of 
+        [TestMethod]
+        public void AMB_Basic_Test()
+        {
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "basictest";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"]+"\\";
+            string byteSize = "3221225472";
+                               
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "32768", "3", logOutputFileName_ClientJob);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15,false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15,false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+
+            //Verify AMB 
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true,AMB1.AMB_Version);
+        }
+
+
+        //** This test does 5 rounds of messages starting with 64MB and cutting in half each time
+        //** Basically same as the basic test but passing giant message - the difference is in the job.exe call and that is it
+        [TestMethod]
+        public void AMB_GiantMessage_Test()
+        {
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "giantmessagetest";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "5368709120";  
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+            
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "67108864", "5", logOutputFileName_ClientJob);
+
+            // Give it a few seconds to start
+            Thread.Sleep(2000);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+
+            //Verify AMB 
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
+
+        //** Test starts job and server then kills the job and restarts it and runs to completion
+        [TestMethod]
+        public void AMB_KillJob_Test()
+        {
+            //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
+            string testName = "killjobtest";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "13958643712";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+
+            // Give it 5seconds to do something before killing it
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            
+            //Kill job at this point as well as ImmCoord1
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+
+            //Restart ImmCoord1
+            string logOutputFileName_ImmCoord1_Restarted = testName + "_ImmCoord1_Restarted.log";
+            int ImmCoordProcessID1_Restarted = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1_Restarted);
+
+            // Restart Job Process
+            string logOutputFileName_ClientJob_Restarted = testName + "_ClientJob_Restarted.log";
+            int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted, byteSize, 15, false, testName, true); // Total bytes received
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName,true );
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID_Restarted);
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID1_Restarted);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+
+            //Verify AMB 
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+
+            // Verify Client (before and after restart)
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
+        //** Test starts job and server then kills the server and restarts it and runs to completion
+        [TestMethod]
+        public void AMB_KillServer_Test()
+        {
+            //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
+            string testName = "killservertest";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "13958643712";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",  // NOTE: if put this to "Y" then when kill it, it will become a checkpointer which never becomes primary
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+
+            // Give it 10 seconds to do something before killing it
+            Thread.Sleep(10000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            //Kill Server at this point as well as ImmCoord2
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+
+            //Restart ImmCoord2
+            string logOutputFileName_ImmCoord2_Restarted = testName + "_ImmCoord2_Restarted.log";
+            int ImmCoordProcessID2_Restarted = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2_Restarted);
+
+            // Restart Server Process
+            string logOutputFileName_Server_Restarted = testName + "_Server_Restarted.log";
+            int serverProcessID_Restarted = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Restarted, 1, false);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_Restarted, byteSize, 25, false, testName,true);  // Total Bytes received needs to be accurate
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID_Restarted);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+            MyUtils.KillProcess(ImmCoordProcessID2_Restarted);
+
+            //Verify AMB 
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+
+            // Verify Server (before and after restart)
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
+
+
+        //** Test starts Job and Server then kills both Job and Server 
+        //  restarts both with JOB restarted first
+
+        [TestMethod]
+        public void AMB_DoubleKill_RestartJOBFirst_Test()
+        {
+            //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
+            string testName = "doublekilljob";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "13958643712";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+
+            // Give it 5 seconds to do something before killing it
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // Kill both Job (and ImmCoord) and Server (and ImmCoord)
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+
+            // Actual test part here -- restarting JOB first before restarting Server
+            // Restart Job / ImmCoord1
+            string logOutputFileName_ImmCoord1_Restarted = testName + "_ImmCoord1_Restarted.log";
+            int ImmCoordProcessID1_Restarted = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1_Restarted);
+            string logOutputFileName_ClientJob_Restarted = testName + "_ClientJob_Restarted.log";
+            int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted);
+
+            // just give a rest 
+            Thread.Sleep(3000);
+
+            // Restart Server / ImmCoord2
+            string logOutputFileName_ImmCoord2_Restarted = testName + "_ImmCoord2_Restarted.log";
+            int ImmCoordProcessID2_Restarted = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2_Restarted);
+            string logOutputFileName_Server_Restarted = testName + "_Server_Restarted.log";
+            int serverProcessID_Restarted = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Restarted, 1, false);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted, byteSize, 20, false, testName, true); // Total bytes received
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_Restarted, byteSize, 20, false, testName,true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID_Restarted);
+            MyUtils.KillProcess(serverProcessID_Restarted);
+            MyUtils.KillProcess(ImmCoordProcessID1_Restarted);
+            MyUtils.KillProcess(ImmCoordProcessID2_Restarted);
+
+            //Verify AMB 
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+
+            // Verify Client (before and after restart)
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
+        //** Test starts Job and Server then kills both Job and Server 
+        //  restarts both with SERVER restarted first
+        [TestMethod]
+        public void AMB_DoubleKill_RestartSERVERFirst_Test()
+        {
+            //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
+            string testName = "doublekillserver";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "13958643712";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+
+            // Give it 5 seconds to do something before killing it
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // Kill both Job (and ImmCoord) and Server (and ImmCoord)
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+
+            // Actual test part here -- restarting SERVER first before restarting Job
+            // Restart Server / ImmCoord2
+            string logOutputFileName_ImmCoord2_Restarted = testName + "_ImmCoord2_Restarted.log";
+            int ImmCoordProcessID2_Restarted = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2_Restarted);
+            string logOutputFileName_Server_Restarted = testName + "_Server_Restarted.log";
+            int serverProcessID_Restarted = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Restarted, 1, false);
+
+            // just give a rest 
+            Thread.Sleep(3000);
+
+            // Restart Job / ImmCoord1
+            string logOutputFileName_ImmCoord1_Restarted = testName + "_ImmCoord1_Restarted.log";
+            int ImmCoordProcessID1_Restarted = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1_Restarted);
+            string logOutputFileName_ClientJob_Restarted = testName + "_ClientJob_Restarted.log";
+            int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted, byteSize, 20, false, testName, true); // Total bytes received
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_Restarted, byteSize, 20, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID_Restarted);
+            MyUtils.KillProcess(serverProcessID_Restarted);
+            MyUtils.KillProcess(ImmCoordProcessID1_Restarted);
+            MyUtils.KillProcess(ImmCoordProcessID2_Restarted);
+
+            //Verify AMB 
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+
+            // Verify Client (before and after restart)
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
+        //** Basic end to end but starts Immortal after other exes
+        [TestMethod]
+        public void AMB_StartImmCoordLast_Test()
+        {
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "startimmcoordlasttest";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "13958643712";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //*** Call client and server exe first
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+
+            // Let is sit a bit before starting ImmCoords
+            Thread.Sleep(15000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            //*** Now call ImmCoords
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+
+            //Verify AMB 
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
+
+        //** Upgrade scenario where the server is upgraded server after server is finished 
+        [TestMethod]
+        public void AMB_UpgradeServerAFTERServerDone_Test()
+        {
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "upgradeserverafterserverdone";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "13958643712";
+            string newUpgradedPrimary = "becoming upgraded primary";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "9"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "9"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server,1, false);
+
+            // Wait for client job to finish
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+
+            // kill Server 
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+
+            // Run AMB again with new version # upped by 9 (10)
+            string logOutputFileName_AMB2_Upgraded = testName + "_AMB2_Upgraded.log";
+            AMB_Settings AMB2_Upgraded = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "9",
+                AMB_UpgradeToVersion = "10"
+            };
+            MyUtils.CallAMB(AMB2_Upgraded, logOutputFileName_AMB2_Upgraded, AMB_ModeConsts.RegisterInstance);
+
+            // start Immortal COord for server again
+            string logOutputFileName_ImmCoord2_Upgraded = testName + "_ImmCoord2_Upgraded.log";
+            int ImmCoordProcessID2_upgraded = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2_Upgraded);
+
+            // start server again but with Upgrade = true
+            string logOutputFileName_Server_upgraded = testName + "_Server_upgraded.log";
+            int serverProcessID_upgraded = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_upgraded, 1, true);
+
+            //Delay until client is done - also check Server just to make sure
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID_upgraded);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+            MyUtils.KillProcess(ImmCoordProcessID2_upgraded);
+
+            // Also verify upgraded server showing new upgraded primary
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, newUpgradedPrimary, 5, false, testName, true);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_upgraded);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
+        //** Upgrade scenario where the server is upgraded server before client is finished
+        [TestMethod]
+        public void AMB_UpgradeServerBEFOREServerDone_Test()
+        {
+
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "upgradeserverbeforeserverdone";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "13958643712";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "10"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "10"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+
+            // Give it 5 seconds to do something before killing it
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // kill Server 
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+
+            // Run AMB again with new version # upped by 1 (11)
+            string logOutputFileName_AMB2_Upgraded = testName + "_AMB2_Upgraded.log";
+            AMB_Settings AMB2_Upgraded = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "10",
+                AMB_UpgradeToVersion = "11"
+            };
+            MyUtils.CallAMB(AMB2_Upgraded, logOutputFileName_AMB2_Upgraded, AMB_ModeConsts.RegisterInstance);
+
+            // start Immortal COord for server again
+            string logOutputFileName_ImmCoord2_Upgraded = testName + "_ImmCoord2_Upgraded.log";
+            int ImmCoordProcessID2_upgraded = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2_Upgraded);
+
+            // start server again but with Upgrade = true
+            string logOutputFileName_Server_upgraded = testName + "_Server_upgraded.log";
+            int serverProcessID_upgraded = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_upgraded, 1, true);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID_upgraded);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+            MyUtils.KillProcess(ImmCoordProcessID2_upgraded);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_upgraded);
+
+        }
+
+        //** Multiple clientscenario where many clients connect to a server
+        [TestMethod]
+        public void AMB_MultipleClientsPerServer_Test()
+        {
+                        
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "multipleclientsperserver";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "12884901888"; 
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Server
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2 - Job 1
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName+"0",
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //AMB3 - Job 2
+            string logOutputFileName_AMB3 = testName + "_AMB3.log";
+            AMB_Settings AMB3 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName+"1",
+                AMB_PortAppReceives = "3000",
+                AMB_PortAMBSends = "3001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB3, logOutputFileName_AMB3, AMB_ModeConsts.RegisterInstance);
+
+            //AMB4 - Job 3
+            string logOutputFileName_AMB4 = testName + "_AMB4.log";
+            AMB_Settings AMB4 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName+"2",
+                AMB_PortAppReceives = "4000",
+                AMB_PortAMBSends = "4001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB4, logOutputFileName_AMB4, AMB_ModeConsts.RegisterInstance);
+
+            //AMB5 - job 4
+            string logOutputFileName_AMB5 = testName + "_AMB5.log";
+            AMB_Settings AMB5 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName +"3",
+                AMB_PortAppReceives = "5000",
+                AMB_PortAMBSends = "5001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB5, logOutputFileName_AMB5, AMB_ModeConsts.RegisterInstance);
+
+            // Server Call
+            string logOutputFileName_ImmCoord5 = testName + "_ImmCoord5.log";
+            int ImmCoordProcessID5 = MyUtils.StartImmCoord(serverName, 1500, logOutputFileName_ImmCoord5);
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server, 4, false);
+
+            // Client call
+            // For multiple clients, you have a "root" name and each of the client names are then root name + instance number starting at 0
+            string logOutputFileName_ImmCoord0 = testName + "_ImmCoord0.log";
+            int ImmCoordProcessID0 = MyUtils.StartImmCoord(clientJobName+"0", 2500, logOutputFileName_ImmCoord0);
+            string logOutputFileName_ClientJob0 = testName + "_ClientJob0.log";
+            int clientJobProcessID0 = MyUtils.StartPerfClientJob("2001", "2000", clientJobName+"0", serverName, "65536", "3", logOutputFileName_ClientJob0);
+
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName+"1", 3500, logOutputFileName_ImmCoord1);
+            string logOutputFileName_ClientJob1 = testName + "_ClientJob1.log";
+            int clientJobProcessID1 = MyUtils.StartPerfClientJob("3001", "3000", clientJobName+"1", serverName, "65536", "3", logOutputFileName_ClientJob1);
+
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(clientJobName+"2", 4500, logOutputFileName_ImmCoord2);
+            string logOutputFileName_ClientJob2 = testName + "_ClientJob2.log";
+            int clientJobProcessID2 = MyUtils.StartPerfClientJob("4001", "4000", clientJobName+"2", serverName, "65536", "3", logOutputFileName_ClientJob2);
+
+            string logOutputFileName_ImmCoord3 = testName + "_ImmCoord3.log";
+            int ImmCoordProcessID3 = MyUtils.StartImmCoord(clientJobName+"3", 5500, logOutputFileName_ImmCoord3);
+            string logOutputFileName_ClientJob3 = testName + "_ClientJob3.log";
+            int clientJobProcessID3 = MyUtils.StartPerfClientJob("5001", "5000", clientJobName + "3", serverName, "65536", "3", logOutputFileName_ClientJob3);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob0, byteSize, 25, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob1, byteSize, 15, false, testName, true); 
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob2, byteSize, 15, false, testName, true); 
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob3, byteSize, 15, false, testName, true); 
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID5);
+
+            MyUtils.KillProcess(clientJobProcessID0);
+            MyUtils.KillProcess(clientJobProcessID1);
+            MyUtils.KillProcess(clientJobProcessID2);
+            MyUtils.KillProcess(clientJobProcessID3);
+
+            MyUtils.KillProcess(ImmCoordProcessID0);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+            MyUtils.KillProcess(ImmCoordProcessID3);
+
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob0);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob1);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob2);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob3);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+
+            // Not easy to do unless modify verify log file call due to break down of log files with multiclient names
+            // Verify integrity of Ambrosia logs by replaying every client ... 
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "1");
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "2");
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "3");
+        }
+
+        //** Basically same as the basic test but using large check points - change is in the call to server
+        //** See memory usage spike when checkpoint size is bigger
+        [TestMethod]
+        public void AMB_GiantCheckPoint_Test()
+        {
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "giantcheckpointtest";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "1073741824";
+            long giantCheckpointSize = 2000483648;// 2147483648; 
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "10", logOutputFileName_ClientJob);
+
+            // Give it a few seconds to start
+            Thread.Sleep(2000);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false, giantCheckpointSize);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID1);
+            MyUtils.KillProcess(ImmCoordProcessID2);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
+
+        [TestCleanup()]
+        public void Cleanup()
+        {
+            // Kill all ImmortalCoordinators, Job and Server exes
+            Utilities MyUtils = new Utilities();
+            MyUtils.TestCleanup();
+        }
+
+    }
+}

@@ -1,0 +1,55 @@
+kind : Deployment
+apiVersion : extensions/v1beta1
+metadata :
+    name : #DEPLOYMENTNAME#
+    namespace : default
+    labels :
+        app : #DEPLOYMENTNAME#
+spec :
+    replicas : 1
+    template :
+        metadata :
+            name : #DEPLOYMENTNAME#
+            labels:
+                app: #DEPLOYMENTNAME#
+        spec:
+            dnsPolicy: Default
+            imagePullSecrets :
+            - name: #ACRSECRETNAME#
+            containers:
+            - name : #DEPLOYMENTNAME#
+              image : #REGISTRYURL#/#CONTAINTERNAME#
+              ports:
+              - containerPort: #COORDPORT#
+                name: craport
+              - containerPort: #LOCALPORT1#
+                name: sendport
+              - containerPort: #LOCALPORT2#
+                name: rcvport
+              - containerPort: 4022
+                name: dbgport
+              env:
+              - name: AMBROSIA_IMMORTALCOORDINATOR_PORT
+                value: "#COORDPORT#"
+              - name: AMBROSIA_INSTANCE_NAME
+                value: #AMBROSIAINSTANCE#
+              - name: AZURE_STORAGE_CONNECTION_STRING
+                value: "#AZURECONNSTRING#"
+              # FIXME: see VSTS bug 127:
+              - name: AZURE_STORAGE_CONN_STRING
+                value: "#AZURECONNSTRING#"
+              - name: AMBROSIA_LOGDIR
+                value: "#LOGDIR#"
+              volumeMounts:
+              - mountPath: "#LOGDIR#"
+                name: ambrosia-logs
+              command: ["bash"]
+              args: ["-c", "#FULLCOMMANDSTRING#"]
+
+            volumes:
+            - name: ambrosia-logs
+              azureFile:
+                 secretName: #FILESHARESECRETNAME#
+                 shareName: #FILESHARENAME#
+                 readOnly: false
+---

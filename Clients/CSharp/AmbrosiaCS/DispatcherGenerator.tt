@@ -1,0 +1,126 @@
+﻿<#@ template language="C#" visibility="internal" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Ambrosia;
+using static Ambrosia.StreamCommunicator;
+using LocalAmbrosiaRuntime;
+
+namespace <#= this.interfaceType.Namespace #>
+{
+    /// <summary>
+    /// This class runs in the process of the object that implements the interface <#= this.interfaceType.Name #>
+    /// and communicates with the local Ambrosia runtime.
+    /// It is instantiated in ImmortalFactory.CreateServer when a bootstrapper registers a container
+    /// that supports the interface <#= this.interfaceType.Name #>.
+    /// </summary>
+    class <#= className #> : Immortal.Dispatcher
+    {
+        private readonly <#= interfaceType.Name #> instance;
+		private readonly ExceptionSerializer exceptionSerializer = new ExceptionSerializer(new List<Type>());
+
+        public <#= className #>(Immortal z, ImmortalSerializerBase myImmortalSerializer, string serviceName, int receivePort, int sendPort, bool setupConnections)
+            : base(z, myImmortalSerializer, serviceName, receivePort, sendPort, setupConnections)
+        {
+            this.instance = (<#= interfaceType.Name #>) z;
+        }
+
+        public  <#= className #>(Immortal z, ImmortalSerializerBase myImmortalSerializer, string localAmbrosiaRuntime, Type newInterface, Type newImmortalType, int receivePort, int sendPort)
+            : base(z, myImmortalSerializer, localAmbrosiaRuntime, newInterface, newImmortalType, receivePort, sendPort)
+        {
+            this.instance = (<#= interfaceType.Name #>) z;
+        }
+
+        public override async Task<bool> DispatchToMethod(int methodId, RpcTypes.RpcType rpcType, string senderOfRPC, long sequenceNumber, byte[] buffer, int cursor)
+        {
+            switch (methodId)
+            {
+                case 0:
+                    // Entry point
+                    this.EntryPoint();
+                    break;
+<#
+    foreach (var M in this.methods) {
+      var idNumber = M.idNumber;
+      var parameterString = String.Join(",", M.Parameters.Select(p => "p_" + p.Position.ToString()));
+      var voidMethod = M.voidMethod;
+#>
+                case <#= idNumber #>:
+                    // <#= M.Name #>Async
+                    {
+                        // deserialize arguments
+<#
+        foreach (var p in M.Parameters) {
+          var parIndex = p.Position;
+          var parName = "p_" + parIndex;
+#>
+
+            // arg<#= parIndex #>: <#= p.TypeName #>
+            <#= Utilities.DeserializeValue(p.ParameterType, parName) #>
+<# } #>
+                        // call the method
+<# if (!voidMethod) { #>
+						var p_<#= M.Parameters.Count() #> = default(<#= M.ReturnType.Name #>);
+<# } #>
+						byte[] argExBytes = null;
+						int argExSize = 0;
+						Exception currEx = null;
+						int arg<#= M.Parameters.Count() #>Size = 0;
+						byte[] arg<#= M.Parameters.Count() #>Bytes = null;
+
+						try 
+						{
+<# if (!voidMethod) { #>
+							p_<#= M.Parameters.Count() #> =
+<# } #>
+								await this.instance.<#= M.Name #>Async(<#= parameterString #>);
+						}
+						catch (Exception ex)
+						{
+							currEx = ex;
+						}
+
+                        if (!rpcType.IsFireAndForget())
+                        {
+<# if (!voidMethod) { #>
+                            // serialize result and send it back
+						if (currEx != null)
+						{
+			<#= Utilities.ComputeExceptionSize() #>
+						}
+						else 
+						{
+			<#= Utilities.ComputeArgumentSize(M.ReturnType, M.Parameters.Count()) #>
+						}
+<# } else { #>
+                            // serialize result and send it back (there isn't one)
+                            arg<#= M.Parameters.Count() #>Size = 0;
+<# } #>
+                            var wp = this.StartRPC_ReturnValue(senderOfRPC, sequenceNumber, currEx == null ? arg<#= M.Parameters.Count() #>Size : argExSize, currEx == null ? <#= !voidMethod ? "ReturnValueTypes.ReturnValue" : "ReturnValueTypes.EmptyReturnValue" #> : ReturnValueTypes.Exception);
+
+<# if (!voidMethod) { #>	
+						if (currEx != null)
+						{
+			<#= Utilities.SerializeException() #>
+						}
+						else 
+						{
+            <#= Utilities.SerializeValue(M.Parameters.Count()) #>
+						}
+<# } #>
+                            this.ReleaseBufferAndSend();
+                        }
+                    }
+                    break;
+<# } #>
+            }
+
+            return true;
+        }
+    }
+}

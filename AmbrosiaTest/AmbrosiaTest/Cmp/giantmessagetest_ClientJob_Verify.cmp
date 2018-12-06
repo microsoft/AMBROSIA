@@ -1,0 +1,13 @@
+Bytes per RPC	Throughput (GB/sec)
+*X* 67108864	0.00892768540362201
+Service Received 1024 MB so far
+*X* 33554432	0.00768423168893252
+Service Received 2048 MB so far
+*X* 16777216	0.00867107172891846
+Service Received 3072 MB so far
+*X* 8388608	0.0091985712679762
+Service Received 4096 MB so far
+*X* 4194304	0.00911352397754352
+Service Received 5120 MB so far
+Bytes received: 5368709120
+DONE

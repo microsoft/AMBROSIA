@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>AmbrosiaLibCS</id>
+    <version>0.0.5</version>
+    <title>AmbrosiaLibCS</title>
+    <authors>Ambrosia</authors>
+    <owners>Microsoft</owners>
+    <projectUrl>https://msrfranklin.visualstudio.com/_projects</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>The AmbrosiaLibCS Binary Distribution</description>
+    <releaseNotes>None yet</releaseNotes>
+    <copyright>Copyright (C) 2018 Microsoft Corporation</copyright>
+    <language>en-US</language>
+    <tags>"MS Internal Only"</tags>
+    <dependencies>
+      <dependency id="Microsoft.CodeAnalysis.CSharp.Scripting" version="2.7.0" />
+      <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" />
+      <dependency id="System.Threading.Tasks.Dataflow" version="4.9.0" />
+      <dependency id="Microsoft.VisualStudio.Threading" version="15.8.168" />
+      <dependency id="Microsoft.VisualStudio.Validation" version="15.3.58" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\AmbrosiaLibCS.dll" target="lib\net46" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\AmbrosiaLibCS.pdb" target="lib\net46" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\Ambrosia.exe" target="lib\net46" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\Ambrosia.pdb" target="lib\net46" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\AmbrosiaLibCS.dll" target="lib\netcoreapp2.0" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\AmbrosiaLibCS.pdb" target="lib\netcoreapp2.0" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\Ambrosia.dll" target="lib\netcoreapp2.0" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\Ambrosia.pdb" target="lib\netcoreapp2.0" />
+  </files>
+</package>

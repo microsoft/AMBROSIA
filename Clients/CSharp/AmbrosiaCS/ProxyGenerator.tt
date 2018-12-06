@@ -1,0 +1,163 @@
+﻿<#@ template language="C#" visibility="internal" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+
+using System;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+using Ambrosia;
+using static Ambrosia.StreamCommunicator;
+
+<#
+  var originalInterfaceName = this.interfaceType.Name;
+#>
+
+namespace <#= this.interfaceType.Namespace #>
+{
+    /// <summary>
+    /// This class is the proxy that runs in the client's process and communicates with the local Ambrosia runtime.
+    /// It runs within the client's process, so it is generated in the language that the client is using.
+    /// It is returned from ImmortalFactory.CreateClient when a client requests a container that supports the interface <#= generatedClientInterfaceName #>.
+    /// </summary>
+    [System.Runtime.Serialization.DataContract]
+    public class <#= className #> : Immortal.InstanceProxy, <#= generatedClientInterfaceName #>
+    {
+
+        public <#= className #>(string remoteAmbrosiaRuntime, bool attachNeeded)
+            : base(remoteAmbrosiaRuntime, attachNeeded)
+        {
+        }
+
+<#
+    foreach (var M in this.methods) {
+      var idNumber = M.idNumber;
+      var parameterDeclarationString = Utilities.ParameterDeclarationString(M);
+      var parameterString = String.Join(",", M.Parameters.Select(p => "p_" + p.Position.ToString()));
+      var returnTypeName = M.ReturnType.Name;
+	  var isImpulseHandler = M.isImpulseHandler;
+      var voidMethod = M.voidMethod;
+
+#>
+<# if (!isImpulseHandler) { #>
+        async <#= "Task" + (voidMethod ? "" : "<" + returnTypeName + ">") #>
+        <#= generatedClientInterfaceName #>.<#= M.Name #>Async(<#= parameterDeclarationString #>)
+        {
+			<#= (voidMethod ? "" : "return") #> await <#= M.Name #>Async(<#= parameterString #>);
+        }
+
+        async <#= "Task" + (voidMethod ? "" : "<" + returnTypeName + ">") #>
+        <#= M.Name #>Async(<#= parameterDeclarationString #>)
+        {
+            SerializableTaskCompletionSource rpcTask;
+            // Make call, wait for reply
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+
+<#
+        foreach (var p in M.Parameters) {
+          var parIndex = p.Position;
+#>
+<# if (!voidMethod) { #>
+			var p_<#= M.Parameters.Count() #> = default(<#= M.ReturnType.Name #>);
+<# } #>
+			int arg<#= parIndex #>Size = 0;
+			byte[] arg<#= parIndex #>Bytes = null;
+
+            // Argument <#= parIndex #>
+            <#= Utilities.ComputeArgumentSize(p.ParameterType, p.Position) #>
+            totalArgSize += arg<#= parIndex #>Size;
+<# } #>
+
+            var wp = this.StartRPC<<#= voidMethod ? "object" : returnTypeName #>>(methodIdentifier: <#= idNumber #> /* method identifier for <#= M.Name #> */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
+			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
+
+            // Serialize arguments
+
+<#
+        foreach (var p in M.Parameters) {
+          var parIndex = p.Position;
+#>
+
+            // Serialize arg<#= parIndex #>
+            <#= Utilities.SerializeValue(parIndex) #>
+<# } #>
+
+            ReleaseBufferAndSend();
+
+			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+            var currentResult = await taskToWaitFor;
+
+			var isSaved = await Immortal.TrySaveContextContinuationAsync(currentResult);
+
+			if (isSaved)
+			{
+				taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+				currentResult = await taskToWaitFor;
+			}			
+
+			<#= !voidMethod ? "var result =" : ""#> await Immortal.TryTakeCheckpointContinuationAsync(currentResult);
+
+<# if (voidMethod) { #>
+			return;
+<# } else { #>
+			return (<#= returnTypeName #>) result.Result;
+<# } #>
+        }
+<# } #>
+
+        void <#= generatedClientInterfaceName #>.<#= M.Name #>Fork(<#= parameterDeclarationString #>)
+        {
+            SerializableTaskCompletionSource rpcTask;
+
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+
+<#
+        foreach (var p in M.Parameters) {
+          var parIndex = p.Position;
+#>
+            // Argument <#= parIndex #>
+			int arg<#= parIndex #>Size = 0;
+			byte[] arg<#= parIndex #>Bytes = null;
+
+            <#= Utilities.ComputeArgumentSize(p.ParameterType, p.Position) #>
+            totalArgSize += arg<#= parIndex #>Size;
+<# } #>
+
+            var wp = this.StartRPC<<#= voidMethod ? "object" : returnTypeName #>>(<#= idNumber #> /* method identifier for <#= M.Name #> */, totalArgSize, out rpcTask, <#= isImpulseHandler ? "RpcTypes.RpcType.Impulse" : "RpcTypes.RpcType.FireAndForget" #>);
+
+            // Serialize arguments
+
+<#
+        foreach (var p in M.Parameters) {
+          var parIndex = p.Position;
+#>
+
+            // Serialize arg<#= parIndex #>
+            <#= Utilities.SerializeValue(p.Position) #>
+<# } #>
+
+            this.ReleaseBufferAndSend();
+            return;
+        }
+
+        private <#= voidMethod ? "object" : returnTypeName #>
+        <#= M.Name #>_ReturnValue(byte[] buffer, int cursor)
+        {
+<# if (voidMethod) { #>
+            // buffer will be an empty byte array since the method <#= M.Name #> returns void
+            // so nothing to read, just getting called is the signal to return to the client
+            return this;
+<# } else { #>
+            // deserialize return value
+            <#= Utilities.DeserializeValue(M.ReturnType, "returnValue") #>
+            return returnValue;
+<# } #>
+        }
+<#
+    }
+#>
+    }
+}

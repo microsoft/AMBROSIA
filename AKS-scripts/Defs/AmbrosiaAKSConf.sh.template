@@ -1,0 +1,45 @@
+# Rename this file to AmbrosiaAKSConf.sh (in the same directory) but
+# DO NOT check it in.  Modify it to include your configuration info
+# and secrets.
+#
+# This file can be used to to deploy multiple application instances
+# (pods) into a single Kubernetes cluster.
+# ------------------------------------------------------------------------------
+# The values in this file are just placeholders, but are meant to be
+# somewhat suggestive ones.  EVERY value is mandatory.
+#
+# SUGGESTION: you can get away with doing only TWO things here:
+#  (1) fill in AZURE_SUBSCRIPTION with your subscription ID.
+#  (2) find/replace "xyz" with a unique string, such as your github username
+# ------------------------------------------------------------------------------
+
+# The descriptive overall name of your AMBROSIA service (which may contain
+# multiple instances, each of which contain multiple replicas).
+AMBROSIA_SERVICE_NAME=perftest
+
+# Find this in the Azure portal or with `az account list --output table`
+AZURE_SUBSCRIPTION=********-****-****-****-************
+# Where to put resources we create:
+AZURE_LOCATION=eastus
+DOCKER_EMAIL=xyz@xyz.com
+
+# These must be GLOBALLY unique.
+# They are not scoped per-subscription or per-resource group.
+# ------------------------------------------------------------
+AZURE_RESOURCE_GROUP=xyz-group
+AZURE_KUBERNETES_CLUSTER=xyz-cluster
+ACR_NAME=xyzcontainerreg
+AZURE_STORAGE_NAME=xyzstorage
+SERVICE_PRINCIPAL_NAME=xyz-aks-acr-service-principal
+# ------------------------------------------------------------
+
+# These variables don't need to be changed.
+# You can use these defaults:
+# ------------------------------------------------------------
+ACR_SECRET_NAME=acr-auth-secret
+FILESHARE_NAME=ambrosia-logs-smbshare
+FILESHARE_SECRET_NAME=azure-fileshare-secret
+# ------------------------------------------------------------
+
+# See Defs/Set-*.sh for variables that are retrieved automatically after login.
+

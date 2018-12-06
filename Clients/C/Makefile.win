@@ -1,0 +1,56 @@
+
+
+# Windows version of the Makefile.
+
+
+# ipv4|ipv6
+NETWORK=ipv6
+DEFINES=
+
+# release|debug
+MODE=release
+
+WINOPTS= /Ox
+
+HEADERS=include\spsc_rring.h
+SRCS=src\spsc_rring.c
+OBJS=bin\$(MODE)\$(NETWORK)\spsc_rring.o bin\$(MODE)\$(NETWORK)\service.o
+
+COMP=cl.exe $(DEFINES) /I"include" $(WINOPTS)
+LINK=cl.exe
+
+all: win
+	@echo "Please select make win or make lin"
+
+bin\$(MODE)\$(NETWORK)\spsc_rring.o: src\spsc_rring.c $(HEADERS) bin\$(MODE)\$(NETWORK)
+	$(COMP) /c src\spsc_rring.c /Fo"$@"
+
+bin\$(MODE)\$(NETWORK)\ambrosia_client.o: src\ambrosia_client.c $(HEADERS) bin\$(MODE)\$(NETWORK)
+	$(COMP) /c src\ambrosia_client.c /Fo"$@"
+
+# TEMP:
+bin\$(MODE)\$(NETWORK)\service.o: service.c $(HEADERS) bin\$(MODE)\$(NETWORK)
+	$(COMP) /c service.c /Fo"$@"
+
+bin\$(MODE)\$(NETWORK):
+	mkdir "bin\$(MODE)\$(NETWORK)"
+
+# Create a native windows binary (Winsock) without using MinGW/etc
+win: service_winsockv4.exe service_winsockv6.exe
+# service_winsockv4_dbg.exe
+
+service_winsockv6.exe: $(OBJS) 
+	$(LINK) $(OBJS) /Fe"$@"
+
+service_winsock.exe: $(OBJS)
+	$(LINK) $(OBJS) /Fe"$@"
+
+service_winsockv4.exe: $(HEADERS) $(SRCS)
+	$(MAKE) /F Makefile.win DEFINES="/DIPV4" NETWORK=ipv4 service_winsock.exe
+	move service_winsock.exe service_winsockv4.exe
+
+clean:
+	del /f /q service.o service_winsockv4.exe service_winsockv6.exe service_v4.exe service_v6.exe $(OBJS) 
+
+.PHONY: win clean
+
