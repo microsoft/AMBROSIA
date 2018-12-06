@@ -1,56 +1,46 @@
+# ------------------------------------------------------------------------------
+# This Makefile builds multiple versions of the "service" binary:
+# debug/release and ipv4/ipv6.
+#
+# ASSUMES:
+# (1) that libambrosia.a is available and published to the lib/
+#     subdirectory of this AMBROSIA working copy.
+# (2) that headers are likewise published to the include/ dir at
+#     the top of the working copy.
+# ------------------------------------------------------------------------------
 
+# This will be set by recursive invocations of Make:
 DEFINES= 
 
-GNULIBS= -lpthread
 GNUOPTS= -pthread -O3
-# -std=c11
-
-HEADERS= include/spsc_rring.h include/ambrosia_client.h
-
-# SRC = $(wildcard src/*.c)
-SRCS= src/spsc_rring.c src/ambrosia_client.c
-OBJS= $(patsubst src/%.c,bin/%.o, $(SRCS) )
-
-COMP= gcc $(DEFINES) -I include/ $(GNUOPTS)
+COMP= gcc -c $(DEFINES) -I ../../bin/include/ $(GNUOPTS)
+LIBS= -L ../../bin -l:libambrosia.a -lpthread
 LINK= gcc
 
-all: lin
-lin: service_v4.exe service_v6.exe
+all: service_v4.exe service_v6.exe
 dbg: service_dbg_v4.exe
 
-# bin/spsc_rring.o: src/spsc_rring.c $(HEADERS) ./bin
-bin/%.o: src/%.c $(HEADERS) ./bin
-	$(COMP) -c $< -o $@
-
-# TEMP:
-service.o: service.c
-	$(COMP) -c $< -o $@
-
-service_lin.exe: service.o $(OBJS)
-	$(LINK) service.o $(OBJS) $(GNULIBS) -o $@
+service_temp.exe: service.c
+	$(COMP) service.c -o service.o
+	$(LINK) service.o $(LIBS) -o $@
 
 service_v4.exe: $(HEADERS) $(SRCS) service.c
-	$(MAKE) -f Makefile.lin DEFINES="-DIPV4" objclean service_lin.exe
-	mv service_lin.exe $@
+	$(MAKE) DEFINES="-DIPV4" partclean service_temp.exe
+	mv service_temp.exe $@
 
 service_dbg_v4.exe: $(HEADERS) $(SRCS) service.c
-	$(MAKE) -f Makefile.lin DEFINES="-DAMBCLIENT_DEBUG -DIPV4" objclean service_lin.exe
-	mv service_lin.exe $@
-
+	$(MAKE) DEFINES="-DAMBCLIENT_DEBUG -DIPV4" partclean service_temp.exe
+	mv service_temp.exe $@
 
 service_v6.exe: $(HEADERS) $(SRCS) service.c
-	$(MAKE) -f Makefile.lin DEFINES="" objclean service_lin.exe
-	mv service_lin.exe $@
+	$(MAKE) DEFINES="" partclean service_temp.exe
+	mv service_temp.exe $@
 
-bin:
-	mkdir bin
+partclean:
+	rm -f service_temp.exe
 
-
-objclean:
-	rm -rf bin
-
-clean: objclean
+clean: 
 	rm -f service_winsockv4.exe service_winsockv6.exe service_v4.exe service_v6.exe
 	rm -f \#* .\#* *~
 
-.PHONY: lin clean objclean
+.PHONY: lin clean partclean

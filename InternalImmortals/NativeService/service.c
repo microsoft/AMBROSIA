@@ -41,8 +41,9 @@
 #endif
 
 
-#include "include/spsc_rring.h"
-#include "include/ambrosia_client.h"
+// TODO: remove internal dependency:
+#include "ambrosia/internal/spsc_rring.h"
+#include "ambrosia/client.h"
 
 
 // Library-level global variables:
