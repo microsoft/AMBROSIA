@@ -34,6 +34,8 @@ ACR_ID=$($AZ acr show --name $ACR_NAME --resource-group $AZURE_RESOURCE_GROUP --
 # translation so that the "--scope=$ACR_ID" below is not mangled on Windows.
 # It should have no affect on Linux/MacOS.
 export MSYS_NO_PATHCONV=1
+# For reference, see this discussion:
+# https://stackoverflow.com/questions/7250130/how-to-stop-mingw-and-msys-from-mangling-path-names-given-at-the-command-line
 
 # Set it to empty string if there's an error:
 EXISTING_ROLES=""

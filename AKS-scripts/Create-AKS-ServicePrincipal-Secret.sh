@@ -14,6 +14,9 @@ set -euo pipefail
 echo "-----------Begin Create-AKS-ServicePrincipal-Secret-----------"
 source `dirname $0`/Defs/Common-Defs.sh
 
+# See Grant-AKS-acess-ACR.sh for more explanation:
+export MSYS_NO_PATHCONV=1
+
 # Create a 'Reader' role assignment with a scope of the ACR resource.
 # Idempotence: retrieve the password if it already exists, otherwise create:
 if ! $AZ ad sp show --id http://$SERVICE_PRINCIPAL_NAME >- ;
@@ -21,7 +24,7 @@ then
     echo "Creating 'Reader' role and password."
     ACR_REGISTRY_ID=$($AZ acr show --name $ACR_NAME --query id --output tsv)
     set -x
-    $AZ ad sp create-for-rbac --name http://$SERVICE_PRINCIPAL_NAME --role Reader --scopes $ACR_REGISTRY_ID
+    $AZ ad sp create-for-rbac --name http://$SERVICE_PRINCIPAL_NAME --role Reader "--scopes=$ACR_REGISTRY_ID"
     set +x
 else
     echo "Service principal exists, ASSUMING it's up-to-date (manually clean w Clean-AKS.sh)"
