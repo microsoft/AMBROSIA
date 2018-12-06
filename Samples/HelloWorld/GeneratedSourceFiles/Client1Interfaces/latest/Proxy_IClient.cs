@@ -6,37 +6,36 @@ using Ambrosia;
 using static Ambrosia.StreamCommunicator;
 
 
-namespace IServer
+namespace IClient
 {
     /// <summary>
     /// This class is the proxy that runs in the client's process and communicates with the local Ambrosia runtime.
     /// It runs within the client's process, so it is generated in the language that the client is using.
-    /// It is returned from ImmortalFactory.CreateClient when a client requests a container that supports the interface IServerProxy.
+    /// It is returned from ImmortalFactory.CreateClient when a client requests a container that supports the interface IClientProxy.
     /// </summary>
     [System.Runtime.Serialization.DataContract]
-    public class IServerProxy_Implementation : Immortal.InstanceProxy, IServerProxy
+    public class IClientProxy_Implementation : Immortal.InstanceProxy, IClientProxy
     {
 
-        public IServerProxy_Implementation(string remoteAmbrosiaRuntime, bool attachNeeded)
+        public IClientProxy_Implementation(string remoteAmbrosiaRuntime, bool attachNeeded)
             : base(remoteAmbrosiaRuntime, attachNeeded)
         {
         }
 
-        async Task<Int32>
-        IServerProxy.ReceiveMessageAsync(System.String p_0)
+        async Task
+        IClientProxy.SendMessageAsync(System.String p_0)
         {
-			return await ReceiveMessageAsync(p_0);
+			 await SendMessageAsync(p_0);
         }
 
-        async Task<Int32>
-        ReceiveMessageAsync(System.String p_0)
+        async Task
+        SendMessageAsync(System.String p_0)
         {
             SerializableTaskCompletionSource rpcTask;
             // Make call, wait for reply
             // Compute size of serialized arguments
             var totalArgSize = 0;
 
-			var p_1 = default(Int32);
 			int arg0Size = 0;
 			byte[] arg0Bytes = null;
 
@@ -46,7 +45,7 @@ arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
 
             totalArgSize += arg0Size;
 
-            var wp = this.StartRPC<Int32>(methodIdentifier: 1 /* method identifier for ReceiveMessage */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
+            var wp = this.StartRPC<object>(methodIdentifier: 1 /* method identifier for SendMessage */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
 			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
 
             // Serialize arguments
@@ -71,12 +70,12 @@ wp.curLength += arg0Bytes.Length;
 				currentResult = await taskToWaitFor;
 			}			
 
-			var result = await Immortal.TryTakeCheckpointContinuationAsync(currentResult);
+			 await Immortal.TryTakeCheckpointContinuationAsync(currentResult);
 
-			return (Int32) result.Result;
+			return;
         }
 
-        void IServerProxy.ReceiveMessageFork(System.String p_0)
+        void IClientProxy.SendMessageFork(System.String p_0)
         {
             SerializableTaskCompletionSource rpcTask;
 
@@ -92,7 +91,7 @@ arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
 
             totalArgSize += arg0Size;
 
-            var wp = this.StartRPC<Int32>(1 /* method identifier for ReceiveMessage */, totalArgSize, out rpcTask, RpcTypes.RpcType.FireAndForget);
+            var wp = this.StartRPC<object>(1 /* method identifier for SendMessage */, totalArgSize, out rpcTask, RpcTypes.RpcType.FireAndForget);
 
             // Serialize arguments
 
@@ -107,18 +106,12 @@ wp.curLength += arg0Bytes.Length;
             return;
         }
 
-        private Int32
-        ReceiveMessage_ReturnValue(byte[] buffer, int cursor)
+        private object
+        SendMessage_ReturnValue(byte[] buffer, int cursor)
         {
-            // deserialize return value
-            var returnValue_ValueLength = buffer.ReadBufferedInt(cursor);
-cursor += IntSize(returnValue_ValueLength);
-var returnValue_ValueBuffer = new byte[returnValue_ValueLength];
-Buffer.BlockCopy(buffer, cursor, returnValue_ValueBuffer, 0, returnValue_ValueLength);
-cursor += returnValue_ValueLength;
-var returnValue = Ambrosia.BinarySerializer.Deserialize<System.Int32>(returnValue_ValueBuffer);
-
-            return returnValue;
+            // buffer will be an empty byte array since the method SendMessage returns void
+            // so nothing to read, just getting called is the signal to return to the client
+            return this;
         }
     }
 }
