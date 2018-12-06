@@ -9,8 +9,13 @@
 # somewhat suggestive ones.  EVERY value is mandatory.
 #
 # SUGGESTION: you can get away with doing only TWO things here:
+#
 #  (1) fill in AZURE_SUBSCRIPTION with your subscription ID.
+#
 #  (2) find/replace "xyz" with a unique string, such as your github username
+#      The string you use must NOT contain '-' or '_'!
+#      (Azure storage and container registry are very restrictive in this respect.)
+#
 # ------------------------------------------------------------------------------
 
 # The descriptive overall name of your AMBROSIA service (which may contain
