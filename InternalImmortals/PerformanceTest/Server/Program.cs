@@ -159,7 +159,7 @@ namespace Server
                 { "s|serverName=", "The service name of the server [REQUIRED].", s => _perfServer = s },
                 { "rp|receivePort=", "The service receive from port [REQUIRED].", rp => _receivePort = int.Parse(rp) },
                 { "sp|sendPort=", "The service send to port. [REQUIRED]", sp => _sendPort = int.Parse(sp) },
-                { "c|autoContinue=", "Is continued automatically at start", c => _autoContinue = true },
+                { "c|autoContinue", "Is continued automatically at start", c => _autoContinue = true },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 
