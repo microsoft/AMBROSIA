@@ -1,0 +1,25 @@
+
+language: minimal
+
+services:
+  - docker
+
+env:
+  global:
+    # Mount the logs from outside the container:
+    - PTI_MOUNT_LOGS=ExternalLogs
+
+  matrix:    
+    # Bring up a basic test within or between containers:
+    - PTI_MODE=OneContainer  
+    - PTI_MODE=TwoContainers 
+
+script:
+# Need to remove the dependence on Azure Tables /
+# AZURE_STORAGE_CONN_STRING if we want to do full CI in a public
+# context (or find some way to use an account without leaking its auth
+# info).
+#   - ./._run_ci.sh
+
+# In the meantime, we can just make sure the images build:
+   - ./build_docker_images.sh
