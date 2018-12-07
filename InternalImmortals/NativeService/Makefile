@@ -12,9 +12,11 @@
 # This will be set by recursive invocations of Make:
 DEFINES= 
 
+AMBROSIA_BINDIR ?= ../../bin
+
 GNUOPTS= -pthread -O3
-COMP= gcc -c $(DEFINES) -I ../../bin/include/ $(GNUOPTS)
-LIBS= -L ../../bin -l:libambrosia.a -lpthread
+COMP= gcc -c $(DEFINES) -I $(AMBROSIA_BINDIR)/include/ $(GNUOPTS)
+LIBS= -L $(AMBROSIA_BINDIR) -l:libambrosia.a -lpthread
 LINK= gcc
 
 all: service_v4.exe service_v6.exe
