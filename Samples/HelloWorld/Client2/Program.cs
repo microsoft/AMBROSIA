@@ -1,15 +1,16 @@
-﻿using Ambrosia;
-using IClient1;
+﻿using System;
+using System.Runtime.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
+using Ambrosia;
+using IClient2;
 using IServer;
 using Microsoft.VisualStudio.Threading;
-using System;
-using System.Runtime.Serialization;
-using System.Threading.Tasks;
 
-namespace Client1
+namespace Client2
 {
     [DataContract]
-    class Client1 : Immortal<IClient1Proxy>, IClient1.IClient1
+    class Client2 : Immortal<IClient2Proxy>, IClient2.IClient2
     {
         [DataMember]
         private string _serverName;
@@ -17,9 +18,19 @@ namespace Client1
         [DataMember]
         private IServerProxy _server;
 
-        public Client1(string serverName)
+        public Client2(string serverName)
         {
             _serverName = serverName;
+        }
+
+        public void IngressKeyboardInput(string input)
+        {
+            thisProxy.ReceiveKeyboardInputFork(input);
+        }
+
+        public async Task ReceiveKeyboardInputAsync(string input)
+        {
+            await thisProxy.SendMessageAsync(input);
         }
 
         public async Task SendMessageAsync(string message)
@@ -32,11 +43,10 @@ namespace Client1
         protected override async Task<bool> OnFirstStart()
         {
             _server = GetProxy<IServerProxy>(_serverName);
-            await thisProxy.SendMessageAsync("Hello world!");
-            Program.finishedTokenQ.Enqueue(0);
             return true;
         }
     }
+
     class Program
     {
         public static AsyncQueue<int> finishedTokenQ;
@@ -47,11 +57,19 @@ namespace Client1
 
             int receivePort = 1001;
             int sendPort = 1000;
-            string clientInstanceName = "client1";
+            string clientInstanceName = "client2";
             string serverInstanceName = "server1";
 
-            using (var c = AmbrosiaFactory.Deploy<IClient1.IClient1>(clientInstanceName, new Client1(serverInstanceName), receivePort, sendPort))
+            Client2 client = new Client2(serverInstanceName);
+            using (var c = AmbrosiaFactory.Deploy<IClient2.IClient2>(clientInstanceName, client, receivePort, sendPort))
             {
+                while (finishedTokenQ.IsEmpty)
+                {
+                    Console.Write("Enter a message (hit ENTER to send): ");
+                    string input = Console.ReadLine();
+                    client.IngressKeyboardInput(input);
+                    Thread.Sleep(1000);
+                }
                 finishedTokenQ.DequeueAsync().Wait();
             }
         }
