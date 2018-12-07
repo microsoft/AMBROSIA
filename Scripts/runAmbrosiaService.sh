@@ -72,9 +72,22 @@ COORDLOG=/var/log/ImmortalCoordinator.log
 function start_immortal_coordinator() {
     echo "Launching coordingator with: ImmortalCoordinator" $*
     echo "  Redirecting output to: $COORDLOG"
-    # Bound the total amount of output used by the ImmortalCoordinator log:
-    ImmortalCoordinator $* 2>1 | rotatelogs -f -t "$COORDLOG" 10M &
-    coord_pid=$!
+
+    if ! truncate -s 0 "$COORDLOG";
+    then COORDLOG="./ImmortalCoordinator.log"
+	 echo " ! WARNING [runAmbrosiaService.sh]: could not write coordinator log, using $COORDLOG instead."
+	 truncate -s 0 "$COORDLOG"
+    fi
+    
+    if which rotatelogs; then 
+	# Bound the total amount of output used by the ImmortalCoordinator log:
+	ImmortalCoordinator $* 2>1 | rotatelogs -f -t "$COORDLOG" 10M &
+	coord_pid=$!
+    else
+	echo " ! WARNING [runAmbrosiaService.sh]: rotatelogs not available, NOT bounding $COORDLOG size."
+	ImmortalCoordinator $* 2>1 > "$COORDLOG" &
+	coord_pid=$!
+    fi
 
     while [ ! -e "$COORDLOG" ]; do
 	echo " -> Waiting for $COORDLOG to appear"
@@ -88,12 +101,17 @@ function start_immortal_coordinator() {
 
     if ! kill -0 $coord_pid 2>- ;
     then echo
-	 echo "ERROR: coordinator died while we were waiting.  Final log ended with:"
+	 echo "ERROR [runAmbrosiaService.sh]"
+	 echo "Coordinator died while we were waiting.  Final log ended with:"
+	 echo "--------------------------------------------------------------
 	 tail $COORDLOG
 	 exit 1;
     fi
     echo "Coordinator ready."
 }
+
+# TODO: health monitoring.  Show an example of AMBROSIA best practice here.
+
 
 # Step 1: 
 start_immortal_coordinator -i $AMBROSIA_INSTANCE_NAME -p $AMBROSIA_IMMORTALCOORDINATOR_PORT
