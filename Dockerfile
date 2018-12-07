@@ -33,8 +33,8 @@ ADD Clients/C                     /ambrosia/Clients/C
 # This publishes to the build directory: bin/lib*.* and bin/include
 RUN cd Clients/C && make publish
 
-ADD ./AKS-scripts/ScriptBits/runAmbrosiaService.sh bin/
+ADD ./Scripts/runAmbrosiaService.sh bin/
 RUN cd bin && ln -s Ambrosia ambrosia
 
-ENV AMBROSIA_BINDIR="/ambrosia/bin"
-ENV PATH="${PATH}:/ambrosia/bin"
+ENV AMBROSIA_BINDIR="/ambrosia/bin" \
+    PATH="${PATH}:/ambrosia/bin"
