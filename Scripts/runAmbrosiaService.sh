@@ -2,11 +2,13 @@
 set -euo pipefail
 
 ################################################################################
-# Script to launch a service instance (coordinator + app), often
+# A script to launch a service instance (coordinator + app), often
 # inside a container.
 ################################################################################
 
-# Responds to ENV VARS:
+# ----------------------------------------------------------
+# Responds to these ENVIRONMENT VARIABLES:
+#
 #  * AMBROSIA_INSTANCE_NAME            (required)
 #
 #  * AMBROSIA_IMMORTALCOORDINATOR_PORT (optional)
@@ -16,13 +18,37 @@ set -euo pipefail
 #  * AMBROSIA_SILENT_COORDINATOR        (optional)
 #    - if set, this suppresses coordinator messages to stdout,
 #      but they still go to /var/log/ImmortalCoordinator.log
+#
+# ----------------------------------------------------------
 
+function print_usage() {
+    echo "USAGE: $0 <service-binary> <service-args>*"
+    echo    
+    echo "This script takes a command (and arguments) that runs the application binary."
+    echo "The script launches the ImmortalCoordinator in the background before launching"
+    echo "the application."
+    echo 
+    echo "Required Environment Variables"
+    echo "------------------------------"
+    echo 
+    echo " * AMBROSIA_INSTANCE_NAME:  must be bound to the service instance name."
+    echo "   This is the same name that was registered with 'ambrosia RegisterInstance' "
+    echo
+    echo "Optional Environment Variables"
+    echo "------------------------------"
+    echo
+    echo " * AMBROSIA_IMMORTALCOORDINATOR_PORT - default 1500"
+    echo
+    exit 1
+}
+
+if [ $# -eq 0 ]; then print_usage; fi
 
 if [[ ! -v AMBROSIA_INSTANCE_NAME ]]; then
-  echo "ERROR: unbound environment variable: AMBROSIA_INSTANCE_NAME"
-  echo "runAmbrosiaService.sh expects it to be bound to the service instance name."
-  echo "This is the same name that was registered with 'ambrosia RegisterInstance' "
-  exit 1
+    echo "ERROR: unbound environment variable: AMBROSIA_INSTANCE_NAME"
+    echo 
+    print_usage
+    exit 1
 fi
 
 if [[ -v AMBROSIA_IMMORTALCOORDINATOR_PORT ]];
