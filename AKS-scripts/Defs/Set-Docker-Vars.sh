@@ -1,10 +1,8 @@
 # Sourced into parent scripts or shell:
 # Sets auth-related variables to access a docker registry.
 
-if [[ ! -v AZ ]];
+if [[ ${AZ:+isdefined} ]];     
 then
-    echo "Error, Set-Storage-Vars.sh: source Defs/Common-Defs.sh before this file."
-else
     DockerPrivateRegistry_Login=$ACR_NAME
     DockerPrivateRegistry_URL=$($AZ acr show --name $ACR_NAME --query loginServer --output tsv)
     # TSV output here avoids double quotes getting into the variable:
@@ -13,4 +11,6 @@ else
     export DockerPrivateRegistry_Login
     export DockerPrivateRegistry_URL
     export DockerPrivateRegistry_Pwd
+else
+    echo "Error, Set-Storage-Vars.sh: source Defs/Common-Defs.sh before this file."
 fi

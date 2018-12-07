@@ -23,7 +23,7 @@ TAG1A=ambrosia-dev
 TAG1B=ambrosia
 TAG2=ambrosia-perftest
 
-if [[ ! -v DOCKER ]]; then
+if ! [[ ${DOCKER:+defined} ]]; then
    DOCKER=docker
 fi
 
@@ -55,8 +55,8 @@ if [ "$mode" != "runonly" ]; then
     
     $DOCKER build                       -t ${TAG1A} .
     
-    if [[ ! -v BUILD_DEV_IMAGE_ONLY ]]; then
-	$DOCKER build -f Dockerfile.release -t ${TAG1B} .
+    if ! [[ ${BUILD_DEV_IMAGE_ONLY:+defined} ]]; then
+        $DOCKER build -f Dockerfile.release -t ${TAG1B} .
     fi
     
     pushd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
@@ -90,7 +90,7 @@ fi
 # --------------------------------------------------------------------------------
 echo "Running a single Docker container with PerformanceTestInterruptable."
 echo "Using AZURE_STORAGE_CONN_STRING from your environment."
-if [[ ! -v AZURE_STORAGE_CONN_STRING ]]; then
+if ! [[ ${AZURE_STORAGE_CONN_STRING:+defined} ]]; then
     echo "ERROR: you must have AZURE_STORAGE_CONN_STRING set to call this script.";
     exit 1;
 else
@@ -99,12 +99,12 @@ else
 fi
 
 # Set the default value if unset:
-if [[ ! -v PTI_MOUNT_LOGS ]]; then
+if ! [[ ${PTI_MOUNT_LOGS:+defined} ]]; then
     PTI_MOUNT_LOGS="InternalLogs";
     echo " * defaulting to PTI_MOUNT_LOGS=$PTI_MOUNT_LOGS"
 fi
 
-if [[ ! -v PTI_MODE ]]; then
+if ! [[ ${PTI_MODE:+defined} ]]; then
     PTI_MODE="OneContainer"
     echo " * defaulting to PTI_MOUNT_LOGS=$PTI_MOUNT_LOGS"
 fi

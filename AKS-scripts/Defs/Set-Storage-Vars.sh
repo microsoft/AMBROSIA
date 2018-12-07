@@ -1,10 +1,9 @@
 # Sourced into parent scripts or shell:
 # Sets auth-related variables to access Azure Storage.
 
-if [[ ! -v AZ ]];
+# if [[ -v AZ ]]; # Needs bash 4
+if [[ ${AZ:+isdefined} ]];  
 then
-    echo "Error, Set-Storage-Vars.sh: source Defs/Common-Defs.sh before this file."
-else
   AZURE_STORAGE_CONNECTION_STRING=$($AZ storage account show-connection-string --name $AZURE_STORAGE_NAME --resource-group $AZURE_RESOURCE_GROUP --query connectionString --output tsv)
   AZURE_STORAGE_KEY=$($AZ storage account keys list --account-name $AZURE_STORAGE_NAME --resource-group $AZURE_RESOURCE_GROUP --query "[0].value" --output tsv)
   export AZURE_STORAGE_CONNECTION_STRING
@@ -17,4 +16,6 @@ else
 
   echo "AZURE_STORAGE_KEY=$AZURE_STORAGE_KEY"
   echo "AZURE_STORAGE_CONNECTION_STRING=$AZURE_STORAGE_CONNECTION_STRING"
+else
+    echo "Error, Set-Storage-Vars.sh: source Defs/Common-Defs.sh before this file."
 fi

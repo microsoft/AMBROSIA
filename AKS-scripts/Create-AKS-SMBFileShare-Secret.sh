@@ -15,7 +15,7 @@ set -euo pipefail
 echo "-----------Begin Create-AKS-SMBFileShare-Secret-----------"
 source `dirname $0`/Defs/Common-Defs.sh
 
-if [[ ! -v AZURE_STORAGE_KEY ]]; then
+if [[ "${AZURE_STORAGE_KEY:+isset}" == "isset" ]]; then
     echo "$0: AZURE_STORAGE_KEY not set, retrieving:"
     source `dirname $0`/Defs/Set-Storage-Vars.sh
 fi
