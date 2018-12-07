@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>netcoreapp2.0;net46</TargetFrameworks>
+    <TargetFrameworks>net46</TargetFrameworks>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
@@ -18,9 +18,9 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TwitterObservable\TwitterObservable.csproj" />
+    <PackageReference Include="AmbrosiaLibCS" Version="2018.12.6.3" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Ambrosia" Version="2018.11.28.3" />
+    <ProjectReference Include="..\TwitterObservable\TwitterObservable.csproj" />
   </ItemGroup>
 </Project>
