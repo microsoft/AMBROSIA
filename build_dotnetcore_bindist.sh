@@ -26,7 +26,7 @@ echo "Building with command: $BUILDIT"
 
 echo 
 echo "Building AMBROSIA libraries/binaries"
-echo "----------------------------------------"
+echo "------------------------------------"
 $BUILDIT  Ambrosia/Ambrosia/Ambrosia.csproj
 $BUILDIT ImmortalCoordinator/ImmortalCoordinator.csproj
 $BUILDIT DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
@@ -39,6 +39,7 @@ $BUILDIT Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
 echo 
 echo "Copying deployment script."
 cp -a Scripts/runAmbrosiaService.sh bin/
+(cd bin; ln -s Ambrosia ambrosia || echo ok)
 
 echo 
 echo "Building Native-code client library"
