@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.0;net46</TargetFrameworks>
+    <TargetFrameworks>net46</TargetFrameworks>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
@@ -18,8 +18,14 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Mono.Options.Core" Version="1.0.0" />
     <PackageReference Include="Trill">
       <Version>2018.3.2.1</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GeneratedSourceFiles\AnalyticsAPIGeneratedNet46\latest\AnalyticsAPIGeneratedNet46.csproj" />
+    <ProjectReference Include="..\ServiceConfiguration\ServiceConfiguration.csproj" />
+    <ProjectReference Include="..\TwitterObservable\TwitterObservable.csproj" />
   </ItemGroup>
 </Project>
