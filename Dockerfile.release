@@ -2,8 +2,10 @@ FROM ambrosia-dev as dev
 
 # The releasedoes not require dotnet SDK to run Ambrosia binaries:
 FROM ubuntu:18.04
+# Ambrosia needs a couple libraries at runtime:
 RUN apt-get update -y && \
     apt-get install -y libunwind-dev libicu60 apache2-utils
+# Also, apache2-utils provides rotatelogs, used by runAmbrosiaService.sh
 
 COPY --from=dev /ambrosia/bin /ambrosia/bin
 
