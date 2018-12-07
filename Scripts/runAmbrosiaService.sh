@@ -103,7 +103,7 @@ function start_immortal_coordinator() {
     then echo
 	 echo "ERROR [runAmbrosiaService.sh]"
 	 echo "Coordinator died while we were waiting.  Final log ended with:"
-	 echo "--------------------------------------------------------------
+	 echo "--------------------------------------------------------------"
 	 tail $COORDLOG
 	 exit 1;
     fi
