@@ -1,7 +1,8 @@
 # Sourced into other scripts
 # Assumes a working directory of ../ relative to this script.
 
-if [ `uname` == Linux ]; then    
+UNAME=`uname`
+if [ "$UNAME" == Linux ] || [ "$UNAME" == Darwin ]; then
     DOCKER=docker    
     AZ=az
     KUBE=kubectl
@@ -18,12 +19,13 @@ if [ ! -e Defs/AmbrosiaAKSConf.sh ]; then
     exit 1
 fi
 
-if [[ -v ECHO_CORE_DEFS ]]; then 
-set -x
-source Defs/AmbrosiaAKSConf.sh
-set +x
+if [[ ${ECHO_CORE_DEFS:+isdefined} ]];  # No -v in Bash 3.2 (Mac OS)
+then 
+    set -x
+    source Defs/AmbrosiaAKSConf.sh
+    set +x
 else
-source Defs/AmbrosiaAKSConf.sh
+    source Defs/AmbrosiaAKSConf.sh
 fi
 # ^ must set AMBROSIA_SERVICE_NAME, used below.
 
