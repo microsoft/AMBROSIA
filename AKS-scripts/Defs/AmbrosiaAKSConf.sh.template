@@ -23,7 +23,7 @@
 AMBROSIA_SERVICE_NAME=perftest
 
 # Find this in the Azure portal or with `az account list --output table`
-AZURE_SUBSCRIPTION=********-****-****-****-************
+AZURE_SUBSCRIPTION=PASTE_SUBSCRIPTION_ID_HERE
 # Where to put resources we create:
 AZURE_LOCATION=eastus
 DOCKER_EMAIL=xyz@xyz.com
