@@ -23,11 +23,13 @@ ADD API /ambrosia/InternalImmortals/PerformanceTestInterruptible/API
 RUN $BUILDIT API/ServerAPI.csproj
 
 # Run the code-generation tool:
-RUN mkdir -p GeneratedSourceFiles && mkdir -p ./CodeGenDependencies/netcoreapp2.0 && \
-    AmbrosiaCS CodeGen -a IJob/bin/Release/netcoreapp2.0/linux-x64/IJob.dll -a API/bin/Release/netcoreapp2.0/linux-x64/ServerAPI.dll -o PTIAmbrosiaGeneratedAPI -f netcoreapp2.0 -b ./CodeGenDependencies/netcoreapp2.0
+RUN rm -rf ./GeneratedSourceFiles && \
+    mkdir -p GeneratedSourceFiles && \
+    mkdir -p ./CodeGenDependencies/netcoreapp2.0 && \
+    AmbrosiaCS CodeGen -a IJob/bin/Release/netcoreapp2.0/linux-x64/IJob.dll -a API/bin/Release/netcoreapp2.0/linux-x64/ServerAPI.dll -o PTIAmbrosiaGeneratedAPINetCore -f netcoreapp2.0 -b ./CodeGenDependencies/netcoreapp2.0
 
 # publish the api dll whose project we just created:
-RUN $BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPI/latest/PTIAmbrosiaGeneratedAPI.csproj
+RUN $BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
 
 # publish the client/server executables that we'll actually run:
 ADD Client /ambrosia/InternalImmortals/PerformanceTestInterruptible/Client
