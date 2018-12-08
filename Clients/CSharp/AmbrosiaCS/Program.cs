@@ -159,7 +159,7 @@ namespace Ambrosia
 
             var conditionToPackageInfo = new Dictionary<string, List<Tuple<string, string, string>>>();
 
-            var projFile = $@"{_binPath}{Assembly.GetExecutingAssembly().GetName().Name}.csproj";
+            var projFile = Path.Combine(_binPath, $@"{Assembly.GetExecutingAssembly().GetName().Name}.csproj");
             var doc = XDocument.Load(projFile);
 
             foreach (var itemGroup in doc.Descendants("ItemGroup"))
