@@ -14,4 +14,9 @@ fi
 uname -a
 pwd -P
 
+export AMBROSIA_ROOT=`pwd`
 ./build_dotnetcore_bindist.sh
+
+pushd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+./build_dotnetcore.sh
+popd
