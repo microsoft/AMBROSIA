@@ -25,11 +25,11 @@ then
     
     echo "Executing containerized, Docker build."
     ./build_docker_images.sh
-
+    
 elif [ "$1" == "nodocker" ];
 then
     
-    echo "Executing native-Linux, non-Docker build."
+    echo "Executing raw-Linux, non-Docker build."
     cd "$AMBROSIA_ROOT"
     ./build_dotnetcore_bindist.sh
 
