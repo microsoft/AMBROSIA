@@ -9,7 +9,9 @@ if ! [[ -e ./build_docker_images.sh ]]; then
     # will get us to the top of the repo:
     cd `dirname $0`/../
 fi
-    
+
+export AMBROSIA_ROOT=`pwd`
+
 # Gather a bit of info about where we are:
 uname -a
 pwd -P
@@ -23,8 +25,15 @@ if [ $# -eq 0 ] || [ "$1" == "docker" ]; then
     # [2018.12.07] Because of issue #5, we're just doing a basic build on Linux for now:
     DONT_BUILD_PTI=1 ./build_docker_images.sh
 elif [ "$1" == "nodocker" ]; then
+    
     echo "Executing native-Linux, non-Docker build."
+    cd "$AMBROSIA_ROOT"
     ./build_dotnetcore_bindist.sh
+
+    cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+    ./build_dotnetcore.sh
+    cd "$AMBROSIA_ROOT"
+    
 else
     echo "$0: ERROR: unexpected first argument: $1"
     exit 1
