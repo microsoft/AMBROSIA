@@ -18,9 +18,12 @@ fi
 OUTDIR=`pwd`/bin
 BUILDIT="dotnet publish -o $OUTDIR -c Release -f netcoreapp2.0 -r $PLAT"
 
-echo "Cleaning publish directory:"
+echo "Cleaning publish directory."
 rm -rf $OUTDIR
 mkdir -p $OUTDIR
+
+echo "Output of 'dotnet --info':"
+dotnet --info
 
 echo "Building with command: $BUILDIT"
 
