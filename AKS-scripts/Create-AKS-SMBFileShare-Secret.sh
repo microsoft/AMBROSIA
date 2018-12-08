@@ -20,7 +20,7 @@ if ! [[ "${AZURE_STORAGE_KEY:+defined}" ]]; then
     source `dirname $0`/Defs/Set-Storage-Vars.sh
 fi
 
-if $KUBE get secret $FILESHARE_SECRET_NAME 2>-;
+if $KUBE get secret $FILESHARE_SECRET_NAME 2>/dev/null;
 then
     echo "File share secret exists, ASSUMING it's up-to-date."
     echo " (Manually clean with 'Clean-AKS.sh auth'.)"

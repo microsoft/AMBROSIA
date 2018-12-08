@@ -96,10 +96,10 @@ function start_immortal_coordinator() {
     if [[ ! -v AMBROSIA_SILENT_COORDINATOR ]]; then
 	tail -F $COORDLOG | while read l; do echo " [ImmortalCoord] $l"; done &
     fi
-    while ! grep -q "Ready" "$COORDLOG" && kill -0 $coord_pid 2>- ;
+    while ! grep -q "Ready" "$COORDLOG" && kill -0 $coord_pid 2>/dev/null ;
     do sleep 2; done
 
-    if ! kill -0 $coord_pid 2>- ;
+    if ! kill -0 $coord_pid 2>/dev/null ;
     then echo
 	 echo "ERROR [runAmbrosiaService.sh]"
 	 echo "Coordinator died while we were waiting.  Final log ended with:"

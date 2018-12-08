@@ -32,10 +32,10 @@ function start_coordinator() {
     done
     tail -F $COORDLOG &
 
-    while ! grep -q "Ready" "$COORDLOG" && kill -0 $coord_pid 2>- ;
+    while ! grep -q "Ready" "$COORDLOG" && kill -0 $coord_pid 2>/dev/null ;
     do sleep 2; done
 
-    if ! kill -0 $coord_pid 2>- ;
+    if ! kill -0 $coord_pid 2>/dev/null ;
     then echo
 	 echo "ERROR: coordinator died while we were waiting.  Final log ended with:"
 	 tail $COORDLOG

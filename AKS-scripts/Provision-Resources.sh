@@ -66,7 +66,7 @@ set +x
 
 echo
 echo "--------Provision the Kubernetes Cluster if it's not already there--------"
-if ! $AZ aks get-credentials --resource-group=$AZURE_RESOURCE_GROUP --name=$AZURE_KUBERNETES_CLUSTER 2>- ;
+if ! $AZ aks get-credentials --resource-group=$AZURE_RESOURCE_GROUP --name=$AZURE_KUBERNETES_CLUSTER 2>/dev/null ;
 then
     echo "Kubernetes cluster not found, creating."
     set -x

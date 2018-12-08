@@ -19,7 +19,7 @@ export MSYS_NO_PATHCONV=1
 
 # Create a 'Reader' role assignment with a scope of the ACR resource.
 # Idempotence: retrieve the password if it already exists, otherwise create:
-if ! $AZ ad sp show --id http://$SERVICE_PRINCIPAL_NAME >- ;
+if ! $AZ ad sp show --id http://$SERVICE_PRINCIPAL_NAME >/dev/null ;
 then
     echo "Creating 'Reader' role and password."
     ACR_REGISTRY_ID=$($AZ acr show --name $ACR_NAME --query id --output tsv)
@@ -39,7 +39,7 @@ echo "Service principal ID: $CLIENT_ID"
 echo "Service principal password: $DockerPrivateRegistry_Pwd"
 
 # Create Kubernetes secret
-if $KUBE get secret $ACR_SECRET_NAME >- ;
+if $KUBE get secret $ACR_SECRET_NAME >/dev/null ;
 then
     echo "Secret $ACR_SECRET_NAME exists, ASSUMING up-to-date (manually clean w/ Clean-AKS.sh)."
 else
