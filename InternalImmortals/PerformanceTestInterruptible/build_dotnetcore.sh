@@ -31,6 +31,9 @@ mkdir -p $DEST
 cp -af API/publish/*  $DEST/
 cp -af IJob/publish/* $DEST/
 
+# Extra codegen dependence, put its code generator's own .csproj file in the resulting deps dir:
+cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
+
 # echo "Populated dependencies folder with:"
 # find CodeGenDependencies/$FMWK || git clean -nxd CodeGenDependencies/$FMWK
 
