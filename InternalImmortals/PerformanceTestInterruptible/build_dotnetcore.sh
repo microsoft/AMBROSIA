@@ -19,11 +19,17 @@ CONF="Debug"
 OUTDIR=publish
 BUILDIT="dotnet publish -o $OUTDIR -c $CONF -f $FMWK -r $PLAT"
 
-# Build the API projects
+echo
+echo "Build the projects that contain the RPC APIs"
+echo "---------------------------------------------"
 set -x
 $BUILDIT "API/ServerAPI.csproj" 
 $BUILDIT "IJob/IJob.csproj"
 set +x
+
+echo
+echo "Copy published build-products into the CodeGenDependencies dir"
+echo "--------------------------------------------------------------"
 
 DEST=CodeGenDependencies/$FMWK
 rm -rf $DEST
@@ -37,10 +43,30 @@ cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
 # echo "Populated dependencies folder with:"
 # find CodeGenDependencies/$FMWK || git clean -nxd CodeGenDependencies/$FMWK
 
-# Generate the assemblies, assumes an executable which is created by previous build:
+if [ "$FMWK" == "net46" ]; then
+    echo "WARNING: CODEGEN is an EXPECTED FAILURE on net46.  Allowing failures below this line."
+    set +e
+fi
+
+echo
+echo "Generate the assemblies (assumes the AmbrosiaCS executable was built):"
+echo "----------------------------------------------------------------------"
 set -x
 # dotnet ../../bin/AmbrosiaCS.dll
-../../bin/AmbrosiaCS CodeGen -a "$DEST/ServerAPI.dll" -a "$DEST/IJob.dll" -o "PTIAmbrosiaGeneratedAPINetCore" -f "$FMWK" -b="$DEST" \
-    || echo "WARNING: CODEGEN ERROR is an EXPECTED FAILURE for now..."
+../../bin/AmbrosiaCS CodeGen -a "$DEST/ServerAPI.dll" -a "$DEST/IJob.dll" -o "PTIAmbrosiaGeneratedAPINetCore" -f "$FMWK" -b="$DEST" 
 set +x
 
+echo
+echo "Build the generated code:"
+echo "-------------------------"
+set -x
+$BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
+set +x
+
+echo 
+echo "Finally, build the Job/Server executables:"
+echo "------------------------------------------"
+set -x
+$BUILDIT Client/Job.csproj
+$BUILDIT Server/Server.csproj
+set +x
