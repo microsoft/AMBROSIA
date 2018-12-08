@@ -11,9 +11,9 @@ then PLAT=osx-x64
 else PLAT=win10-x64
 fi
 
-# FMWK="net46"
-FMWK="netcoreapp2.0"
-CONF="Debug"
+# Set defaults if these environment vars aren't present:
+FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.0}"
+CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
 # OUTDIR=`pwd`/bin
 OUTDIR=publish
@@ -38,13 +38,16 @@ cp -af API/publish/*  $DEST/
 cp -af IJob/publish/* $DEST/
 
 # Extra codegen dependence, put its code generator's own .csproj file in the resulting deps dir:
+# TODO/FIXME: this should be replaced by a template which is modified by the user:
 cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
 
 # echo "Populated dependencies folder with:"
 # find CodeGenDependencies/$FMWK || git clean -nxd CodeGenDependencies/$FMWK
 
 if [ "$FMWK" == "net46" ]; then
+    echo "================================================================================"
     echo "WARNING: CODEGEN is an EXPECTED FAILURE on net46.  Allowing failures below this line."
+    echo "================================================================================"
     set +e
 fi
 
@@ -52,7 +55,7 @@ echo
 echo "Generate the assemblies (assumes the AmbrosiaCS executable was built):"
 echo "----------------------------------------------------------------------"
 set -x
-# dotnet ../../bin/AmbrosiaCS.dll
+# Alternatively: "dotnet ../../bin/AmbrosiaCS.dll"
 ../../bin/AmbrosiaCS CodeGen -a "$DEST/ServerAPI.dll" -a "$DEST/IJob.dll" -o "PTIAmbrosiaGeneratedAPINetCore" -f "$FMWK" -b="$DEST" 
 set +x
 
