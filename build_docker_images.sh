@@ -58,11 +58,13 @@ if [ "$mode" != "runonly" ]; then
     if ! [[ ${BUILD_DEV_IMAGE_ONLY:+defined} ]]; then
         $DOCKER build -f Dockerfile.release -t ${TAG1B} .
     fi
-    
-    pushd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
-    $DOCKER build -t ${TAG2} .
-    popd
 
+    if ! [[ ${DONT_BUILD_PTI:+defined} ]]; then    
+	pushd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+	$DOCKER build -t ${TAG2} .
+	popd
+    fi
+	
     # TODO: build other examples:
     # cd InternalImmortals/NativeService; $DOCKER build -t ambrosia-native .
 
@@ -76,7 +78,7 @@ if [ "$mode" != "runonly" ]; then
     set -x
     rm -rf ambrosia.tgz
     TMPCONT=temp-container-name_`date '+%s'`
-    $DOCKER run --name $TMPCONT ambrosia-dev bash -c 'tar czvf /ambrosia/ambrosia.tgz /ambrosia/bin'
+    $DOCKER run --name $TMPCONT ambrosia-dev bash -c 'tar czf /ambrosia/ambrosia.tgz /ambrosia/bin'
     $DOCKER cp $TMPCONT:/ambrosia/ambrosia.tgz ambrosia.tgz
     $DOCKER rm $TMPCONT
     set +x

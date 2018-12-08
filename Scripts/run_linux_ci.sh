@@ -16,4 +16,7 @@ pwd -P
 cat /etc/issue || echo ok
 
 # Build and run a small PerformanceTestInterruptable:
-./build_docker_images.sh run
+# ./build_docker_images.sh run
+
+# [2018.12.07] Because of issue #5, we're just doing a basic build on Linux for now:
+DONT_BUILD_PTI=1 ./build_docker_images.sh 
