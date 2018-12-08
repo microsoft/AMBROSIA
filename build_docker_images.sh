@@ -22,6 +22,7 @@ set -euo pipefail
 TAG1A=ambrosia-dev
 TAG1B=ambrosia
 TAG2=ambrosia-perftest
+TAG3=ambrosia-nativeapp
 
 if ! [[ ${DOCKER:+defined} ]]; then
    DOCKER=docker
@@ -59,10 +60,15 @@ if [ "$mode" != "runonly" ]; then
         $DOCKER build -f Dockerfile.release -t ${TAG1B} .
     fi
 
-    if ! [[ ${DONT_BUILD_PTI:+defined} ]]; then    
-	pushd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+    if ! [[ ${DONT_BUILD_APP_IMAGES:+defined} ]]; then
+
+	cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
 	$DOCKER build -t ${TAG2} .
-	popd
+	cd "$AMBROSIA_ROOT"
+
+	cd "$AMBROSIA_ROOT"/InternalImmortals/NativeService
+	docker build -t ${TAG3} .
+	cd "$AMBROSIA_ROOT"
     fi
 	
     # TODO: build other examples:
