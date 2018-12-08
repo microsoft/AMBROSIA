@@ -44,13 +44,6 @@ cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
 # echo "Populated dependencies folder with:"
 # find CodeGenDependencies/$FMWK || git clean -nxd CodeGenDependencies/$FMWK
 
-if [ "$FMWK" == "net46" ]; then
-    echo "================================================================================"
-    echo "WARNING: CODEGEN is an EXPECTED FAILURE on net46.  Allowing failures below this line."
-    echo "================================================================================"
-    set +e
-fi
-
 echo
 echo "Generate the assemblies (assumes the AmbrosiaCS executable was built):"
 echo "----------------------------------------------------------------------"
@@ -66,6 +59,13 @@ set -x
 $BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
 set +x
 
+if [ "$FMWK" == "net46" ]; then
+    echo "================================================================================"
+    echo "WARNING: EXPECTED FAILURES on net46.  Allowing failures below this line."
+    echo "================================================================================"
+    set +e
+fi
+
 echo 
 echo "Finally, build the Job/Server executables:"
 echo "------------------------------------------"
@@ -73,3 +73,5 @@ set -x
 $BUILDIT Client/Job.csproj
 $BUILDIT Server/Server.csproj
 set +x
+
+echo "Finished building."

@@ -11,51 +11,48 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     update-locale LANG=en_US.UTF-8
 # ----------------------------------------
 
+# Publish to a local directory:
+ENV DEST=/ambrosia/InternalImmortals/PerformanceTestInterruptible/CodeGenDependencies/$AMBROSIA_DOTNET_FRAMEWORK
+
+# Be wary: absolute paths have rather different behavior for dotnet publish:
+ENV BUILDIT="dotnet publish -o $DEST $BLDFLAGS"
+ENV PATH="${PATH}:/ambrosia/InternalImmortals/PerformanceTestInterruptible/bin"
+
+# ------------------------------------------------------------
+
 # This Dockerfile is an example of adding the application
 # *piece-by-piece* to enable incremental rebuilds.
 ADD IJob /ambrosia/InternalImmortals/PerformanceTestInterruptible/IJob
 WORKDIR /ambrosia/InternalImmortals/PerformanceTestInterruptible
-
-# Publish to a local directory:
-ENV BUILDIT="dotnet publish -o /ambrosia/InternalImmortals/PerformanceTestInterruptible/bin $BLDFLAGS"
-ENV PATH="${PATH}:/ambrosia/InternalImmortals/PerformanceTestInterruptible/bin"
-
 RUN $BUILDIT IJob/IJob.csproj
 
 ADD API /ambrosia/InternalImmortals/PerformanceTestInterruptible/API
 RUN $BUILDIT API/ServerAPI.csproj
 
-# # $AMBROSIA_DOTNET_FRAMEWORK -r $AMBROSIA_DOTNET_PLATFORM "
-# ENV DEST=CodeGenDependencies/$AMBROSIA_DOTNET_FRAMEWORK/ && \
-#     rm -rf $DEST && \
-#     mkdir -p $DEST && \
-#     cp -af API/publish/*  $DEST/ && \
-#     cp -af IJob/publish/* $DEST/
+# TODO/FIXME: this should be replaced by a template which is modified by the user:
+# WARNING: as currently set up, this creates a dependency on the
+# "ambrosia-dev" rather than "ambrosia" image.
+RUN cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
 
-# # TODO/FIXME: this should be replaced by a template which is modified by the user:
-# cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
+# Run the code-generation tool:
+RUN rm -rf ./GeneratedSourceFiles && \
+    mkdir -p GeneratedSourceFiles 
+RUN AmbrosiaCS CodeGen -a IJob/bin/Release/netcoreapp2.0/linux-x64/IJob.dll -a API/bin/Release/netcoreapp2.0/linux-x64/ServerAPI.dll -o PTIAmbrosiaGeneratedAPINetCore -f netcoreapp2.0 -b ./CodeGenDependencies/netcoreapp2.0
 
+# Bulid/ppublish the RPC wrappers whose project we just created:
+RUN $BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
 
-# # Run the code-generation tool:
-# RUN rm -rf ./GeneratedSourceFiles && \
-#     mkdir -p GeneratedSourceFiles && \
-#     mkdir -p ./CodeGenDependencies/netcoreapp2.0
-# RUN AmbrosiaCS CodeGen -a IJob/bin/Release/netcoreapp2.0/linux-x64/IJob.dll -a API/bin/Release/netcoreapp2.0/linux-x64/ServerAPI.dll -o PTIAmbrosiaGeneratedAPINetCore -f netcoreapp2.0 -b ./CodeGenDependencies/netcoreapp2.0
+# publish the client/server executables that we'll actually run:
+ADD Client /ambrosia/InternalImmortals/PerformanceTestInterruptible/Client
+ADD Server /ambrosia/InternalImmortals/PerformanceTestInterruptible/Server
+RUN $BUILDIT Client/Job.csproj
+RUN $BUILDIT Server/Server.csproj
 
-# # publish the api dll whose project we just created:
-# RUN $BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
+# Add the scripts for invoking PTI inside the container:
+ADD run_*.sh            /ambrosia/InternalImmortals/PerformanceTestInterruptible/
+ADD Scripts             /ambrosia/InternalImmortals/PerformanceTestInterruptible/Scripts
 
-# # publish the client/server executables that we'll actually run:
-# ADD Client /ambrosia/InternalImmortals/PerformanceTestInterruptible/Client
-# ADD Server /ambrosia/InternalImmortals/PerformanceTestInterruptible/Server
-# RUN $BUILDIT Client/Job.csproj
-# RUN $BUILDIT Server/Server.csproj
-
-# # Add the scripts for invoking PTI inside the container:
-# ADD run_*.sh            /ambrosia/InternalImmortals/PerformanceTestInterruptible/
-# ADD Scripts             /ambrosia/InternalImmortals/PerformanceTestInterruptible/Scripts
-
-# # ImmortalCoordinator default port:
-# EXPOSE 1500
-# # Trying this secondary port as well:
-# EXPOSE 50500
+# ImmortalCoordinator default port:
+EXPOSE 1500
+# Trying this secondary port as well:
+EXPOSE 50500
