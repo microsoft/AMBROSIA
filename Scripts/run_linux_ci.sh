@@ -1,5 +1,5 @@
 #!/bin/bash
-set -xeu
+set -xeuo pipefail
 
 # A simple script to build and test under Linux CI.
 
