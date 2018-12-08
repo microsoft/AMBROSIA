@@ -25,26 +25,37 @@ RUN $BUILDIT IJob/IJob.csproj
 ADD API /ambrosia/InternalImmortals/PerformanceTestInterruptible/API
 RUN $BUILDIT API/ServerAPI.csproj
 
-# Run the code-generation tool:
-RUN rm -rf ./GeneratedSourceFiles && \
-    mkdir -p GeneratedSourceFiles && \
-    mkdir -p ./CodeGenDependencies/netcoreapp2.0
-RUN AmbrosiaCS CodeGen -a IJob/bin/Release/netcoreapp2.0/linux-x64/IJob.dll -a API/bin/Release/netcoreapp2.0/linux-x64/ServerAPI.dll -o PTIAmbrosiaGeneratedAPINetCore -f netcoreapp2.0 -b ./CodeGenDependencies/netcoreapp2.0
+# # $AMBROSIA_DOTNET_FRAMEWORK -r $AMBROSIA_DOTNET_PLATFORM "
+# ENV DEST=CodeGenDependencies/$AMBROSIA_DOTNET_FRAMEWORK/ && \
+#     rm -rf $DEST && \
+#     mkdir -p $DEST && \
+#     cp -af API/publish/*  $DEST/ && \
+#     cp -af IJob/publish/* $DEST/
 
-# publish the api dll whose project we just created:
-RUN $BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
+# # TODO/FIXME: this should be replaced by a template which is modified by the user:
+# cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
 
-# publish the client/server executables that we'll actually run:
-ADD Client /ambrosia/InternalImmortals/PerformanceTestInterruptible/Client
-ADD Server /ambrosia/InternalImmortals/PerformanceTestInterruptible/Server
-RUN $BUILDIT Client/Job.csproj
-RUN $BUILDIT Server/Server.csproj
 
-# Add the scripts for invoking PTI inside the container:
-ADD run_*.sh            /ambrosia/InternalImmortals/PerformanceTestInterruptible/
-ADD Scripts             /ambrosia/InternalImmortals/PerformanceTestInterruptible/Scripts
+# # Run the code-generation tool:
+# RUN rm -rf ./GeneratedSourceFiles && \
+#     mkdir -p GeneratedSourceFiles && \
+#     mkdir -p ./CodeGenDependencies/netcoreapp2.0
+# RUN AmbrosiaCS CodeGen -a IJob/bin/Release/netcoreapp2.0/linux-x64/IJob.dll -a API/bin/Release/netcoreapp2.0/linux-x64/ServerAPI.dll -o PTIAmbrosiaGeneratedAPINetCore -f netcoreapp2.0 -b ./CodeGenDependencies/netcoreapp2.0
 
-# ImmortalCoordinator default port:
-EXPOSE 1500
-# Trying this secondary port as well:
-EXPOSE 50500
+# # publish the api dll whose project we just created:
+# RUN $BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
+
+# # publish the client/server executables that we'll actually run:
+# ADD Client /ambrosia/InternalImmortals/PerformanceTestInterruptible/Client
+# ADD Server /ambrosia/InternalImmortals/PerformanceTestInterruptible/Server
+# RUN $BUILDIT Client/Job.csproj
+# RUN $BUILDIT Server/Server.csproj
+
+# # Add the scripts for invoking PTI inside the container:
+# ADD run_*.sh            /ambrosia/InternalImmortals/PerformanceTestInterruptible/
+# ADD Scripts             /ambrosia/InternalImmortals/PerformanceTestInterruptible/Scripts
+
+# # ImmortalCoordinator default port:
+# EXPOSE 1500
+# # Trying this secondary port as well:
+# EXPOSE 50500
