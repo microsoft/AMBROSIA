@@ -34,7 +34,7 @@ namespace Ambrosia
 
         private static void RunCodeGen()
         {
-            var directoryName = @"latest\";
+            var directoryName = @"latest";
 
             var generatedDirectory = "GeneratedSourceFiles";
             if (!Directory.Exists(generatedDirectory))
