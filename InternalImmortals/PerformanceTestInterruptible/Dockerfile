@@ -16,7 +16,10 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
 ADD IJob /ambrosia/InternalImmortals/PerformanceTestInterruptible/IJob
 WORKDIR /ambrosia/InternalImmortals/PerformanceTestInterruptible
 
-# Build and publish to the same top-level /ambrosia/bin/ directory:
+# Publish to a local directory:
+ENV BUILDIT="dotnet publish -o /ambrosia/InternalImmortals/PerformanceTestInterruptible/bin $BLDFLAGS"
+ENV PATH="${PATH}:/ambrosia/InternalImmortals/PerformanceTestInterruptible/bin"
+
 RUN $BUILDIT IJob/IJob.csproj
 
 ADD API /ambrosia/InternalImmortals/PerformanceTestInterruptible/API
@@ -25,8 +28,8 @@ RUN $BUILDIT API/ServerAPI.csproj
 # Run the code-generation tool:
 RUN rm -rf ./GeneratedSourceFiles && \
     mkdir -p GeneratedSourceFiles && \
-    mkdir -p ./CodeGenDependencies/netcoreapp2.0 && \
-    AmbrosiaCS CodeGen -a IJob/bin/Release/netcoreapp2.0/linux-x64/IJob.dll -a API/bin/Release/netcoreapp2.0/linux-x64/ServerAPI.dll -o PTIAmbrosiaGeneratedAPINetCore -f netcoreapp2.0 -b ./CodeGenDependencies/netcoreapp2.0
+    mkdir -p ./CodeGenDependencies/netcoreapp2.0
+RUN AmbrosiaCS CodeGen -a IJob/bin/Release/netcoreapp2.0/linux-x64/IJob.dll -a API/bin/Release/netcoreapp2.0/linux-x64/ServerAPI.dll -o PTIAmbrosiaGeneratedAPINetCore -f netcoreapp2.0 -b ./CodeGenDependencies/netcoreapp2.0
 
 # publish the api dll whose project we just created:
 RUN $BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
