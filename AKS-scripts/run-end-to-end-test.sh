@@ -24,8 +24,8 @@ echo
 ./Provision-Resources.sh
 
 # STEPs 1-3: Secrets and Authentication
-./Grant-AKS-access-ACR.sh  # TODO: Problems on Windows/Git-Bash [2018.12.03]
-./Create-AKS-ServicePrincipal-Secret.sh
+./Grant-AKS-access-ACR.sh 
+./Create-AKS-ServicePrincipal-Secret.sh # TODO: bypass if $servicePrincipalId/$servicePrincipalKey are set
 ./Create-AKS-SMBFileShare-Secret.sh 
 
 # STEP 4: Building and pushing Docker.
