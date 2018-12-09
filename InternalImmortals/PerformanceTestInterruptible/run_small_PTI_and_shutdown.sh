@@ -16,17 +16,21 @@ set -xeuo pipefail
 cd `dirname $0`
 source ./default_var_settings.sh
 
+CLIENTNAME=dockertestC
+SERVERNAME=dockertestS
+
 if ! which Ambrosia; then
     pushd ../../bin
     PATH=$PATH:`pwd`
     popd
 fi
 
-UnsafeDeregisterInstance $CLIENTNAME || echo ok
-UnsafeDeregisterInstance $SERVERNAME || echo ok
+# UnsafeDeregisterInstance $CLIENTNAME || true
+# UnsafeDeregisterInstance $SERVERNAME || true
 
-Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "/ambrosia_logs/" 
-Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "/ambrosia_logs/" 
+Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "./ambrosia_logs/" 
+Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "./ambrosia_logs/"
+
 
 COORDTAG=CoordServ AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT1 \
   runAmbrosiaService.sh ./bin/Server --rp $PORT4 --sp $PORT3 -j $CLIENTNAME -s $SERVERNAME -n 1 -c & 

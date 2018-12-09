@@ -9,17 +9,17 @@ set -xeuo pipefail
 
 # source `dirname $0`/default_var_settings.sh
 
-PORT1=50001
-PORT2=50002
-PORT3=50003
-PORT4=50004
+PORT1=49001
+PORT2=49002
+PORT3=49003
+PORT4=49004
 
 CLIENTNAME=nativecli
 SERVERNAME=nativeserv
 
 # Wipe the server-side information:
-UnsafeDeregisterInstance $CLIENTNAME
-UnsafeDeregisterInstance $SERVERNAME
+# UnsafeDeregisterInstance $CLIENTNAME
+# UnsafeDeregisterInstance $SERVERNAME
 
 Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "./ambrosia_logs/" 
 Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "./ambrosia_logs/" 

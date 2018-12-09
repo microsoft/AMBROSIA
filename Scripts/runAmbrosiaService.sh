@@ -24,7 +24,7 @@ set -euo pipefail
 TAG="[runAmbrosiaService.sh]"
 
 if ! [ "${COORDTAG:+defined}" ];
-then COORDTAG = "ImmortalCoord"
+then COORDTAG="ImmortalCoord"
 fi
 
 function print_usage() {
