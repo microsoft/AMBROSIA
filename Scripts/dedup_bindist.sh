@@ -7,6 +7,19 @@ set -euo pipefail
 primary="runtime"
 secondary=" coord codegen unsafedereg "
 
+if [ $# -eq 0 ]; then
+    mode=symlink
+elif [ "$1" == "symlink" ]; then
+     mode=symlink
+elif [ "$1" == "squish" ]; then
+     mode=squish
+else
+    echo "ERROR: expected 'symlink' or 'squish' as optional first argument (default symlink)."
+    exit 1
+fi
+
+echo "Begin script in mode = $mode"
+
 cd `dirname $0`/../bin
 bindir=`pwd -P`
 echo "Total files in bin/: "`find . | wc -l`
@@ -22,22 +35,33 @@ for dir in $secondary; do
     diffs=`mktemp`
     diff -srq ../$primary/ ./ > $diffs || true
     echo "  Computed diffs..."
+    echo "  Number of diffs: $(cat $diffs | wc -l) $diffs"
     
     # FRAGILE:
     # Expects Files __ and __ are identical
     cat $diffs | grep identical \
                | awk '{ print $4 }' \
-               > $dups
+               > $dups || true
     
     echo "  Found $(cat $dups | wc -l) duplicates."
-    echo -ne "  Linking: "
+    case $mode in
+        symlink)
+            echo -ne "  Linking: " ;;
+        squish)
+            echo -ne "  Deleting dups: " ;;
+    esac
     while read f; do        
         echo -ne "."
         # Requires realpath from GNU coreutils:
         dirof=`dirname $f`
         relative=`realpath ../runtime/$f --relative-to=$dirof`
         # echo "ln -sf $relative $f"
-        ln -sf $relative $f
+        case $mode in
+            symlink)
+                ln -sf $relative $f ;;
+            squish)
+                rm -f $f ;;
+        esac
     done < $dups
     echo
 
@@ -47,19 +71,48 @@ done
 
 echo "Done with all subdirectories."
 
-echo " |-> Looking for broken links:"
-cd "$bindir"
-broken=`mktemp`
-find . -type l ! -exec test -e {} \; -print | tee $broken
+if [ $mode == symlink ]; then 
 
-if [ "$(cat $broken)" == "" ];
-then
-    echo " |-> No broken links found."
+    echo " |-> Looking for broken links:"
+    cd "$bindir"
+    broken=`mktemp`
+    find . -type l ! -exec test -e {} \; -print | tee $broken    
+
+    if [ "$(cat $broken)" == "" ];
+    then
+        echo " |-> No broken links found."
+    else
+        echo
+        echo "ERROR: found broken links."
+        echo "Number of broken: $(cat $broken | wc -l)"
+        echo "Sample:"
+        head -n10 $broken
+        exit 1
+    fi
 else
     echo
-    echo "ERROR: found broken links."
-    echo "Number of broken: $(cat $broken | wc -l)"
-    echo "Sample:"
-    head -n10 $broken
-    exit 1
+    echo "In squishing mode, so smashing it back together."
+    echo "Clearing main exe symlinks."
+    cd "$bindir"
+    rm -f ambrosia AmbrosiaCS ImmortalCoordinator UnsafeDeregisterInstance
+    
+    cd "$bindir/$primary"
+    mv -n * ..
+
+    echo "Removing redundant localization stuff."
+    cd "$bindir"
+    rm -rf */cs */de */es */fr */it */ja */ko */pl */pt-BR */ru */tr */zh-Hans */zh-Hant
+    
+    for dir in $secondary; do
+        echo "  Dumping back in $dir contents"
+        cd "$bindir/$dir"
+        mv -n * ..
+    done
+
+    echo "After squishing, these files left behind / conflicting:"
+    echo "-------------------------------------------------------"
+    cd "$bindir"
+    find $secondary
+    echo "-------------------------------------------------------"
+    echo "Every one of these represents a risk of undefined behavior!"
 fi

@@ -34,7 +34,7 @@ CONF="${AMBROSIA_DOTNET_CONF}"
 function buildit() {
     dir=$1
     shift
-    dotnet publish -o $dir -c $CONF -f $FMWK -r $PLAT $*
+    dotnet publish --self-contained -o $dir -c $CONF -f $FMWK -r $PLAT $*
 }
 
 
@@ -121,6 +121,9 @@ fi
 
 echo "Deduplicating output produced by separate dotnet publish calls"
 echo "--------------------------------------------------------------"
-./Scripts/dedup_bindist.sh
+if [ "$OS" == "Windows_NT" ];
+then ./Scripts/dedup_bindist.sh squish
+else ./Scripts/dedup_bindist.sh symlink
+fi
 
 echo "$0 Finished"
