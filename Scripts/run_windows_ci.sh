@@ -17,6 +17,9 @@ pwd -P
 export AMBROSIA_ROOT=`pwd`
 ./build_dotnetcore_bindist.sh
 
-pushd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
-./build_dotnetcore.sh
-popd
+# [2018.12.08] Disabling this for now:
+# with SEPARATED dotnet publish output, I don't know how to link the binaries on Windows:
+#
+# pushd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+# ./build_dotnetcore.sh
+# popd
