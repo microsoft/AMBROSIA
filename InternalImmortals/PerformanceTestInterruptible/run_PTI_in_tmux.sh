@@ -12,9 +12,13 @@ set -xeuo pipefail
 # ------------------------------------------------------------------------------
 
 source `dirname $0`/default_var_settings.sh
-CLIENTNAME=ptitmuxC
-SERVERNAME=ptitmuxS
 
+INSTANCE_PREFIX=""
+if [ $# -ne 0 ];
+then INSTANCE_PREFIX="$1"
+fi
+CLIENTNAME=${INSTANCE_PREFIX}ptitmuxC
+SERVERNAME=${INSTANCE_PREFIX}ptitmuxS
 
 export PATH="$PATH:/ambrosia/bin"
 

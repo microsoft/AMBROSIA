@@ -20,7 +20,6 @@ INSTANCE_PREFIX=""
 if [ $# -ne 0 ];
 then INSTANCE_PREFIX="$1"
 fi
-
 CLIENTNAME=${INSTANCE_PREFIX}dockC
 SERVERNAME=${INSTANCE_PREFIX}dockS
 
@@ -59,3 +58,4 @@ echo "PTI Client finished, exiting."
 kill $pid_server
 wait
 echo "Everything shut down.  All done."
+
