@@ -1,7 +1,11 @@
 #!/bin/bash
 set -xeuo pipefail
 
-# A simple script to build and test under Linux CI.
+# ------------------------------------------------------------
+# A script to build and test under Linux CI.
+#
+# This mostly DISPATCHES to other scripts.
+# ------------------------------------------------------------
 
 # Hack to deal with Azure Devops Pipelines:
 if ! [[ -e ./build_docker_images.sh ]]; then
@@ -30,11 +34,11 @@ fi
 case $mode in
   docker)
     
-      echo "Executing containerized, Docker build."
+      echo "Executing containerized, Docker build."      
       # When we are trying to run tests we don't really want the tarball:
       DONT_BUILD_TARBALL=1 ./build_docker_images.sh
 
-      ./Scripts/run_linux_PTI_docker.sh
+      ./Scripts/internal/run_linux_PTI_docker.sh
       ;;
   
   nodocker)
