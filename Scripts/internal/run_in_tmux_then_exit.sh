@@ -15,7 +15,7 @@ echo "$TIME seconds later, do things seem ok?"
 docker ps
 
 echo "Checking the output of 'ps auxww' in the container..."
-docker exec -it $(docker ps -q) ps auxww  2>&1 > ps.out
+docker exec $(docker ps -q) ps auxww  2>&1 > ps.out
 docker kill $(cat cont.id)
 
 echo "Basic health check: were all four processes still alive?"

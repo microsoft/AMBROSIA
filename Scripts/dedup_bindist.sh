@@ -35,7 +35,7 @@ for dir in $secondary; do
     diffs=`mktemp`
     diff -srq ../$primary/ ./ > $diffs || true
     echo "  Computed diffs..."
-    echo "  Number of diffs: $(cat $diffs | wc -l) $diffs"
+    echo "  Number of diffs: $(cat $diffs | wc -l)"
     
     # FRAGILE:
     # Expects Files __ and __ are identical
