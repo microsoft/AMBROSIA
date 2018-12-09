@@ -24,7 +24,7 @@ if [ "$($DOCKER images -q ambrosia-dev)" == "" ]; then
     echo "Could not find 'ambrosia-dev' image, attempting to build it."
     # Top of Ambrosia source working dir:
     cd `dirname $0`/../../
-    BUILD_DEV_IMAGE_ONLY=1 ./build_docker_images.sh
+    DONT_BUILD_RELEASE_IMAGE=1 ./build_docker_images.sh
     cd `dirname $0`
 fi
 

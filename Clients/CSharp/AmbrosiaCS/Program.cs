@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
-using AmbrosiaCS.Properties;
 using Mono.Options;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -35,7 +34,7 @@ namespace Ambrosia
 
         private static void RunCodeGen()
         {
-            var directoryName = @"latest\";
+            var directoryName = @"latest";
 
             var generatedDirectory = "GeneratedSourceFiles";
             if (!Directory.Exists(generatedDirectory))
@@ -159,7 +158,9 @@ namespace Ambrosia
             }
 
             var conditionToPackageInfo = new Dictionary<string, List<Tuple<string, string, string>>>();
-            var doc = XDocument.Parse(Resources.AmbrosiaCS);
+
+            var projFile = Path.Combine(_binPath, $@"{Assembly.GetExecutingAssembly().GetName().Name}.csproj");
+            var doc = XDocument.Load(projFile);
 
             foreach (var itemGroup in doc.Descendants("ItemGroup"))
             {
