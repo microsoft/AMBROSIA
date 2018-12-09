@@ -50,6 +50,9 @@ function print_usage() {
 
 if [ $# -eq 0 ]; then print_usage; fi
 
+# Don't let this fail, it's just informative:
+APPNAME=`basename $1` || APPNAME="$1"
+
 if [[ ! -v AMBROSIA_INSTANCE_NAME ]]; then
     echo "ERROR $TAG: unbound environment variable: AMBROSIA_INSTANCE_NAME"
     echo 
@@ -73,6 +76,29 @@ else
     COORDLOG=/var/log/ImmortalCoordinator.log
 fi
 
+# Helper functions
+# --------------------------------------------------
+
+function tag_stdin() {
+    local MSG=$1
+    # A complicated but full-proof bash method of line-by-line reading:        
+    while IFS='' read -r line || [[ -n "$line" ]]; do
+        echo " [$MSG] $line";
+    done
+}
+
+# Global variable set below:
+tail_pid=""
+
+function tail_tagged() {
+    local MSG=$1
+    local FILE=$2
+    (tail -F "$FILE" | tag_stdin $MSG) &
+    tail_pid=$!
+}
+
+# --------------------------------------------------
+
 # Arguments: all passed through to the coordinator.
 # Returns: when the Coordinator is READY (in the background).
 # Returns: sets "coord_pid" to the return value.
@@ -82,7 +108,7 @@ fi
 # Side effect: uses a log file on disk in the same directory as this script.
 # Side effect: runs a tail proycess in the background
 function start_immortal_coordinator() {
-    echo " $TAG Launching coordingator with: ImmortalCoordinator" $*
+    echo " $TAG Launching coordinator with: ImmortalCoordinator" $*
     if ! which ImmortalCoordinator; then
         echo "  ERROR $TAG - ImmortalCoordinator not found on path!"
         exit 1
@@ -106,17 +132,8 @@ function start_immortal_coordinator() {
         coord_pid=$!
     fi
 
-    while [ ! -e "$COORDLOG" ]; do
-        echo " $TAG -> Waiting for $COORDLOG to appear"
-        sleep 1
-    done
     if [[ ! -v AMBROSIA_SILENT_COORDINATOR ]]; then
-        # It seems like tail -F is spitting the same output multiple times on 
-        # A complicated but full-proof bash method of line-by-line reading:
-        tail -F "$COORDLOG" | \
-            while IFS='' read -r line || [[ -n "$line" ]]; do
-                echo " [$COORDTAG] $line";
-            done &
+        tail_tagged "$COORDTAG" "$COORDLOG"
     fi
     while ! grep -q "Ready" "$COORDLOG" && kill -0 $coord_pid 2>/dev/null ;
     do sleep 2; done
@@ -144,14 +161,18 @@ function monitor_health() {
     echo " $TAG Health monitor starting coord_pid=$coord_pid, app_pid=$app_pid"
     while [ -f $keep_monitoring ]; do
         sleep 2
-        if ! kill -0 $coord_pid 2>- ; then
-            echo "-------------------------------------------------------"
-            echo "ERROR $TAG ImmortalCoordinator died!"
-            echo "Killing application process.  Must initiate recovery."
-            echo "-------------------------------------------------------"
-            set -x 
-            kill -9 $app_pid
-            exit 1
+        if ! kill -0 $coord_pid 2>/dev/null ; then
+            # Sleep a bit here to make sure it's really a crash and not just normal shutdown:
+            sleep 2
+            if [ -f $keep_monitoring ]; then
+                echo "-------------------------------------------------------"
+                echo "ERROR $TAG ImmortalCoordinator died! ($COORDTAG)"
+                echo "Likewise killing application process; they're a pair."
+                echo "-------------------------------------------------------"
+                set -x 
+                kill -9 $app_pid
+                exit 1
+            fi
         fi
     done
     echo " $TAG Cleanly exiting health monitor background function..."
@@ -161,7 +182,7 @@ function monitor_health() {
 start_immortal_coordinator -i $AMBROSIA_INSTANCE_NAME -p $AMBROSIA_IMMORTALCOORDINATOR_PORT
 
 # Step 2:
-echo " $TAG Launching app client process:"
+echo " $TAG Launching app process alongside coordinator:"
 set -x
 $* &
 set +x
@@ -170,7 +191,14 @@ app_pid=$!
 monitor_health &
 
 wait $app_pid
-echo " $TAG Ambrosia: client exited, killing coordinator and health monitor function..."
-kill -9 $coord_pid || echo ok
+echo " $TAG Ambrosia app cleanly exited ($APPNAME)"
+if [ "$tail_pid" != "" ]; then
+    kill $tail_pid
+    echo " $TAG  |-> Stopped echoing coordinator output (transient errors in shutdown not important)."
+fi
+echo " $TAG  |-> Killing coordinator and health monitor function."
 rm -f $keep_monitoring
-wait
+
+kill -9 $coord_pid || echo ok
+echo " $TAG  |-> Cleanup complete, exiting."
+# wait 

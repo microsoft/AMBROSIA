@@ -39,7 +39,7 @@ echo
     
 $DOCKER build                       -t ${TAG1A} .
 
-if ! [[ ${BUILD_DEV_IMAGE_ONLY:+defined} ]]; then
+if ! [[ ${DONT_BUILD_RELEASE_IMAGE:+defined} ]]; then
     $DOCKER build -f Dockerfile.release -t ${TAG1B} .
 fi
 
@@ -48,10 +48,12 @@ if ! [[ ${DONT_BUILD_APP_IMAGES:+defined} ]]; then
 	  cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
 	  $DOCKER build -t ${TAG2} .
 	  cd "$AMBROSIA_ROOT"
-    
-	  cd "$AMBROSIA_ROOT"/InternalImmortals/NativeService
-	  docker build -t ${TAG3} .
-	  cd "$AMBROSIA_ROOT"
+
+    if ! [[ ${DONT_BUILD_NATIVE_IMAGE:+defined} ]]; then    
+	      cd "$AMBROSIA_ROOT"/InternalImmortals/NativeService
+	      docker build -t ${TAG3} .
+	      cd "$AMBROSIA_ROOT"
+    fi
 fi
 
 echo
@@ -59,13 +61,15 @@ echo "Docker images built successfully."
 echo
 echo "Below is an example command bring up the generated image interactively:"
 echo "  $DOCKER run -it --rm --env AZURE_STORAGE_CONN_STRING=... ${TAG2}"
-echo
-echo "Extracting a release tarball..."
-set -x
-rm -rf ambrosia.tgz
-TMPCONT=temp-container-name_`date '+%s'`
-$DOCKER run --name $TMPCONT ambrosia-dev bash -c 'tar czf /ambrosia/ambrosia.tgz /ambrosia/bin'
-$DOCKER cp $TMPCONT:/ambrosia/ambrosia.tgz ambrosia.tgz
-$DOCKER rm $TMPCONT
-set +x
 
+if ! [[ ${DONT_BUILD_TARBALL:+defined} ]]; then
+    echo
+    echo "Extracting a release tarball..."
+    set -x
+    rm -rf ambrosia.tgz
+    TMPCONT=temp-container-name_`date '+%s'`
+    $DOCKER run --name $TMPCONT ambrosia-dev bash -c 'tar czf /ambrosia/ambrosia.tgz /ambrosia/bin'
+    $DOCKER cp $TMPCONT:/ambrosia/ambrosia.tgz ambrosia.tgz
+    $DOCKER rm $TMPCONT
+    set +x
+fi
