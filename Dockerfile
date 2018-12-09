@@ -17,20 +17,27 @@ ENV AMBROSIA_DOTNET_FRAMEWORK=netcoreapp2.0 \
 
 # This is the command we use to build each of the individual C# projects:
 ENV BLDFLAGS " -c Release -f $AMBROSIA_DOTNET_FRAMEWORK -r $AMBROSIA_DOTNET_PLATFORM "
-ENV BUILDIT "dotnet publish -o /ambrosia/bin $BLDFLAGS"
+ENV BUILDIT "dotnet publish $BLDFLAGS"
 # NOTE: use the following for a debug build of AMBROSIA:
 # ENV BLDFLAGS " -c Debug -f netcoreapp2.0 -r linux-x64 -p:DefineConstants=DEBUG "
 
 # (1) Build the core executables and libraries:
 # ---------------------------------------------
-RUN $BUILDIT Ambrosia/Ambrosia/Ambrosia.csproj
-RUN $BUILDIT ImmortalCoordinator/ImmortalCoordinator.csproj
-RUN $BUILDIT DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
+RUN $BUILDIT -o /ambrosia/bin/runtime     Ambrosia/Ambrosia/Ambrosia.csproj
+RUN $BUILDIT -o /ambrosia/bin/coord       ImmortalCoordinator/ImmortalCoordinator.csproj
+RUN $BUILDIT -o /ambrosia/bin/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
+
+RUN cd bin && \
+    ln -s runtime/Ambrosia Ambrosia && \
+    ln -s coord/ImmortalCoordinator && \ 
+    ln -s unsafedereg/UnsafeDeregisterInstance
+
 
 # (2) Language binding: CSharp (depends on AmbrosiaLibCS on nuget)
 # ----------------------------------------------------------------
 ADD Clients/CSharp                /ambrosia/Clients/CSharp
-RUN $BUILDIT Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
+RUN $BUILDIT -o /ambrosia/bin/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj && \
+    cd bin && ln -s codegen/AmbrosiaCS 
 
 # (3) Low-level Native-code network client:
 # -----------------------------------------
@@ -41,8 +48,9 @@ RUN cd Clients/C && make publish
 # (4) A script used by apps to start the ImmortalCoordinator:
 # -----------------------------------------------------------
 ADD ./Scripts/runAmbrosiaService.sh bin/
-RUN cd bin && ln -s Ambrosia ambrosia && \
-    (chmod -x *.dll *.so *.dylib *.a 2>/dev/null || echo ok)
+
+# Remove unnecessary execute permissions:
+# RUN cd bin && (chmod -x *.dll *.so *.dylib *.a 2>/dev/null || echo ok)
 
 # Make "ambrosia", "AmbrosiaCS", and "ImmortalCoordinator" available on PATH:
 ENV AMBROSIA_BINDIR="/ambrosia/bin" \
