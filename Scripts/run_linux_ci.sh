@@ -25,6 +25,8 @@ then
     
     echo "Executing containerized, Docker build."
     ./build_docker_images.sh
+    ./Scripts/run_linux_PTI_docker.sh || \
+       echo "EXPECTED FAILURE: PTI is not required to pass at this time."
     
 elif [ "$1" == "nodocker" ];
 then
