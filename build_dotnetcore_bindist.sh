@@ -90,10 +90,19 @@ echo
 echo "Building Native-code client library"
 echo "----------------------------------------"
 if [ "$UNAME" == Linux ]; then
-    cd Clients/C && make publish || \
-      echo "WARNING: Successfully built a dotnet core distribution, but without the native code wrapper library."
+    pushd Clients/C
+    make publish || \
+        echo "WARNING: Successfully built a dotnet core distribution, but without the native code wrapper library."
+    popd
 elif [ "$UNAME" == Darwin ]; then
     echo "WARNING: not building native client for Mac OS."
 else
     echo "WARNING: this script doesn't build the native client for Windows yet (FINISHME)"
 fi
+
+echo 
+echo "Removing unnecessary execute permissions"
+echo "----------------------------------------"
+chmod -x ./bin/*.dll ./bin/*.so ./bin/*.dylib ./bin/*.a 2>/dev/null || echo 
+
+echo "$0 Finished"

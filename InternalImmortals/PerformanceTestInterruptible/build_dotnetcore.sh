@@ -74,4 +74,4 @@ $BUILDIT Client/Job.csproj
 $BUILDIT Server/Server.csproj
 set +x
 
-echo "Finished building."
+echo "$0: Finished building."

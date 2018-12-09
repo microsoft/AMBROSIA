@@ -41,7 +41,8 @@ RUN cd Clients/C && make publish
 # (4) A script used by apps to start the ImmortalCoordinator:
 # -----------------------------------------------------------
 ADD ./Scripts/runAmbrosiaService.sh bin/
-RUN cd bin && ln -s Ambrosia ambrosia
+RUN cd bin && ln -s Ambrosia ambrosia && \
+    (chmod -x *.dll *.so *.dylib *.a 2>/dev/null || echo ok)
 
 # Make "ambrosia", "AmbrosiaCS", and "ImmortalCoordinator" available on PATH:
 ENV AMBROSIA_BINDIR="/ambrosia/bin" \
