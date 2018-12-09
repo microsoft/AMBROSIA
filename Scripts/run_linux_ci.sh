@@ -20,26 +20,39 @@ cat /etc/issue || echo ok
 # Build and run a small PerformanceTestInterruptable:
 # ./build_docker_images.sh 
 
-if [ $# -eq 0 ] || [ "$1" == "docker" ];
-then
-    
-    echo "Executing containerized, Docker build."
-    ./build_docker_images.sh
-    ./Scripts/run_linux_PTI_docker.sh || \
-       echo "EXPECTED FAILURE: PTI is not required to pass at this time."
-    
-elif [ "$1" == "nodocker" ];
-then
-    
-    echo "Executing raw-Linux, non-Docker build."
-    cd "$AMBROSIA_ROOT"
-    ./build_dotnetcore_bindist.sh
-
-    cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
-    ./build_dotnetcore.sh
-    cd "$AMBROSIA_ROOT"
-    
+if [ $# -eq 0 ]; then
+    mode=nodocker
 else
-    echo "$0: ERROR: unexpected first argument: $1"
-    exit 1
-fi    
+    mode=$1
+fi
+
+
+case $mode in
+  docker)
+    
+      echo "Executing containerized, Docker build."
+      ./build_docker_images.sh
+
+      # [2018.12.08] Hanging behavior prevents us from running this:
+      # ./Scripts/run_linux_PTI_docker.sh || \
+      #     echo "EXPECTED FAILURE: PTI is not required to pass at this time."
+      ;;
+  
+  nodocker)
+        
+      echo "Executing raw-Linux, non-Docker build."
+      cd "$AMBROSIA_ROOT"
+      ./build_dotnetcore_bindist.sh
+      
+      cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+      ./build_dotnetcore.sh
+      cd "$AMBROSIA_ROOT"
+      ;;
+
+  *)
+      echo "$0: ERROR: unknown first argument: $mode"
+      exit 1
+      ;;
+
+esac
+

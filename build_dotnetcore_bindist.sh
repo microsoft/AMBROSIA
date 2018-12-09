@@ -31,7 +31,12 @@ OUTDIR=`pwd`/bin
 # Shorthands:
 FMWK="${AMBROSIA_DOTNET_FRAMEWORK}"
 CONF="${AMBROSIA_DOTNET_CONF}"
-BUILDIT="dotnet publish -o $OUTDIR -c $CONF -f $FMWK -r $PLAT"
+function buildit() {
+    dir=$1
+    shift
+    dotnet publish -o $dir -c $CONF -f $FMWK -r $PLAT $*
+}
+
 
 echo "Cleaning publish directory."
 rm -rf $OUTDIR
@@ -40,7 +45,7 @@ mkdir -p $OUTDIR
 echo "Output of 'dotnet --info':"
 dotnet --info
 
-echo "Building with command: $BUILDIT"
+# echo "Building with command: $BUILDIT"
 
 if [ $FMWK == net46 ]; then
     echo 
@@ -69,16 +74,24 @@ echo
 echo "Building AMBROSIA libraries/binaries"
 echo "------------------------------------"
 set -x
-$BUILDIT Ambrosia/Ambrosia/Ambrosia.csproj
-$BUILDIT ImmortalCoordinator/ImmortalCoordinator.csproj
-$BUILDIT DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
+buildit $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
+buildit $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
+buildit $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
+pushd $OUTDIR
+ln -s runtime/Ambrosia ambrosia
+ln -s coord/ImmortalCoordinator
+ln -s unsafedereg/UnsafeDeregisterInstance
+popd
 set +x
 
 echo 
 echo "Building C# client tools"
 echo "----------------------------------------"
 set -x
-$BUILDIT Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
+buildit $OUTDIR/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
+pushd $OUTDIR
+ln -s codegen/AmbrosiaCS 
+popd
 set +x
 
 echo 
@@ -100,9 +113,9 @@ else
     echo "WARNING: this script doesn't build the native client for Windows yet (FINISHME)"
 fi
 
-echo 
-echo "Removing unnecessary execute permissions"
-echo "----------------------------------------"
-chmod -x ./bin/*.dll ./bin/*.so ./bin/*.dylib ./bin/*.a 2>/dev/null || echo 
+# echo 
+# echo "Removing unnecessary execute permissions"
+# echo "----------------------------------------"
+# chmod -x ./bin/*.dll ./bin/*.so ./bin/*.dylib ./bin/*.a 2>/dev/null || echo 
 
 echo "$0 Finished"
