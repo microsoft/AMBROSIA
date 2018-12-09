@@ -61,14 +61,10 @@ case $PTI_MOUNT_LOGS in
         ;;
 esac
 
-
-# Avoiding collisions on concurrently running tests is a difficult
-# business.  Here we use the CI build ID (Azure Pipelines) if
-# available, to make more unique CRA instance names.
-INSTPREF=`whoami`
-if [ ${BUILD_BUILDID:+defined} ]; then
-    INSTPREF=${INSTPREF}"$BUILD_BUILDID"
+if ! [ ${INSTPREF:+defined} ]; then
+    INSTPREF=""
 fi
+
 case $PTI_MODE in
   tmux)
      echo "Testing the interactive, tmux-based demo."
