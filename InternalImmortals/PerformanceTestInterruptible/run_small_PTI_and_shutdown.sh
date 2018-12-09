@@ -16,8 +16,13 @@ set -xeuo pipefail
 cd `dirname $0`
 source ./default_var_settings.sh
 
-CLIENTNAME=dockertestC
-SERVERNAME=dockertestS
+INSTANCE_PREFIX=""
+if [ $# -ne 0 ];
+then INSTANCE_PREFIX="$1"
+fi
+
+CLIENTNAME=${INSTANCE_PREFIX}dockC
+SERVERNAME=${INSTANCE_PREFIX}dockS
 
 if ! which Ambrosia; then
     pushd ../../bin

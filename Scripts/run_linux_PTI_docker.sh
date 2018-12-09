@@ -65,7 +65,8 @@ case $PTI_MODE in
     OneContainer)
     echo "Running PTI server/client both inside ONE container:"
     set -x
-    $DOCKER run --rm ${OPTS} ambrosia-perftest ./run_small_PTI_and_shutdown.sh
+    $DOCKER run --rm ${OPTS} \
+       ambrosia-perftest ./run_small_PTI_and_shutdown.sh `whoami`
     set +x
     ;;
     
