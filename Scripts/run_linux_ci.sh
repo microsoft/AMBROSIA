@@ -33,9 +33,8 @@ case $mode in
       echo "Executing containerized, Docker build."
       ./build_docker_images.sh
 
-      # [2018.12.08] Hanging behavior prevents us from running this:
-      # ./Scripts/run_linux_PTI_docker.sh || \
-      #     echo "EXPECTED FAILURE: PTI is not required to pass at this time."
+      ./Scripts/run_linux_PTI_docker.sh || \
+          echo "EXPECTED FAILURE: PTI is not required to pass at this time."
       ;;
   
   nodocker)
