@@ -30,6 +30,14 @@ else
     mode=$1
 fi
 
+# Avoiding collisions on concurrently running tests is a difficult
+# business.  Here we use the CI build ID (Azure Pipelines) if
+# available, to make more unique CRA instance names.
+INSTPREF=`whoami`
+if [ ${BUILD_BUILDID:+defined} ]; then
+    INSTPREF=${INSTPREF}"$BUILD_BUILDID"
+fi
+export INSTPREF
 
 case $mode in
   docker)
@@ -38,7 +46,7 @@ case $mode in
       # When we are trying to run tests we don't really want the tarball:
       DONT_BUILD_TARBALL=1 ./build_docker_images.sh
 
-      ./Scripts/internal/run_linux_PTI_docker.sh
+      ./Scripts/internal/run_linux_PTI_docker.sh 
       ;;
   
   nodocker)
@@ -49,6 +57,12 @@ case $mode in
       
       cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
       ./build_dotnetcore.sh
+
+      echo
+      echo "All builds completed.  Attempt to run a test."
+      ./run_small_PTI_and_shutdown.sh $INSTPREF || \
+          echo "EXPECTED FAILURE - allowing local non-docker test to fail for PTI."
+      
       cd "$AMBROSIA_ROOT"
       ;;
 
