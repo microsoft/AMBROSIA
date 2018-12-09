@@ -38,3 +38,9 @@ tmux select-pane -t 0 \; \
      split-window -h  \; \
      send-keys "sleep 10; ./bin/Server --rp $PORT4 --sp $PORT3 -j dockertest1 -s dockertest2 -n 1 -c" C-m ;
 tmux attach
+
+echo "Tmux exited"
+# echo "Attempt a cleanup of our table metadata:"
+# UnsafeDeregisterInstance $CLIENTNAME || true
+# UnsafeDeregisterInstance $SERVERNAME || true
+echo "All done."

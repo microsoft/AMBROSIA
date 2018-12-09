@@ -32,6 +32,8 @@ function DOCKRUN() {
 DOCKRUN ambrosia-perftest Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "/ambrosia_logs/"
 DOCKRUN ambrosia-perftest Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "/ambrosia_logs/"
 
+rm server.id || true
+
 # [2018.11.29] Docker for Windows appears to have a bug that will not properly
 # pass through an absolute path for the program to run, but instead will prepend
 # "C:/Users/../vendor/git-for-windows/", incorrectly reinterpreting the path on
@@ -47,8 +49,13 @@ DOCKRUN --env AMBROSIA_INSTANCE_NAME=$CLIENTNAME ambrosia-perftest runAmbrosiaSe
 
 echo "Job docker image exited cleanly, killing the server one."
 docker kill $(cat ./server.id)
+rm server.id
 
 echo "Docker ps should show as empty now:"
 docker ps
 
 echo "TwoContainers test mode completed."
+echo "Attempt a cleanup of our table metadata:"
+DOCKRUN ambrosia-perftest UnsafeDeregisterInstance $CLIENTNAME || true 
+DOCKRUN ambrosia-perftest UnsafeDeregisterInstance $SERVERNAME || true
+echo "All done."
