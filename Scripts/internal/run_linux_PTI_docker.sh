@@ -62,6 +62,12 @@ case $PTI_MOUNT_LOGS in
 esac
 
 case $PTI_MODE in
+  tmux)
+     echo "Testing the interactive, tmux-based demo."
+      
+    `dirname $0`/run_in_tmux_then_exit.sh
+    ;;
+    
   OneContainer)
     echo "Running PTI server/client both inside ONE container:"
     set -x
@@ -75,7 +81,7 @@ case $PTI_MODE in
     "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible/run_two_docker_containers.sh `whoami`
     ;;
     
-    *)
+  *)
     echo "ERROR: invalid value of PTI_MODE=$PTI_MODE";
     echo " (expected 'OneContainer' or 'TwoContainers')";
     exit 1;
