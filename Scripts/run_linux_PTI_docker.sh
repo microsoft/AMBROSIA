@@ -62,7 +62,7 @@ case $PTI_MOUNT_LOGS in
 esac
 
 case $PTI_MODE in
-    OneContainer)
+  OneContainer)
     echo "Running PTI server/client both inside ONE container:"
     set -x
     $DOCKER run --rm ${OPTS} \
@@ -70,9 +70,9 @@ case $PTI_MODE in
     set +x
     ;;
     
-    TwoContainers)
+  TwoContainers)
     echo "Running PTI server/client in separate, communicating containers:"
-    "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible/run_two_docker_containers.sh
+    "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible/run_two_docker_containers.sh `whoami`
     ;;
     
     *)
