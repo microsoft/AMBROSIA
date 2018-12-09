@@ -9,8 +9,11 @@ set -xeuo pipefail
 
 source `dirname $0`/Scripts/default_var_settings.sh
 
-Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "/ambrosia_logs/" --lts 1024
-Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "/ambrosia_logs/" --lts 1024
+UnsafeDeregisterInstance $CLIENTNAME || echo ok
+UnsafeDeregisterInstance $SERVERNAME || echo ok
+
+Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "/ambrosia_logs/" 
+Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "/ambrosia_logs/" 
 
 set +x
 start_coordinator -i $CLIENTNAME -p $CRAPORT1
