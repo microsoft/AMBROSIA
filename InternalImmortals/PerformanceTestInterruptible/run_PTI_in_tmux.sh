@@ -1,13 +1,17 @@
 #!/bin/bash
 set -xeuo pipefail
 
+# ------------------------------------------------------------------------------
 # This is a script to run PTI interactively to allow a human observer
 # to see all four processes as panes of a tmux session.
 
 # It is typically called WITHIN a docker container, like so:
+#
 #  docker run -it --rm --env AZURE_STORAGE_CONN_STRING="$AZURE_STORAGE_CONN_STRING" ambrosia-perftest  ./run_PTI_in_tmux.sh
+#
+# ------------------------------------------------------------------------------
 
-source `dirname $0`/Scripts/default_var_settings.sh
+source `dirname $0`/default_var_settings.sh
 
 export PATH="$PATH:/ambrosia/bin"
 

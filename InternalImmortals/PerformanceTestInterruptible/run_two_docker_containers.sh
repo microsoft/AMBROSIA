@@ -12,13 +12,13 @@ set -xeuo pipefail
 # It should exit cleanly after the test is complete.
 
 cd `dirname $0`
-source ./Scripts/default_var_settings.sh
+source ./default_var_settings.sh
 function DOCKRUN() {
     docker run --rm --env AZURE_STORAGE_CONN_STRING="$AZURE_STORAGE_CONN_STRING" $*
 }
 
-DOCKRUN ambrosia-perftest Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "/ambrosia_logs/" --lts 1024
-DOCKRUN ambrosia-perftest Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "/ambrosia_logs/" --lts 1024
+DOCKRUN ambrosia-perftest Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "/ambrosia_logs/"
+DOCKRUN ambrosia-perftest Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "/ambrosia_logs/"
 
 # [2018.11.29] Docker for Windows appears to have a bug that will not properly
 # pass through an absolute path for the program to run, but instead will prepend
