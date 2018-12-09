@@ -53,14 +53,14 @@ if [ $# -eq 0 ]; then print_usage; fi
 # Don't let this fail, it's just informative:
 APPNAME=`basename $1` || APPNAME="$1"
 
-if [[ ! -v AMBROSIA_INSTANCE_NAME ]]; then
+if ! [[ ${AMBROSIA_INSTANCE_NAME:+defined} ]]; then
     echo "ERROR $TAG: unbound environment variable: AMBROSIA_INSTANCE_NAME"
     echo 
     print_usage
     exit 1
 fi
 
-if [[ -v AMBROSIA_IMMORTALCOORDINATOR_PORT ]];
+if [[ ${AMBROSIA_IMMORTALCOORDINATOR_PORT:+defined} ]];
 then
     echo " $TAG Using environment var AMBROSIA_IMMORTALCOORDINATOR_PORT=$AMBROSIA_IMMORTALCOORDINATOR_PORT"
 else
@@ -112,13 +112,17 @@ function start_immortal_coordinator() {
     if ! which ImmortalCoordinator; then
         echo "  ERROR $TAG - ImmortalCoordinator not found on path!"
         exit 1
-    fi    
-    echo " $TAG   Creating zero length log file: $COORDLOG"
-    if ! truncate -s 0 "$COORDLOG";
+    fi
+    if [ -e "$COORDLOG" ]; then
+        echo " $TAG   Removing existing log file $COORDLOG"
+        rm "$COORDLOG"
+    fi
+    echo " $TAG   Creating zero-length log file at $COORDLOG"
+    if ! touch "$COORDLOG";
     then
         COORDLOG=`mktemp ImmortalCoordinator.XXXXXX.log`
         echo " ! WARNING $TAG: could not write coordinator log, using $COORDLOG instead."
-        truncate -s 0 "$COORDLOG"
+        touch "$COORDLOG"
     fi
     echo " $TAG   Redirecting output to: $COORDLOG"
     
@@ -132,7 +136,7 @@ function start_immortal_coordinator() {
         coord_pid=$!
     fi
 
-    if [[ ! -v AMBROSIA_SILENT_COORDINATOR ]]; then
+    if ! [[ ${AMBROSIA_SILENT_COORDINATOR:+defined} ]]; then
         tail_tagged "$COORDTAG" "$COORDLOG"
     fi
     while ! grep -q "Ready" "$COORDLOG" && kill -0 $coord_pid 2>/dev/null ;
