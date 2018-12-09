@@ -29,9 +29,6 @@ if ! which Ambrosia; then
     popd
 fi
 
-# UnsafeDeregisterInstance $CLIENTNAME || true
-# UnsafeDeregisterInstance $SERVERNAME || true
-
 Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "./ambrosia_logs/" 
 Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "./ambrosia_logs/"
 
@@ -57,5 +54,9 @@ echo
 echo "PTI Client finished, exiting."
 kill $pid_server
 wait
-echo "Everything shut down.  All done."
+echo "Everything shut down.  All background processes done."
 
+echo "Attempt a cleanup of our table metadata:"
+UnsafeDeregisterInstance $CLIENTNAME || true
+UnsafeDeregisterInstance $SERVERNAME || true
+echo "All done."
