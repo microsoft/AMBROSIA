@@ -12,6 +12,9 @@ set -xeuo pipefail
 # ------------------------------------------------------------------------------
 
 source `dirname $0`/default_var_settings.sh
+CLIENTNAME=ptitmuxC
+SERVERNAME=ptitmuxS
+
 
 export PATH="$PATH:/ambrosia/bin"
 
