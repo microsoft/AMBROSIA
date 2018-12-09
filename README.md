@@ -29,34 +29,25 @@ execution, without requiring developers to weave together such complex
 systems, or use overly expensive mechanisms. Check out the overview
 deck linked to the left to learn more or email us.
 
-Quick Start
------------
+Quick Start: Fetch a binary distribution
+----------------------------------------
 
-Build the PerformanceTestInterruptible example, using this one-line
-powershell command:
-
-    .\CmdLine-FreshBuild.ps1
-
-Overview of directories
------------------------
-
- * LocalAmbrosiaRuntime: the core reliable messaging and coordination engine.
-
- * InternalImmortals: example programs and services built on Ambrosia.
-
- * Tools: additional console tools for interacting with the Azure
-           metadata that supports an Ambrosia service.
-
- * AmbrosiaTest: integration tests.
-
- * Ambrosia : Language binding for C#
- 
-Out of place things that should move:
-
- * Franklin_TestApp/
-   - this contained the first kubernetes prototype, obsolete [2018.09.13]
+FINISHME - 
 
 
+Quick Start: Build from Source
+------------------------------
 
+Build the Ambrosia Immortal coordinator and C# client code generator
+with this Bash script:
 
+    ./build_dotnetcore_bindist.sh
 
+Given a .NET Core SDK, this will work on Windows, Mac OS, or Linux.
+After that, you have an AMBROSIA binary distribution built inside the
+`./bin` directory within your working copy.
+
+Running a Sample
+----------------
+
+FINISHME - AmbrosiaDocs.md content will move here!!
