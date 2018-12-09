@@ -47,33 +47,35 @@ fi
 # Optional: mount logs from *outside* the container:
 case $PTI_MOUNT_LOGS in
     InternalLogs)
-    ;;
+        ;;
     ExternalLogs)
-	# [2018.11.27] RRN: Having problems with this on Windows^:
-	OPTS+=" -v ${AMBROSIA_LOGDIR}:/ambrosia_logs "
-    ;;
+        # Use a directory on the local machine.
+        AMBROSIA_LOGDIR=`pwd`/logs
+        mkdir -p "$AMBROSIA_LOGDIR"
+        OPTS+=" -v ${AMBROSIA_LOGDIR}:/ambrosia_logs "
+        ;;
     *)
-	echo "ERROR: invalid value of PTI_MOUNT_LOGS=$PTI_MOUNT_LOGS";
-	echo "  (expected 'InternalLogs' or 'ExternalLogs')";
-	exit 1;
-    ;;
+        echo "ERROR: invalid value of PTI_MOUNT_LOGS=$PTI_MOUNT_LOGS";
+        echo "  (expected 'InternalLogs' or 'ExternalLogs')";
+        exit 1;
+        ;;
 esac
 
 case $PTI_MODE in
     OneContainer)
-	echo "Running PTI server/client both inside ONE container:"
-	set -x
-	$DOCKER run --rm ${OPTS} ambrosia-perftest ./run_small_PTI_and_shutdown.sh
-	set +x
-	;;
+    echo "Running PTI server/client both inside ONE container:"
+    set -x
+    $DOCKER run --rm ${OPTS} ambrosia-perftest ./run_small_PTI_and_shutdown.sh
+    set +x
+    ;;
     TwoContainers)
-	echo "Running PTI server/client in separate, communicating containers:"
-	"$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible/run_two_docker_containers.sh
-	;;
+    echo "Running PTI server/client in separate, communicating containers:"
+    "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible/run_two_docker_containers.sh
+    ;;
     *)
-	echo "ERROR: invalid value of PTI_MODE=$PTI_MODE";
-	echo " (expected 'OneContainer' or 'TwoContainers')";
-	exit 1;
+    echo "ERROR: invalid value of PTI_MODE=$PTI_MODE";
+    echo " (expected 'OneContainer' or 'TwoContainers')";
+    exit 1;
 esac
 
 echo "$0: Finished successfully."
