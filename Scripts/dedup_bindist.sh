@@ -50,21 +50,22 @@ for dir in $secondary; do
         squish)
             echo -ne "  Deleting dups: " ;;
     esac
-    while read f; do        
-        echo -ne "."
-        # Requires realpath from GNU coreutils:
-        dirof=`dirname $f`
-        relative=`realpath ../runtime/$f --relative-to=$dirof`
-        # echo "ln -sf $relative $f"
-        case $mode in
-            symlink)
-                ln -sf $relative $f ;;
-            squish)
-                rm -f $f ;;
-        esac
-    done < $dups
-    echo
-
+    case $mode in
+        squish)
+            xargs rm -f < $dups
+            ;;        
+        symlink)
+            while read f; do        
+                echo -ne "."
+                # echo "ln -sf $relative $f"
+                # Requires realpath from GNU coreutils:
+                dirof=`dirname $f`
+                relative=`realpath ../runtime/$f --relative-to=$dirof`
+                ln -sf $relative $f
+            done < $dups
+            echo
+            ;;
+    esac
     rm $diffs
     rm $dups
 done

@@ -78,7 +78,7 @@ buildit $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
 buildit $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
 buildit $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
 pushd $OUTDIR
-ln -s runtime/Ambrosia ambrosia
+ln -s runtime/Ambrosia Ambrosia
 ln -s coord/ImmortalCoordinator
 ln -s unsafedereg/UnsafeDeregisterInstance
 popd
@@ -118,10 +118,10 @@ fi
 # echo "----------------------------------------"
 # chmod -x ./bin/*.dll ./bin/*.so ./bin/*.dylib ./bin/*.a 2>/dev/null || echo 
 
-
+echo 
 echo "Deduplicating output produced by separate dotnet publish calls"
 echo "--------------------------------------------------------------"
-if [ "$OS" == "Windows_NT" ];
+if [ ${OS:-defined} ] && [ "$OS" == "Windows_NT" ];
 then ./Scripts/dedup_bindist.sh squish
 else ./Scripts/dedup_bindist.sh symlink
 fi
