@@ -25,13 +25,14 @@ hits3=`grep bin/Server ps.out | grep -v tmux | wc -l`
 
 if [ $hits1 != 2 ] || [ $hits2 != 1 ] || [ $hits3 != 1 ]; then 
     echo "Failed health check."
+    echo "Processes were: "
+    cat ps.out
     exit 1
 else 
     echo "Passed health check."
+    rm ps.out cont.id || true
     exit 0
 fi
-
-
 
 
 
