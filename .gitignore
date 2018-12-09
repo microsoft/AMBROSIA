@@ -246,7 +246,7 @@ ModelManifest.xml
 # CodeGen history files
 **/GeneratedSourceFiles/*/*/
 # Except latest generated code
-!**/GeneratedSourceFiles/*/latest/
+# !**/GeneratedSourceFiles/*/latest/
 
 #Test run logs
 /AmbrosiaTest/AmbrosiaTest/AmbrosiaLogs

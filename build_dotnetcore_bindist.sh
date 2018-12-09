@@ -17,6 +17,7 @@ export AMBROSIA_DOTNET_CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 UNAME=`uname`
 if [ $AMBROSIA_DOTNET_FRAMEWORK == "net46" ]; then
     PLAT=x64
+    OS=Windows_NT
 else
     # netcore gives an error on Ambrosia.csproj with x64...
     if [ "$UNAME" == Linux ];
@@ -24,6 +25,7 @@ else
     elif [ "$UNAME" == Darwin ];
     then PLAT=osx-x64
     else PLAT=win10-x64
+         OS=Windows_NT
     fi
 fi
 
@@ -123,6 +125,9 @@ echo "Deduplicating output produced by separate dotnet publish calls"
 echo "--------------------------------------------------------------"
 if [ ${OS:+defined} ] && [ "$OS" == "Windows_NT" ];
 then ./Scripts/dedup_bindist.sh squish
+elif [ "$UNAME" == Darwin ]; 
+then ./Scripts/dedup_bindist.sh squish
+     # FIXME ^ should symlink, but "realpath" is needed.
 else ./Scripts/dedup_bindist.sh symlink
 fi
 

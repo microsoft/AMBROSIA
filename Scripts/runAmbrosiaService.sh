@@ -23,6 +23,10 @@ set -euo pipefail
 
 TAG="[runAmbrosiaService.sh]"
 
+if ! [ "${COORDTAG:+defined}" ];
+then COORDTAG = "ImmortalCoord"
+fi
+
 function print_usage() {
     echo "USAGE: $0 <service-binary> <service-args>*"
     echo    
@@ -111,7 +115,7 @@ function start_immortal_coordinator() {
         # A complicated but full-proof bash method of line-by-line reading:
         tail -F "$COORDLOG" | \
             while IFS='' read -r line || [[ -n "$line" ]]; do
-                echo " [ImmortalCoord] $line";
+                echo " [$COORDTAG] $line";
             done &
     fi
     while ! grep -q "Ready" "$COORDLOG" && kill -0 $coord_pid 2>/dev/null ;

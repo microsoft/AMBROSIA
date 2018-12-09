@@ -28,7 +28,7 @@ UnsafeDeregisterInstance $SERVERNAME || echo ok
 Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "/ambrosia_logs/" 
 Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "/ambrosia_logs/" 
 
-AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT1 \
+COORDTAG=CoordServ AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT1 \
   runAmbrosiaService.sh ./bin/Server --rp $PORT4 --sp $PORT3 -j $CLIENTNAME -s $SERVERNAME -n 1 -c & 
 set +x
 pid_server=$!
@@ -36,7 +36,8 @@ echo "Server launched as PID ${pid_server}.  Waiting a bit."
 sleep 12
 echo "Launching client now:"
 set -x
-AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT2 \
+
+COORDTAG=CoordCli AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT2 \
   runAmbrosiaService.sh ./bin/Job --rp $PORT2 --sp $PORT1 -j $CLIENTNAME -s $SERVERNAME --mms 65536 -n 2 -c 
 
 echo "Client finished, exiting."e
