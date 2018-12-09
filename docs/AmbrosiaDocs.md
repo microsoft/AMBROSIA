@@ -37,6 +37,8 @@ RPCs.
 
 ## Requirements/Platforms supported for development and deployment
 
+FINISHME - 
+
 ## Setup
 How to get set up to use Ambrosia
 
@@ -118,6 +120,8 @@ open a PowerShell prompt and enter the following commands:
     .\Generate-Assemblies-NetCore.ps1
 
 ## Developing with Ambrosia
+FINISHME - 
+
 small snippet example of how to send messages through ambrosia
 how to handle impulses
 recovery, active active
@@ -126,19 +130,23 @@ time travel debugging how to
 portability
 
 ## Deployment of services built on Ambrosia
-Windows, Linux
+FINISHME - Windows, Linux
 
 ## Best Practices
-how to ensure you get all the guarantees that Ambrosia provides
+FINISHME - how to ensure you get all the guarantees that Ambrosia provides
 
 ## Examples
+
+FINISHME - 
 Brief description of each example and what it demonstrates
 instructions for cloning/downloading and modifying examples
 
 ## References
-configurations, command line options, parameters
+FINISHME -  configurations, command line options, parameters
 
 ## Roadmap
+
+FINISHME - 
 planned future features
 other language support
 support non-Azure storage

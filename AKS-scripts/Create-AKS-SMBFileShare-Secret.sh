@@ -15,12 +15,12 @@ set -euo pipefail
 echo "-----------Begin Create-AKS-SMBFileShare-Secret-----------"
 source `dirname $0`/Defs/Common-Defs.sh
 
-if [[ "${AZURE_STORAGE_KEY:+isset}" == "isset" ]]; then
+if ! [[ "${AZURE_STORAGE_KEY:+defined}" ]]; then
     echo "$0: AZURE_STORAGE_KEY not set, retrieving:"
     source `dirname $0`/Defs/Set-Storage-Vars.sh
 fi
 
-if $KUBE get secret $FILESHARE_SECRET_NAME 2>-;
+if $KUBE get secret $FILESHARE_SECRET_NAME 2>/dev/null;
 then
     echo "File share secret exists, ASSUMING it's up-to-date."
     echo " (Manually clean with 'Clean-AKS.sh auth'.)"

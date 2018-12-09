@@ -241,9 +241,6 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 
-# Ignore InternalImmortals, because they typically build their own Docker containers:
-InternalImmortals/
-
 #Test run logs
 /AmbrosiaTest/AmbrosiaTest/AmbrosiaLogs
 
@@ -256,3 +253,10 @@ InternalImmortals/
 .git
 Dockerfile
 build_docker_images.sh
+
+**/launchSettings.json
+CodeGenDependencies
+**/GeneratedSourceFiles/*/*/
+
+# Ignore InternalImmortals, because they typically build their own Docker containers:
+InternalImmortals/

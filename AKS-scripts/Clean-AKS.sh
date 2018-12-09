@@ -38,7 +38,7 @@ function clean_auth()
     else
 	echo "Service principal, $SERVICE_PRINCIPAL_NAME, not found.  Not deleting."	
     fi
-    if $KUBE get secret $ACR_SECRET_NAME >- ;
+    if $KUBE get secret $ACR_SECRET_NAME >/dev/null ;
     then
 	echo "Secret $ACR_SECRET_NAME exists, deleting:"
 	set -x
@@ -48,7 +48,7 @@ function clean_auth()
 
     # File share access secret (logs) 
     # ----------------------------------------
-    if $KUBE get secret $FILESHARE_SECRET_NAME 2>-;
+    if $KUBE get secret $FILESHARE_SECRET_NAME 2>/dev/null;
     then
 	echo "Secret already exists, deleting:"
 	set -x
