@@ -68,10 +68,12 @@ case $PTI_MODE in
     $DOCKER run --rm ${OPTS} ambrosia-perftest ./run_small_PTI_and_shutdown.sh
     set +x
     ;;
+    
     TwoContainers)
     echo "Running PTI server/client in separate, communicating containers:"
     "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible/run_two_docker_containers.sh
     ;;
+    
     *)
     echo "ERROR: invalid value of PTI_MODE=$PTI_MODE";
     echo " (expected 'OneContainer' or 'TwoContainers')";

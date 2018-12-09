@@ -8,7 +8,7 @@ CLIENTNAME=dockertest1
 SERVERNAME=dockertest2
 
 CRAPORT1=1500
-CRAPORT2=2500
+CRAPORT2=50500
 
 cd `dirname $0`
 myscriptdir=`pwd`
