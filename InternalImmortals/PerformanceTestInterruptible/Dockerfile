@@ -50,8 +50,8 @@ RUN $BUILDIT Client/Job.csproj
 RUN $BUILDIT Server/Server.csproj
 
 # Add the scripts for invoking PTI inside the container:
-ADD run_*.sh            /ambrosia/InternalImmortals/PerformanceTestInterruptible/
-ADD Scripts             /ambrosia/InternalImmortals/PerformanceTestInterruptible/Scripts
+ADD run_*.sh                /ambrosia/InternalImmortals/PerformanceTestInterruptible/
+ADD default_var_settings.sh /ambrosia/InternalImmortals/PerformanceTestInterruptible/
 
 env PATH="$PATH:/ambrosia/InternalImmortals/PerformanceTestInterruptible/bin"
 

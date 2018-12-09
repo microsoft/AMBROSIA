@@ -80,55 +80,51 @@ fi
 function start_immortal_coordinator() {
     echo " $TAG Launching coordingator with: ImmortalCoordinator" $*
     if ! which ImmortalCoordinator; then
-	echo "  ERROR $TAG - ImmortalCoordinator not found on path!"
-	exit 1
+        echo "  ERROR $TAG - ImmortalCoordinator not found on path!"
+        exit 1
     fi    
     echo " $TAG   Creating zero length log file: $COORDLOG"
     if ! truncate -s 0 "$COORDLOG";
     then
-	COORDLOG=`mktemp ImmortalCoordinator.XXXXXX.log`
-	echo " ! WARNING $TAG: could not write coordinator log, using $COORDLOG instead."
-	truncate -s 0 "$COORDLOG"
+        COORDLOG=`mktemp ImmortalCoordinator.XXXXXX.log`
+        echo " ! WARNING $TAG: could not write coordinator log, using $COORDLOG instead."
+        truncate -s 0 "$COORDLOG"
     fi
     echo " $TAG   Redirecting output to: $COORDLOG"
     
     if which rotatelogs; then 
-	# Bound the total amount of output used by the ImmortalCoordinator log:
-	set -x 
-	ImmortalCoordinator $* 2>&1 | rotatelogs -f -t "$COORDLOG" 10M &
-	set +x
-	coord_pid=$!
+        # Bound the total amount of output used by the ImmortalCoordinator log:
+        ImmortalCoordinator $* 2>&1 | rotatelogs -f -t "$COORDLOG" 10M &
+        coord_pid=$!
     else
-	echo " ! WARNING $TAG: rotatelogs not available, NOT bounding size of $COORDLOG"
-	set -x
-	ImmortalCoordinator $* >>"$COORDLOG" 2>&1 &
-	set +x
-	coord_pid=$!
+        echo " ! WARNING $TAG: rotatelogs not available, NOT bounding size of $COORDLOG"
+        ImmortalCoordinator $* >>"$COORDLOG" 2>&1 &
+        coord_pid=$!
     fi
 
     while [ ! -e "$COORDLOG" ]; do
-	echo " $TAG -> Waiting for $COORDLOG to appear"
-	sleep 1
+        echo " $TAG -> Waiting for $COORDLOG to appear"
+        sleep 1
     done
     if [[ ! -v AMBROSIA_SILENT_COORDINATOR ]]; then
-	# It seems like tail -F is spitting the same output multiple times on 
-	# A complicated but full-proof bash method of line-by-line reading:
-	tail -F "$COORDLOG" | \
-	  while IFS='' read -r line || [[ -n "$line" ]]; do
-	    echo " [ImmortalCoord] $line";
-	  done &
+        # It seems like tail -F is spitting the same output multiple times on 
+        # A complicated but full-proof bash method of line-by-line reading:
+        tail -F "$COORDLOG" | \
+            while IFS='' read -r line || [[ -n "$line" ]]; do
+                echo " [ImmortalCoord] $line";
+            done &
     fi
     while ! grep -q "Ready" "$COORDLOG" && kill -0 $coord_pid 2>/dev/null ;
     do sleep 2; done
-
+    
     if ! kill -0 $coord_pid 2>/dev/null ;
     then echo
-	 echo "--------------- ERROR $TAG ----------------"
-	 echo "Coordinator died while we were waiting.  Final log ended with:"
-	 echo "--------------------------------------------------------------"
-	 tail -n20 $COORDLOG
-	 echo "--------------------------------------------------------------"	 
-	 exit 1;
+         echo "--------------- ERROR $TAG ----------------"
+         echo "Coordinator died while we were waiting.  Final log ended with:"
+         echo "--------------------------------------------------------------"
+         tail -n20 $COORDLOG
+         echo "--------------------------------------------------------------"   
+         exit 1;
     fi
     echo " $TAG Coordinator looks ready."
 }
@@ -143,16 +139,16 @@ touch $keep_monitoring
 function monitor_health() {
     echo " $TAG Health monitor starting coord_pid=$coord_pid, app_pid=$app_pid"
     while [ -f $keep_monitoring ]; do
-	sleep 2
-	if ! kill -0 $coord_pid 2>- ; then
-	    echo "-------------------------------------------------------"
-	    echo "ERROR $TAG ImmortalCoordinator died!"
-	    echo "Killing application process.  Must initiate recovery."
-	    echo "-------------------------------------------------------"
-	    set -x 
-	    kill -9 $app_pid
-	    exit 1
-	fi
+        sleep 2
+        if ! kill -0 $coord_pid 2>- ; then
+            echo "-------------------------------------------------------"
+            echo "ERROR $TAG ImmortalCoordinator died!"
+            echo "Killing application process.  Must initiate recovery."
+            echo "-------------------------------------------------------"
+            set -x 
+            kill -9 $app_pid
+            exit 1
+        fi
     done
     echo " $TAG Cleanly exiting health monitor background function..."
 }
