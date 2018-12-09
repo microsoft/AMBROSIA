@@ -97,7 +97,7 @@ set +x
 echo 
 echo "Copying deployment script."
 cp -a Scripts/runAmbrosiaService.sh bin/
-(cd bin; ln -s Ambrosia ambrosia || echo ok)
+# (cd bin; ln -s Ambrosia ambrosia || echo ok)
 
 echo 
 echo "Building Native-code client library"
@@ -117,5 +117,10 @@ fi
 # echo "Removing unnecessary execute permissions"
 # echo "----------------------------------------"
 # chmod -x ./bin/*.dll ./bin/*.so ./bin/*.dylib ./bin/*.a 2>/dev/null || echo 
+
+
+echo "Deduplicating output produced by separate dotnet publish calls"
+echo "--------------------------------------------------------------"
+./Scripts/dedup_bindist.sh
 
 echo "$0 Finished"
