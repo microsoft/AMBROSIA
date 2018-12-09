@@ -72,6 +72,9 @@ echo "------------------------------------------"
 set -x
 $BUILDIT Client/Job.csproj
 $BUILDIT Server/Server.csproj
+mkdir -p ./bin
+ln -s ../Client/publish/Job ./bin/Job
+ln -s ../Server/publish/Server ./bin/Server
 set +x
 
 echo "$0: Finished building."

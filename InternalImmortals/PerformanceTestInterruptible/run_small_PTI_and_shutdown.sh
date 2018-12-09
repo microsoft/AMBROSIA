@@ -1,6 +1,8 @@
 #!/bin/bash
-echo "Using AZURE_STORAGE_CONN_STRING =" $AZURE_STORAGE_CONN_STRING
-set -xeuo pipefail
+
+[[ "$AZURE_STORAGE_CONN_STRING" =~ ';AccountName='[^\;]*';' ]] && \
+  echo "Using AZURE_STORAGE_CONN_STRING with account "${BASH_REMATCH}
+set -euo pipefail
 
 # ------------------------------------------------------------------------------
 # This script is meant to be used in automated testing.  The output is
@@ -29,11 +31,21 @@ if ! which Ambrosia; then
     popd
 fi
 
-Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "./ambrosia_logs/" 
-Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "./ambrosia_logs/"
+echo
+echo "--------------------------------------------------------------------------------"
+echo "PerformanceTestInterruptible with 4 processes all in this machine/container"
+echo "  Instance: names $CLIENTNAME, $SERVERNAME"
+echo "--------------------------------------------------------------------------------"
+echo
+
+set -x
+time Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "./ambrosia_logs/" 
+time Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "./ambrosia_logs/"
+set +x
 
 echo
 echo "PTI: Launching Server:"
+set -x
 AMBROSIA_INSTANCE_NAME=$SERVERNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT1 \
 COORDTAG=CoordServ AMBROSIA_IMMORTALCOORDINATOR_LOG=./server.log \
   runAmbrosiaService.sh ./bin/Server --rp $PORT4 --sp $PORT3 -j $CLIENTNAME -s $SERVERNAME -n 1 -c & 
@@ -42,6 +54,12 @@ pid_server=$!
 echo "Server launched as PID ${pid_server}.  Waiting a bit."
 sleep 12
 
+if ! kill -0 $pid_server 2>/dev/null ; then
+    echo
+    echo " !!!  Server already died!  Not launching Job.  !!!"
+    echo
+    exit 1
+fi
 echo
 echo "PTI: Launching Job now:"
 set -x
