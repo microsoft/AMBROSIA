@@ -32,12 +32,17 @@ RUN cd bin && \
     ln -s coord/ImmortalCoordinator && \ 
     ln -s unsafedereg/UnsafeDeregisterInstance
 
-
 # (2) Language binding: CSharp (depends on AmbrosiaLibCS on nuget)
 # ----------------------------------------------------------------
 ADD Clients/CSharp                /ambrosia/Clients/CSharp
 RUN $BUILDIT -o /ambrosia/bin/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj && \
     cd bin && ln -s codegen/AmbrosiaCS 
+
+# (2B) Reduce the size of our dotnet binary distribution:
+ADD ./Scripts/dedup_bindist.sh Scripts/
+RUN du -sch ./bin && \
+    ./Scripts/dedup_bindist.sh && \
+    du -sch ./bin
 
 # (3) Low-level Native-code network client:
 # -----------------------------------------

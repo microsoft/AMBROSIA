@@ -21,7 +21,7 @@ myscriptdir=`pwd`
 # Side effect: runs a tail process in the background
 function start_coordinator() {
     local COORDLOG="$myscriptdir/coord_out_client.txt"    
-    echo "Launching coordingator with: ImmortalCoordinator" $*
+    echo "Launching coordinator with: ImmortalCoordinator" $*
     echo "  Redirecting output to: $COORDLOG"
     "ImmortalCoordinator" $* 2>&1 >"$COORDLOG" &
     coord_pid=$!

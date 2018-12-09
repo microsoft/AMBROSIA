@@ -31,7 +31,8 @@ case $mode in
   docker)
     
       echo "Executing containerized, Docker build."
-      ./build_docker_images.sh
+      # When we are trying to run tests we don't really want the tarball:
+      DONT_BUILD_TARBALL=1 ./build_docker_images.sh
 
       ./Scripts/run_linux_PTI_docker.sh || \
           echo "EXPECTED FAILURE: PTI is not required to pass at this time."
