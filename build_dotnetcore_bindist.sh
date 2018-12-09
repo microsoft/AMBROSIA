@@ -121,7 +121,7 @@ fi
 echo 
 echo "Deduplicating output produced by separate dotnet publish calls"
 echo "--------------------------------------------------------------"
-if [ ${OS:-defined} ] && [ "$OS" == "Windows_NT" ];
+if [ ${OS:+defined} ] && [ "$OS" == "Windows_NT" ];
 then ./Scripts/dedup_bindist.sh squish
 else ./Scripts/dedup_bindist.sh symlink
 fi
