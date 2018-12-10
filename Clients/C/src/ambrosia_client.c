@@ -57,10 +57,12 @@ int g_to_immortal_coord, g_from_immortal_coord;
 
 #ifdef IPV4
 const char* coordinator_host = "127.0.0.1";
-#else
+#elif defined IPV6
 // char* host = "0:0:0:0:0:0:0:1";
 // char* host = "1:2:3:4:5:6:7:8";
 const char* coordinator_host = "::1";
+#else
+#error "Preprocessor: Expected IPV4 or IPV6 to be defined."
 #endif
 
 #ifdef AMBCLIENT_DEBUG

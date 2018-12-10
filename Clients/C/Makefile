@@ -1,6 +1,9 @@
 
 # Put your -D variables here, e.g. -DDEBUG
-DEFINES= 
+DEFINES= -DIPV4
+# ^ TODO build everything twice for IPV6 vs IPV4.
+# TODOTODO fix it so that one compile can work for both.
+
 
 GNULIBS= -lpthread
 GNUOPTS= -pthread -O3
