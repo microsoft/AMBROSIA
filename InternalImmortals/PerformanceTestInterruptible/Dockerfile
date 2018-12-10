@@ -24,6 +24,7 @@ ADD IJob /ambrosia/InternalImmortals/PerformanceTestInterruptible/IJob
 WORKDIR /ambrosia/InternalImmortals/PerformanceTestInterruptible
 RUN dotnet publish -o $CGDEPS $BLDFLAGS IJob/IJob.csproj
 
+# DANGER, WARNING, FIXME: it is UNSAFE to dotnet publish twice to the same absolute path:
 ADD API /ambrosia/InternalImmortals/PerformanceTestInterruptible/API
 RUN dotnet publish -o $CGDEPS $BLDFLAGS API/ServerAPI.csproj
 
@@ -38,7 +39,7 @@ RUN rm -rf ./GeneratedSourceFiles && \
 RUN AmbrosiaCS CodeGen -a IJob/bin/Release/netcoreapp2.0/linux-x64/IJob.dll -a API/bin/Release/netcoreapp2.0/linux-x64/ServerAPI.dll -o PTIAmbrosiaGeneratedAPINetCore -f netcoreapp2.0 -b ./CodeGenDependencies/netcoreapp2.0
 
 # Be wary: absolute paths have rather different behavior for dotnet publish.
-ENV BUILDIT="dotnet publish -o /ambrosia/InternalImmortals/PerformanceTestInterruptible/bin $BLDFLAGS"
+ENV BUILDIT="dotnet publish -o publish $BLDFLAGS"
 
 # Bulid/ppublish the RPC wrappers whose project we just created:
 RUN $BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
