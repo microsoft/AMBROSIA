@@ -48,7 +48,7 @@ echo "PTI: Launching Server:"
 set -x
 AMBROSIA_INSTANCE_NAME=$SERVERNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT1 \
 COORDTAG=CoordServ AMBROSIA_IMMORTALCOORDINATOR_LOG=./server.log \
-  runAmbrosiaService.sh ./bin/Server --rp $PORT4 --sp $PORT3 -j $CLIENTNAME -s $SERVERNAME -n 1 -c & 
+  runAmbrosiaService.sh ./Server/publish/Server --rp $PORT4 --sp $PORT3 -j $CLIENTNAME -s $SERVERNAME -n 1 -c & 
 set +x
 pid_server=$!
 echo "Server launched as PID ${pid_server}.  Waiting a bit."
@@ -65,11 +65,11 @@ echo "PTI: Launching Job now:"
 set -x
 AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT2 \
 COORDTAG=CoordCli AMBROSIA_IMMORTALCOORDINATOR_LOG=./job.log \
-  runAmbrosiaService.sh ./bin/Job --rp $PORT2 --sp $PORT1 -j $CLIENTNAME -s $SERVERNAME --mms 65536 -n 2 -c 
+  runAmbrosiaService.sh ./Client/publish/Job --rp $PORT2 --sp $PORT1 -j $CLIENTNAME -s $SERVERNAME --mms 65536 -n 2 -c 
 set +x
 
 echo
-echo "PTI Client finished, exiting."
+echo "PTI Client finished, shutting down server."
 kill $pid_server
 wait
 echo "Everything shut down.  All background processes done."

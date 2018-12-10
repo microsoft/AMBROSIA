@@ -15,7 +15,7 @@ fi
 FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.0}"
 CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
-# OUTDIR=`pwd`/bin
+# Use a non-absolute directory here to prevent collisions:
 OUTDIR=publish
 BUILDIT="dotnet publish -o $OUTDIR -c $CONF -f $FMWK -r $PLAT"
 
@@ -72,9 +72,6 @@ echo "------------------------------------------"
 set -x
 $BUILDIT Client/Job.csproj
 $BUILDIT Server/Server.csproj
-mkdir -p ./bin
-ln -s ../Client/publish/Job ./bin/Job
-ln -s ../Server/publish/Server ./bin/Server
 set +x
 
 echo "$0: Finished building."

@@ -12,6 +12,7 @@ if (-not ( $env:AMBVARIANT )) {
 New-Item -ItemType Directory -Force -Path "CodeGenDependencies\netcoreapp2.0"
 Get-ChildItem "CodeGenDependencies\netcoreapp2.0" | Remove-Item
 Copy-Item "API\bin\Debug\netcoreapp2.0\publish\*" -Force -Destination "CodeGenDependencies\netcoreapp2.0\"
+# DANGER, WARNING, FIXME: it is UNSAFE to MERGE the outputs of two publish directories:
 Copy-Item "IJob\bin\Debug\netcoreapp2.0\publish\*" -Force -Destination "CodeGenDependencies\netcoreapp2.0\"
 
 Copy-Item "..\..\Clients\CSharp\AmbrosiaCS\AmbrosiaCS.csproj" -Force -Destination "CodeGenDependencies\netcoreapp2.0\"
