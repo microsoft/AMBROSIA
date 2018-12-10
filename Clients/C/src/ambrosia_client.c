@@ -1,4 +1,6 @@
 
+// See client.h header for function-level documentation.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -11,29 +13,13 @@
 
 #ifdef _WIN32
   #define WIN32_LEAN_AND_MEAN
-  /* #include <malloc.h> */
-  /* #include<stdio.h> */
-  /* #include<winsock2.h> */
-  /* #include <Ws2tcpip.h> */
-
   // for SIO_LOOPBACK_FAST_PATH: 
   #include <Mstcpip.h> 
   #pragma comment(lib,"ws2_32.lib") //Winsock Library
-
-  /* #define int32_t  INT32 */
-  /* #define uint32_t UINT32 */
-  /* #define int64_t  INT64 */
-  /* #define uint64_t UINT64 */
-
 #else
-  // *nix, but really Linux only for now:
-  /* #include <alloca.h> */
-  /* #include <unistd.h> */
   #include <sys/socket.h>
-  // #include <netinet/in.h>
   #include <arpa/inet.h> // inet_pton
   #include <netdb.h> // gethostbyname
-  /* #include <stdarg.h> */
 #endif
 
 #include "ambrosia/client.h"
@@ -58,8 +44,6 @@ int g_to_immortal_coord, g_from_immortal_coord;
 #ifdef IPV4
 const char* coordinator_host = "127.0.0.1";
 #elif defined IPV6
-// char* host = "0:0:0:0:0:0:0:1";
-// char* host = "1:2:3:4:5:6:7:8";
 const char* coordinator_host = "::1";
 #else
 #error "Preprocessor: Expected IPV4 or IPV6 to be defined."

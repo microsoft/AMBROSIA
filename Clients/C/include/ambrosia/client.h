@@ -14,8 +14,11 @@
 // Data formats used by the AMBROSIA "wire protocol"
 // -------------------------------------------------
 
+// The fixed header size used by the protocol:
 #define AMBROSIA_HEADERSIZE 24
 
+// A C struct which matches the format of the header.
+// 
 // The compiler shouldn't insert any padding for this one, but we use
 // the pragma to make absolutely sure:
 // #pragma pack(1)
@@ -26,7 +29,9 @@ struct log_hdr {
   int64_t seqID;
 };
 
-enum MsgType { RPC=0,                             // 
+// This enum is established by the wire protocol, which fixes this
+// assignment of (8 bit) integers to message types.
+enum MsgType { RPC=0,                       // 
 	       AttachTo=1,                        // dest str
 	       TakeCheckpoint=2,                  // no data
 	       RPCBatch=5,                        // count, msg seq
@@ -40,9 +45,7 @@ enum MsgType { RPC=0,                             //
 
 
 // The soft limit after which we should send on the socket.
-// TEMP: this will be replaced by a ringbuffer and a concurrent
-// network progress thread.
-// #define AMBCLIENT_DEFAULT_BUFSIZE 4096
+// A fairly large buffer is used for performance.
 #define AMBCLIENT_DEFAULT_BUFSIZE (20*1024*1024)
 
 // Print extremely verbose debug output to stdout:
@@ -98,6 +101,7 @@ extern int upport, downport;
 // received from a call to connect_sockets.
 void startup_protocol(int upfd, int downfd);
 
+// Connect the 
 void connect_sockets(int* upptr, int* downptr);
 
 //------------------------------------------------------------------------------
