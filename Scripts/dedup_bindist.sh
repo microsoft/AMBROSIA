@@ -21,22 +21,27 @@ fi
 # Helpers
 # ------------------------------------------------------------
 
-# Compute the relative path to A starting from directory B
-function getrelative()
-{
-    $to=$1
-    $relativeto=$2
-    if which realpath; then
-        realpath "$to" --relative-to="$relativeto"
-    elif which python; then
-        python -c "import os,sys;print(os.path.relpath(*(sys.argv[1:])))" "$to" "$relativeto"
-#   elif which perl; then
-    else
-        echo "ERROR $0: can't find an easy way to compute relative paths on this system."
-        exit 1
-    fi
-}
 
+
+# Compute the relative path to A starting from directory B
+# Output the resulting relative path to stdout.
+if which realpath 2>&1 >/dev/null ; then
+    
+    function getrelative() {
+        realpath "$1" --relative-to="$2"
+    }
+    
+elif which python 2>&1 >/dev/null ; then
+
+    function getrelative() {
+        python -c "import os,sys;print(os.path.relpath(*(sys.argv[1:])))" "$1" "$2"
+    }
+        
+# elif which perl; then
+else
+    echo "ERROR $0: can't find an easy way to compute relative paths on this system."
+    exit 1
+fi
 
 # ------------------------------------------------------------
 
@@ -79,11 +84,9 @@ for dir in $secondary; do
         symlink)
             while read f; do        
                 echo -ne "."
-                # echo "ln -sf $relative $f"
-                # Requires realpath from GNU coreutils:
                 dirof=`dirname $f`
-                relative=`getrelative "../runtime/$f" "$dirof"`
-                ln -sf $relative $f
+                relativepath=$(getrelative "../runtime/$f" "$dirof")
+                ln -sf $relativepath $f
             done < $dups
             echo
             ;;
