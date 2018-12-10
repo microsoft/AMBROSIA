@@ -41,6 +41,7 @@ echo
 echo "NativeService: Launching Receiver"
 set -x
 AMBROSIA_INSTANCE_NAME=$SERVERNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=1500 \
+COORDTAG=CoordRecv AMBROSIA_IMMORTALCOORDINATOR_LOG=./recvr.log \
   runAmbrosiaService.sh ./service_v4.exe 1 $CLIENTNAME $PORT3 $PORT4 24 1 20 &
 pid_server=$!
 set +x
@@ -56,6 +57,7 @@ echo
 echo "NativeService: Launching Sender now:"
 set -x
 AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=2500 \
+COORDTAG=CoordSend AMBROSIA_IMMORTALCOORDINATOR_LOG=./sender.log \
   runAmbrosiaService.sh ./service_v4.exe 0 $SERVERNAME $PORT1 $PORT2 24 1 20
 set +x
 
