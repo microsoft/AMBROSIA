@@ -364,13 +364,23 @@ namespace AmbrosiaTest
             // if (File.Exists(AmbrosiaLibCSExe) == false)
             //     Assert.Fail("<VerifyTestEnvironment> Missing AmbrosiaLibcs dll. Expecting:" + AmbrosiaLibCSExe);
 
+            /*
             string perfTestJobFile = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + "\\job.exe";
             if (File.Exists(perfTestJobFile) == false)
-                Assert.Fail("<VerifyTestEnvironment> Missing job.exe. Expecting:" + perfTestJobFile);
+                Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
 
             string perfTestServerFile = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + "\\server.exe";
             if (File.Exists(perfTestServerFile) == false)
-                Assert.Fail("<VerifyTestEnvironment> Missing server.exe. Expecting:" + perfTestServerFile);
+                Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
+*/
+            string perfAsyncTestJobFile = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + "\\job.exe";
+            if (File.Exists(perfAsyncTestJobFile) == false)
+                Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest job.exe. Expecting:" + perfAsyncTestJobFile);
+
+            string perfAsyncTestServerFile = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + "\\server.exe";
+            if (File.Exists(perfAsyncTestJobFile) == false)
+                Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest server.exe. Expecting:" + perfAsyncTestJobFile);
+
 
             string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
             if (connectionString == null)
@@ -451,7 +461,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalMultiClientStartingPoint = "")
+        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalMultiClientStartingPoint = "", bool asyncTest = false)
         {
 
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
@@ -574,13 +584,30 @@ namespace AmbrosiaTest
             };
             CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.DebugInstance);
 
-            // Job call
-            string logOutputFileName_ClientJob_Verify = testName + "_ClientJob_Verify.log";
-            int clientJobProcessID = StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Verify);
+            string logOutputFileName_ClientJob_Verify;
+            string logOutputFileName_Server_Verify;
 
-            //Server Call
-            string logOutputFileName_Server_Verify = testName + "_Server_Verify.log";
-            int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Verify, 1, false);
+            // if async, use the async job and server
+            if (asyncTest)
+            {
+                // Job call
+                logOutputFileName_ClientJob_Verify = testName + "_ClientJob_Verify.log";
+                int clientJobProcessID = StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "1", logOutputFileName_ClientJob_Verify);
+
+                //Server Call
+                logOutputFileName_Server_Verify = testName + "_Server_Verify.log";
+                int serverProcessID = StartAsyncPerfServer("2001", "2000", serverName, logOutputFileName_Server_Verify);
+            }
+            else
+            {
+                // Job call
+                logOutputFileName_ClientJob_Verify = testName + "_ClientJob_Verify.log";
+                int clientJobProcessID = StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Verify);
+
+                //Server Call
+                logOutputFileName_Server_Verify = testName + "_Server_Verify.log";
+                int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Verify, 1, false);
+            }
 
             // wait until done running
             bool pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, testName, true);
@@ -852,12 +879,12 @@ namespace AmbrosiaTest
         }
 
         // Perf Client from PerformanceTest --- runs in Async
-        public int StartAsyncPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile)
+        public int StartAsyncPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfNumberRounds,string testOutputLogFile)
         {
             // Launch the client job process with these values
             string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"];
             string fileNameExe = "Job.exe";
-            string argString = "-rp="+receivePort + " -sp=" + sendPort + " -j=" + perfJobName + " -s=" + perfServerName +" -c "; 
+            string argString = "-rp="+receivePort + " -sp=" + sendPort + " -j=" + perfJobName + " -s=" + perfServerName +" -n="+ perfNumberRounds + " -c "; 
 
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)

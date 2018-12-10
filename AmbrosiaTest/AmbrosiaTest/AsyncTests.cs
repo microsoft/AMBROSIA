@@ -26,7 +26,6 @@ namespace AmbrosiaTest
         //************* Init Code *****************
 
         //** Basic end to end test starts job and server and runs a bunch of bytes through
-        //** Only a few rounds and part of 
         [TestMethod]
         public void AMB_Async_Basic_Test()
         {
@@ -39,11 +38,7 @@ namespace AmbrosiaTest
 
             Utilities MyUtils = new Utilities();
 
-            //#*#*#  Remove ...
-            MyUtils.AsyncTestCleanup();
-            //#*#*#
-
-            //AMB1 - Job
+                        //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
             AMB_Settings AMB1 = new AMB_Settings
             {
@@ -87,15 +82,15 @@ namespace AmbrosiaTest
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, logOutputFileName_ClientJob);
+            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "3",logOutputFileName_ClientJob);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
             int serverProcessID = MyUtils.StartAsyncPerfServer("2001", "2000", serverName, logOutputFileName_Server);
 
             //Delay until client is done - also check Server just to make sure
-            //            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
-            //          pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 20, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 10, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID);
@@ -104,17 +99,17 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID2);
 
             //Verify AMB 
-//            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-  //          MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
 
             // Verify Client
-    //        MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
 
             // Verify Server
-      //      MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
 
             // Verify integrity of Ambrosia logs by replaying
-        //    MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version,"",true);
         }
 
         [TestCleanup()]
