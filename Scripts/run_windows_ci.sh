@@ -23,12 +23,11 @@ pushd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
 ./build_dotnetcore.sh
 popd
 
-# if [[ ${AZURE_STORAGE_CONN_STRING:+defined} ]]; then
-#     echo
-#     echo "All builds completed.  Attempt to run a test."
-#     ./run_small_PTI_and_shutdown.sh $INSTPREF || \
-#         echo "EXPECTED FAILURE - allowing local non-docker test to fail for PTI."
-# else
-#     echo "AZURE_STORAGE_CONN_STRING not defined, so not attempting PTI test."
-# fi
-
+if [[ ${AZURE_STORAGE_CONN_STRING:+defined} ]]; then
+    echo
+    echo "All builds completed.  Attempt to run a test."
+    ./run_small_PTI_and_shutdown.sh $INSTPREF || \
+        echo "EXPECTED FAILURE - allowing local non-docker test to fail for PTI."
+else
+    echo "AZURE_STORAGE_CONN_STRING not defined, so not attempting PTI test."
+fi
