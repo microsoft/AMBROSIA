@@ -66,13 +66,6 @@ set -x
 $BUILDIT GeneratedSourceFiles/${GENDEST}/latest/${GENDEST}.csproj
 set +x
 
-if [ "$FMWK" == "net46" ]; then
-    echo "================================================================================"
-    echo "WARNING: EXPECTED FAILURES on net46.  Allowing failures below this line."
-    echo "================================================================================"
-    set +e
-fi
-
 echo 
 echo "Finally, build the Job/Server executables:"
 echo "------------------------------------------"

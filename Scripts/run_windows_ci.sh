@@ -27,8 +27,7 @@ cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
 if [[ ${AZURE_STORAGE_CONN_STRING:+defined} ]]; then
     echo
     echo "All builds completed.  Attempt to run a test."
-    ./run_small_PTI_and_shutdown.sh $INSTPREF || \
-        echo "EXPECTED FAILURE - allowing local non-docker test to fail for PTI."
+    ./run_small_PTI_and_shutdown.sh $INSTPREF
 else
     echo "AZURE_STORAGE_CONN_STRING not defined, so not attempting PTI test."
 fi
