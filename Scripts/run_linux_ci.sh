@@ -1,8 +1,9 @@
 #!/bin/bash
-set -xeuo pipefail
+set -euo pipefail
 
 # ------------------------------------------------------------
 # A script to build and test under Linux CI.
+#  (Also currently used for Mac OS.)
 #
 # This mostly DISPATCHES to other scripts.
 # ------------------------------------------------------------
@@ -13,31 +14,9 @@ if ! [[ -e ./build_docker_images.sh ]]; then
     # will get us to the top of the repo:
     cd `dirname $0`/../
 fi
+# Set up common definitions.
+source Scripts/ci_common_defs.sh
 
-export AMBROSIA_ROOT=`pwd`
-
-# Gather a bit of info about where we are:
-uname -a
-pwd -P
-cat /etc/issue || echo ok
-
-# Build and run a small PerformanceTestInterruptable:
-# ./build_docker_images.sh 
-
-if [ $# -eq 0 ]; then
-    mode=nodocker
-else
-    mode=$1
-fi
-
-# Avoiding collisions on concurrently running tests is a difficult
-# business.  Here we use the CI build ID (Azure Pipelines) if
-# available, to make more unique CRA instance names.
-INSTPREF=`whoami`
-if [ ${BUILD_BUILDID:+defined} ]; then
-    INSTPREF=${INSTPREF}"$BUILD_BUILDID"
-fi
-export INSTPREF
 
 case $mode in
   docker)
@@ -46,6 +25,7 @@ case $mode in
       # When we are trying to run tests we don't really want the tarball:
       DONT_BUILD_TARBALL=1 ./build_docker_images.sh
 
+      # APPLICATION 1: PTI
       ./Scripts/internal/run_linux_PTI_docker.sh 
       ;;
   
@@ -54,7 +34,9 @@ case $mode in
       echo "Executing raw-Linux, non-Docker build."
       cd "$AMBROSIA_ROOT"
       ./build_dotnetcore_bindist.sh
-      
+
+      # APPLICATION 1: PTI
+      # ----------------------------------------
       cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
       ./build_dotnetcore.sh
 
@@ -65,6 +47,9 @@ case $mode in
       else
           echo "AZURE_STORAGE_CONN_STRING not defined, so not attempting PTI test."
       fi
+
+      # Application 2: ...
+      # ----------------------------------------
       
       cd "$AMBROSIA_ROOT"
       ;;
