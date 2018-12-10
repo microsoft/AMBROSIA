@@ -30,13 +30,18 @@ namespace Job
         [DataMember]
         internal long _callNum = 0;
 
+        [DataMember]
+        private int _numRoundsLeft;
+
         public Job()
         {
         }
 
-        public Job(string localPerfServer)
+        public Job(string localPerfServer,
+                   int numRounds)
         {
             this._perfServer = localPerfServer;
+            _numRoundsLeft = numRounds;
         }
 
         protected override async Task<bool> OnFirstStart()
@@ -51,7 +56,7 @@ namespace Job
             return true;
         }
 
-        protected async Task<bool> RunAsync()
+        public async Task<bool> RunAsync()
         {
             long totalBytesSent = 0;
 
@@ -61,8 +66,9 @@ namespace Job
 
             Console.WriteLine("*X* {0}\t{1}", "Bytes per RPC", "Throughput (GB/sec)");
             var sw = new Stopwatch();
-            for (var numRPCBytes = 64 * 1024; numRPCBytes >= 16; numRPCBytes >>= 1)
+            for (var numRPCBytes = 128 * 1024; _numRoundsLeft > 0; _numRoundsLeft--)
             {
+                numRPCBytes >>= 1;
                 var RPCbuf = new byte[numRPCBytes];
                 for (int i = 0; i < RPCbuf.Length; i++)
                 {
@@ -104,7 +110,12 @@ namespace Job
             Console.WriteLine("*X* - Total Time (secs):" + totalSecsEntireTest);
             Console.WriteLine("*X* - Throughput (GB/Sec):" + runningAvg);
             Console.WriteLine("--------------------------------");
-            this._server.PrintBytesReceivedFork();
+            await this._server.PrintBytesReceivedAsync();
+            Console.WriteLine("Bytes received: {0}", _bytesReceived);
+            Console.WriteLine("DONE");
+            Console.Out.Flush();
+            Console.Out.Flush();
+            ClientBootstrapper.finishedTokenQ.Enqueue(0);
             return true;
         }
 
@@ -124,6 +135,7 @@ namespace Job
         private static int _sendPort = -1;
         private static string _perfJob;
         private static string _perfServer;
+        private static int _numRounds = 13;
         private static bool _autoContinue;
 
         public static AsyncQueue<int> finishedTokenQ;
@@ -145,12 +157,12 @@ namespace Job
             Console.WriteLine("Connecting to: "+ _perfServer + "....");
 #endif
 
-            var myClient = new Job(_perfServer);
+            var myClient = new Job(_perfServer, _numRounds);
 
             // Use "Empty" as the type parameter because this container doesn't run a service
             // that responds to any RPC calls.
 
-            using (var c = AmbrosiaFactory.Deploy<Empty>(_perfJob, myClient, _receivePort, _sendPort))
+            using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
             {
                 finishedTokenQ.DequeueAsync().Wait();
             }
@@ -170,6 +182,7 @@ namespace Job
                 { "s|serverName=", "The service name of the server [REQUIRED].", s => _perfServer = s },
                 { "rp|receivePort=", "The service receive from port [REQUIRED].", rp => _receivePort = int.Parse(rp) },
                 { "sp|sendPort=", "The service send to port. [REQUIRED]", sp => _sendPort = int.Parse(sp) },
+                { "n|numOfRounds=", "The number of rounds.", n => _numRounds = int.Parse(n) },
                 { "c|autoContinue", "Is continued automatically at start", c => _autoContinue = true },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
