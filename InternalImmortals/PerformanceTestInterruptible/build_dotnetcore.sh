@@ -35,6 +35,7 @@ DEST=CodeGenDependencies/$FMWK
 rm -rf $DEST
 mkdir -p $DEST
 cp -af API/publish/*  $DEST/
+# DANGER, WARNING, FIXME: it is UNSAFE to MERGE the outputs of two publish directories:
 cp -af IJob/publish/* $DEST/
 
 # Extra codegen dependence, put its code generator's own .csproj file in the resulting deps dir:
@@ -44,19 +45,25 @@ cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
 # echo "Populated dependencies folder with:"
 # find CodeGenDependencies/$FMWK || git clean -nxd CodeGenDependencies/$FMWK
 
+if [ "$FMWK" == "net46" ]; then
+    GENDEST="PTIAmbrosiaGeneratedAPINet46"
+else
+    GENDEST="PTIAmbrosiaGeneratedAPINetCore"
+fi
+
 echo
 echo "Generate the assemblies (assumes the AmbrosiaCS executable was built):"
 echo "----------------------------------------------------------------------"
 set -x
 # Alternatively: "dotnet ../../bin/AmbrosiaCS.dll"
-../../bin/AmbrosiaCS CodeGen -a "$DEST/ServerAPI.dll" -a "$DEST/IJob.dll" -o "PTIAmbrosiaGeneratedAPINetCore" -f "$FMWK" -b="$DEST" 
+../../bin/AmbrosiaCS CodeGen -a "$DEST/ServerAPI.dll" -a "$DEST/IJob.dll" -o $GENDEST -f "$FMWK" -b="$DEST" 
 set +x
 
 echo
 echo "Build the generated code:"
 echo "-------------------------"
 set -x
-$BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
+$BUILDIT GeneratedSourceFiles/${GENDEST}/latest/${GENDEST}.csproj
 set +x
 
 if [ "$FMWK" == "net46" ]; then
