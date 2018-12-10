@@ -44,11 +44,12 @@ if ! [[ ${DONT_BUILD_RELEASE_IMAGE:+defined} ]]; then
 fi
 
 if ! [[ ${DONT_BUILD_APP_IMAGES:+defined} ]]; then
-    
-	  cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
-	  $DOCKER build -t ${TAG2} .
-	  cd "$AMBROSIA_ROOT"
 
+    if ! [[ ${DONT_BUILD_PTI_IMAGE:+defined} ]]; then    
+	      cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+	      $DOCKER build -t ${TAG2} .
+	      cd "$AMBROSIA_ROOT"
+    fi
     if ! [[ ${DONT_BUILD_NATIVE_IMAGE:+defined} ]]; then    
 	      cd "$AMBROSIA_ROOT"/InternalImmortals/NativeService
 	      docker build -t ${TAG3} .

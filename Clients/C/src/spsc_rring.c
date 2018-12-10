@@ -1,4 +1,6 @@
 
+// See the corresponding header for function-level documentation.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -9,9 +11,12 @@
   #include <sched.h> // sched_yield
 #endif
 
+// ----------------------------------------------------------------------------
 // FIXME: replace globals with a proper API for dynamically allocating buffers:
+// ----------------------------------------------------------------------------
 
-// TODO: FACTOR OUT:
+// TODO: FACTOR THESE INTO A STRUCT TO ALLOW MORE THAN ONE INSTANCE:
+
 // Single-producer Single-consumer concurrent ring buffer:
 char* g_buffer = NULL;
 volatile int g_buffer_head = 0; // Byte offset into buffer, written by consumer.
@@ -22,37 +27,65 @@ volatile int g_buffer_end = -1; // The current capacity, MODIFIED dynamically by
 int orig_buffer_end = -1; // Snapshot of the original buffer capacity.
 
 int g_buffer_last_reserved = -1; // The number of bytes in the last reserve call (producer-private)
-// int g_buffer_total_reserved = -1; // The number of bytes in the last reserve call (producer-private)
 
 
+// Debugging
+//--------------------------------------------------------------------------------
+
+// Fine-grained debugging.  Turned off statically to avoid overhead.
+#ifdef SPSC_RRING_DEBUG
+volatile int64_t spsc_debug_lock = 0;
+void spsc_rring_debug_log(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    sleep_seconds((double)(rand()%1000) * 0.00001); // .01 - 10 ms
+    while ( 1 == InterlockedCompareExchange64(&spsc_debug_lock, 1, 0) ) { }
+    fprintf(dbg_fd," [AMBCLIENT] ");
+    vfprintf(dbg_fd,format, args);
+    fflush(dbg_fd);
+    spsc_debug_lock = 0;
+    va_end(args);
+}
+#else
+// inline void spsc_rring_debug_log(const char *format, ...) { }
+#define spsc_rring_debug_log(...) {}
+#endif
+
+
+// Buffer life cycle
 // ------------------------------------------------------------
 
-void new_buffer(int sz) {
+void new_buffer(int sz)
+{
+  if (g_buffer != NULL) {
+    fprintf(stderr, "ERROR: tried to call new_buffer a second time\n");
+    fprintf(stderr, "Only one global ring buffer permitted for now.");
+    abort();
+  }
   g_buffer = malloc(sz); 
   orig_buffer_end = sz;  // Need room for the largest message.
   spsc_rring_debug_log("Initialized global buffer, address %p\n", g_buffer);
 }
 
-void reset_buffer() {
+void reset_buffer()
+{
   g_buffer_end = orig_buffer_end;
 }
 
+void free_buffer()
+{
+  spsc_rring_debug_log("Freeing buffer %p\n", g_buffer);
+  free(g_buffer);
+  g_buffer = NULL;
+  orig_buffer_end = -1;
+}
+
+// Buffer operations
 //--------------------------------------------------------------------------------
 
-// (Consumer) Wait until a number of (contiguous) bytes is available within the
-// buffer, and write the pointer to those bytes into the pointer argument.
-// 
-// This only reads in units of "complete messages", but it is UNKNOWN
-// how many complete messages are returned into the buffer.
-//
-// RETURN: the pointer P to the available bytes.
-// RETURN(param): set N to the (nonzero) number of bytes read.
-// POSTCOND: the permission to read N bytes from P
-// POSTCOND: the caller must use pop_buffer(N) to actually
-//          free these bytes for reuse.
-//
-// IDEMPOTENT! Only pop actually clears the bytes.
-char* peek_buffer(int* numread) {
+char* peek_buffer(int* numread)
+{
   while (1)
   {
     int observed_head = g_buffer_head; // We "own" the head (and _end)
@@ -90,9 +123,8 @@ char* peek_buffer(int* numread) {
   }
 }
 
-// (Consumer) Free N bytes from the ring buffer, marking them as consumed and
-// allowing the storage to be reused.
-void pop_buffer(int numread) {
+void pop_buffer(int numread)
+{
   int observed_head = g_buffer_head; // We "own" the head 
   int observed_end  = g_buffer_end;  // We "own" the end
   spsc_rring_debug_log(" pop_buffer: advancing head (%d) by %d\n", observed_head, numread);
@@ -120,25 +152,10 @@ void pop_buffer(int numread) {
   }
 }
 
-// From old flush_buffer:
-  /*  
-  // ASSUMPTION: only complete RPC messages reside in the buffer!
-  // This sends out the RPCBatch header followed by the messages.
-  if (g_buffer_msgs > 1) {
-    spsc_rring_debug_log(" sending RPCBatch of size %d\n", g_buffer_msgs);
-    char tempbuf[16];
-    char* cur = tempbuf;
-    int allbytes = g_buffer_tail + 1 + zigzag_int_size(g_buffer_msgs);
-    cur = write_zigzag_int(cur, allbytes); // Size 
-    *cur++ = RPCBatch;                   // Type
-    cur = write_zigzag_int(cur, g_buffer_msgs); // RPCBatch has numMsgs 1st
-    send_all(g_to_immortal_coord, tempbuf, cur-tempbuf, 0);
-  }
-  */  
-
 
 // Hacky busy-wait by thread-yielding for now:
-static inline void wait() {
+static inline void wait()
+{
 #ifdef _WIN32
   SwitchToThread();
 #else  
@@ -147,22 +164,14 @@ static inline void wait() {
 }
 
 
-// (Producer) Grab a cursor for writing an (unspecified) number of bytes to the
-// tail of the buffer.  It's ok to RESERVE more than you ultimately USE.
-char* reserve_buffer(int len) {
+char* reserve_buffer(int len)
+{
   if (len > orig_buffer_end) {
     fprintf(stderr,"\nERROR: reserve_buffer request bigger than allocated buffer itself! %d", len);
     abort();
   }
-  /*
-  while (len > g_buffer_end) {
-    spsc_rring_debug_log(" reserve_buffer: producer waiting until consumer un-shrinks the buffer..\n");
-    wait();
-  }
-  */
-
   while(1) // Retry loop.
-  { 
+    { 
     int our_tail = g_buffer_tail;
     int observed_head = g_buffer_head; // Only consumer changes this.
     int observed_end = g_buffer_end;
@@ -172,79 +181,55 @@ char* reserve_buffer(int len) {
     else headroom = observed_end  - our_tail;
 
     spsc_rring_debug_log("  reserve_buffer: headroom = %d  (head/tail/end %d / %d / %d)\n",
-		  headroom, observed_head, our_tail, observed_end);
+          headroom, observed_head, our_tail, observed_end);
     if (len < headroom)
       {
-	g_buffer_last_reserved = len;
-	return g_buffer+our_tail; // good to go!
+        g_buffer_last_reserved = len;
+        return g_buffer+our_tail; // good to go!
       }
     else if (our_tail < observed_head) // Torn state
       {
-	int clearpos = our_tail + len;
-	if ( clearpos < observed_end ) {
-	  // Don't wait for state change, wait till we have just enough room:
-	  // while( g_buffer_head < clearpos ) 
-	  spsc_rring_debug_log("! reserve_buffer: wait for head to advance.  Head/tail/end: %d %d %d\n",
-			observed_head, our_tail, observed_end);
-	} else {
-	  // Otherwise we have to wait for state change.  In natural
-	  // state the shrunk buffer is restored.
-	  // while( g_buffer_head < our_tail ) 
-	  spsc_rring_debug_log("! reserve_buffer: wait to exit torn state.  Head/tail/end: %d %d %d\n",
-			observed_head, our_tail, observed_end);
-	}
-	wait();
-	continue;
+        int clearpos = our_tail + len;
+        if ( clearpos < observed_end ) {
+          // Don't wait for state change, wait till we have just enough room:
+          // while( g_buffer_head < clearpos ) 
+          spsc_rring_debug_log("! reserve_buffer: wait for head to advance.  Head/tail/end: %d %d %d\n",
+                               observed_head, our_tail, observed_end);
+        } else {
+          // Otherwise we have to wait for state change.  In natural
+          // state the shrunk buffer is restored.
+          // while( g_buffer_head < our_tail ) 
+          spsc_rring_debug_log("! reserve_buffer: wait to exit torn state.  Head/tail/end: %d %d %d\n",
+                               observed_head, our_tail, observed_end);
+        }
+        wait();
+        continue;
       }
     else // Natural state but need to switch.
       {
-	// In the natural state, we may be near the _end and need to
-	// shrink/wrap-early.  BUT, we cannot wrap if head is squatting at
-	// the start -- that would make a full state appear empty.
-	while ( observed_head == 0 ) {
-	  spsc_rring_debug_log("! reserve_buffer: stalling EARLY WRAP (tail %d), until head moves off the start mark\n",
-			our_tail);
-	  wait();
-	  observed_head = g_buffer_head;
-	}
-
-	spsc_rring_debug_log("! reserve_buffer: committing an EARLY WRAP, shrinking end from %d to %d\n",
-		      observed_end, our_tail);
-	// We're in "natural" not "torn" state until *we* change it.
-	g_buffer_end = our_tail; // The state gives us "the lock" on this var.
-	our_tail      = 0;
-	g_buffer_tail = 0; // State change!  Torn state.
-	continue;
+        // In the natural state, we may be near the _end and need to
+        // shrink/wrap-early.  BUT, we cannot wrap if head is squatting at
+        // the start -- that would make a full state appear empty.
+        while ( observed_head == 0 ) {
+          spsc_rring_debug_log("! reserve_buffer: stalling EARLY WRAP (tail %d), until head moves off the start mark\n",
+                               our_tail);
+          wait();
+          observed_head = g_buffer_head;
+        }
+        
+        spsc_rring_debug_log("! reserve_buffer: committing an EARLY WRAP, shrinking end from %d to %d\n",
+                      observed_end, our_tail);
+        // We're in "natural" not "torn" state until *we* change it.
+        g_buffer_end = our_tail; // The state gives us "the lock" on this var.
+        our_tail      = 0;
+        g_buffer_tail = 0; // State change!  Torn state.
+        continue;
       }
   }
 }
 
-
-/*
-// Finish the data transfer (corresponding to the previous reserve_buffer) but
-// do NOT actually release the bytes to the consumer yet. That waits until
-// someone calls "release_buffer" instead of this procedure.
-//
-// Adds "len" bytes to the tail of the buffer.  This number must be
-// less than or equal to the amount reserved.
-static inline void finished_reserve_buffer(int len) {
-  if (len > g_buffer_last_reserved) {
-    fprintf(stderr, "ERROR: cannot finish/release %d bytes, only reserved %d\n", len, g_buffer_last_reserved);
-    abort();
-  }
-  // Ammendment:
-  g_buffer_total_reserved -= g_buffer_last_reserved;
-  g_buffer_total_reserved += len;
-  g_buffer_last_reserved  = -1;
-  // We don't write g_buffer_tail, because we don't want the consumer to have it yet:
-}
-*/
-
-// (Producer) Add "len" bytes to the tail and release the buffer.
-// This number must be less than or equal to the amount reserved.
-// 
-// ASSUMPTION: only call release to COMPLETE a message:
-void release_buffer(int len) {
+void release_buffer(int len)
+{
   // finished_reserve_buffer(len);
   // g_buffer_tail += g_buffer_total_reserved; // Publish it!  
   //  g_buffer_total_reserved = 0;
@@ -252,7 +237,8 @@ void release_buffer(int len) {
   spsc_rring_debug_log("  => release_buffer of %d bytes, new tail %d\n", len, g_buffer_tail + len);
   
   if (len > g_buffer_last_reserved) {
-    fprintf(stderr, "ERROR: cannot finish/release %d bytes, only reserved %d\n", len, g_buffer_last_reserved);
+    fprintf(stderr, "ERROR: cannot finish/release %d bytes, only reserved %d\n",
+            len, g_buffer_last_reserved);
     abort();
   }
   g_buffer_tail += len;

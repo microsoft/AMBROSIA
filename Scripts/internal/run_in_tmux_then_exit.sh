@@ -20,8 +20,8 @@ docker kill $(cat cont.id)
 
 echo "Basic health check: were all four processes still alive?"
 hits1=`grep /ambrosia/bin/ImmortalCoordinator ps.out | grep -v tmux | wc -l`
-hits2=`grep bin/Job ps.out | grep -v tmux | wc -l`
-hits3=`grep bin/Server ps.out | grep -v tmux | wc -l`
+hits2=`grep /Job ps.out | grep -v tmux | wc -l`
+hits3=`grep /Server ps.out | grep -v tmux | wc -l`
 
 if [ $hits1 != 2 ] || [ $hits2 != 1 ] || [ $hits3 != 1 ]; then 
     echo "Failed health check."
