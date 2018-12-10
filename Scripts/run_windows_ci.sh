@@ -21,9 +21,8 @@ export AMBROSIA_ROOT=`pwd`
 
 # APPLICATION 1: PTI
 # ----------------------------------------
-pushd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
 ./build_dotnetcore.sh
-popd
 
 if [[ ${AZURE_STORAGE_CONN_STRING:+defined} ]]; then
     echo
@@ -36,3 +35,7 @@ fi
 
 # Application 2: ...
 # ----------------------------------------
+
+
+# ----------------------------------------
+cd "$AMBROSIA_ROOT"
