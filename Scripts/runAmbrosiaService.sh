@@ -174,7 +174,7 @@ function monitor_health() {
                 echo "Likewise killing application process; they're a pair."
                 echo "-------------------------------------------------------"
                 set -x 
-                kill -9 $app_pid
+                kill $app_pid
                 exit 1
             fi
         fi
@@ -203,6 +203,6 @@ fi
 echo " $TAG  |-> Killing coordinator and health monitor function."
 rm -f $keep_monitoring
 
-kill -9 $coord_pid || echo ok
+kill $coord_pid || echo ok
 echo " $TAG  |-> Cleanup complete, exiting."
 # wait 

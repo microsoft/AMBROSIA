@@ -25,7 +25,7 @@
 FROM ambrosia-dev
 
 RUN apt-get update && \
-    apt-get install -y make gcc 
+    apt-get install -y make gcc nmap
 
 ADD . /ambrosia/NativeService
 WORKDIR /ambrosia/NativeService
