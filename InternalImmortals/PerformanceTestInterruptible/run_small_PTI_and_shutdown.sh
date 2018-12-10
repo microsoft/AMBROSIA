@@ -75,6 +75,8 @@ wait
 echo "Everything shut down.  All background processes done."
 
 echo "Attempt a cleanup of our table metadata:"
+set -x
 UnsafeDeregisterInstance $CLIENTNAME || true
 UnsafeDeregisterInstance $SERVERNAME || true
+set +x
 echo "All done."
