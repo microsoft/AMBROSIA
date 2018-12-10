@@ -28,6 +28,7 @@ void free_buffer();
 // allowing the storage to be reused.
 void  pop_buffer(int numread);
 
+
 // (Consumer) Wait until a number of (contiguous) bytes is available within the
 // buffer, and write the pointer to those bytes into the pointer argument.
 // 
@@ -43,37 +44,16 @@ void  pop_buffer(int numread);
 // IDEMPOTENT! Only pop actually clears the bytes.
 char* peek_buffer(int* numread);
 
+
 // (Producer) Grab a cursor for writing an (unspecified) number of bytes to the
 // tail of the buffer.  It's ok to RESERVE more than you ultimately USE.
 char* reserve_buffer(int len); 
+
 
 // (Producer) Add "len" bytes to the tail and release the buffer.
 // This number must be less than or equal to the amount reserved.
 // 
 // ASSUMPTION: only call release to COMPLETE a message:
 void  release_buffer(int len);
-
-// Debugging
-//--------------------------------------------------------------------------------
-
-// Fine-grained debugging.  Turned off statically to avoid overhead.
-#ifdef SPSC_RRING_DEBUG
-volatile int64_t spsc_debug_lock = 0;
-void spsc_rring_debug_log(const char *format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    sleep_seconds((double)(rand()%1000) * 0.00001); // .01 - 10 ms
-    while ( 1 == InterlockedCompareExchange64(&spsc_debug_lock, 1, 0) ) { }
-    fprintf(dbg_fd," [AMBCLIENT] ");
-    vfprintf(dbg_fd,format, args);
-    fflush(dbg_fd);
-    spsc_debug_lock = 0;
-    va_end(args);
-}
-#else
-// inline void spsc_rring_debug_log(const char *format, ...) { }
-#define spsc_rring_debug_log(...) {}
-#endif
 
 #endif

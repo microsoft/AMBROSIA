@@ -11,6 +11,7 @@
   #include <stdarg.h> // va_list
 #endif
 
+// -------------------------------------------------
 // Data formats used by the AMBROSIA "wire protocol"
 // -------------------------------------------------
 
@@ -43,49 +44,9 @@ enum MsgType { RPC=0,                       //
 };
 
 
-
-// The soft limit after which we should send on the socket.
-// A fairly large buffer is used for performance.
-#define AMBCLIENT_DEFAULT_BUFSIZE (20*1024*1024)
-
 // Print extremely verbose debug output to stdout:
-// #define AMBCLIENT_DEBUG
 #define amb_dbg_fd stderr
    // ^ Non-constant initializer...
-
-#ifdef AMBCLIENT_DEBUG
-static inline void amb_sleep_seconds(double n) {
-#ifdef _WIN32
-  Sleep((int)(n * 1000));
-#else
-  int64_t nanos = (int64_t)(10e9 * n);
-  const struct timespec ts = {0, nanos};
-  nanosleep(&ts, NULL);
-#endif
-}
-
-extern volatile int64_t debug_lock;
-
-static inline void amb_debug_log(const char *format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    amb_sleep_seconds((double)(rand()%1000) * 0.00001); // .01 - 10 ms
-#ifdef _WIN32      
-    while ( 1 == InterlockedCompareExchange64(&debug_lock, 1, 0) ) { }
-#else
-    while ( 1 == __sync_val_compare_and_swap(&debug_lock, 1, 0) ) { }
-#endif    
-    fprintf(amb_dbg_fd," [AMBCLIENT] ");
-    vfprintf(amb_dbg_fd,format, args);
-    fflush(amb_dbg_fd);
-    debug_lock = 0;
-    va_end(args);
-}
-#else
-// inline void amb_debug_log(const char *format, ...) { }
-#define amb_debug_log(...) {}
-#endif
 
 //------------------------------------------------------------------------------
 
@@ -128,14 +89,13 @@ void* amb_write_outgoing_rpc(void* buf, char* dest, int32_t destLen, char RPC_or
 void amb_send_outgoing_rpc(void* tempbuf, char* dest, int32_t destLen, char RPC_or_RetVal,
 			   int32_t methodID, char fireForget, void* args, int argsLen);
 
+
+// Read a full log header off the socket, writing it into the provided pointer.
 void amb_recv_log_hdr(int sockfd, struct log_hdr* hdr);
 
 
 // TEMP - audit me
 void attach_if_needed(char* dest, int destLen);
-
-// Remove this?
-// void send_message(char* buf, int len);
 
 
 // ------------------------------------------------------------
@@ -161,31 +121,39 @@ void* read_zigzag_int(void* ptr, int32_t* ret);
 int zigzag_int_size(int32_t value);
 
 
+// Debugging
+//------------------------------------------------------------------------------
+
+#ifdef AMBCLIENT_DEBUG
+
+extern volatile int64_t debug_lock;
+
+static inline void amb_debug_log(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    amb_sleep_seconds((double)(rand()%1000) * 0.00001); // .01 - 10 ms
+#ifdef _WIN32      
+    while ( 1 == InterlockedCompareExchange64(&debug_lock, 1, 0) ) { }
+#else
+    while ( 1 == __sync_val_compare_and_swap(&debug_lock, 1, 0) ) { }
+#endif    
+    fprintf(amb_dbg_fd," [AMBCLIENT] ");
+    vfprintf(amb_dbg_fd,format, args);
+    fflush(amb_dbg_fd);
+    debug_lock = 0;
+    va_end(args);
+}
+#else
+// inline void amb_debug_log(const char *format, ...) { }
+#define amb_debug_log(...) {}
+#endif
+
+
 // ------------------------------------------------------------
 
 // A standardized, cross-platform way used by this library to acquire
 // the last error message from a system call.
 char* amb_get_error_string();
-
-// Internal helper: try repeatedly on a socket until all bytes are sent.
-static inline void socket_send_all(int sock, const void* buf, size_t len, int flags) {
-  char* cur = (char*)buf;
-  int remaining = len;
-  while (remaining > 0) {
-    int n = send(sock, cur, remaining, flags);
-    if (n < 0) {
-      char* err = amb_get_error_string();
-      fprintf(stderr,"\nERROR: failed send (%d bytes, of %d) which left errno = %s\n",
-	      remaining, (int)len, err);
-      abort();
-    }
-    cur += n;
-    remaining -= n;
-#ifdef AMBCLIENT_DEBUG
-    if (remaining > 0)
-      amb_debug_log(" Warning: socket send didn't get all bytes across (%d of %d), retrying.\n", n, remaining);
-#endif
-  }
-}
 
 #endif

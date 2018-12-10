@@ -170,15 +170,8 @@ char* reserve_buffer(int len)
     fprintf(stderr,"\nERROR: reserve_buffer request bigger than allocated buffer itself! %d", len);
     abort();
   }
-  /*
-  while (len > g_buffer_end) {
-    spsc_rring_debug_log(" reserve_buffer: producer waiting until consumer un-shrinks the buffer..\n");
-    wait();
-  }
-  */
-
   while(1) // Retry loop.
-  { 
+    { 
     int our_tail = g_buffer_tail;
     int observed_head = g_buffer_head; // Only consumer changes this.
     int observed_end = g_buffer_end;
@@ -188,49 +181,49 @@ char* reserve_buffer(int len)
     else headroom = observed_end  - our_tail;
 
     spsc_rring_debug_log("  reserve_buffer: headroom = %d  (head/tail/end %d / %d / %d)\n",
-		  headroom, observed_head, our_tail, observed_end);
+          headroom, observed_head, our_tail, observed_end);
     if (len < headroom)
       {
-	g_buffer_last_reserved = len;
-	return g_buffer+our_tail; // good to go!
+        g_buffer_last_reserved = len;
+        return g_buffer+our_tail; // good to go!
       }
     else if (our_tail < observed_head) // Torn state
       {
-	int clearpos = our_tail + len;
-	if ( clearpos < observed_end ) {
-	  // Don't wait for state change, wait till we have just enough room:
-	  // while( g_buffer_head < clearpos ) 
-	  spsc_rring_debug_log("! reserve_buffer: wait for head to advance.  Head/tail/end: %d %d %d\n",
-			observed_head, our_tail, observed_end);
-	} else {
-	  // Otherwise we have to wait for state change.  In natural
-	  // state the shrunk buffer is restored.
-	  // while( g_buffer_head < our_tail ) 
-	  spsc_rring_debug_log("! reserve_buffer: wait to exit torn state.  Head/tail/end: %d %d %d\n",
-			observed_head, our_tail, observed_end);
-	}
-	wait();
-	continue;
+        int clearpos = our_tail + len;
+        if ( clearpos < observed_end ) {
+          // Don't wait for state change, wait till we have just enough room:
+          // while( g_buffer_head < clearpos ) 
+          spsc_rring_debug_log("! reserve_buffer: wait for head to advance.  Head/tail/end: %d %d %d\n",
+                               observed_head, our_tail, observed_end);
+        } else {
+          // Otherwise we have to wait for state change.  In natural
+          // state the shrunk buffer is restored.
+          // while( g_buffer_head < our_tail ) 
+          spsc_rring_debug_log("! reserve_buffer: wait to exit torn state.  Head/tail/end: %d %d %d\n",
+                               observed_head, our_tail, observed_end);
+        }
+        wait();
+        continue;
       }
     else // Natural state but need to switch.
       {
-	// In the natural state, we may be near the _end and need to
-	// shrink/wrap-early.  BUT, we cannot wrap if head is squatting at
-	// the start -- that would make a full state appear empty.
-	while ( observed_head == 0 ) {
-	  spsc_rring_debug_log("! reserve_buffer: stalling EARLY WRAP (tail %d), until head moves off the start mark\n",
-			our_tail);
-	  wait();
-	  observed_head = g_buffer_head;
-	}
-
-	spsc_rring_debug_log("! reserve_buffer: committing an EARLY WRAP, shrinking end from %d to %d\n",
-		      observed_end, our_tail);
-	// We're in "natural" not "torn" state until *we* change it.
-	g_buffer_end = our_tail; // The state gives us "the lock" on this var.
-	our_tail      = 0;
-	g_buffer_tail = 0; // State change!  Torn state.
-	continue;
+        // In the natural state, we may be near the _end and need to
+        // shrink/wrap-early.  BUT, we cannot wrap if head is squatting at
+        // the start -- that would make a full state appear empty.
+        while ( observed_head == 0 ) {
+          spsc_rring_debug_log("! reserve_buffer: stalling EARLY WRAP (tail %d), until head moves off the start mark\n",
+                               our_tail);
+          wait();
+          observed_head = g_buffer_head;
+        }
+        
+        spsc_rring_debug_log("! reserve_buffer: committing an EARLY WRAP, shrinking end from %d to %d\n",
+                      observed_end, our_tail);
+        // We're in "natural" not "torn" state until *we* change it.
+        g_buffer_end = our_tail; // The state gives us "the lock" on this var.
+        our_tail      = 0;
+        g_buffer_tail = 0; // State change!  Torn state.
+        continue;
       }
   }
 }
@@ -244,7 +237,8 @@ void release_buffer(int len)
   spsc_rring_debug_log("  => release_buffer of %d bytes, new tail %d\n", len, g_buffer_tail + len);
   
   if (len > g_buffer_last_reserved) {
-    fprintf(stderr, "ERROR: cannot finish/release %d bytes, only reserved %d\n", len, g_buffer_last_reserved);
+    fprintf(stderr, "ERROR: cannot finish/release %d bytes, only reserved %d\n",
+            len, g_buffer_last_reserved);
     abort();
   }
   g_buffer_tail += len;

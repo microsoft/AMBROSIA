@@ -28,22 +28,16 @@
 /*   #define uint64_t UINT64 */
 
 #else
-
-/* // *nix, but really Linux only for now: */
+  // Unix variants, but really just Linux for now:
   #include <alloca.h>
-//  #include <unistd.h>
-//  #include <sys/socket.h> 
-// #include <netinet/in.h>
-//  #include <arpa/inet.h> // inet_pton
-//  #include <netdb.h>
-//  #include <stdarg.h>
-   #include <pthread.h> 
+  #include <pthread.h> 
 #endif
 
 
 // TODO: remove internal dependency:
 #include "ambrosia/internal/spsc_rring.h"
 #include "ambrosia/client.h"
+#include "ambrosia/internal/bits.h"
 
 
 // Library-level global variables:
@@ -75,6 +69,10 @@ int g_numRPCBytes = 0;
 // Library-level Global constants
 // --------------------------------------------------
 
+// The soft limit after which we should send on the socket.
+// A fairly large buffer is used for performance.
+#define AMBCLIENT_DEFAULT_BUFSIZE (20*1024*1024)
+
 // A Gibibyte (binary not metric/decimal) for now:
 #define ONE_GIBIBYTE ((int64_t)1 * 1024 * 1024 * 1024)
 
@@ -99,9 +97,23 @@ char* destName; // Initialized below..
 int destLen;    // Initialized below..
 
 
-
 // General helper functions
 // --------------------------------------------------------------------------------
+
+#ifdef AMBCLIENT_DEBUG
+// DUPLICATED with ambrosia_client.
+void print_hex_bytes(FILE* fd, char* ptr, int len) {
+  const int limit = 100; // Only print this many:
+  fprintf(fd,"0x");
+  int j;
+  for (j=0; j < len && j < limit; j++) {
+    fprintf(fd,"%02hhx", (unsigned char)ptr[j]);
+    if (j % 2 == 1)
+      fprintf(fd," ");
+  }
+  if (j<len) fprintf(fd,"...");
+}
+#endif
 
 // Hacky busy-wait by thread-yielding for now:
 static inline void yield_thread() {
@@ -248,7 +260,8 @@ void receive_message(char* msg, int64_t len) {
   amb_debug_log("GOT THE MESSAGE: %ld bytes, %ld remaining expected messages this round\n", len, g_totalExpected);
 #ifdef AMBCLIENT_DEBUG
   if ( len != g_numRPCBytes ) {
-    fprintf(stderr,"\nError: expected message of size %d this round, received %lld\n", g_numRPCBytes, len);
+    fprintf(stderr,"\nError: expected message of size %d this round, received %lld\n",
+            g_numRPCBytes, (long long)len);
     abort();
   }
   for(int i=0; i<len; i++) {
