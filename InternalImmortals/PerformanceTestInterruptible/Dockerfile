@@ -14,7 +14,7 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
 # Publish to a local directory:
 ENV CGDEPS=/ambrosia/InternalImmortals/PerformanceTestInterruptible/CodeGenDependencies/$AMBROSIA_DOTNET_FRAMEWORK
 
-ENV PATH="${PATH}:/ambrosia/InternalImmortals/PerformanceTestInterruptible/bin"
+ENV PATH="${PATH}:/ambrosia/InternalImmortals/PerformanceTestInterruptible/Client/publish:/ambrosia/InternalImmortals/PerformanceTestInterruptible/Server/publish"
 
 # ------------------------------------------------------------
 
