@@ -18,6 +18,28 @@ else
     exit 1
 fi
 
+# Helpers
+# ------------------------------------------------------------
+
+# Compute the relative path to A starting from directory B
+function getrelative()
+{
+    $to=$1
+    $relativeto=$2
+    if which realpath; then
+        realpath "$to" --relative-to="$relativeto"
+    elif which python; then
+        python -c "import os,sys;print(os.path.relpath(*(sys.argv[1:])))" "$to" "$relativeto"
+#   elif which perl; then
+    else
+        echo "ERROR $0: can't find an easy way to compute relative paths on this system."
+        exit 1
+    fi
+}
+
+
+# ------------------------------------------------------------
+
 echo "Begin script in mode = $mode"
 
 cd `dirname $0`/../bin
@@ -60,7 +82,7 @@ for dir in $secondary; do
                 # echo "ln -sf $relative $f"
                 # Requires realpath from GNU coreutils:
                 dirof=`dirname $f`
-                relative=`realpath ../runtime/$f --relative-to=$dirof`
+                relative=`getrelative "../runtime/$f" "$dirof"`
                 ln -sf $relative $f
             done < $dups
             echo

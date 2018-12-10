@@ -126,8 +126,7 @@ echo "--------------------------------------------------------------"
 if [ ${OS:+defined} ] && [ "$OS" == "Windows_NT" ];
 then ./Scripts/dedup_bindist.sh squish
 elif [ "$UNAME" == Darwin ]; 
-then ./Scripts/dedup_bindist.sh squish
-     # FIXME ^ should symlink, but "realpath" is needed.
+then ./Scripts/dedup_bindist.sh symlink
 else ./Scripts/dedup_bindist.sh symlink
 fi
 
