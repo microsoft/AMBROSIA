@@ -669,11 +669,12 @@ int main(int argc, char** argv)
     abort();
   }
   
-  printf("Connecting to my coordinator on ports: %d, %d\n", upport, downport);
-  printf("Please make sure that you have already registered the service in Azure tables with commands such as the following:\n");
-  printf("  Ambrosia/bin/x64/Release/net46/LocalAmbrosiaRuntime.exe  native1 50000 50001 native1 logs/ nativetestbins a n y 1000 n 0 0\n");
-  printf("  Ambrosia/bin/x64/Release/net46/LocalAmbrosiaRuntime.exe  native2 50002 50003 native2 logs/ nativetestbins a n y 1000 n 0 0\n");
-  printf("(You need four ports, in the above example: 50000-50003 .)\n");
+  printf("Connecting to my coordinator on ports: %d (up), %d (down)\n", upport, downport);
+  printf("The 'up' port we connect, and the 'down' one the coordinator connects to us.\n");
+  /* printf("Please make sure that you have already registered the service in Azure tables with commands such as the following:\n"); */
+  /* printf("  Ambrosia/bin/x64/Release/net46/LocalAmbrosiaRuntime.exe  native1 50000 50001 native1 logs/ nativetestbins a n y 1000 n 0 0\n"); */
+  /* printf("  Ambrosia/bin/x64/Release/net46/LocalAmbrosiaRuntime.exe  native2 50002 50003 native2 logs/ nativetestbins a n y 1000 n 0 0\n"); */
+  /* printf("(You need four ports, in the above example: 50000-50003 .)\n"); */
 
   int upfd, downfd;
   connect_sockets(&upfd, &downfd);

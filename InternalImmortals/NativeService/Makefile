@@ -35,7 +35,7 @@ service_dbg_v4.exe: $(HEADERS) $(SRCS) service.c
 	mv service_temp.exe $@
 
 service_v6.exe: $(HEADERS) $(SRCS) service.c
-	$(MAKE) DEFINES="" partclean service_temp.exe
+	$(MAKE) DEFINES="-DIPV6" partclean service_temp.exe
 	mv service_temp.exe $@
 
 partclean:
