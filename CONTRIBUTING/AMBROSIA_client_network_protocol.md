@@ -2,26 +2,34 @@
 Client Protocol for AMBROSIA network participants
 =================================================
 
-This document covers how a network endpoint should communicate with
-the AMBROSIA reliability coordinator assigned to it.  The coordinator
-is located within the same physical machine/container and assumed to
-survive or fail with the application process.
-
-Indeed, the coordinator could have been running inside the same
-process as the application, but it is designed to instead run in a
-separate process (and communicate via TCP/IP over a local socket) to
-be more language-agnostic.
+This document covers how an application should communicate with the AMBROSIA
+reliability coordinator assigned to it.  The coordinator is located within the
+same physical machine/container and assumed to survive or fail with the
+application process.  The coordinator communicates via TCP/IP over a local
+socket with the application.  This process separation is designed to minimize
+assumptions about the application and maximize language-agnosticity.
 
 Overview and Terminology
 ------------------------
 
+In AMBROSIA a set of application processes (services) serve as communication
+endpoints, communicating *exclusively* through the network of Immortal
+Coordinators, which collectively serve as the message bus.  The individual
+processes (or objects contained therein) are the *Immortals* which survive the
+failure of individual machines.
+
 Below we use the following terminology:
 
- * Committer ID - an arbitrary (32 bit) identifier for a communication
-   endpoint (a service) in the network of running "immortals".
- 
+ * Committer ID - an arbitrary (32 bit) identifier for a communication endpoint
+   (a service) in the network of running "immortals".  This is typically
+   generated automatically the first time each application process starts.
+   It is distinct from the destination *name*.
+
+ * Destination name - the string identifying a communication endpoint, often
+   human readable.
+
  * Sequence ID - the (monotonically increasing) number of a log entry. Note that
-   each logical immortal has its own log
+   each logical immortal has its own log.
 
  * "Async/await" RPCs - are *futures*; they return a value back to the
    caller.  Because AMBROSIA ensures reliability, they are semantically
@@ -40,14 +48,14 @@ In order to build the binary message formats described below, we assume that the
 new client software can access TCP sockets and additionally implements the
 following serialized datatypes.
 
- * ZigZagInt  - a zig-zag encoded variable size 32 bit signed integer
- * ZigZagLong - a zig-zag encoded variable size 64 bit signed integer
- * IntFixed  - a 32 bit little endian number 
- * LongFixed - a 64 bit little endian number 
+ * ZigZagInt  - a zig-zag encoded 32-bit signed integer
+ * ZigZagLong - a zig-zag encoded 64-bit signed integer
+ * IntFixed  - a 32-bit little endian number 
+ * LongFixed - a 64-bit little endian number 
 
  * CheckSum - FINISHME
 
-These variable-length integers are in the same format used by, e.g.,
+The variable-length integers are in the same format used by, e.g.,
 [Protobufs](https://developers.google.com/protocol-buffers/docs/encoding).
 
 
