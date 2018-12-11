@@ -48,7 +48,7 @@ RUN du -sch ./bin && \
 # -----------------------------------------
 ADD Clients/C                     /ambrosia/Clients/C
 # This publishes to the build directory: bin/lib*.* and bin/include
-RUN cd Clients/C && make publish
+RUN cd Clients/C && make debug # publish
 
 # (4) A script used by apps to start the ImmortalCoordinator:
 # -----------------------------------------------------------

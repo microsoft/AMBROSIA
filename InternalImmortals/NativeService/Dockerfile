@@ -34,7 +34,7 @@ WORKDIR /ambrosia/NativeService
 ENV AMBROSIA_BINDIR=/ambrosia/bin
 
 # This will leave the binary in the current directory:
-RUN make clean service_v4.exe 
+RUN make clean debug # all
 
 ENV PATH="${PATH}:${AMBROSIA_BINDIR}"
 

@@ -37,3 +37,30 @@ void print_hex_bytes(FILE* fd, char* ptr, int len) {
   if (j<len) fprintf(fd,"...");
 }
 
+void amb_sleep_seconds(double n);
+
+static inline
+#ifdef _WIN32
+double amb_current_time_seconds()
+{
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER current;
+    double result;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&current);
+    return (double)current.QuadPart / (double)frequency.QuadPart;
+}
+#else
+double amb_current_time_seconds() {
+  struct timespec current;
+  clock_gettime((clockid_t)CLOCK_REALTIME, &current);
+  // clock_gettime(0,NULL);  
+  return  (double)current.tv_sec + ((double)current.tv_nsec * 0.000000001);
+}
+#endif
+
+#ifdef _WIN32
+  extern DWORD WINAPI amb_network_progress_thread( LPVOID lpParam );
+#else
+  extern void*        amb_network_progress_thread( void* lpParam );
+#endif
