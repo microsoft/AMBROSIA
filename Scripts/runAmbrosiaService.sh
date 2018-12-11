@@ -83,19 +83,24 @@ fi
 tail_pid=""
 coord_pid=""
 app_pid=""
+keep_monitoring=""
 
-_cleanup() {
-  echo "$0: Exiting script (or caught signal)! Cleaning up." 
-  kill -TERM "$coord_pid" 2>/dev/null || true
-  kill -TERM "$tail_pid"  2>/dev/null || true
-  kill -TERM "$app_pid"   2>/dev/null || true
+_normal_cleanup() {
+  kill -TERM "$coord_pid" 2>/dev/null  || true
+  kill -TERM "$tail_pid"  2>/dev/null  || true
+  kill -TERM "$app_pid"   2>/dev/null  || true
+  rm -f "$keep_monitoring" 2>/dev/null || true
+}
+
+_unexpected_cleanup() {
+  trap '' EXIT # some shells will call EXIT after the INT handler
+  echo "$0: Exiting script abnormally! Cleaning up. ($1)" 
+  _normal_cleanup
   echo "$0: Done with cleanup."
 }
 
-trap _cleanup EXIT
-# subsumed by exit? TERM INT HUP
-# what about QUIT? 
-
+trap _normal_cleanup     EXIT
+trap _unexpected_cleanup TERM INT QUIT
 
 function tag_stdin() {
     local MSG=$1

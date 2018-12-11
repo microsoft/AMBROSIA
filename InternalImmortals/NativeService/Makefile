@@ -20,7 +20,7 @@ LIBS= -L $(AMBROSIA_BINDIR) -l:libambrosia.a -lpthread
 LINK= gcc
 
 all: service_v4.exe service_v6.exe
-dbg: service_dbg_v4.exe
+debug: service_dbg_v4.exe
 
 service_temp.exe: service.c
 	$(COMP) service.c -o service.o
@@ -29,10 +29,12 @@ service_temp.exe: service.c
 service_v4.exe: $(HEADERS) $(SRCS) service.c
 	$(MAKE) DEFINES="-DIPV4" partclean service_temp.exe
 	mv service_temp.exe $@
+	ln -sf $@ service.exe
 
 service_dbg_v4.exe: $(HEADERS) $(SRCS) service.c
 	$(MAKE) DEFINES="-DAMBCLIENT_DEBUG -DIPV4" partclean service_temp.exe
 	mv service_temp.exe $@
+	ln -sf $@ service.exe
 
 service_v6.exe: $(HEADERS) $(SRCS) service.c
 	$(MAKE) DEFINES="-DIPV6" partclean service_temp.exe
@@ -42,7 +44,7 @@ partclean:
 	rm -f service_temp.exe
 
 clean: 
-	rm -f service_winsockv4.exe service_winsockv6.exe service_v4.exe service_v6.exe
+	rm -f service_winsockv4.exe service_winsockv6.exe service_v4.exe service_v6.exe service_dbg_v4.exe serice_temp.exe
 	rm -f \#* .\#* *~
 
 .PHONY: lin clean partclean

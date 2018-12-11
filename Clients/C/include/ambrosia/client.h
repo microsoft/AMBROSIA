@@ -125,8 +125,18 @@ int zigzag_int_size(int32_t value);
 //------------------------------------------------------------------------------
 
 #ifdef AMBCLIENT_DEBUG
+extern volatile int64_t amb_debug_lock;
 
-extern volatile int64_t debug_lock;
+// Helper used only below
+static inline void amb_sleep_seconds(double n) {
+#ifdef _WIN32
+  Sleep((int)(n * 1000));
+#else
+  int64_t nanos = (int64_t)(10e9 * n);
+  const struct timespec ts = {0, nanos};
+  nanosleep(&ts, NULL);
+#endif
+}
 
 static inline void amb_debug_log(const char *format, ...)
 {
@@ -134,14 +144,14 @@ static inline void amb_debug_log(const char *format, ...)
     va_start(args, format);
     amb_sleep_seconds((double)(rand()%1000) * 0.00001); // .01 - 10 ms
 #ifdef _WIN32      
-    while ( 1 == InterlockedCompareExchange64(&debug_lock, 1, 0) ) { }
+    while ( 1 == InterlockedCompareExchange64(&amb_debug_lock, 1, 0) ) { }
 #else
-    while ( 1 == __sync_val_compare_and_swap(&debug_lock, 1, 0) ) { }
+    while ( 1 == __sync_val_compare_and_swap(&amb_debug_lock, 1, 0) ) { }
 #endif    
     fprintf(amb_dbg_fd," [AMBCLIENT] ");
     vfprintf(amb_dbg_fd,format, args);
     fflush(amb_dbg_fd);
-    debug_lock = 0;
+    amb_debug_lock = 0;
     va_end(args);
 }
 #else
