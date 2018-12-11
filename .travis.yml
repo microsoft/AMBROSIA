@@ -1,10 +1,11 @@
 
 language: csharp
 mono: none
+dotnet: latest
 
 services:
   - docker
-
+  
 env:
   global:
     # Mount the logs from outside the container when/if running PerformanceTestInterruptible:
