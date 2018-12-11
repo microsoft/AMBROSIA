@@ -5,6 +5,13 @@ dotnet: 2.1
 
 services:
   - docker
+
+addons:
+  apt:
+    packages:
+    - libunwind-dev
+    - make
+    - gcc
   
 env:
   global:
