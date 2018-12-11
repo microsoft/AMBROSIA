@@ -1,25 +1,37 @@
 
-language: minimal
+language: csharp
+mono: none
+dotnet: 2.1
+dist: xenial
 
 services:
   - docker
 
+addons:
+  apt:
+    packages:
+    - libunwind-dev 
+    - make
+    - gcc
+  
 env:
   global:
-    # Mount the logs from outside the container:
+    # Mount the logs from outside the container when/if running PerformanceTestInterruptible:
     - PTI_MOUNT_LOGS=ExternalLogs
 
-  matrix:    
+  matrix:
     # Bring up a basic test within or between containers:
-    - PTI_MODE=OneContainer  
-    - PTI_MODE=TwoContainers 
+    - DOCK=nodocker
+    - DOCK=docker PTI_MODE=OneContainer
+#    - DOCK=docker PTI_MODE=TwoContainers
+
+before_install:
+  - sudo apt-get install -y libunwind-dev make gcc
 
 script:
 # Need to remove the dependence on Azure Tables /
 # AZURE_STORAGE_CONN_STRING if we want to do full CI in a public
 # context (or find some way to use an account without leaking its auth
 # info).
-#   - ./._run_ci.sh
-
-# In the meantime, we can just make sure the images build:
-   - ./build_docker_images.sh
+# In the meantime, this will just make sure that everything builds.
+- ./Scripts/run_linux_ci.sh $DOCK
