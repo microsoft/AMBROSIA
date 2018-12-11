@@ -11,6 +11,8 @@
   #include <stdarg.h> // va_list
 #endif
 
+// #include "ambrosia/internal/bits.h"
+
 // -------------------------------------------------
 // Data formats used by the AMBROSIA "wire protocol"
 // -------------------------------------------------
@@ -132,16 +134,7 @@ int zigzag_int_size(int32_t value);
 #ifdef AMBCLIENT_DEBUG
 extern volatile int64_t amb_debug_lock;
 
-// Helper used only below
-static inline void amb_sleep_seconds(double n) {
-#ifdef _WIN32
-  Sleep((int)(n * 1000));
-#else
-  int64_t nanos = (int64_t)(10e9 * n);
-  const struct timespec ts = {0, nanos};
-  nanosleep(&ts, NULL);
-#endif
-}
+extern void amb_sleep_seconds(double n);
 
 static inline void amb_debug_log(const char *format, ...)
 {

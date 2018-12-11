@@ -20,10 +20,14 @@
   #include <sys/socket.h>
   #include <arpa/inet.h> // inet_pton
   #include <netdb.h> // gethostbyname
+  #include <sched.h>  // sched_yield
 #endif
 
 #include "ambrosia/client.h"
 #include "ambrosia/internal/bits.h"
+
+// For network progress thread only:
+#include "ambrosia/internal/spsc_rring.h"
 
 // Library-level (private) global variables:
 // --------------------------------------------------
@@ -64,6 +68,16 @@ char* amb_get_error_string() {
 #else  
   return strerror(errno);
 #endif  
+}
+
+void amb_sleep_seconds(double n) {
+#ifdef _WIN32
+  Sleep((int)(n * 1000));
+#else
+  int64_t nanos = (int64_t)(10e9 * n);
+  const struct timespec ts = {0, nanos};
+  nanosleep(&ts, NULL);
+#endif
 }
 
 void print_decimal_bytes(char* ptr, int len) {
@@ -228,7 +242,10 @@ void amb_recv_log_hdr(int sockfd, struct log_hdr* hdr) {
 }
 
 
-// ------------------------------------------------------------
+
+// ==============================================================================
+// Manage the state of the client (networking/connections)
+// ==============================================================================
 
 void attach_if_needed(char* dest, int destLen) {
   // HACK: only working for one dest atm...
@@ -251,6 +268,51 @@ void attach_if_needed(char* dest, int destLen) {
       amb_debug_log("  attach message sent (%d bytes)\n", cur-sendbuf);
   }
 }
+
+// Hacky busy-wait by thread-yielding for now:
+// FIXME: NEED BACKOFF!
+static inline
+void amb_yield_thread() {
+#ifdef _WIN32
+  SwitchToThread();
+#else  
+  sched_yield();
+#endif
+}
+
+
+// Launch a background thread that progresses the network.
+#ifdef _WIN32
+DWORD WINAPI amb_network_progress_thread( LPVOID lpParam )
+#else
+void*        amb_network_progress_thread( void* lpParam )
+#endif
+{
+  printf(" *** Network progress thread starting...\n");
+  int hot_spin_amount = 1; // 100
+  int spin_tries = hot_spin_amount;
+  while(1) {
+    int numbytes = -1;
+    char* ptr = peek_buffer(&numbytes);    
+    if (numbytes > 0) {
+      amb_debug_log(" network thread: sending slice of %d bytes\n", numbytes);
+      socket_send_all(g_to_immortal_coord, ptr, numbytes, 0);
+      pop_buffer(numbytes); // Must be at least this many.
+      spin_tries = hot_spin_amount;
+    } else if ( spin_tries == 0) {
+      spin_tries = hot_spin_amount;
+      // amb_debug_log(" network thread: yielding to wait...\n");
+#ifdef AMBCLIENT_DEBUG      
+      amb_sleep_seconds(0.5);
+      amb_sleep_seconds(0.05);
+#endif
+      amb_yield_thread();
+    } else spin_tries--;   
+  }
+
+  return 0;
+}
+
 
 
 // Begin connect_sockets:
