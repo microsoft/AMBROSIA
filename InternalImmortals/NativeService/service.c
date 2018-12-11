@@ -387,16 +387,27 @@ void send_ack() {
 }
 
 void send_dummy_checkpoint(int upfd) {
-  const char* dummy_checkpoint = "dummy_checkpoint";
-  int size = 1 + strlen(dummy_checkpoint);
-  char* buf = alloca(size+5);
-  char* bufcur = write_zigzag_int(buf, size); // Size (including type tag)
-  *bufcur++ = Checkpoint;             // Type
+  const char* dummy_checkpoint = "dummyckpt";
+  int strsize = strlen(dummy_checkpoint);
+
+  // New protocol, the payload is just a 64 bit size:
+  int   msgsize = 1 + 8;
+  char* buf = alloca(msgsize + 5 + strsize);
+  char* bufcur = write_zigzag_int(buf, msgsize); // Size (including type tag)
+  *bufcur++ = Checkpoint;                        // Type
+  *((int64_t*)bufcur) = strsize;                 // 8 byte size
+  bufcur += 8;
+  
+  assert(bufcur-buf == 9 + zigzag_int_size(msgsize)); 
+
+  // Then write the checkpoint itself AFTER the regular message:
   bufcur += sprintf(bufcur, "%s", dummy_checkpoint); // Dummy checkpoint.
+
   socket_send_all(upfd, buf, bufcur-buf, 0);
+  
 #ifdef AMBCLIENT_DEBUG  
-  amb_debug_log("  Trivial checkpoint message sent to coordinator (%lld bytes)\n",
-		(int64_t)(bufcur-buf));
+  amb_debug_log("  Trivial checkpoint message sent to coordinator (%lld bytes), checkpoint %d bytes\n",
+                (int64_t)(bufcur-buf), strsize);
   amb_debug_log("    Message was: ");
   print_hex_bytes(amb_dbg_fd,buf, bufcur-buf); fprintf(amb_dbg_fd,"\n");
 #endif
