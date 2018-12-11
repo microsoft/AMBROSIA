@@ -53,8 +53,6 @@ enum MsgType { RPC=0,                       //
 // FIXME: these should become PRIVATE to the library:
 extern int g_to_immortal_coord, g_from_immortal_coord;
 
-extern int upport, downport;
-
 
 // Communicates with the server to establish normal operation.
 //
@@ -62,9 +60,14 @@ extern int upport, downport;
 // received from a call to connect_sockets.
 void startup_protocol(int upfd, int downfd);
 
-// Connect the 
-void connect_sockets(int* upptr, int* downptr);
+// Connect to the ImmortalCoordinator.  Use the provided ports.
+// 
+// On the "up" port we connect, and on "down" the coordinator connects
+// to us.  This function writes the file descriptors for the opened
+// connections into the pointers provided as the last two arguments.
+void connect_sockets(int upport, int downport, int* up_fd_ptr, int* down_fd_ptr);
 
+// Encoding and Decoding message types
 //------------------------------------------------------------------------------
 
 // PRECONDITION: sufficient space free at output pointer.
@@ -93,6 +96,8 @@ void amb_send_outgoing_rpc(void* tempbuf, char* dest, int32_t destLen, char RPC_
 // Read a full log header off the socket, writing it into the provided pointer.
 void amb_recv_log_hdr(int sockfd, struct log_hdr* hdr);
 
+
+//------------------------------------------------------------------------------
 
 // TEMP - audit me
 void attach_if_needed(char* dest, int destLen);

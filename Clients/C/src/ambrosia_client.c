@@ -25,17 +25,11 @@
 #include "ambrosia/client.h"
 #include "ambrosia/internal/bits.h"
 
-// Library-level global variables:
+// Library-level (private) global variables:
 // --------------------------------------------------
 
 // FIXME: looks like we need a hashtable after all...
 int g_attached = 0;  // For now, ONE destination.
-
-
-// This follows the rule that the RECV side acts as the server:
-int upport   = 1000; // Send. Up to the reliability-coordinator-as-server
-int downport = 1001; // Recv. Down from the coordinator (we're server)
-
 
 // Global variables that should be initialized once for the library.
 // We can ONLY ever have ONE reliability coordinator.
@@ -189,27 +183,6 @@ void* amb_write_outgoing_rpc(void* buf, char* dest, int32_t destLen, char RPC_or
   return (void*)cursor;
 }
 
-
-// This is a convenience method that sits above the buffer API:
-// ------------------------------------------------------------
-
-/*
-// Logically the same as send_outgoing_*, except uses the global buffer.
-// PRECONDITION: buffer is free / no outstanding "reserve" that needs to be released.
-void buffer_outgoing_rpc_hdr(char* dest, int32_t destLen, char RPC_or_RetVal,
-                             int32_t methodID, char fireForget, int argsLen) {  
-  // Overestimate the space needed:
-  int sizeBound = (1 // type tag
-		   + 5 + destLen + 1  // RPC_or_RetVal
-		   + 5 + 1 // fireForget
-		   + 5);
-  char* start = reserve_buffer(sizeBound);
-  char* end = amb_write_outgoing_rpc_hdr(start, dest,destLen,RPC_or_RetVal,methodID,fireForget,argsLen);
-  // If we want to create RPCBatch messages we need to only send complete messages, not just headers:
-  finished_reserve_buffer(end-start);
-}
-*/
-
 // Direct socket sends/recvs
 // ------------------------------
 
@@ -308,7 +281,7 @@ void enable_fast_loopback(SOCKET sock) {
   }
 }
 
-void connect_sockets(int* upptr, int* downptr) {
+void connect_sockets(int upport, int downport, int* upptr, int* downptr) {
   WSADATA wsa;
   SOCKET sock;
 
@@ -467,7 +440,7 @@ void connect_sockets(int* upptr, int* downptr) {
 
 // Establish both connections with the reliability coordinator.
 // Takes two output parameters where it will write the resulting sockets.
-void connect_sockets(int* upptr, int* downptr) {
+void connect_sockets(int upport, int downport, int* upptr, int* downptr) {
 #ifdef IPV4
   struct hostent* immortalCoord;
   struct sockaddr_in addr;
@@ -597,6 +570,7 @@ void startup_protocol(int upfd, int downfd) {
   case TakeBecomingPrimaryCheckpoint:
     amb_debug_log("Starting up for the first time (TakeBecomingPrimaryCheckpoint)\n");
     break;
+
   case Checkpoint:
     fprintf(stderr, "RECOVER mode ... not implemented yet.\n");
     
