@@ -37,8 +37,9 @@
 // TODO: remove internal dependency:
 #include "ambrosia/internal/spsc_rring.h"
 #include "ambrosia/client.h"
-#include "ambrosia/internal/bits.h"
 
+// Extra utilities (print_hex_bytes, socket_send_all):
+#include "ambrosia/internal/bits.h"
 
 // Library-level global variables:
 // --------------------------------------------------
@@ -99,21 +100,6 @@ int destLen;    // Initialized below..
 
 // General helper functions
 // --------------------------------------------------------------------------------
-
-#ifdef AMBCLIENT_DEBUG
-// DUPLICATED with ambrosia_client.
-void print_hex_bytes(FILE* fd, char* ptr, int len) {
-  const int limit = 100; // Only print this many:
-  fprintf(fd,"0x");
-  int j;
-  for (j=0; j < len && j < limit; j++) {
-    fprintf(fd,"%02hhx", (unsigned char)ptr[j]);
-    if (j % 2 == 1)
-      fprintf(fd," ");
-  }
-  if (j<len) fprintf(fd,"...");
-}
-#endif
 
 // Hacky busy-wait by thread-yielding for now:
 static inline void yield_thread() {
@@ -587,7 +573,7 @@ void* network_progress_thread( void* lpParam )
     } else if ( spin_tries == 0) {
       spin_tries = hot_spin_amount;
       // amb_debug_log(" network thread: yielding to wait...\n");
- #ifdef AMBCLIENT_DEBUG      
+#ifdef AMBCLIENT_DEBUG      
       sleep_seconds(0.5);
       sleep_seconds(0.05);
 #endif
@@ -681,6 +667,11 @@ int main(int argc, char** argv)
     fprintf(stderr, "\nERROR: Bytes-per-round should be bigger than max message size.\n");
     abort();
   }
+
+  if ( g_is_sender || destLen == 0) 
+    printf("We are running the SENDER\n");
+  else
+    printf("We are running the RECEIVER\n");
   
   printf("Connecting to my coordinator on ports: %d (up), %d (down)\n", upport, downport);
   printf("The 'up' port we connect, and the 'down' one the coordinator connects to us.\n");

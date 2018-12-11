@@ -50,7 +50,7 @@ const char* coordinator_host = "::1";
 #endif
 
 #ifdef AMBCLIENT_DEBUG
-// volatile int64_t debug_lock = 0;
+volatile int64_t amb_debug_lock = 0;
 #endif
 
 
@@ -70,18 +70,6 @@ char* amb_get_error_string() {
 #else  
   return strerror(errno);
 #endif  
-}
-    
-void print_hex_bytes(FILE* fd, char* ptr, int len) {
-  const int limit = 100; // Only print this many:
-  fprintf(fd,"0x");
-  int j;
-  for (j=0; j < len && j < limit; j++) {
-    fprintf(fd,"%02hhx", (unsigned char)ptr[j]);
-    if (j % 2 == 1)
-      fprintf(fd," ");
-  }
-  if (j<len) fprintf(fd,"...");
 }
 
 void print_decimal_bytes(char* ptr, int len) {
@@ -290,29 +278,6 @@ void attach_if_needed(char* dest, int destLen) {
       amb_debug_log("  attach message sent (%d bytes)\n", cur-sendbuf);
   }
 }
-
-/*
-// INEFFICIENT version that makes an extra copy:
-void send_message(char* buf, int len) {
-  attach_if_needed(destName, ??); // Hard-coded global dest name.
-
-  // FIXME - LAME COPY to PREPEND header bytes!
-  char* sendbuf = (char*)malloc(1 + 5 + destLen + 1 + 5 + 1 + len);
-  char* newpos = amb_write_outgoing_rpc(sendbuf, destName, destLen, 0, TPUT_MSG_ID, 1, buf, len);
-
-  // FIXME: one system call per message!
-  socket_send_all(g_to_immortal_coord, sendbuf, newpos-sendbuf, 0);
-#ifdef AMBCLIENT_DEBUG
-  amb_debug_log("Sent %d byte message up to coordinator, argsLen %d...\n  Hex: ", newpos-sendbuf, len);  
-  print_hex_bytes(amb_dbg_fd, sendbuf, newpos-sendbuf);
-  fprintf(amb_dbg_fd,"\n   Decimal: ");
-  print_decimal_bytes(sendbuf, newpos-sendbuf);  printf("\n");
-#endif
-  free(sendbuf);
-}
-*/
-
-
 
 
 // Begin connect_sockets:

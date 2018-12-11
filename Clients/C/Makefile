@@ -1,9 +1,12 @@
 
-# Put your -D variables here, e.g. -DDEBUG
-DEFINES= -DIPV4
+# Put your -D variables here:
+DEFINES ?= 
+
+EXTRA_DEFINES = -DIPV4
 # ^ TODO build everything twice for IPV6 vs IPV4.
 # TODOTODO fix it so that one compile can work for both.
 
+ALL_DEFINES = $(DEFINES) $(EXTRA_DEFINES)
 
 GNULIBS= -lpthread
 GNUOPTS= -pthread -O3
@@ -16,12 +19,15 @@ OBJS1= $(patsubst src/%.c,bin/static/%.o, $(SRCS) )
 
 OBJS2= $(patsubst src/%.c,bin/shared/%.o, $(SRCS) )
 
-COMP= gcc $(DEFINES) -I include/ $(GNUOPTS)
+COMP= gcc $(ALL_DEFINES) -I include/ $(GNUOPTS)
 LINK= gcc
 
 LIBNAME=libambrosia
 
 all: bin/$(LIBNAME).a bin/$(LIBNAME).so 
+
+debug:
+	$(MAKE) DEFINES="-DAMBCLIENT_DEBUG" clean publish
 
 bin/$(LIBNAME).a: $(OBJS1)
 	ar rcs $@ $(OBJS1)
