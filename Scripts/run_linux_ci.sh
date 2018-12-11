@@ -17,6 +17,14 @@ fi
 # Set up common definitions.
 source Scripts/ci_common_defs.sh
 
+function check_az_storage_and_bail() {
+    echo
+    echo "All builds completed.  Proceeding to running system tests."
+    if ! [[ ${AZURE_STORAGE_CONN_STRING:+defined} ]]; then
+        echo "AZURE_STORAGE_CONN_STRING not defined, so not attempting runnning system tests."
+        exit 0
+    fi
+}
 
 case $mode in
   docker)
@@ -26,9 +34,15 @@ case $mode in
       DONT_BUILD_TARBALL=1 ./build_docker_images.sh
 
       # APPLICATION 1: PTI
-      ./Scripts/internal/run_linux_PTI_docker.sh 
+      # ----------------------------------------
+      check_az_storage_and_bail
+      ./Scripts/internal/run_linux_PTI_docker.sh
+      
+      # Application 2: ...
+      # ----------------------------------------          
+
       ;;
-  
+      
   nodocker)
         
       echo "Executing raw-Linux, non-Docker build."
@@ -39,19 +53,13 @@ case $mode in
       # ----------------------------------------
       cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
       ./build_dotnetcore.sh
-
-      if [[ ${AZURE_STORAGE_CONN_STRING:+defined} ]]; then
-          echo
-          echo "All builds completed.  Attempt to run a test."
-          ./run_small_PTI_and_shutdown.sh $INSTPREF 
-      else
-          echo "AZURE_STORAGE_CONN_STRING not defined, so not attempting PTI test."
-      fi
-
+      check_az_storage_and_bail
+      ./run_small_PTI_and_shutdown.sh $INSTPREF
+      
       # Application 2: ...
       # ----------------------------------------
-      
-      cd "$AMBROSIA_ROOT"
+
+
       ;;
 
   *)
