@@ -134,11 +134,12 @@ else
         cd "$bindir/$dir"
         mv -n * ..
     done
-
+    echo 
     echo "After squishing, these files left behind / conflicting:"
     echo "-------------------------------------------------------"
     cd "$bindir"
     find $secondary
     echo "-------------------------------------------------------"
     echo "Every one of these represents a risk of undefined behavior!"
+    echo
 fi

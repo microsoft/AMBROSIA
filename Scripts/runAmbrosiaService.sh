@@ -93,10 +93,14 @@ _normal_cleanup() {
 }
 
 _unexpected_cleanup() {
-  trap '' EXIT # some shells will call EXIT after the INT handler
-  echo "$0: Exiting script abnormally! Cleaning up. ($1)" 
-  _normal_cleanup
-  echo "$0: Done with cleanup."
+    trap '' EXIT # some shells will call EXIT after the INT handler
+    if [ ${$1:+defined} ];
+    then local WHCH="($1)"
+    else local WHCH=""
+    fi
+    echo "$0: Exiting script abnormally! Cleaning up. $WHCH" 
+    _normal_cleanup
+    echo "$0: Done with cleanup."
 }
 
 trap _normal_cleanup     EXIT
