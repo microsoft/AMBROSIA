@@ -18,6 +18,19 @@ set -euo pipefail
 cd `dirname $0`
 source ./default_var_settings.sh
 
+# PORTOFFSET: A number to add to all ports to avoid colliding or
+# reusing recently used ports.
+if ! [ ${PORTOFFSET:+defined} ]; then
+    PORTOFFSET=0
+else
+    PORT1=$((PORT1 + PORTOFFSET))
+    PORT2=$((PORT2 + PORTOFFSET))
+    PORT3=$((PORT3 + PORTOFFSET))
+    PORT4=$((PORT4 + PORTOFFSET))
+    CRAPORT1=$((CRAPORT1 + PORTOFFSET))
+    CRAPORT2=$((CRAPORT2 + PORTOFFSET))
+fi
+
 INSTANCE_PREFIX=""
 if [ $# -ne 0 ];
 then INSTANCE_PREFIX="$1"
