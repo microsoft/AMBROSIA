@@ -3,14 +3,14 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Ambrosia;
-using IClient2;
-using IServer;
+using Client2;
+using Server;
 using Microsoft.VisualStudio.Threading;
 
 namespace Client2
 {
     [DataContract]
-    class Client2 : Immortal<IClient2Proxy>, IClient2.IClient2
+    class Client2 : Immortal<IClient2Proxy>, IClient2
     {
         [DataMember]
         private string _serverName;
@@ -61,7 +61,7 @@ namespace Client2
             string serverInstanceName = "server1";
 
             Client2 client = new Client2(serverInstanceName);
-            using (var c = AmbrosiaFactory.Deploy<IClient2.IClient2>(clientInstanceName, client, receivePort, sendPort))
+            using (var c = AmbrosiaFactory.Deploy<IClient2>(clientInstanceName, client, receivePort, sendPort))
             {
                 while (finishedTokenQ.IsEmpty)
                 {
