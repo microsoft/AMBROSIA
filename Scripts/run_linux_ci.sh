@@ -33,14 +33,17 @@ case $mode in
       # When we are trying to run tests we don't really want the tarball:
       DONT_BUILD_TARBALL=1 ./build_docker_images.sh
 
+      check_az_storage_and_bail
+      
       # APPLICATION 1: PTI
       # ----------------------------------------
-      check_az_storage_and_bail
       ./Scripts/internal/run_linux_PTI_docker.sh
       
-      # Application 2: ...
-      # ----------------------------------------          
-
+      # Application 2: NativeService
+      # ----------------------------------------
+      # docker --env AZURE_STORAGE_CONN_STRING="${AZURE_STORAGE_CONN_STRING}" --rm \
+      #    ambrosia-nativeapp ./run_test_in_one_machine.sh
+      
       ;;
       
   nodocker)
