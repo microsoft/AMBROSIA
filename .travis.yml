@@ -1,5 +1,6 @@
 
-language: minimal
+language: csharp
+mono: none
 
 services:
   - docker
@@ -12,14 +13,13 @@ env:
   matrix:
     # Bring up a basic test within or between containers:
     - DOCK=nodocker
-    - PTI_MODE=OneContainer DOCK=docker
-#    - PTI_MODE=TwoContainers DOCK=docker
+    - DOCK=docker PTI_MODE=OneContainer
+#    - DOCK=docker PTI_MODE=TwoContainers
 
 script:
 # Need to remove the dependence on Azure Tables /
 # AZURE_STORAGE_CONN_STRING if we want to do full CI in a public
 # context (or find some way to use an account without leaking its auth
 # info).
-
 # In the meantime, this will just make sure that everything builds.
 - ./Scripts/run_linux_ci.sh $DOCK
