@@ -2,6 +2,7 @@
 language: csharp
 mono: none
 dotnet: 2.1
+dist: xenial
 
 services:
   - docker
@@ -9,7 +10,7 @@ services:
 addons:
   apt:
     packages:
-    - libunwind-dev
+    - libunwind-dev 
     - make
     - gcc
   
@@ -23,6 +24,9 @@ env:
     - DOCK=nodocker
     - DOCK=docker PTI_MODE=OneContainer
 #    - DOCK=docker PTI_MODE=TwoContainers
+
+before_install:
+  - sudo apt-get install -y libunwind-dev make gcc
 
 script:
 # Need to remove the dependence on Azure Tables /
