@@ -230,10 +230,6 @@ char* reserve_buffer(int len)
 
 void release_buffer(int len)
 {
-  // finished_reserve_buffer(len);
-  // g_buffer_tail += g_buffer_total_reserved; // Publish it!  
-  //  g_buffer_total_reserved = 0;
-
   spsc_rring_debug_log("  => release_buffer of %d bytes, new tail %d\n", len, g_buffer_tail + len);
   
   if (len > g_buffer_last_reserved) {

@@ -611,10 +611,12 @@ void reset_trial_state() {
   }
 }
 
+
 int main(int argc, char** argv)
 {
   // How big to allocate the buffer:
   int buffer_bytes_allocated = -1; // Ivar semantics - write once.  
+  int upport, downport;
   
   srand(time(0));
   
@@ -650,6 +652,7 @@ int main(int argc, char** argv)
     destLen = strlen(destName); 
     upport = atoi(argv[3]);
     downport = atoi(argv[4]);
+    
   } else {
     fprintf(stderr, "Usage: this executable expects args: <role=0/1/2/3> <destination> <port> <port> [roundsz] [trials] [bufsz]\n");
     fprintf(stderr, "  where <role> is 0/1 for sender/receiver throughput mode\n");
@@ -681,7 +684,7 @@ int main(int argc, char** argv)
   /* printf("(You need four ports, in the above example: 50000-50003 .)\n"); */
 
   int upfd, downfd;
-  connect_sockets(&upfd, &downfd);
+  connect_sockets(upport, downport, &upfd, &downfd);
   amb_debug_log("Connections established (%d,%d), beginning protocol.\n", upfd, downfd);
   startup_protocol(upfd, downfd);
 
