@@ -1,7 +1,6 @@
 ﻿using Ambrosia;
-using System;
 
-namespace IClient2
+namespace Client2
 {
     public interface IClient2
     {
