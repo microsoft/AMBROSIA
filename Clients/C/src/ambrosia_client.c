@@ -39,6 +39,11 @@ int g_attached = 0;  // For now, ONE destination.
 // We can ONLY ever have ONE reliability coordinator.
 int g_to_immortal_coord, g_from_immortal_coord;
 
+
+// An INTERNAL global representing whether the client is terminating
+// this AMBROSIA instance/network-endpoint.
+int g_amb_client_terminating = 0;
+
 #ifdef IPV4
 const char* coordinator_host = "127.0.0.1";
 #elif defined IPV6
@@ -592,7 +597,6 @@ void connect_sockets(int upport, int downport, int* upptr, int* downptr) {
 // (Runtime library) Startup.
 //------------------------------------------------------------------------------
 
-
 // FIXME: move this to a callback argument:
 extern void send_dummy_checkpoint(int upfd);
 
@@ -659,6 +663,7 @@ void startup_protocol(int upfd, int downfd) {
   int32_t msgsize;
   char *msgbufcur, *bufcur;
 
+  
 
 // FIXME!! Factor this out into the client application:
 #define STARTUP_ID 32
@@ -703,4 +708,120 @@ void startup_protocol(int upfd, int downfd) {
 
   return;
 }
+
+// FIXME: turn into a callback (currently defined by application):
+extern void dispatchMethod(int32_t methodID, void* args, int argsLen);
+
+
+// Application loop (FIXME: Move into the client library!)
+//------------------------------------------------------------------------------
+
+// Handle the serialized RPC after the (Size,MsgType) have been read
+// off.
+// 
+// ARGUMENT len: The length argument is an exact bound on the bytes
+// read by this function for this message, which is used in turn to
+// compute the byte size of the arguments at the tail of the payload.
+char* amb_handle_rpc(char* buf, int len) {
+  if (len < 0) {
+    fprintf(stderr, "ERROR: amb_handle_rpc, received negative length!: %d", len);
+    abort();
+  }
+  char* bufstart = buf;
+  char rpc_or_ret = *buf++;             // 1 Reserved byte.
+  int32_t methodID;
+  buf = read_zigzag_int(buf, &methodID);  // 1-5 bytes
+  char fire_forget = *buf++;            // 1 byte
+  int argsLen = len - (buf-bufstart);   // Everything left
+  if (argsLen < 0) {
+    fprintf(stderr, "ERROR: amb_handle_rpc, read past the end of the buffer: start %p, len %d", buf, len);
+    abort();
+  }
+  amb_debug_log("  Dispatching method %d (rpc/ret %d, fireforget %d) with %d bytes of args...\n",
+		methodID, rpc_or_ret, fire_forget, argsLen);
+  dispatchMethod(methodID, buf, argsLen);
+  return (buf+argsLen);
+}
+
+// The heart of the runtime: enter the processing loop and make
+// "up-calls" (callbacks) into the application when we receive
+// incoming messages.
+void amb_normal_processing_loop(int upfd, int downfd)
+{  
+  amb_debug_log("\n        .... Normal processing underway ....\n");
+  struct log_hdr hdr;
+  memset((void*) &hdr, 0, AMBROSIA_HEADERSIZE);
+
+  int round = 0;
+  while (!g_amb_client_terminating) {
+    amb_debug_log("Normal processing (iter %d): receive next log header..\n", round++);
+    amb_recv_log_hdr(downfd, &hdr);
+
+    int payloadsize = hdr.totalSize - AMBROSIA_HEADERSIZE;
+    char* buf = calloc(payloadsize, 1);
+    recv(downfd, buf, payloadsize, MSG_WAITALL);
+#ifdef AMBCLIENT_DEBUG  
+    amb_debug_log("Entire Message Payload (%d bytes): ", payloadsize);
+    print_hex_bytes(amb_dbg_fd,buf, payloadsize); fprintf(amb_dbg_fd,"\n");
+#endif
+
+    // Read a stream of messages from the log record:
+    int rawsize = 0;
+    char* bufcur = buf;
+    char* limit = buf + payloadsize;
+    int ind = 0;
+    while (bufcur < limit) {
+      amb_debug_log(" Processing message %d in log record, starting at offset %d (%p), remaining bytes %d\n",
+		    ind++, bufcur-buf, bufcur, limit-bufcur);
+      bufcur = read_zigzag_int(bufcur, &rawsize);  // Size
+      char tag = *bufcur++;                      // Type
+      rawsize--; // Discount type byte.
+      switch(tag) {
+
+      case RPC:
+	amb_debug_log(" It's an incoming RPC.. size without len/tag bytes: %d\n", rawsize);
+	// print_hex_bytes(bufcur,rawsize);printf("\n");
+	bufcur = amb_handle_rpc(bufcur, rawsize);
+	break;
+
+      case InitialMessage:
+	amb_debug_log(" Received InitialMessage back from server.  Processing..\n");
+	// FIXME: InitialMessage should be an arbitrary blob... but here we're following the convention that it's an actual message.
+	break;
+
+      case RPCBatch:
+	{ int32_t numMsgs = -1;
+	  bufcur = read_zigzag_int(bufcur, &numMsgs);
+	  amb_debug_log(" Receiving RPC batch of %d messages.\n", numMsgs);
+	  char* batchstart = bufcur;
+	  for (int i=0; i < numMsgs; i++) {
+	    amb_debug_log(" Reading off message %d/%d of batch, current offset %d, bytes left: %d.\n",
+			  i+1, numMsgs, bufcur-batchstart, rawsize);
+	    char* lastbufcur = bufcur;
+	    int32_t msgsize = -100;
+	    bufcur = read_zigzag_int(bufcur, &msgsize);  // Size (unneeded)	    
+	    char type = *bufcur++;                     // Type - IGNORED
+	    amb_debug_log(" --> Read message, type %d, payload size %d\n", type, msgsize-1);
+	    bufcur = amb_handle_rpc(bufcur, msgsize-1);
+	    amb_debug_log(" --> handling that message read %d bytes off the batch\n", (int)(bufcur - lastbufcur));
+	    rawsize -= (bufcur - lastbufcur);
+	  }
+	}
+	break;
+
+      case TakeCheckpoint:
+	send_dummy_checkpoint(upfd);
+	break;
+      default:
+	fprintf(stderr, "ERROR: unexpected or unrecognized message type: %d", tag);
+	abort();
+	break;
+      }
+    }
+  }  
+  //  g_trials_remaining--;  
+
+  return;
+}
+
 
