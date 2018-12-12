@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+# TODO: Should merge this with the Linux CI script.
+
 # ------------------------------------------------------------
 # A script to build and test under Windows (Azure DevOps) CI.
 # ------------------------------------------------------------
@@ -32,9 +34,10 @@ else
     echo "AZURE_STORAGE_CONN_STRING not defined, so not attempting PTI test."
 fi
 
-# Application 2: ...
+# Application 2: Hello World Sample
 # ----------------------------------------
-
+cd "$AMBROSIA_ROOT"/Samples/HelloWorld
+./build_dotnetcore.sh
 
 # ----------------------------------------
 cd "$AMBROSIA_ROOT"
