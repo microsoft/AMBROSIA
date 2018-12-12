@@ -26,6 +26,9 @@ function check_az_storage_and_bail() {
     fi
 }
 
+FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.0}"
+CONF="${AMBROSIA_DOTNET_CONF:-Release}"
+
 case $mode in
   docker)
     
@@ -61,6 +64,11 @@ case $mode in
       # Build Application 2: Hello World Sample
       # ----------------------------------------
       cd "$AMBROSIA_ROOT"/Samples/HelloWorld
+      # First make sure a straight-to-the-solution build works:
+      dotnet publish -c $CONF -f $FMWK HelloWorld.sln
+      # Then make sure it builds from scratch:
+      rm -rf GeneratedSourceFiles
+      git clean -nxd .
       ./build_dotnetcore.sh
       
       # ----------------------------------------
