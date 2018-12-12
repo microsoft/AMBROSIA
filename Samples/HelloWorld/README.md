@@ -7,13 +7,13 @@ This sample shows two immortals communicating, a client and a server. You can bu
 To run it yourself, refer to the version of the tutorial that matches
 your tooling environment:
 
- * [HOWTO-windows.md](./HOWTO-windows.md): Build and run using
+ * [HOWTO-WINDOWS.md](./HOWTO-WINDOWS.md): Build and run using
    Windows-native tooling, e.g. Visual Studio and `cmd.exe`.
 
- * [HOWTO-bash.md](./HOWTO-bash.md): Build and run on your local
+ * [HOWTO-BASH.md](./HOWTO-BASH.md): Build and run on your local
    machine (Mac, Windows, Linux) using Bash scripts.
 
- * [HOWTO-docker.md](./HOWTO-docker.md): Build and run inside
+ * [HOWTO-DOCKER.md](./HOWTO-DOCKER.md): Build and run inside
    containers using Docker.
 
 
