@@ -471,7 +471,7 @@ namespace Ambrosia
                         else
                         {
                             // writing a mixed batch
-                            outputStream.WriteInt(bytesInBatchData + 1 + 2 * StreamCommunicator.IntSize(numRPCs));
+                            outputStream.WriteInt(bytesInBatchData + 1 + StreamCommunicator.IntSize(numRPCs) + StreamCommunicator.IntSize(numReplayableMessagesToSend));
                             outputStream.WriteByte(AmbrosiaRuntime.CountReplayableRPCBatchByte);
                             outputStream.WriteInt(numRPCs);
                             outputStream.WriteInt(numReplayableMessagesToSend);
@@ -564,7 +564,8 @@ namespace Ambrosia
                         for (int i = 0; i < skipEvents; i++)
                         {
                             int eventSize = curBuffer.PageBytes.ReadBufferedInt(bufferPos);
-                            if (curBuffer.PageBytes[bufferPos + StreamCommunicator.IntSize(eventSize) + 1] != (byte)RpcTypes.RpcType.Impulse)
+                            var methodID = curBuffer.PageBytes.ReadBufferedInt(bufferPos + StreamCommunicator.IntSize(eventSize) + 2);
+                            if (curBuffer.PageBytes[bufferPos + StreamCommunicator.IntSize(eventSize) + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
                             {
                                 curBuffer.UnsentReplayableMessages--;
                             }
@@ -778,7 +779,8 @@ namespace Ambrosia
                     for (var i = currentHead.LowestSeqNo; i <= trimSeqNo; i++ )
                     {
                         int eventSize = currentHead.PageBytes.ReadBufferedInt(readBufferPos);
-                        if (currentHead.PageBytes[readBufferPos + StreamCommunicator.IntSize(eventSize) + 1] != (byte)RpcTypes.RpcType.Impulse)
+                        var methodID = currentHead.PageBytes.ReadBufferedInt(readBufferPos + StreamCommunicator.IntSize(eventSize) + 2);
+                        if (currentHead.PageBytes[readBufferPos + StreamCommunicator.IntSize(eventSize) + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
                         {
                             currentHead.TotalReplayableMessages--;
                         }
@@ -806,7 +808,8 @@ namespace Ambrosia
                     for (int i = 0; i < numMessagesOnPage; i++)
                     {
                         int eventSize = curBuffer.PageBytes.ReadBufferedInt(readBufferPos);
-                        if (curBuffer.PageBytes[readBufferPos + StreamCommunicator.IntSize(eventSize) + 1] != (byte)RpcTypes.RpcType.Impulse)
+                        var methodID = curBuffer.PageBytes.ReadBufferedInt(readBufferPos + StreamCommunicator.IntSize(eventSize) + 2);
+                        if (curBuffer.PageBytes[readBufferPos + StreamCommunicator.IntSize(eventSize) + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
                         {
                             // Copy event over to new page bytes
                             pageWriteStream.Write(curBuffer.PageBytes, readBufferPos, eventSize + StreamCommunicator.IntSize(eventSize));
@@ -2744,13 +2747,15 @@ namespace Ambrosia
             // lock to avoid conflict and ensure maximum memory cleaning during replay. No possible conflict during primary operation
             lock (_shuffleOutputRecord)
             {
-                // Buffer the output if it is at or beyond the replay or trim point (during recovery). If we are recovering, this may not be the case.
+                // Buffer the output if it is at or beyond the replay or trim point (during recovery).
                 if ((_shuffleOutputRecord.LastSeqNoFromLocalService + 1 >= _shuffleOutputRecord.ReplayFrom) &&
-                    (_shuffleOutputRecord.LastSeqNoFromLocalService + 1 >= _shuffleOutputRecord.TrimTo))
+                    (_shuffleOutputRecord.LastSeqNoFromLocalService + 1 >= _shuffleOutputRecord.ReplayableTrimTo))
                 {
                     var writablePage = _shuffleOutputRecord.BufferedOutput.GetWritablePage(totalSize, _shuffleOutputRecord.LastSeqNoFromLocalService + 1);
                     writablePage.HighestSeqNo = _shuffleOutputRecord.LastSeqNoFromLocalService + 1;
-                    if (RpcBuffer.Buffer[restOfRPCOffset] != (byte) RpcTypes.RpcType.Impulse)
+
+                    var methodID = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1);
+                    if (RpcBuffer.Buffer[restOfRPCOffset + 1 + StreamCommunicator.IntSize(methodID)] != (byte) RpcTypes.RpcType.Impulse)
                     {
                         writablePage.UnsentReplayableMessages++;
                         writablePage.TotalReplayableMessages++;
@@ -2818,7 +2823,7 @@ namespace Ambrosia
                 var sizeBytes = inputFlexBuffer.LengthLength;
                 // Get the seqNo of the replay/filter point
                 var commitSeqNo = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1);
-                var commitSeqNoReplayable = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1);
+                var commitSeqNoReplayable = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1 + StreamCommunicator.LongSize(commitSeqNo));
                 inputFlexBuffer.ResetBuffer();
                 if (outputConnectionRecord.ConnectingAfterRestart)
                 {
@@ -2829,6 +2834,7 @@ namespace Ambrosia
                         // Don't think I actually need this lock, but can't hurt and shouldn't affect perf.
                         outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                         outputConnectionRecord.BufferedOutput.RebaseSeqNosInBuffer(commitSeqNo, commitSeqNoReplayable);
+                        outputConnectionRecord.LastSeqNoFromLocalService += commitSeqNo - commitSeqNoReplayable;
                         outputConnectionRecord.ConnectingAfterRestart = false;
                         outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
                     }
@@ -3126,7 +3132,7 @@ namespace Ambrosia
                         if (commitSeqNo > outputConnectionRecord.TrimTo && !outputConnectionRecord.WillResetConnection && !outputConnectionRecord.ConnectingAfterRestart)
                         {
                             outputConnectionRecord.TrimTo = Math.Max(outputConnectionRecord.TrimTo, commitSeqNo);
-                            outputConnectionRecord.ReplayableTrimTo = Math.Max(outputConnectionRecord.TrimTo, replayableCommitSeqNo);
+                            outputConnectionRecord.ReplayableTrimTo = Math.Max(outputConnectionRecord.ReplayableTrimTo, replayableCommitSeqNo);
                             if (outputConnectionRecord.ControlWorkQ.IsEmpty)
                             {
                                 outputConnectionRecord.ControlWorkQ.Enqueue(-2);
@@ -3153,7 +3159,8 @@ namespace Ambrosia
             switch (inputFlexBuffer.Buffer[sizeBytes])
             {
                 case RPCByte:
-                    if (inputFlexBuffer.Buffer[sizeBytes + 1] != (byte) RpcTypes.RpcType.Impulse)
+                    var methodID = inputFlexBuffer.Buffer.ReadBufferedInt(sizeBytes + 2);
+                    if (inputFlexBuffer.Buffer[sizeBytes + 2 + StreamCommunicator.IntSize(methodID)] != (byte) RpcTypes.RpcType.Impulse)
                     {
                         inputRecord.LastProcessedReplayableID++;
                     }

@@ -79,6 +79,33 @@ fi
 # Helper functions
 # --------------------------------------------------
 
+# Global variable set below:
+tail_pid=""
+coord_pid=""
+app_pid=""
+keep_monitoring=""
+
+_normal_cleanup() {
+  kill -TERM "$coord_pid" 2>/dev/null  || true
+  kill -TERM "$tail_pid"  2>/dev/null  || true
+  kill -TERM "$app_pid"   2>/dev/null  || true
+  rm -f "$keep_monitoring" 2>/dev/null || true
+}
+
+_unexpected_cleanup() {
+    trap '' EXIT # some shells will call EXIT after the INT handler
+    if [ $# -gt 0 ];
+    then local WHCH="($1)"
+    else local WHCH=""
+    fi
+    echo "$0: Exiting script abnormally! Cleaning up. $WHCH" 
+    _normal_cleanup
+    echo "$0: Done with cleanup."
+}
+
+trap _normal_cleanup     EXIT
+trap _unexpected_cleanup TERM INT QUIT
+
 function tag_stdin() {
     local MSG=$1
     # A complicated but full-proof bash method of line-by-line reading:        
@@ -87,13 +114,10 @@ function tag_stdin() {
     done
 }
 
-# Global variable set below:
-tail_pid=""
-
 function tail_tagged() {
     local MSG=$1
     local FILE=$2
-    (tail -F "$FILE" | tag_stdin $MSG) &
+    tail -F "$FILE" | tag_stdin $MSG &
     tail_pid=$!
 }
 
@@ -125,8 +149,10 @@ function start_immortal_coordinator() {
         touch "$COORDLOG"
     fi
     echo " $TAG   Redirecting output to: $COORDLOG"
-    
-    if which rotatelogs; then 
+
+    # OPTION (1): Bound logs, but complicated.
+    # ----------------------------------------
+    if which rotatelogs >/dev/null ; then 
         # Bound the total amount of output used by the ImmortalCoordinator log:
         ImmortalCoordinator $* 2>&1 | rotatelogs -f -t "$COORDLOG" 10M &
         coord_pid=$!
@@ -135,10 +161,14 @@ function start_immortal_coordinator() {
         ImmortalCoordinator $* >>"$COORDLOG" 2>&1 &
         coord_pid=$!
     fi
-
     if ! [[ ${AMBROSIA_SILENT_COORDINATOR:+defined} ]]; then
         tail_tagged "$COORDTAG" "$COORDLOG"
     fi
+    # ----------------------------------------
+    # OPTION (2) Don't bound coordinator log on disk.  Keep it simple:
+    # ImmortalCoordinator $* 2>&1 | tee "$COORDLOG" &
+    # coord_pid=$!
+    
     while ! grep -q "Ready" "$COORDLOG" && kill -0 $coord_pid 2>/dev/null ;
     do sleep 2; done
     
@@ -153,6 +183,9 @@ function start_immortal_coordinator() {
     fi
     echo " $TAG Coordinator looks ready."
 }
+
+# Script main body:
+# --------------------------------------------------------------------------------
 
 # Health monitoring. This is an example of AMBROSIA required practice:
 # the coordinator and application are bound together, if one dies the

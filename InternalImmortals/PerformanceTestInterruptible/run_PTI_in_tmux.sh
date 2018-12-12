@@ -33,10 +33,10 @@ tmux new-session  -d \; \
 tmux split-window -v \; \
      send-keys "/ambrosia/bin/ImmortalCoordinator -i dockertest1 -p $CRAPORT1" C-m ;
 tmux split-window -h \; \
-     send-keys "sleep 10; ./bin/Job --rp $PORT2 --sp $PORT1 -j dockertest1 -s dockertest2 --mms 65536 -n 9999 -c" C-m ; 
+     send-keys "sleep 10; ./Client/publish/Job --rp $PORT2 --sp $PORT1 -j dockertest1 -s dockertest2 --mms 65536 -n 9999 -c" C-m ; 
 tmux select-pane -t 0 \; \
      split-window -h  \; \
-     send-keys "sleep 10; ./bin/Server --rp $PORT4 --sp $PORT3 -j dockertest1 -s dockertest2 -n 1 -c" C-m ;
+     send-keys "sleep 10; ./Server/publish/Server --rp $PORT4 --sp $PORT3 -j dockertest1 -s dockertest2 -n 1 -c" C-m ;
 tmux attach
 
 echo "Tmux exited"

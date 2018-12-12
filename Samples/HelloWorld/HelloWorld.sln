@@ -10,14 +10,25 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client1", "Client1\Client1.csproj", "{318EC3BE-E578-4779-9800-DB3436F1706C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerInterfaces", "GeneratedSourceFiles\ServerInterfaces\latest\ServerInterfaces.csproj", "{04F60232-F122-47BF-850E-0092742DB33E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9180745A-DE7F-40CB-BC48-595057C8D98F} = {9180745A-DE7F-40CB-BC48-595057C8D98F}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client1Interfaces", "GeneratedSourceFiles\Client1Interfaces\latest\Client1Interfaces.csproj", "{625A71B0-DA9E-467F-9744-A4344EA8B6E5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8EFAD205-E2BF-46C0-B310-7D023210797F} = {8EFAD205-E2BF-46C0-B310-7D023210797F}
+		{9180745A-DE7F-40CB-BC48-595057C8D98F} = {9180745A-DE7F-40CB-BC48-595057C8D98F}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IClient2", "IClient2\IClient2.csproj", "{975C3389-6CE2-4905-BE58-57FCF29B5D31}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client2", "Client2\Client2.csproj", "{644D897D-1311-4073-9F0C-4197A9719E28}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client2Interfaces", "GeneratedSourceFiles\Client2Interfaces\latest\Client2Interfaces.csproj", "{6E5C78F0-B847-4C22-90B6-FAA96C013609}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9180745A-DE7F-40CB-BC48-595057C8D98F} = {9180745A-DE7F-40CB-BC48-595057C8D98F}
+		{975C3389-6CE2-4905-BE58-57FCF29B5D31} = {975C3389-6CE2-4905-BE58-57FCF29B5D31}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IClient1", "IClient1\IClient1.csproj", "{8EFAD205-E2BF-46C0-B310-7D023210797F}"
 EndProject

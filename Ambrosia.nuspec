@@ -13,11 +13,11 @@
     <copyright>Copyright (C) 2018 Microsoft Corporation</copyright>
     <language>en-US</language>
     <dependencies>
-      <dependency id="Microsoft.CodeAnalysis.CSharp.Scripting" version="2.7.0" />
+      <dependency id="Microsoft.CodeAnalysis.Scripting" version="2.7.0" />
       <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" />
       <dependency id="System.Threading.Tasks.Dataflow" version="4.9.0" />
-      <dependency id="Microsoft.VisualStudio.Threading" version="15.8.168" />
-      <dependency id="Microsoft.VisualStudio.Validation" version="15.3.58" />
+      <dependency id="Microsoft.VisualStudio.Threading" version="15.8.168" /> 
+      <dependency id="Microsoft.VisualStudio.Validation" version="15.3.58" />     
     </dependencies>
   </metadata>
   <files>

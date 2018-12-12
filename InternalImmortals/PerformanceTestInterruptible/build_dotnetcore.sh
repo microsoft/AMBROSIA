@@ -15,7 +15,7 @@ fi
 FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.0}"
 CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
-# OUTDIR=`pwd`/bin
+# Use a non-absolute directory here to prevent collisions:
 OUTDIR=publish
 BUILDIT="dotnet publish -o $OUTDIR -c $CONF -f $FMWK -r $PLAT"
 
@@ -35,6 +35,7 @@ DEST=CodeGenDependencies/$FMWK
 rm -rf $DEST
 mkdir -p $DEST
 cp -af API/publish/*  $DEST/
+# DANGER, WARNING, FIXME: it is UNSAFE to MERGE the outputs of two publish directories:
 cp -af IJob/publish/* $DEST/
 
 # Extra codegen dependence, put its code generator's own .csproj file in the resulting deps dir:
@@ -44,27 +45,26 @@ cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
 # echo "Populated dependencies folder with:"
 # find CodeGenDependencies/$FMWK || git clean -nxd CodeGenDependencies/$FMWK
 
+if [ "$FMWK" == "net46" ]; then
+    GENDEST="PTIAmbrosiaGeneratedAPINet46"
+else
+    GENDEST="PTIAmbrosiaGeneratedAPINetCore"
+fi
+
 echo
 echo "Generate the assemblies (assumes the AmbrosiaCS executable was built):"
 echo "----------------------------------------------------------------------"
 set -x
 # Alternatively: "dotnet ../../bin/AmbrosiaCS.dll"
-../../bin/AmbrosiaCS CodeGen -a "$DEST/ServerAPI.dll" -a "$DEST/IJob.dll" -o "PTIAmbrosiaGeneratedAPINetCore" -f "$FMWK" -b="$DEST" 
+../../bin/AmbrosiaCS CodeGen -a "$DEST/ServerAPI.dll" -a "$DEST/IJob.dll" -o $GENDEST -f "$FMWK" -b="$DEST" 
 set +x
 
 echo
 echo "Build the generated code:"
 echo "-------------------------"
 set -x
-$BUILDIT GeneratedSourceFiles/PTIAmbrosiaGeneratedAPINetCore/latest/PTIAmbrosiaGeneratedAPINetCore.csproj
+$BUILDIT GeneratedSourceFiles/${GENDEST}/latest/${GENDEST}.csproj
 set +x
-
-if [ "$FMWK" == "net46" ]; then
-    echo "================================================================================"
-    echo "WARNING: EXPECTED FAILURES on net46.  Allowing failures below this line."
-    echo "================================================================================"
-    set +e
-fi
 
 echo 
 echo "Finally, build the Job/Server executables:"
@@ -72,9 +72,6 @@ echo "------------------------------------------"
 set -x
 $BUILDIT Client/Job.csproj
 $BUILDIT Server/Server.csproj
-mkdir -p ./bin
-ln -s ../Client/publish/Job ./bin/Job
-ln -s ../Server/publish/Server ./bin/Server
 set +x
 
 echo "$0: Finished building."
