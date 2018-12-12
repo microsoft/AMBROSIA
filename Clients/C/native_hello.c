@@ -35,10 +35,10 @@ enum MethodTable { STARTUP_MSG_ID=32 };
 // FIXME: add g_numRPCBytes as an argument to startup....
 // startup a ROUND.  Called once per round.
 void startup(int64_t n) {
-  printf("\nHello! Received message from self: %d\n", n);
+  printf("\nHello! Received message from self: %lld\n", n);
   // TODO: send n-1 and count down...
 
-  printf("\nSignaling shutdown to runtime...\n", n);
+  printf("\nSignaling shutdown to runtime...\n");
   amb_shutdown_client_runtime(); 
 }
 
