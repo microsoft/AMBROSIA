@@ -159,7 +159,12 @@ namespace Ambrosia
 
             var conditionToPackageInfo = new Dictionary<string, List<Tuple<string, string, string>>>();
 
-            var projFile = Path.Combine(_binPath, $@"{Assembly.GetExecutingAssembly().GetName().Name}.csproj");
+            var execAssembly = Assembly.GetExecutingAssembly();
+            var projFile = Path.Combine(Path.GetDirectoryName(execAssembly.Location), $@"{execAssembly.GetName().Name}.csproj");
+            if (!File.Exists(projFile))
+            {
+                throw new Exception($"Unable to find {Path.GetFileName(projFile)} in bin path: {Path.GetDirectoryName(projFile)}");
+            }
             var doc = XDocument.Load(projFile);
 
             foreach (var itemGroup in doc.Descendants("ItemGroup"))
