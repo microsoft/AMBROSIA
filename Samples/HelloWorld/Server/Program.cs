@@ -36,7 +36,13 @@ namespace Server
         {
             int receivePort = 2001;
             int sendPort = 2000;
-            string serviceName = "jgserver1";
+            string serviceName = "server1";
+
+            if (args.Length == 1)
+            {
+                serviceName = args[0];
+            }
+
             using (var c = AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
             {
                 Thread.Sleep(14 * 24 * 3600 * 1000);
