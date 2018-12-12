@@ -221,7 +221,7 @@ start_immortal_coordinator -i $AMBROSIA_INSTANCE_NAME -p $AMBROSIA_IMMORTALCOORD
 # Step 2:
 echo " $TAG Launching app process alongside coordinator:"
 set -x
-$* &
+$* < /dev/stdin &
 set +x
 app_pid=$!
 
