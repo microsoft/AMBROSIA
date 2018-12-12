@@ -364,7 +364,6 @@ namespace AmbrosiaTest
             // if (File.Exists(AmbrosiaLibCSExe) == false)
             //     Assert.Fail("<VerifyTestEnvironment> Missing AmbrosiaLibcs dll. Expecting:" + AmbrosiaLibCSExe);
 
-            /*
             string perfTestJobFile = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + "\\job.exe";
             if (File.Exists(perfTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
@@ -372,7 +371,7 @@ namespace AmbrosiaTest
             string perfTestServerFile = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + "\\server.exe";
             if (File.Exists(perfTestServerFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
-*/
+
             string perfAsyncTestJobFile = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + "\\job.exe";
             if (File.Exists(perfAsyncTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest job.exe. Expecting:" + perfAsyncTestJobFile);
