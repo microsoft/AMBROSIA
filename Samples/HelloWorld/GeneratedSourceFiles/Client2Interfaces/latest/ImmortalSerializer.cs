@@ -10,7 +10,8 @@ using System.Xml;
 
 using Ambrosia;
 using static Ambrosia.StreamCommunicator;
-using IClient2;
+using Server;
+using Client2;
 
 namespace Ambrosia
 {
@@ -23,6 +24,7 @@ namespace Ambrosia
 		{
 			base.KnownTypes = new SerializableType[] 
 			{
+				new SerializableType(typeof(IServerProxy_Implementation)),
 				new SerializableType(typeof(IClient2Proxy_Implementation)),
 				new SerializableType(this.GetType())
 			};

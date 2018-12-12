@@ -38,7 +38,7 @@
 #include "ambrosia/internal/spsc_rring.h"
 #include "ambrosia/client.h"
 
-// Extra utilities (print_hex_bytes, socket_send_all):
+// Extra utilities (print_hex_bytes, amb_socket_send_all):
 #include "ambrosia/internal/bits.h"
 
 // Library-level global variables:
@@ -101,44 +101,6 @@ int destLen;    // Initialized below..
 // General helper functions
 // --------------------------------------------------------------------------------
 
-// Hacky busy-wait by thread-yielding for now:
-static inline void yield_thread() {
-#ifdef _WIN32
-  SwitchToThread();
-#else  
-  sched_yield();
-#endif
-}
-
-void sleep_seconds(double n) {
-#ifdef _WIN32
-  Sleep((int)(n * 1000));
-#else
-  int64_t nanos = (int64_t)(10e9 * n);
-  const struct timespec ts = {0, nanos};
-  nanosleep(&ts, NULL);
-#endif
-}
-
-#ifdef _WIN32
-double current_time_seconds()
-{
-    LARGE_INTEGER frequency;
-    LARGE_INTEGER current;
-    double result;
-    QueryPerformanceFrequency(&frequency);
-    QueryPerformanceCounter(&current);
-    return (double)current.QuadPart / (double)frequency.QuadPart;
-}
-#else
-double current_time_seconds() {
-  struct timespec current;
-  clock_gettime((clockid_t)CLOCK_REALTIME, &current);
-  // clock_gettime(0,NULL);  
-  return  (double)current.tv_sec + ((double)current.tv_nsec * 0.000000001);
-}
-#endif
-
 
 // An example service sitting on top of AMBROSIA
 //------------------------------------------------------------------------------
@@ -167,7 +129,7 @@ void send_loop( int numRPCBytes )
   
   for(; rep < iterations; rep++) {
     // When we hit zero this is our "logically first" iteration:
-    if(rep==0) g_startTimeRound = current_time_seconds();
+    if(rep==0) g_startTimeRound = amb_current_time_seconds();
     //      buffer_outgoing_rpc_hdr(destName, destLen, 0, TPUT_MSG_ID, 1, numRPCBytes);      
     //      char* cur = reserve_buffer(numRPCBytes);
     {
@@ -183,7 +145,7 @@ void send_loop( int numRPCBytes )
     }
   }
   
-  double duration = current_time_seconds() - g_startTimeRound;
+  double duration = amb_current_time_seconds() - g_startTimeRound;
   double throughput = ((double)iterations*numRPCBytes / (double)ONE_GIBIBYTE) / duration;
   if (g_moderate_chatter)
     printf("  Optimistic throughput based on the just sender's time to get the messages out the door:\n");
@@ -300,7 +262,7 @@ void end_round(int numRPCBytes) {
   if (g_moderate_chatter && SEND_ACK)
     printf("  Finished this round (message size %d)\n\n", g_numRPCBytes);
   long iterations = bytesPerRound / numRPCBytes;
-  double duration = current_time_seconds() - g_startTimeRound;
+  double duration = amb_current_time_seconds() - g_startTimeRound;
   double throughput = ((double)iterations * numRPCBytes / (double)ONE_GIBIBYTE) / duration;
   if (g_moderate_chatter) printf("  Realistic throughput based on time for a final acknowledgement from:\n");
   if (SEND_ACK || g_pingpong_mode) {
@@ -315,7 +277,7 @@ void end_round(int numRPCBytes) {
     char* endbuf = amb_write_outgoing_rpc(sendbuf, "", 0, 0, STARTUP_ID, 1, NULL,0);
 
     // Audit: is this needed?
-    socket_send_all(g_to_immortal_coord, sendbuf, endbuf-sendbuf, 0);
+    amb_socket_send_all(g_to_immortal_coord, sendbuf, endbuf-sendbuf, 0);
   } else {
     if (SEND_ACK) {
       printf("Finished last round, exiting...\n");
@@ -335,7 +297,7 @@ void receive_ack(int numRPCBytes) {
   }
   else if (g_pingpong_mode) {
     assert(numRPCBytes == 1);
-    double duration = current_time_seconds() - g_startTimeRound;
+    double duration = amb_current_time_seconds() - g_startTimeRound;
     assert(g_pingpong_count < g_total_pingpongs);
     g_pingpong_latencies[g_pingpong_count] = duration;
     amb_debug_log("Logged result from ping pong %d: %lf\n", g_pingpong_count, duration);    
@@ -383,29 +345,42 @@ void bounce(int64_t n) {
 void send_ack() {
   char sendbuf[16];
   char* newpos = amb_write_outgoing_rpc(sendbuf, destName, destLen, 0, ACK_MSG_ID, 1, NULL, 0);
-  socket_send_all(g_to_immortal_coord, sendbuf, newpos-sendbuf, 0);
+  amb_socket_send_all(g_to_immortal_coord, sendbuf, newpos-sendbuf, 0);
 }
 
 void send_dummy_checkpoint(int upfd) {
-  const char* dummy_checkpoint = "dummy_checkpoint";
-  int size = 1 + strlen(dummy_checkpoint);
-  char* buf = alloca(size+5);
-  char* bufcur = write_zigzag_int(buf, size); // Size (including type tag)
-  *bufcur++ = Checkpoint;             // Type
+  const char* dummy_checkpoint = "dummyckpt";
+  int strsize = strlen(dummy_checkpoint);
+
+  // New protocol, the payload is just a 64 bit size:
+  int   msgsize = 1 + 8;
+  char* buf = alloca(msgsize + 5 + strsize);
+  char* bufcur = write_zigzag_int(buf, msgsize); // Size (including type tag)
+  *bufcur++ = Checkpoint;                        // Type
+  *((int64_t*)bufcur) = strsize;                 // 8 byte size
+  bufcur += 8;
+  
+  assert(bufcur-buf == 9 + zigzag_int_size(msgsize)); 
+
+  // Then write the checkpoint itself AFTER the regular message:
   bufcur += sprintf(bufcur, "%s", dummy_checkpoint); // Dummy checkpoint.
-  socket_send_all(upfd, buf, bufcur-buf, 0);
+
+  amb_socket_send_all(upfd, buf, bufcur-buf, 0);
+  
 #ifdef AMBCLIENT_DEBUG  
-  amb_debug_log("  Trivial checkpoint message sent to coordinator (%lld bytes)\n",
-		(int64_t)(bufcur-buf));
+  amb_debug_log("  Trivial checkpoint message sent to coordinator (%lld bytes), checkpoint %d bytes\n",
+                (int64_t)(bufcur-buf), strsize);
   amb_debug_log("    Message was: ");
   print_hex_bytes(amb_dbg_fd,buf, bufcur-buf); fprintf(amb_dbg_fd,"\n");
 #endif
 }
 
 
+// FIXME: this is currently called by libambrosiaclient
+// 
 // Translate from untyped blobs to the multi-arity calling conventions
 // of each RPC entrypoint.
-void dispatchMethod(int32_t methodID, void* args, int argsLen) {
+void amb_dispatch_method(int32_t methodID, void* args, int argsLen) {
   switch(methodID) {
   case STARTUP_ID:    
     startup();
@@ -448,7 +423,7 @@ char* handle_rpc(char* buf, int len) {
   }
   amb_debug_log("  Dispatching method %d (rpc/ret %d, fireforget %d) with %d bytes of args...\n",
 		methodID, rpc_or_ret, fire_forget, argsLen);
-  dispatchMethod(methodID, buf, argsLen);
+  amb_dispatch_method(methodID, buf, argsLen);
   return (buf+argsLen);
 }
 
@@ -538,7 +513,7 @@ void normal_processing_loop(int upfd, int downfd)
     printf(" *** processing loop: Last trial finished; exiting.\n");
     if (! g_is_sender) {
       printf("Receiver exiting after a moderate wait...\n");
-      sleep_seconds(30); // Uh.....
+      amb_sleep_seconds(30); // Uh.....
     }
     exit(0);
   } else {
@@ -552,37 +527,6 @@ void normal_processing_loop(int upfd, int downfd)
 // Basic example application
 // ------------------------------------------------------------
 
-
-#ifdef _WIN32
-DWORD WINAPI network_progress_thread( LPVOID lpParam )
-#else
-void* network_progress_thread( void* lpParam )
-#endif
-{
-  printf(" *** Network progress thread starting...\n");
-  int hot_spin_amount = 1; // 100
-  int spin_tries = hot_spin_amount;
-  while(1) {
-    int numbytes = -1;
-    char* ptr = peek_buffer(&numbytes);    
-    if (numbytes > 0) {
-      amb_debug_log(" network thread: sending slice of %d bytes\n", numbytes);
-      socket_send_all(g_to_immortal_coord, ptr, numbytes, 0);
-      pop_buffer(numbytes); // Must be at least this many.
-      spin_tries = hot_spin_amount;
-    } else if ( spin_tries == 0) {
-      spin_tries = hot_spin_amount;
-      // amb_debug_log(" network thread: yielding to wait...\n");
-#ifdef AMBCLIENT_DEBUG      
-      sleep_seconds(0.5);
-      sleep_seconds(0.05);
-#endif
-      yield_thread();
-    } else spin_tries--;   
-  }
-
-  return 0;
-}
 
 
 // Reset global state for the next trial.
@@ -684,9 +628,9 @@ int main(int argc, char** argv)
   /* printf("(You need four ports, in the above example: 50000-50003 .)\n"); */
 
   int upfd, downfd;
-  connect_sockets(upport, downport, &upfd, &downfd);
+  amb_connect_sockets(upport, downport, &upfd, &downfd);
   amb_debug_log("Connections established (%d,%d), beginning protocol.\n", upfd, downfd);
-  startup_protocol(upfd, downfd);
+  amb_startup_protocol(upfd, downfd);
 
   g_to_immortal_coord = upfd;
   g_from_immortal_coord = downfd;
@@ -707,13 +651,13 @@ int main(int argc, char** argv)
 #ifdef _WIN32
   DWORD lpThreadId;
   HANDLE th = CreateThread(NULL, 0,
-			   network_progress_thread,
+			   amb_network_progress_thread,
 			   NULL, 0,
 			   & lpThreadId);
   if (th == NULL)
 #else
   pthread_t th;
-  int res = pthread_create(& th, NULL, network_progress_thread, NULL);
+  int res = pthread_create(& th, NULL, amb_network_progress_thread, NULL);
   if (res != 0)
 #endif
   {

@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Ambrosia;
 
-namespace IClient1
+namespace Client1
 {
     public interface IClient1
     {
-        void SendMessage(string message);
     }
 }

@@ -6,7 +6,7 @@ using Ambrosia;
 using static Ambrosia.StreamCommunicator;
 
 
-namespace IClient2
+namespace Client2
 {
     /// <summary>
     /// This class is the proxy that runs in the client's process and communicates with the local Ambrosia runtime.
