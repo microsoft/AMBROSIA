@@ -4,7 +4,7 @@ using Ambrosia;
 using System.Threading.Tasks;
 using static Ambrosia.StreamCommunicator;
 
-namespace IClient1
+namespace Client1
 {
     /// <summary>
     // Generated from IClient1 by the proxy generation.
@@ -12,7 +12,6 @@ namespace IClient1
     /// </summary>
     public interface IClient1
     {
-        Task SendMessageAsync(System.String p_0);
     }
 
     /// <summary>
@@ -22,7 +21,5 @@ namespace IClient1
     [Ambrosia.InstanceProxy(typeof(IClient1))]
     public interface IClient1Proxy
     {
-        Task SendMessageAsync(System.String p_0);
-        void SendMessageFork(System.String p_0);
     }
 }

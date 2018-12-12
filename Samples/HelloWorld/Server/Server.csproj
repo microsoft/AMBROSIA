@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AmbrosiaLibCS" Version="2018.12.06.3" />
+    <PackageReference Include="AmbrosiaLibCS" Version="2018.12.10.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -26,6 +26,9 @@ function check_az_storage_and_bail() {
     fi
 }
 
+FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.0}"
+CONF="${AMBROSIA_DOTNET_CONF:-Release}"
+
 case $mode in
   docker)
     
@@ -35,11 +38,15 @@ case $mode in
 
       check_az_storage_and_bail
       
-      # APPLICATION 1: PTI
+      # Application 1: PTI
       # ----------------------------------------
       ./Scripts/internal/run_linux_PTI_docker.sh
+
+      # Application 2: Hello World Sample
+      # ----------------------------------------
+      # docker --rm ambrosia-dev ./Samples/HelloWorld/build_dotnetcore.sh
       
-      # Application 2: NativeService
+      # Application 3: NativeService
       # ----------------------------------------
       # docker --env AZURE_STORAGE_CONN_STRING="${AZURE_STORAGE_CONN_STRING}" --rm \
       #    ambrosia-nativeapp ./run_test_in_one_machine.sh
@@ -49,19 +56,37 @@ case $mode in
   nodocker)
         
       echo "Executing raw-Linux, non-Docker build."
+      export PATH="$PATH:$AMBROSIA_ROOT/bin"
       cd "$AMBROSIA_ROOT"
       ./build_dotnetcore_bindist.sh
 
-      # APPLICATION 1: PTI
+      # Build Application 1: PTI
       # ----------------------------------------
       cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
       ./build_dotnetcore.sh
-      check_az_storage_and_bail
-      ./run_small_PTI_and_shutdown.sh $INSTPREF
-      
-      # Application 2: ...
-      # ----------------------------------------
 
+      # Build Application 2: Hello World Sample
+      # ----------------------------------------
+      cd "$AMBROSIA_ROOT"/Samples/HelloWorld
+      # First make sure a straight-to-the-solution build works:
+      dotnet publish -c $CONF -f $FMWK HelloWorld.sln
+      # Then make sure it builds from scratch:
+      rm -rf GeneratedSourceFiles
+      git clean -nxd .
+      ./build_dotnetcore.sh
+      
+      # ----------------------------------------
+      check_az_storage_and_bail
+
+      # Test Application: PTI
+      # ----------------------------------------
+      cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+      ./run_small_PTI_and_shutdown.sh $INSTPREF      
+      
+      # Test Application: Native client hello
+      # ----------------------------------------
+      cd "$AMBROSIA_ROOT"/Clients/C
+      ./run_hello_world.sh || echo "Allowed failure for now."
 
       ;;
 

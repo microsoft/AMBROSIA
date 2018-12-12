@@ -2,8 +2,12 @@
 
 
 // Internal helper: try repeatedly on a socket until all bytes are sent.
+// 
+// The Linux man pages are vague on when send on a (blocking) socket
+// can return less than the requested number of bytes.  This little
+// helper simply retries.
 static inline
-void socket_send_all(int sock, const void* buf, size_t len, int flags) {
+void amb_socket_send_all(int sock, const void* buf, size_t len, int flags) {
   char* cur = (char*)buf;
   int remaining = len;
   while (remaining > 0) {
@@ -23,7 +27,6 @@ void socket_send_all(int sock, const void* buf, size_t len, int flags) {
   }
 }
 
-
 static inline
 void print_hex_bytes(FILE* fd, char* ptr, int len) {
   const int limit = 100; // Only print this many:
@@ -37,3 +40,30 @@ void print_hex_bytes(FILE* fd, char* ptr, int len) {
   if (j<len) fprintf(fd,"...");
 }
 
+void amb_sleep_seconds(double n);
+
+static inline
+#ifdef _WIN32
+double amb_current_time_seconds()
+{
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER current;
+    double result;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&current);
+    return (double)current.QuadPart / (double)frequency.QuadPart;
+}
+#else
+double amb_current_time_seconds() {
+  struct timespec current;
+  clock_gettime((clockid_t)CLOCK_REALTIME, &current);
+  // clock_gettime(0,NULL);  
+  return  (double)current.tv_sec + ((double)current.tv_nsec * 0.000000001);
+}
+#endif
+
+#ifdef _WIN32
+  extern DWORD WINAPI amb_network_progress_thread( LPVOID lpParam );
+#else
+  extern void*        amb_network_progress_thread( void* lpParam );
+#endif
