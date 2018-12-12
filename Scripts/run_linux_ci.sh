@@ -38,11 +38,15 @@ case $mode in
 
       check_az_storage_and_bail
       
-      # APPLICATION 1: PTI
+      # Application 1: PTI
       # ----------------------------------------
       ./Scripts/internal/run_linux_PTI_docker.sh
+
+      # Application 2: Hello World Sample
+      # ----------------------------------------
+      # docker --rm ambrosia-dev ./Samples/HelloWorld/build_dotnetcore.sh
       
-      # Application 2: NativeService
+      # Application 3: NativeService
       # ----------------------------------------
       # docker --env AZURE_STORAGE_CONN_STRING="${AZURE_STORAGE_CONN_STRING}" --rm \
       #    ambrosia-nativeapp ./run_test_in_one_machine.sh
