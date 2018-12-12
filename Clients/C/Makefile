@@ -9,8 +9,7 @@ EXTRA_DEFINES = -DIPV4
 ALL_DEFINES = $(DEFINES) $(EXTRA_DEFINES)
 
 GNULIBS= -lpthread
-GNUOPTS= -pthread -O3
-# -std=c11
+GNUOPTS= -pthread -O0 -g
 
 HEADERS= include/ambrosia/internal/spsc_rring.h include/ambrosia/client.h include/ambrosia/internal/bits.h
 
@@ -20,14 +19,18 @@ OBJS1= $(patsubst src/%.c,bin/static/%.o, $(SRCS) )
 OBJS2= $(patsubst src/%.c,bin/shared/%.o, $(SRCS) )
 
 COMP= gcc $(ALL_DEFINES) -I include/ $(GNUOPTS)
-LINK= gcc
+LINK= gcc $(GNULIBS)
 
 LIBNAME=libambrosia
 
-all: bin/$(LIBNAME).a bin/$(LIBNAME).so 
+all: bin/$(LIBNAME).a bin/$(LIBNAME).so bin/native_hello.exe
 
 debug:
 	$(MAKE) DEFINES="-DAMBCLIENT_DEBUG" clean publish
+
+bin/native_hello.exe: native_hello.c $(OBJS1) $(HEADERS)
+	$(COMP) -c $< -o bin/static/hello.o
+	$(LINK) $(OBJS1) bin/static/hello.o -o $@
 
 bin/$(LIBNAME).a: $(OBJS1)
 	ar rcs $@ $(OBJS1)

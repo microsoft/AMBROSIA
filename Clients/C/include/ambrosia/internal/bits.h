@@ -2,8 +2,12 @@
 
 
 // Internal helper: try repeatedly on a socket until all bytes are sent.
+// 
+// The Linux man pages are vague on when send on a (blocking) socket
+// can return less than the requested number of bytes.  This little
+// helper simply retries.
 static inline
-void socket_send_all(int sock, const void* buf, size_t len, int flags) {
+void amb_socket_send_all(int sock, const void* buf, size_t len, int flags) {
   char* cur = (char*)buf;
   int remaining = len;
   while (remaining > 0) {
@@ -22,7 +26,6 @@ void socket_send_all(int sock, const void* buf, size_t len, int flags) {
 #endif
   }
 }
-
 
 static inline
 void print_hex_bytes(FILE* fd, char* ptr, int len) {
