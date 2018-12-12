@@ -59,15 +59,15 @@ extern int g_to_immortal_coord, g_from_immortal_coord;
 // Communicates with the server to establish normal operation.
 //
 // ARGS: two valid socket file descriptors which must have been
-// received from a call to connect_sockets.
-void startup_protocol(int upfd, int downfd);
+// received from a call to amb_connect_sockets.
+void amb_startup_protocol(int upfd, int downfd);
 
 // Connect to the ImmortalCoordinator.  Use the provided ports.
 // 
 // On the "up" port we connect, and on "down" the coordinator connects
 // to us.  This function writes the file descriptors for the opened
 // connections into the pointers provided as the last two arguments.
-void connect_sockets(int upport, int downport, int* up_fd_ptr, int* down_fd_ptr);
+void amb_connect_sockets(int upport, int downport, int* up_fd_ptr, int* down_fd_ptr);
 
 // Encoding and Decoding message types
 //------------------------------------------------------------------------------
@@ -101,8 +101,62 @@ void amb_recv_log_hdr(int sockfd, struct log_hdr* hdr);
 
 //------------------------------------------------------------------------------
 
-// TEMP - audit me
+// USER DEFINED: FIXME: REPLACE W CALLBACK
+extern void send_dummy_checkpoint(int upfd);
+
+// USER-DEFINED: FIXME: turn into a callback (currently defined by application):
+extern void amb_dispatch_method(int32_t methodID, void* args, int argsLen);
+
+
+// TEMP - audit me - need to add a hash table to track attached destinations:
 void attach_if_needed(char* dest, int destLen);
+
+//------------------------------------------------------------------------------
+
+// PHASE 1/3
+//
+// This performs the full setup process: attaching to the Immortal
+// Coordinator on the specified ports, creating a network progress
+// thread in the background, and executing the first phases of the
+// App/Coordinator communication protocol.
+//
+// ARG: upport: the port on which we will reach out and connect to the
+//      coordinator on localhost (127.0.0.1 or ::1).  This is used to
+//      send data to the coordinator.
+//
+// ARG: downport: (after upport is connected) the port on which we
+//      will listen for the coordinator to connect to us.  This is
+//      used to receive data from the coordinator.
+//
+// ARG: bufSz: the size of the buffer used to buffer small messages on
+//      their way to the ImmortalCoordinator.  If this is zero, or
+//      negative, a default is used.
+//
+// ARG: 
+//
+// RETURNS:
+//
+// EFFECTS:
+void amb_initialize_client_runtime(int upport, int downport, int bufSz);
+
+// PHASE 2/3
+//
+// The heart of the runtime: enter the processing loop.  Read log
+// entries from the coordinator and make "up-calls" (callbacks) into
+// the application when we receive incoming messages.  These call
+// backs in turn send outgoing messages, and so on.
+void amb_normal_processing_loop();
+
+// PHASE 3/3
+//
+// This can be called by the client application at any time post
+// initalization.  It signals that the main event loop
+// (amb_normal_processing_loop) should exit.
+//
+// It does NOT transfer control away from the current function
+// (longjmp), rather it returns to the caller, which is expected to
+// return normally to the event handler loop.
+void amb_shutdown_client_runtime();
 
 
 // ------------------------------------------------------------

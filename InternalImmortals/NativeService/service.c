@@ -38,7 +38,7 @@
 #include "ambrosia/internal/spsc_rring.h"
 #include "ambrosia/client.h"
 
-// Extra utilities (print_hex_bytes, socket_send_all):
+// Extra utilities (print_hex_bytes, amb_socket_send_all):
 #include "ambrosia/internal/bits.h"
 
 // Library-level global variables:
@@ -277,7 +277,7 @@ void end_round(int numRPCBytes) {
     char* endbuf = amb_write_outgoing_rpc(sendbuf, "", 0, 0, STARTUP_ID, 1, NULL,0);
 
     // Audit: is this needed?
-    socket_send_all(g_to_immortal_coord, sendbuf, endbuf-sendbuf, 0);
+    amb_socket_send_all(g_to_immortal_coord, sendbuf, endbuf-sendbuf, 0);
   } else {
     if (SEND_ACK) {
       printf("Finished last round, exiting...\n");
@@ -345,7 +345,7 @@ void bounce(int64_t n) {
 void send_ack() {
   char sendbuf[16];
   char* newpos = amb_write_outgoing_rpc(sendbuf, destName, destLen, 0, ACK_MSG_ID, 1, NULL, 0);
-  socket_send_all(g_to_immortal_coord, sendbuf, newpos-sendbuf, 0);
+  amb_socket_send_all(g_to_immortal_coord, sendbuf, newpos-sendbuf, 0);
 }
 
 void send_dummy_checkpoint(int upfd) {
@@ -365,7 +365,7 @@ void send_dummy_checkpoint(int upfd) {
   // Then write the checkpoint itself AFTER the regular message:
   bufcur += sprintf(bufcur, "%s", dummy_checkpoint); // Dummy checkpoint.
 
-  socket_send_all(upfd, buf, bufcur-buf, 0);
+  amb_socket_send_all(upfd, buf, bufcur-buf, 0);
   
 #ifdef AMBCLIENT_DEBUG  
   amb_debug_log("  Trivial checkpoint message sent to coordinator (%lld bytes), checkpoint %d bytes\n",
@@ -376,9 +376,11 @@ void send_dummy_checkpoint(int upfd) {
 }
 
 
+// FIXME: this is currently called by libambrosiaclient
+// 
 // Translate from untyped blobs to the multi-arity calling conventions
 // of each RPC entrypoint.
-void dispatchMethod(int32_t methodID, void* args, int argsLen) {
+void amb_dispatch_method(int32_t methodID, void* args, int argsLen) {
   switch(methodID) {
   case STARTUP_ID:    
     startup();
@@ -421,7 +423,7 @@ char* handle_rpc(char* buf, int len) {
   }
   amb_debug_log("  Dispatching method %d (rpc/ret %d, fireforget %d) with %d bytes of args...\n",
 		methodID, rpc_or_ret, fire_forget, argsLen);
-  dispatchMethod(methodID, buf, argsLen);
+  amb_dispatch_method(methodID, buf, argsLen);
   return (buf+argsLen);
 }
 
@@ -626,9 +628,9 @@ int main(int argc, char** argv)
   /* printf("(You need four ports, in the above example: 50000-50003 .)\n"); */
 
   int upfd, downfd;
-  connect_sockets(upport, downport, &upfd, &downfd);
+  amb_connect_sockets(upport, downport, &upfd, &downfd);
   amb_debug_log("Connections established (%d,%d), beginning protocol.\n", upfd, downfd);
-  startup_protocol(upfd, downfd);
+  amb_startup_protocol(upfd, downfd);
 
   g_to_immortal_coord = upfd;
   g_from_immortal_coord = downfd;
