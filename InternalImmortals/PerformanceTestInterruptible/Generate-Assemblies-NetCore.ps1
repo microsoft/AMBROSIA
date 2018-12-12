@@ -1,7 +1,9 @@
 # Perform the code-generation step for this example application.
 
-if (-not ( $env:AMBVARIANTCORE )) {
-    $env:AMBVARIANTCORE="x64\Debug\netcoreapp2.0"
+if ( $env:AMBVARIANTCORE ) {
+    $AMBVARIANTCORE=$env:AMBVARIANTCORE
+} else {
+    $AMBVARIANTCORE = "x64\Debug\netcoreapp2.0"
 }
 
 # Build the API projects
@@ -17,9 +19,8 @@ Copy-Item "IJob\bin\Debug\netcoreapp2.0\publish\*" -Force -Destination "CodeGenD
 
 Copy-Item "..\..\Clients\CSharp\AmbrosiaCS\AmbrosiaCS.csproj" -Force -Destination "CodeGenDependencies\netcoreapp2.0\"
 
-Write-Host "Using variant of AmbrosiaCS.exe: $env:AMBVARIANTCORE"
+Write-Host "Using variant of AmbrosiaCS.exe: $AMBVARIANTCORE"
 
-Write-Host "Executing codegen command: dotnet ..\..\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANTCORE\AmbrosiaCS.dll CodeGen -a=API\bin\$env:AMBVARIANTCORE\ServerAPI.dll -a=IJob\bin\$env:AMBVARIANTCORE\IJob.dll -o=PTIAmbrosiaGeneratedAPINetCore -f=netcoreapp2.0 -b=CodeGenDependencies\netcoreapp2.0"
+Write-Host "Executing codegen command: dotnet ..\..\Clients\CSharp\AmbrosiaCS\bin\$AMBVARIANTCORE\AmbrosiaCS.dll CodeGen -a=API\bin\$AMBVARIANTCORE\ServerAPI.dll -a=IJob\bin\$AMBVARIANTCORE\IJob.dll -o=PTIAmbrosiaGeneratedAPINetCore -f=netcoreapp2.0 -b=CodeGenDependencies\netcoreapp2.0"
 
-# Generate the assemblies, assumes an .exe which is created by a .Net Framework build:
-& dotnet "..\..\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANTCORE\AmbrosiaCS.dll" CodeGen -a="API\bin\$env:AMBVARIANTCORE\ServerAPI.dll" -a="IJob\bin\$env:AMBVARIANTCORE\IJob.dll" -o="PTIAmbrosiaGeneratedAPINetCore" -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
+& dotnet "..\..\Clients\CSharp\AmbrosiaCS\bin\$AMBVARIANTCORE\AmbrosiaCS.dll" CodeGen -a="API\bin\$AMBVARIANTCORE\ServerAPI.dll" -a="IJob\bin\$AMBVARIANTCORE\IJob.dll" -o="PTIAmbrosiaGeneratedAPINetCore" -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
