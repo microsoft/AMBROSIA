@@ -57,17 +57,20 @@ case $mode in
       cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
       ./build_dotnetcore.sh
 
-      # Build Application 2: ...
+      # Build Application 2: Hello World Sample
       # ----------------------------------------
-
+      cd "$AMBROSIA_ROOT"/Samples/HelloWorld
+      ./build_dotnetcore.sh
+      
+      # ----------------------------------------
       check_az_storage_and_bail
 
-      # Test Application 1: PTI
+      # Test Application: PTI
       # ----------------------------------------
       cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
       ./run_small_PTI_and_shutdown.sh $INSTPREF      
       
-      # Test Application 2: ...
+      # Test Application: Native client hello
       # ----------------------------------------
       cd "$AMBROSIA_ROOT"/Clients/C
       ./run_hello_world.sh || echo "Allowed failure for now."
