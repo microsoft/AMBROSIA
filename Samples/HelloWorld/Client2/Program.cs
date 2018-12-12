@@ -23,14 +23,28 @@ namespace Client2
             _serverName = serverName;
         }
 
-        public void IngressKeyboardInput(string input)
+        void InputLoop()
         {
-            thisProxy.ReceiveKeyboardInputFork(input);
+            while (true)
+            {
+                Console.Write("Enter a message (hit ENTER to send): ");
+                string input = Console.ReadLine();
+                thisProxy.ReceiveKeyboardInputFork(input);
+                Thread.Sleep(1000);
+            }
+        }
+
+        protected override void BecomingPrimary()
+        {
+            Console.WriteLine("Finished initializing state/recovering");
+            Thread timerThread = new Thread(InputLoop);
+            timerThread.Start();
         }
 
         public async Task ReceiveKeyboardInputAsync(string input)
         {
-            await thisProxy.SendMessageAsync(input);
+            Console.WriteLine("Sending keyboard input {0}", input);
+            _server.ReceiveMessageFork(input);
         }
 
         public async Task SendMessageAsync(string message)
@@ -57,20 +71,16 @@ namespace Client2
 
             int receivePort = 1001;
             int sendPort = 1000;
-            string clientInstanceName = "client2";
-            string serverInstanceName = "server1";
+            string clientInstanceName = "jgclient1";
+            string serverInstanceName = "jgserver1";
 
             Client2 client = new Client2(serverInstanceName);
             using (var c = AmbrosiaFactory.Deploy<IClient2>(clientInstanceName, client, receivePort, sendPort))
             {
                 while (finishedTokenQ.IsEmpty)
                 {
-                    Console.Write("Enter a message (hit ENTER to send): ");
-                    string input = Console.ReadLine();
-                    client.IngressKeyboardInput(input);
-                    Thread.Sleep(1000);
+                    finishedTokenQ.DequeueAsync().Wait();
                 }
-                finishedTokenQ.DequeueAsync().Wait();
             }
         }
     }
