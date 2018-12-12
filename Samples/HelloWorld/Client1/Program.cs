@@ -1,6 +1,6 @@
 ﻿using Ambrosia;
-using IClient1;
-using IServer;
+using Client1;
+using Server;
 using Microsoft.VisualStudio.Threading;
 using System;
 using System.Runtime.Serialization;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Client1
 {
     [DataContract]
-    class Client1 : Immortal<IClient1Proxy>, IClient1.IClient1
+    class Client1 : Immortal<IClient1Proxy>, IClient1
     {
         [DataMember]
         private string _serverName;
@@ -22,17 +22,16 @@ namespace Client1
             _serverName = serverName;
         }
 
-        public async Task SendMessageAsync(string message)
-        {
-            Console.WriteLine("Sending message to server: " + message);
-            int numMessages = await _server.ReceiveMessageAsync(message);
-            Console.WriteLine("Sent message to server! Server has received " + numMessages + " messages.");
-        }
-
         protected override async Task<bool> OnFirstStart()
         {
             _server = GetProxy<IServerProxy>(_serverName);
-            await thisProxy.SendMessageAsync("Hello world!");
+            _server.ReceiveMessageFork("Hello World 1!");
+            Console.WriteLine("Press any key to continue");
+            Console.ReadKey();
+            _server.ReceiveMessageFork("Hello World 2!");
+            _server.ReceiveMessageFork("Hello World 3!");
+            Console.WriteLine("Press any key to end");
+            Console.ReadKey();
             Program.finishedTokenQ.Enqueue(0);
             return true;
         }
@@ -47,10 +46,10 @@ namespace Client1
 
             int receivePort = 1001;
             int sendPort = 1000;
-            string clientInstanceName = "client1";
-            string serverInstanceName = "server1";
+            string clientInstanceName = "jgclient1";
+            string serverInstanceName = "jgserver1";
 
-            using (var c = AmbrosiaFactory.Deploy<IClient1.IClient1>(clientInstanceName, new Client1(serverInstanceName), receivePort, sendPort))
+            using (var c = AmbrosiaFactory.Deploy<IClient1>(clientInstanceName, new Client1(serverInstanceName), receivePort, sendPort))
             {
                 finishedTokenQ.DequeueAsync().Wait();
             }
