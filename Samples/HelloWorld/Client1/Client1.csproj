@@ -7,12 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AmbrosiaLibCS" Version="2018.12.06.3" />
+    <PackageReference Include="AmbrosiaLibCS" Version="2018.12.10.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.192" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GeneratedSourceFiles\Client1Interfaces\latest\Client1Interfaces.csproj" />
-    <ProjectReference Include="..\GeneratedSourceFiles\ServerInterfaces\latest\ServerInterfaces.csproj" />
   </ItemGroup>
 
 </Project>
