@@ -52,16 +52,24 @@ case $mode in
       cd "$AMBROSIA_ROOT"
       ./build_dotnetcore_bindist.sh
 
-      # APPLICATION 1: PTI
+      # Build Application 1: PTI
       # ----------------------------------------
       cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
       ./build_dotnetcore.sh
-      check_az_storage_and_bail
-      ./run_small_PTI_and_shutdown.sh $INSTPREF
-      
-      # Application 2: ...
+
+      # Build Application 2: ...
       # ----------------------------------------
 
+      check_az_storage_and_bail
+
+      # Test Application 1: PTI
+      # ----------------------------------------
+      ./run_small_PTI_and_shutdown.sh $INSTPREF      
+      
+      # Test Application 2: ...
+      # ----------------------------------------
+      cd "$AMBROSIA_ROOT"/InternalImmortals/NativeService
+      ./run_hello_world.sh
 
       ;;
 

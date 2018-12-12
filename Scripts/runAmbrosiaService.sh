@@ -94,7 +94,7 @@ _normal_cleanup() {
 
 _unexpected_cleanup() {
     trap '' EXIT # some shells will call EXIT after the INT handler
-    if [ ${$1:+defined} ];
+    if [ $# -gt 0 ];
     then local WHCH="($1)"
     else local WHCH=""
     fi

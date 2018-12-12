@@ -35,10 +35,10 @@ enum MethodTable { STARTUP_MSG_ID=32 };
 // FIXME: add g_numRPCBytes as an argument to startup....
 // startup a ROUND.  Called once per round.
 void startup(int64_t n) {
-  printf("Hello! Received message from self: %d\n", n);
+  printf("\nHello! Received message from self: %d\n", n);
   // TODO: send n-1 and count down...
 
-  printf("Signalling shutdown to runtime...\n", n);
+  printf("\nSignaling shutdown to runtime...\n", n);
   amb_shutdown_client_runtime(); 
 }
 
@@ -106,5 +106,5 @@ int main(int argc, char** argv)
 
   // Enter processing loop until a message handler calls shutdown.
   amb_normal_processing_loop();  
-  printf("Returned from AMBROSIA message processing loop.  All done.\n");
+  printf("\nReturned from AMBROSIA message processing loop.  All done.\n");
 }
