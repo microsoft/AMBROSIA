@@ -36,7 +36,7 @@ namespace Server
         {
             int receivePort = 2001;
             int sendPort = 2000;
-            string serviceName = "server1";
+            string serviceName = "server";
 
             if (args.Length == 1)
             {

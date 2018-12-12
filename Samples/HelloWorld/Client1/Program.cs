@@ -46,8 +46,8 @@ namespace Client1
 
             int receivePort = 1001;
             int sendPort = 1000;
-            string clientInstanceName = "client1";
-            string serverInstanceName = "server1";
+            string clientInstanceName = "client";
+            string serverInstanceName = "server";
 
             if (args.Length >= 1)
             {
