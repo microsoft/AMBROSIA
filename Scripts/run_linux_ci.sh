@@ -49,6 +49,7 @@ case $mode in
   nodocker)
         
       echo "Executing raw-Linux, non-Docker build."
+      export PATH="$PATH:$AMBROSIA_ROOT/bin"
       cd "$AMBROSIA_ROOT"
       ./build_dotnetcore_bindist.sh
 

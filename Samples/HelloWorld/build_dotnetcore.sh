@@ -24,6 +24,7 @@ set +x
 
 echo
 echo "(STEP 2) Use those DLL's to generate proxy code for RPC calls"
+
 CG="AmbrosiaCS CodeGen -f $FMWK -b=$DEST"
 set -x
 $CG -o ServerInterfaces  -a ServerAPI/publish/IServer.dll 
