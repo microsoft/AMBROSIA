@@ -20,11 +20,6 @@ if ! [ -d "$RSRC" ]; then
     exit 1
 fi
 
-# Baseline CodeGen dependencies:
-#cp -f "MinimalCodeGenDeps.csproj" $DEST/AmbrosiaCS.csproj
-cp -f "$RSRC/AmbrosiaCS.csproj" $DEST/AmbrosiaCS.csproj
-  # ^ TODO/FIXME the name should change from AmbrosiaCS.csproj
-
 echo
 echo "(STEP 1) Build enough so that we have compiled versions of our RPC interfaces"
 BUILDIT="dotnet publish -o publish -c $CONF -f $FMWK "
