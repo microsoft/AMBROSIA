@@ -4,7 +4,7 @@ using Ambrosia;
 using System.Threading.Tasks;
 using static Ambrosia.StreamCommunicator;
 
-namespace IClient2
+namespace Client2
 {
     /// <summary>
     // Generated from IClient2 by the proxy generation.
