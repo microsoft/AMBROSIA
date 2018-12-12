@@ -97,9 +97,12 @@ popd
 set +x
 
 echo 
-echo "Copying deployment script."
+echo "Copying deployment script and other included resources."
 cp -a Scripts/runAmbrosiaService.sh bin/
 # (cd bin; ln -s Ambrosia ambrosia || echo ok)
+mkdir -p bin/resources
+cp -a Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj \
+      bin/resources/MinimalCodeGenDeps.csproj
 
 echo 
 echo "Building Native-code client library"
@@ -107,7 +110,8 @@ echo "----------------------------------------"
 if [ "$UNAME" == Linux ]; then
     pushd Clients/C
     make publish || \
-        echo "WARNING: Successfully built a dotnet core distribution, but without the native code wrapper library."
+        echo "WARNING: Non-fatal error." && \
+        echo "Successfully built a dotnet core distribution, but the native code wrapper failed to build."
     popd
 elif [ "$UNAME" == Darwin ]; then
     echo "WARNING: not building native client for Mac OS."
