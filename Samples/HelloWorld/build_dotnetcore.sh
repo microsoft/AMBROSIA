@@ -9,9 +9,20 @@ DEST=CodeGenDependencies/$FMWK
 rm -rf $DEST
 mkdir -p $DEST
 
-# Extra codegen dependence, put its code generator's own .csproj file in the resulting deps dir:
-# TODO/FIXME: this should be replaced by a template which is modified by the user:
-cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
+if ! which AmbrosiaCS 2>/dev/null; then
+    echo "ERROR: AmbrosiaCS not on PATH"
+    exit 1
+fi
+RSRC=$(dirname `which AmbrosiaCS`)
+if ! [ -d "$RSRC" ]; then
+    echo "Error: directory does not exist: $RSRC"
+    echo "Expected to find resource/ directory which is part of the AMBROSIA binary distribution."
+    exit 1
+fi
+
+# Baseline CodeGen dependencies:
+cp -f "$RSRC/AmbrosiaCS.csproj" $DEST/AmbrosiaCS.csproj
+  # ^ TODO/FIXME the name should change from AmbrosiaCS.csproj
 
 echo
 echo "(STEP 1) Build enough so that we have compiled versions of our RPC interfaces"

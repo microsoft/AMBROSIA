@@ -54,6 +54,9 @@ RUN cd Clients/C && make debug # publish
 # -----------------------------------------------------------
 ADD ./Scripts/runAmbrosiaService.sh bin/
 
+# We currently use this as a baseline source of dependencies for generated code:
+ADD ./Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj  bin/AmbrosiaCS.csproj
+
 # Remove unnecessary execute permissions:
 # RUN cd bin && (chmod -x *.dll *.so *.dylib *.a 2>/dev/null || echo ok)
 
