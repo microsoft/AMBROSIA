@@ -46,8 +46,18 @@ namespace Client1
 
             int receivePort = 1001;
             int sendPort = 1000;
-            string clientInstanceName = "jgclient1";
-            string serverInstanceName = "jgserver1";
+            string clientInstanceName = "client1";
+            string serverInstanceName = "server1";
+
+            if (args.Length >= 1)
+            {
+                clientInstanceName = args[0];
+            }
+
+            if (args.Length == 2)
+            {
+                serverInstanceName = args[1];
+            }
 
             using (var c = AmbrosiaFactory.Deploy<IClient1>(clientInstanceName, new Client1(serverInstanceName), receivePort, sendPort))
             {
