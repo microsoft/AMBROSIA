@@ -13,7 +13,7 @@ if ! which AmbrosiaCS 2>/dev/null; then
     echo "ERROR: AmbrosiaCS not on PATH"
     exit 1
 fi
-RSRC=$(dirname `which AmbrosiaCS`)/resources
+RSRC=$(dirname `which AmbrosiaCS`)
 if ! [ -d "$RSRC" ]; then
     echo "Error: directory does not exist: $RSRC"
     echo "Expected to find resource/ directory which is part of the AMBROSIA binary distribution."
@@ -21,8 +21,8 @@ if ! [ -d "$RSRC" ]; then
 fi
 
 # Baseline CodeGen dependencies:
-cp -f "$RSRC/MinimalCodeGenDeps.csproj" $DEST/AmbrosiaCS.csproj
-# ^ TODO/FIXME the name should change from AmbrosiaCS.csproj
+cp -f "$RSRC/AmbrosiaCS.csproj" $DEST/AmbrosiaCS.csproj
+  # ^ TODO/FIXME the name should change from AmbrosiaCS.csproj
 
 echo
 echo "(STEP 1) Build enough so that we have compiled versions of our RPC interfaces"

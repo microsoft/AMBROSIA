@@ -100,9 +100,8 @@ echo
 echo "Copying deployment script and other included resources."
 cp -a Scripts/runAmbrosiaService.sh bin/
 # (cd bin; ln -s Ambrosia ambrosia || echo ok)
-mkdir -p bin/resources
-cp -a Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj \
-      bin/resources/MinimalCodeGenDeps.csproj
+# We currently use this as a baseline source of dependencies for generated code:
+cp -a Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj bin/AmbrosiaCS.csproj
 
 echo 
 echo "Building Native-code client library"
