@@ -133,7 +133,7 @@ function tail_tagged() {
 # Side effect: runs a tail proycess in the background
 function start_immortal_coordinator() {
     echo " $TAG Launching coordinator with: ImmortalCoordinator" $*
-    if ! which ImmortalCoordinator; then
+    if ! which ImmortalCoordinator 2> /dev/null; then
         echo "  ERROR $TAG - ImmortalCoordinator not found on path!"
         exit 1
     fi
@@ -150,28 +150,36 @@ function start_immortal_coordinator() {
     fi
     echo " $TAG   Redirecting output to: $COORDLOG"
 
-    # OPTION (1): Bound logs, but complicated.
-    # ----------------------------------------
-    if which rotatelogs >/dev/null ; then 
-        # Bound the total amount of output used by the ImmortalCoordinator log:
-        ImmortalCoordinator $* 2>&1 | rotatelogs -f -t "$COORDLOG" 10M &
-        coord_pid=$!
+    if [[ ${AMBROSIA_SILENT_COORDINATOR:+defined} ]]; then
+	# OPTION (1): No output from Coordinator to stdout/stderr:
+	ImmortalCoordinator $* 2>&1 > "$COORDLOG" &
+	coord_pid=$!
+	
+    elif [ ${RUNAMBROSIA_USE_TAIL:+defined} ]; then
+	# OPTION (2): Bound logs, but complicated (and tends to leave stray tail processes)
+	# ---------------------------------------------------------------------------------
+	if which rotatelogs 2> /dev/null ; then 
+	    # Bound the total amount of output used by the ImmortalCoordinator log:
+	    ImmortalCoordinator $* 2>&1 | rotatelogs -f -t "$COORDLOG" 10M &
+	    coord_pid=$!
+	else
+	    echo " ! WARNING $TAG: rotatelogs not available, NOT bounding size of $COORDLOG"
+	    ImmortalCoordinator $* >>"$COORDLOG" 2>&1 &
+	    coord_pid=$!
+	fi
+	if ! [[ ${AMBROSIA_SILENT_COORDINATOR:+defined} ]]; then
+	    tail_tagged "$COORDTAG" "$COORDLOG"
+	fi
     else
-        echo " ! WARNING $TAG: rotatelogs not available, NOT bounding size of $COORDLOG"
-        ImmortalCoordinator $* >>"$COORDLOG" 2>&1 &
-        coord_pid=$!
+	# OPTION (3) Just use tee. Don't bound coordinator log on disk.
+	# -------------------------------------------------------------
+	ImmortalCoordinator $* 2>&1 | tee "$COORDLOG" | tag_stdin "$COORDTAG" &
+	coord_pid=$!
     fi
-    if ! [[ ${AMBROSIA_SILENT_COORDINATOR:+defined} ]]; then
-        tail_tagged "$COORDTAG" "$COORDLOG"
-    fi
-    # ----------------------------------------
-    # OPTION (2) Don't bound coordinator log on disk.  Keep it simple:
-    # ImmortalCoordinator $* 2>&1 | tee "$COORDLOG" &
-    # coord_pid=$!
     
     while ! grep -q "Ready" "$COORDLOG" && kill -0 $coord_pid 2>/dev/null ;
     do sleep 2; done
-    
+
     if ! kill -0 $coord_pid 2>/dev/null ;
     then echo
          echo "--------------- ERROR $TAG ----------------"
@@ -195,7 +203,7 @@ keep_monitoring=`mktemp healthMonitorContinue.XXXXXX`
 touch $keep_monitoring
 
 function monitor_health() {
-    echo " $TAG Health monitor starting coord_pid=$coord_pid, app_pid=$app_pid"
+    echo " $TAG Health monitor starting, coord_pid=$coord_pid, app_pid=$app_pid"
     while [ -f $keep_monitoring ]; do
         sleep 2
         if ! kill -0 $coord_pid 2>/dev/null ; then
@@ -220,18 +228,18 @@ start_immortal_coordinator -i $AMBROSIA_INSTANCE_NAME -p $AMBROSIA_IMMORTALCOORD
 
 # Step 2:
 echo " $TAG Launching app process alongside coordinator:"
-set -x
-
 # Test for interactive shell:
-if tty -s; then
+if [ -e /dev/stdin ]; then
+    set -x
     $* < /dev/stdin &
+    set +x
     app_pid=$!
 else
+    set -x    
     $* &
+    set +x
     app_pid=$!
 fi
-set +x
-
 
 monitor_health &
 

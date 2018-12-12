@@ -25,12 +25,22 @@ namespace Client1
         protected override async Task<bool> OnFirstStart()
         {
             _server = GetProxy<IServerProxy>(_serverName);
-            _server.ReceiveMessageFork("Hello World 1!");
-            Console.WriteLine("Press any key to continue");
+
+
+            _server.ReceiveMessageFork("\n!! Client: Hello World 1!");
+
+	    Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\n!! Client: Press any key to continue");
+	    Console.ResetColor();
+	    
             Console.ReadKey();
-            _server.ReceiveMessageFork("Hello World 2!");
-            _server.ReceiveMessageFork("Hello World 3!");
-            Console.WriteLine("Press any key to end");
+            _server.ReceiveMessageFork("\n!! Client: Hello World 2!");
+            _server.ReceiveMessageFork("\n!! Client: Hello World 3!");
+
+	    Console.ForegroundColor = ConsoleColor.Yellow; 	    
+            Console.WriteLine("\n!! Client: Press any key to end");
+	    Console.ResetColor();
+
             Console.ReadKey();
             Program.finishedTokenQ.Enqueue(0);
             return true;
