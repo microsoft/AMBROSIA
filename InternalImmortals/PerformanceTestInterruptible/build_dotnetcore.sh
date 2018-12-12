@@ -38,10 +38,6 @@ cp -af API/publish/*  $DEST/
 # DANGER, WARNING, FIXME: it is UNSAFE to MERGE the outputs of two publish directories:
 cp -af IJob/publish/* $DEST/
 
-# Extra codegen dependence, put its code generator's own .csproj file in the resulting deps dir:
-# TODO/FIXME: this should be replaced by a template which is modified by the user:
-cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $DEST/
-
 # echo "Populated dependencies folder with:"
 # find CodeGenDependencies/$FMWK || git clean -nxd CodeGenDependencies/$FMWK
 

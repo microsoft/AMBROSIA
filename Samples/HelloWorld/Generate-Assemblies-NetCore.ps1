@@ -10,8 +10,6 @@ $ambrosiaPath="..\.."
 New-Item -ItemType Directory -Force -Path "CodeGenDependencies\netcoreapp2.0" | Out-Null
 Get-ChildItem "CodeGenDependencies\netcoreapp2.0\" | Remove-Item
 
-Copy-Item "..\..\Clients\CSharp\AmbrosiaCS\AmbrosiaCS.csproj" -Force -Destination "CodeGenDependencies\netcoreapp2.0\"
-
 Write-Host "Using variant of CodeGen.exe: $env:AMBVARIANT"
 
 Write-Host "Executing codegen command: dotnet $ambrosiaPath\Clients\CSharp\AmbrosiaCS\bin\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a=ServerAPI\bin\$env:AMBVARIANT\IServer.dll -o=ServerInterfaces -f=netcoreapp2.0 -b=CodeGenDependencies\netcoreapp2.0"

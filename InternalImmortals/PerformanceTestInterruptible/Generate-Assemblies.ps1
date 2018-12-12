@@ -13,8 +13,6 @@ Copy-Item "API\bin\$AMBVARIANT\*" -Force -Destination "CodeGenDependencies\net46
 # DANGER, WARNING, FIXME: it is UNSAFE to MERGE the outputs of two publish directories:
 Copy-Item "IJob\bin\$AMBVARIANT\*" -Force -Destination "CodeGenDependencies\net46\"
 
-Copy-Item "..\..\Clients\CSharp\AmbrosiaCS\AmbrosiaCS.csproj" -Force -Destination "CodeGenDependencies\net46\"
-
 Write-Host "Using variant of AmbrosiaCS.exe: $AMBVARIANT"
 
 Write-Host "Executing codegen command: ..\..\Clients\CSharp\AmbrosiaCS\bin\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=API\bin\$AMBVARIANT\ServerAPI.dll -a=IJob\bin\$AMBVARIANT\IJob.dll -o=PTIAmbrosiaGeneratedAPINet46 -f=net46 -b=CodeGenDependencies\net46"
