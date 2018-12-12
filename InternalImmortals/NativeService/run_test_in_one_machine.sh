@@ -11,10 +11,17 @@ set -euo pipefail
 
 # source `dirname $0`/default_var_settings.sh
 
-PORT1=49001
-PORT2=49002
-PORT3=49003
-PORT4=49004
+
+# A number to add to all ports to avoid colliding or reusing recently
+# used ports.
+if ! [ ${PORTOFFSET:+defined} ]; then
+    PORTOFFSET=0
+fi
+
+PORT1=$((49001 + PORTOFFSET))
+PORT2=$((49002 + PORTOFFSET))
+PORT3=$((49003 + PORTOFFSET))
+PORT4=$((49004 + PORTOFFSET))
 
 INSTANCE_PREFIX=""
 if [ $# -ne 0 ];
@@ -23,26 +30,32 @@ fi
 CLIENTNAME=${INSTANCE_PREFIX}nativeSend
 SERVERNAME=${INSTANCE_PREFIX}nativeRecv
 
+_cleanup() {
+  kill -TERM "$pid_server" 2>/dev/null  || true
+}
+trap _cleanup  TERM INT QUIT HUP
+
 echo
 echo "--------------------------------------------------------------------------------"
 echo "Running NativeService with 4 processes all in this machine/container"
 echo "  Instance: names $CLIENTNAME, $SERVERNAME"
+
 echo "--------------------------------------------------------------------------------"
 echo
 
-set -x
-time Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "./ambrosia_logs/" 
-time Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "./ambrosia_logs/" 
-set +x
-
-# AMBROSIA_IMMORTALCOORDINATOR_PORT=2500 runAmbrosiaService.sh ./service_v4.exe 0 $SERVERNAME $PORT1 $PORT2 24 1 20 
+if ! [ ${SKIP_REGISTER:+defined} ]; then
+    set -x
+    time Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "./ambrosia_logs/" 
+    time Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "./ambrosia_logs/" 
+    set +x
+fi
 
 echo
 echo "NativeService: Launching Receiver"
 set -x
-AMBROSIA_INSTANCE_NAME=$SERVERNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=1500 \
+AMBROSIA_INSTANCE_NAME=$SERVERNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$((1600 + PORTOFFSET)) \
 COORDTAG=CoordRecv AMBROSIA_IMMORTALCOORDINATOR_LOG=./recvr.log \
-  runAmbrosiaService.sh ./service_v4.exe 1 $CLIENTNAME $PORT3 $PORT4 24 1 20 &
+  runAmbrosiaService.sh ./service.exe 1 $CLIENTNAME $PORT3 $PORT4 24 1 20 &
 pid_server=$!
 set +x
 
@@ -56,9 +69,9 @@ fi
 echo
 echo "NativeService: Launching Sender now:"
 set -x
-AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=2500 \
+AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$((1601 + PORTOFFSET)) \
 COORDTAG=CoordSend AMBROSIA_IMMORTALCOORDINATOR_LOG=./sender.log \
-  runAmbrosiaService.sh ./service_v4.exe 0 $SERVERNAME $PORT1 $PORT2 24 1 20
+  runAmbrosiaService.sh ./service.exe 0 $SERVERNAME $PORT1 $PORT2 24 1 20
 set +x
 
 echo

@@ -1,6 +1,5 @@
 ﻿using Ambrosia;
-using IServer;
-using Microsoft.VisualStudio.Threading;
+using Server;
 using System;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -11,7 +10,7 @@ namespace Server
     class Program
     {
         [DataContract]
-        sealed class Server : Immortal<IServerProxy>, IServer.IServer
+        sealed class Server : Immortal<IServerProxy>, IServer
         {
             [DataMember]
             int _messagesReceived = 0;
@@ -37,8 +36,8 @@ namespace Server
         {
             int receivePort = 2001;
             int sendPort = 2000;
-            string serviceName = "server1";
-            using (var c = AmbrosiaFactory.Deploy<IServer.IServer>(serviceName, new Server(), receivePort, sendPort))
+            string serviceName = "jgserver1";
+            using (var c = AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
             {
                 Thread.Sleep(14 * 24 * 3600 * 1000);
             }

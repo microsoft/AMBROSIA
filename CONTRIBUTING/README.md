@@ -77,13 +77,12 @@ with ImmortalCoordinator at runtime over TCP sockets.
 Wrap the Native Client
 ----------------------
 
-`Clients/C` contains a small library that handles the wire protocol:
-i.e, decoding headers, variable width integer encodings, and so on.
-It provides a primitive messaging abstraction for writing payloads of
-bytes with different method IDs, but nothing more.
+`Clients/C` contains a small library that handles the wire protocol.
+That is it deals with decoding headers, variable width integer
+encodings, and so on.  It provides a primitive messaging abstraction
+for sending payloads of bytes with method IDs attached, but nothing more.
 
-This native code client library is written in vanilla C code and is
-free of runtime dependencies.  It should be wrappable in any
-high-level language that supports the C calling conventions with its
-foreign function interface (FFI).
-
+This native code client library is written in vanilla C code, free of
+runtime dependencies.  Thus, it can be wrapped in any high-level
+language that supports C calling conventions in its foreign function
+interface.

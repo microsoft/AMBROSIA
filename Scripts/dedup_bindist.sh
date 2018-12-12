@@ -18,6 +18,33 @@ else
     exit 1
 fi
 
+# Helpers
+# ------------------------------------------------------------
+
+
+
+# Compute the relative path to A starting from directory B
+# Output the resulting relative path to stdout.
+if which realpath 2>&1 >/dev/null ; then
+    
+    function getrelative() {
+        realpath "$1" --relative-to="$2"
+    }
+    
+elif which python 2>&1 >/dev/null ; then
+
+    function getrelative() {
+        python -c "import os,sys;print(os.path.relpath(*(sys.argv[1:])))" "$1" "$2"
+    }
+        
+# elif which perl; then
+else
+    echo "ERROR $0: can't find an easy way to compute relative paths on this system."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+
 echo "Begin script in mode = $mode"
 
 cd `dirname $0`/../bin
@@ -57,11 +84,9 @@ for dir in $secondary; do
         symlink)
             while read f; do        
                 echo -ne "."
-                # echo "ln -sf $relative $f"
-                # Requires realpath from GNU coreutils:
                 dirof=`dirname $f`
-                relative=`realpath ../runtime/$f --relative-to=$dirof`
-                ln -sf $relative $f
+                relativepath=$(getrelative "../runtime/$f" "$dirof")
+                ln -sf $relativepath $f
             done < $dups
             echo
             ;;
@@ -109,11 +134,12 @@ else
         cd "$bindir/$dir"
         mv -n * ..
     done
-
+    echo 
     echo "After squishing, these files left behind / conflicting:"
     echo "-------------------------------------------------------"
     cd "$bindir"
     find $secondary
     echo "-------------------------------------------------------"
     echo "Every one of these represents a risk of undefined behavior!"
+    echo
 fi

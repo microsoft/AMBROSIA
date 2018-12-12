@@ -6,7 +6,7 @@ using Ambrosia;
 using static Ambrosia.StreamCommunicator;
 using LocalAmbrosiaRuntime;
 
-namespace IClient2
+namespace Client2
 {
     /// <summary>
     /// This class runs in the process of the object that implements the interface IClient2

@@ -23,17 +23,18 @@
 
 # Oh, that's happening even on ambrosia-dev:
 FROM ambrosia-dev
+# We get build dependencies from ambrosia-dev, since it built the native library.
+# RUN apt-get update && \
+#     apt-get install -y make gcc
+# nmap
 
-RUN apt-get update && \
-    apt-get install -y make gcc nmap
-
-ADD . /ambrosia/NativeService
+ADD   . /ambrosia/NativeService
 WORKDIR /ambrosia/NativeService
 
 ENV AMBROSIA_BINDIR=/ambrosia/bin
 
 # This will leave the binary in the current directory:
-RUN make clean service_v4.exe 
+RUN make clean debug # all
 
 ENV PATH="${PATH}:${AMBROSIA_BINDIR}"
 
