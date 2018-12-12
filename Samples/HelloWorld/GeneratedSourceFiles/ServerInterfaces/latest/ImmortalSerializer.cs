@@ -10,7 +10,7 @@ using System.Xml;
 
 using Ambrosia;
 using static Ambrosia.StreamCommunicator;
-using IServer;
+using Server;
 
 namespace Ambrosia
 {
