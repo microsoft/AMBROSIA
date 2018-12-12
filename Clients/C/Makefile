@@ -19,7 +19,7 @@ OBJS1= $(patsubst src/%.c,bin/static/%.o, $(SRCS) )
 OBJS2= $(patsubst src/%.c,bin/shared/%.o, $(SRCS) )
 
 COMP= gcc $(ALL_DEFINES) -I include/ $(GNUOPTS)
-LINK= gcc $(GNULIBS)
+LINK= gcc 
 
 LIBNAME=libambrosia
 
@@ -30,7 +30,7 @@ debug:
 
 bin/native_hello.exe: native_hello.c $(OBJS1) $(HEADERS)
 	$(COMP) -c $< -o bin/static/hello.o
-	$(LINK) $(OBJS1) bin/static/hello.o -o $@
+	$(LINK) $(OBJS1) bin/static/hello.o $(GNULIBS) -o $@
 
 bin/$(LIBNAME).a: $(OBJS1)
 	ar rcs $@ $(OBJS1)
