@@ -2,7 +2,8 @@
 
 
 // Internal helper: try repeatedly on a socket until all bytes are sent.
-static inline void socket_send_all(int sock, const void* buf, size_t len, int flags) {
+static inline
+void socket_send_all(int sock, const void* buf, size_t len, int flags) {
   char* cur = (char*)buf;
   int remaining = len;
   while (remaining > 0) {
@@ -21,3 +22,18 @@ static inline void socket_send_all(int sock, const void* buf, size_t len, int fl
 #endif
   }
 }
+
+
+static inline
+void print_hex_bytes(FILE* fd, char* ptr, int len) {
+  const int limit = 100; // Only print this many:
+  fprintf(fd,"0x");
+  int j;
+  for (j=0; j < len && j < limit; j++) {
+    fprintf(fd,"%02hhx", (unsigned char)ptr[j]);
+    if (j % 2 == 1)
+      fprintf(fd," ");
+  }
+  if (j<len) fprintf(fd,"...");
+}
+

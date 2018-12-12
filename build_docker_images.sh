@@ -40,17 +40,20 @@ echo
 $DOCKER build                       -t ${TAG1A} .
 
 if ! [[ ${DONT_BUILD_RELEASE_IMAGE:+defined} ]]; then
+    echo;echo "Building Release Image: $TAG1B"; echo
     $DOCKER build -f Dockerfile.release -t ${TAG1B} .
 fi
 
 if ! [[ ${DONT_BUILD_APP_IMAGES:+defined} ]]; then
 
-    if ! [[ ${DONT_BUILD_PTI_IMAGE:+defined} ]]; then    
+    if ! [[ ${DONT_BUILD_PTI_IMAGE:+defined} ]]; then
+        echo;echo "Building App Image: $TAG2"; echo
 	      cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
 	      $DOCKER build -t ${TAG2} .
 	      cd "$AMBROSIA_ROOT"
     fi
-    if ! [[ ${DONT_BUILD_NATIVE_IMAGE:+defined} ]]; then    
+    if ! [[ ${DONT_BUILD_NATIVE_IMAGE:+defined} ]]; then
+        echo;echo "Building App Image: $TAG3"; echo
 	      cd "$AMBROSIA_ROOT"/InternalImmortals/NativeService
 	      docker build -t ${TAG3} .
 	      cd "$AMBROSIA_ROOT"
