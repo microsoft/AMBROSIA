@@ -7,15 +7,18 @@ Running HelloWorld on Docker Locally
 ------------------------------------
 
 For this example you need the "ambrosia" Docker image.  You can pull
-it from Dockerhub [FINISHME!].  Or you can build it locally by
-checking out the source:
+it from Dockerhub:
+
+	docker pull ambrosia/ambrosia
+
+Or you can build it locally by checking out the source:
 
     git clone git@github.com:Microsoft/AMBROSIA
     cd AMBROSIA
     ./build_docker_images.sh
 
-Test it out by executing `docker run -it --rm ambrosia`.  Now you're
-ready to build the HelloWorld example in this directory:
+Test it out by executing `docker run -it --rm ambrosia/ambrosia`.  Now
+you're ready to build the HelloWorld example in this directory:
 
     docker build -t ambrosia-hello . 
 

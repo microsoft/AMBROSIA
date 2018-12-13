@@ -13,7 +13,7 @@ your tooling environment:
  * [HOWTO-BASH.md](./HOWTO-BASH.md): Build and run on your local
    machine (Mac, Windows, Linux) using Bash scripts.
 
- * [HOWTO-DOCKER.md](./HOWTO-DOCKER.md): Build and run inside
+ * [HOWTO-DOCKER-K8S.md](./HOWTO-DOCKER-K8S.md): Build and run inside
    containers using Docker.
 
 

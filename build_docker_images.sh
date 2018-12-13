@@ -11,10 +11,10 @@ set -euo pipefail
 # 
 # Run this inside a fresh working copy.
 
-TAG1A=ambrosia-dev
-TAG1B=ambrosia
-TAG2=ambrosia-perftest
-TAG3=ambrosia-nativeapp
+TAG1A=ambrosia/ambrosia-dev
+TAG1B=ambrosia/ambrosia
+TAG2=ambrosia/ambrosia-perftest
+TAG3=ambrosia/ambrosia-nativeapp
 
 if ! [[ ${DOCKER:+defined} ]]; then
    DOCKER=docker
@@ -72,7 +72,7 @@ if ! [[ ${DONT_BUILD_TARBALL:+defined} ]]; then
     set -x
     rm -rf ambrosia.tgz
     TMPCONT=temp-container-name_`date '+%s'`
-    $DOCKER run --name $TMPCONT ambrosia-dev bash -c 'tar czf /ambrosia/ambrosia.tgz /ambrosia/bin'
+    $DOCKER run --name $TMPCONT $TAG1A bash -c 'tar czf /ambrosia/ambrosia.tgz /ambrosia/bin'
     $DOCKER cp $TMPCONT:/ambrosia/ambrosia.tgz ambrosia.tgz
     $DOCKER rm $TMPCONT
     set +x

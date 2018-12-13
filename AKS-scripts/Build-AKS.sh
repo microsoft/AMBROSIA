@@ -49,8 +49,8 @@ set +x
 
 # But first, we depend on the ambrosia-dev base image:
 # Go and build the base images only if they are not found:
-if [ "$($DOCKER images -q ambrosia-dev)" == "" ]; then
-    echo "Could not find 'ambrosia-dev' image, attempting to build it."
+if [ "$($DOCKER images -q ambrosia/ambrosia-dev)" == "" ]; then
+    echo "Could not find 'ambrosia/ambrosia-dev' image, attempting to build it."
     # Top of Ambrosia source working dir:
     set -x
     pushd `dirname $0`/../

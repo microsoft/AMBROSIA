@@ -45,12 +45,11 @@ SERVICE_YML_FILE="${UNIQUE_ID}${YMLEXTENSION}"  # Need yml file to have unique d
 echo "Registering Instance..."
 set -x
 function DOCKRUN() {
-  # FIXME: this should work with ambrosia, instead of ambrosia-dev, but right now [2018.11.29] it is producing an error:
-  # Error trying to upload service. Exception: One or more errors occurred. (The type initializer for 'System.Net.Http.CurlHandler' threw an exception    
+    # TODO: this should work with ambrosia/ambrosia instead of ambrosia/ambrosia-dev
     $DOCKER run --rm \
 	   --env AZURE_STORAGE_CONN_STRING="$AZURE_STORAGE_CONN_STRING" \
-	   ambrosia-dev $*
-# FIXME: bug 127 : --env AZURE_STORAGE_CONNECTION_STRING="$AZURE_STORAGE_CONNECTION_STRING" \
+	   ambrosia/ambrosia-dev $*
+# FIXME: VSTS bug 127 : --env AZURE_STORAGE_CONNECTION_STRING="$AZURE_STORAGE_CONNECTION_STRING" \
 }
 time DOCKRUN Ambrosia RegisterInstance -i $AMBROSIA_INSTANCE_NAME --rp $LOCALPORT1 --sp $LOCALPORT2 -l "$AMBROSIA_LOGDIR" --lts 1024
 set +x
