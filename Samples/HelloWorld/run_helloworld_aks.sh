@@ -49,7 +49,7 @@ $KUBE get pods
 
 export LOCALPORT1=2000
 export LOCALPORT2=2001
-./Deploy-AKS.sh helloserver 'runAmbrosiaService.sh dotnet Client1/Publish/Client1.dll helloclient helloserver'
+./Deploy-AKS.sh helloserver 'runAmbrosiaService.sh dotnet Client1/publish/Client1.dll helloclient helloserver'
 
 export LOCALPORT1=1000
 export LOCALPORT2=1001
