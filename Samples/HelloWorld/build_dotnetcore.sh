@@ -20,10 +20,6 @@ if ! [ -d "$RSRC" ]; then
     exit 1
 fi
 
-# Baseline CodeGen dependencies:
-cp -f "$RSRC/AmbrosiaCS.csproj" $DEST/AmbrosiaCS.csproj
-  # ^ TODO/FIXME the name should change from AmbrosiaCS.csproj
-
 echo
 echo "(STEP 1) Build enough so that we have compiled versions of our RPC interfaces"
 BUILDIT="dotnet publish -o publish -c $CONF -f $FMWK "
@@ -45,6 +41,14 @@ set +x
 
 echo
 echo "(STEP 3) Now the entire solution can be built."
-$BUILDIT HelloWorld.sln
+set -x
+$BUILDIT GeneratedSourceFiles/Client1Interfaces/latest/Client1Interfaces.csproj
+$BUILDIT GeneratedSourceFiles/Client2Interfaces/latest/Client2Interfaces.csproj
+$BUILDIT GeneratedSourceFiles/ServerInterfaces/latest/ServerInterfaces.csproj
+$BUILDIT Server/Server.csproj
+$BUILDIT Client1/Client1.csproj
+$BUILDIT Client2/Client2.csproj
+set +x
+# $BUILDIT HelloWorld.sln
 echo
 echo "Hello world built."

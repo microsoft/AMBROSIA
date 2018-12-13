@@ -28,11 +28,6 @@ RUN dotnet publish -o $CGDEPS $BLDFLAGS IJob/IJob.csproj
 ADD API /ambrosia/InternalImmortals/PerformanceTestInterruptible/API
 RUN dotnet publish -o $CGDEPS $BLDFLAGS API/ServerAPI.csproj
 
-# TODO/FIXME: this should be replaced by a template which is modified by the user:
-# WARNING: as currently set up, this creates a dependency on the
-# "ambrosia-dev" rather than "ambrosia" image.
-RUN cp -f "../../Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj" $CGDEPS/
-
 # Run the code-generation tool:
 RUN rm -rf ./GeneratedSourceFiles && \
     mkdir -p GeneratedSourceFiles 
