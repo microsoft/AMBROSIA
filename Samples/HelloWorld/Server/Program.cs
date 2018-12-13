@@ -21,7 +21,10 @@ namespace Server
 
             public async Task<int> ReceiveMessageAsync(string message)
             {
-                Console.WriteLine("Received message from a client: " + message);
+		Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("\n!! SERVER Received message from a client: " + message);
+		Console.ResetColor();
+
                 _messagesReceived++;
                 return _messagesReceived;
             }

@@ -5,8 +5,6 @@ set -euo pipefail
 # This script can be used to create a service principle which can then be used
 # to create an image pull secret.
 #
-# Note: This is an alternative to giving direct access to ACS using the
-# "Grant-AKS-acess-ACR.sh" script.
 ################################################################################
 
 #Please see https://docs.microsoft.com/en-us/azure/container-registry/container-registry-auth-aks for more documentation

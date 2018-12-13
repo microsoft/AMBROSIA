@@ -2,66 +2,18 @@
 AMBROSIA Sample Application: Hello World
 ========================================
 
-This application ....
+This sample shows two immortals communicating, a client and a server. You can build and run it locally to get a quick idea of how Ambrosia operates. The solution contains two alternate versions of the client (Client1 and Client2), only one of which is used at a time.  Client1 demonstrates basic communication, while Client2 demonstrates nondeterministic input using an impulse handler.
 
-   <FINISHME>
+To run it yourself, refer to the version of the tutorial that matches
+your tooling environment:
 
-Building and Running: CLI and .NET Core
----------------------------------------
+ * [HOWTO-WINDOWS.md](./HOWTO-WINDOWS.md): Build and run using
+   Windows-native tooling, e.g. Visual Studio and `cmd.exe`.
 
-To build everything, make sure the AMBROSIA binary distrubition is in
-your PATH (e.g. `which AmbrosiaCS`) and run the script:
+ * [HOWTO-BASH.md](./HOWTO-BASH.md): Build and run on your local
+   machine (Mac, Windows, Linux) using Bash scripts.
 
-	./build_dotnetcore.sh
-
-Now you have binaries built under the paths `Server/publish`,
-`Client1/publish`, and `Client2/publish`.  The two clients are
-*different* examples, and only one or the other should be run at a time.
-
-
-Before we can run the client/server, we need to register metadata
-about these AMBROSIA instances with in the cloud table storage.  Pick
-a name for your client and server instances.
-
-    Ambrosia RegisterInstance -i myclient --rp 2000 --sp 2001 -l locallogs
-    Ambrosia RegisterInstance -i myserver --rp 2000 --sp 2001 -l locallogs	
-
-We've told AMBROSIA that it will use `./locallogs` for storing logs,
-but in a production environment of course logs would need to be on a
-remotely-mounted file system that is durable even when the machine fails.
-
-First let's run the server.  Open a terminal, and let's set up some of
-the configuration information that will be used by the
-`runAmbrosiaService.sh` script to launch your process.
-
-    export AMBROSIA_INSTANCE_NAME=myclient
-	export AMBROSIA_IMMORTALCOORDINATOR_PORT=1500
-	export AZURE_STORAGE_CONN_STRING=...
-
-To launch a service we're going to use a convenience script called
-`runAmbrosiaService.sh` which is included in the binary distribution
-of AMBROSIA.  This handles starting the immortal coordinator and
-monitorying its health.  (You could start ImmortalCoordinator
-yourself, as well
-
-
-
-
-
-
-
-Building and Running: Docker
-----------------------------
-
-docker run -it --rm --env "AZURE_STORAGE_CONN_STRING=$AZURE_STORAGE_CONN_STRING" \
-       --env  --env "AMBROSIA_IMMORTALCOORDINATOR_PORT=1600" \
-       ambrosia-hello runAmbrosiaService.sh dotnet Client2/publish/Client2.dll $CNAME $SNAME
-
-
-Building and Running: Windows / Visual Studio
----------------------------------------------
-
-
-   <FINISHME>  - move from AmbrosiaDocs.md??
+ * [HOWTO-DOCKER-K8S.md](./HOWTO-DOCKER-K8S.md): Build and run inside
+   containers using Docker.
 
 
