@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.Serialization;
 using TwitterObservable;
 using Microsoft.StreamProcessing;
@@ -139,10 +139,10 @@ namespace Analytics
             return new TwitterConfig
             {
                 // Put your keys and secrets here
-                oauth_consumer_key = "s5ocdNJ2JnKi87ayC0Fpwto1f",
-                oauth_consumer_secret = "D7OH70N1QUhCMUYdbIQuqZFx6Dqc1mKiuHljT1Sv7Igh4scXqo",
-                oauth_token = "2547031843-C3Dt114eXNSYkZx83Xj1kBkL3AK4F4E76dWMmrD",
-                oauth_token_secret = "YlX6vSQoofKZp78Zf1j4hxGBiPSQbtmdVOCUjRiA5BDN2",
+                oauth_consumer_key = "",
+                oauth_consumer_secret = "",
+                oauth_token = "",
+                oauth_token_secret = "",
                 twitter_keywords = "Office Microsoft,Surface Microsoft,Phone Window,Windows 8,SQL Server,SharePoint,Bing,Skype,XBox,System Center,Microsoft,msftluv"
             };
         }
