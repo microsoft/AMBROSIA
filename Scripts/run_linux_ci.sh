@@ -48,10 +48,10 @@ case $mode in
       cd "$AMBROSIA_ROOT"/Samples/HelloWorld
       docker build -t ambrosia-hello .
       if [ ${AZURE_STORAGE_CONN_STRING:+defined} ]; then
-	  # Expects stdin, so we pipe 'yes' to it:
-	  docker run -it --rm --env "AZURE_STORAGE_CONN_STRING=$AZURE_STORAGE_CONN_STRING" \
-		 ambrosia-hello bash -c 'yes|./run_helloworld_both.sh' \
-		 || echo "Allowed failure for now."
+	        # Expects stdin, so we pipe 'yes' to it:
+	        docker run -it --rm --env "AZURE_STORAGE_CONN_STRING=$AZURE_STORAGE_CONN_STRING" \
+		             ambrosia-hello bash -c 'yes|./run_helloworld_both.sh' \
+		          || echo "Allowed failure for now."
       fi
       
       # Application 3: NativeService
@@ -96,10 +96,10 @@ case $mode in
 
       # Test Application: Hello World Sample
       # ----------------------------------------
-      cd "$AMBROSIA_ROOT"/Samples/HelloWorld
-      ./build_dotnetcore.sh
-      # Expects stdin, so we pipe 'yes' to it:
-      yes | ./run_helloworld_both.sh || echo "Allowed failure for now."
+      # cd "$AMBROSIA_ROOT"/Samples/HelloWorld
+      # ./build_dotnetcore.sh
+      # # Expects stdin, so we pipe 'yes' to it:
+      # yes | ./run_helloworld_both.sh || echo "Allowed failure for now."
       
       
       # Test Application: PTI (last because it's slow)
