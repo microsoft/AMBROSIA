@@ -22,7 +22,6 @@ namespace Analytics
     [Ambrosia.InstanceProxy(typeof(IAnalytics))]
     public interface IAnalyticsProxy
     {
-        Task OnNextAsync(Microsoft.StreamProcessing.StreamEvent<TwitterObservable.Tweet> p_0);
         void OnNextFork(Microsoft.StreamProcessing.StreamEvent<TwitterObservable.Tweet> p_0);
     }
 }

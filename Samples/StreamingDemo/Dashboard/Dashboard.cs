@@ -26,8 +26,8 @@ namespace DashboardFancy
         {
             dash = this;
             InitializeComponent();
-            int receivePort = 1001;
-            int sendPort = 1000;
+            int receivePort = 3001;
+            int sendPort = 3000;
             var myClient = new TwitterDashboard(this);
             new Thread(new ThreadStart(() => _container = AmbrosiaFactory.Deploy<IDashboard>(DashboardServiceName, myClient, receivePort, sendPort))).Start();
         }
