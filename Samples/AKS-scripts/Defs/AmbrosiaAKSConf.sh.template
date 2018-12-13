@@ -46,5 +46,18 @@ FILESHARE_NAME=ambrosia-logs-smbshare
 FILESHARE_SECRET_NAME=azure-fileshare-secret
 # ------------------------------------------------------------
 
-# See Defs/Set-*.sh for variables that are retrieved automatically after login.
+# Configuration parameters (can leave unchanged)
+# ----------------------------------------------
+# These relate to how many / how big the resources provisioned are.
 
+# Values: Premium_LRS, Standard_GRS, Standard_LRS, Standard_RAGRS, Standard_ZRS
+AZ_STORAGE_SKU=Premium_LRS
+AZ_STORAGE_TIER=Hot         # Hot or Cold
+
+# Values: Basic, Classic, Premium, Standard
+ACR_SKU=Standard
+
+# Default is Standard_DS2_v2 (--node-vm-size)
+AKS_VM_SIZE=Standard_DS4_v2
+
+# See Defs/Set-*.sh for variables that are retrieved automatically after login.
