@@ -28,7 +28,7 @@ then COORDTAG="ImmortalCoord"
 fi
 
 function print_usage() {
-    echo "USAGE: $0 [--quiet] <service-binary> <service-args>*"
+    echo "USAGE: $0 [--silent-coord] [--verbose] <service-binary> <service-args>*"
     echo    
     echo "This script takes a command (and arguments) that runs the application binary."
     echo "The script launches the ImmortalCoordinator in the background before launching"
@@ -50,7 +50,8 @@ function print_usage() {
 
 while [ $# -ge 1 ]; do
     case $1 in
-        --quiet) shift; RUNAMBROSIA_QUIET=1 ;;
+        --silent-coord) shift; AMBROSIA_SILENT_COORDINATOR=1 ;;
+        --verbose) shift; RUNAMBROSIA_VERBOSE=1 ;;
         *) break ;;
     esac
 done
@@ -66,10 +67,9 @@ if ! [[ ${AMBROSIA_INSTANCE_NAME:+defined} ]]; then
     exit 1
 fi
 
-if [[ ${RUNAMBROSIA_QUIET:+defined} ]];
-then AMBROSIA_SILENT_COORDINATOR=1
-     function tag() { return; }
-else function tag() { echo " $TAG $*"; }     
+if   [[ ${RUNAMBROSIA_VERBOSE:+defined} ]];
+then function tag() { echo " $TAG $*"; }     
+else function tag() { return; }
 fi
 
 if [[ ${AMBROSIA_IMMORTALCOORDINATOR_PORT:+defined} ]];
