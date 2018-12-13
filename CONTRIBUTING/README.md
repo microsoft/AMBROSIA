@@ -7,6 +7,8 @@ For developers interested in adding to AMBROSIA, or developing new
 [language-level or RPC-framework bindings to AMBROSIA](#new-client-bindings),
 this document provides a few pointers.
 
+We invite developers wishing to build on or contribute to AMBROSIA to join our [gitter community](https://gitter.im/AMBROSIA-resilient-systems/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link).
+
 Overview of repository
 ----------------------
 
