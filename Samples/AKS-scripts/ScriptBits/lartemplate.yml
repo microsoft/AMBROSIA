@@ -19,6 +19,8 @@ spec :
             containers:
             - name : #DEPLOYMENTNAME#
               image : #FULLCONTAINERNAME#
+              tty: true
+              stdin: true
               ports:
               - containerPort: #COORDPORT#
                 name: craport

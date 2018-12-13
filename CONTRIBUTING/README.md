@@ -26,12 +26,12 @@ find.
  * `./DevTools`: additional console tools for interacting with the
    Azure metadata that supports an Ambrosia service.
 
- * `./AKS-scripts`: scripts to get a user started with AMBROSIA on
-   Kubernetes on Azure.
-
  * `./Scripts`: scripts used when running automated tests (CI) as well
    as the runAmbrosiaService.sh script which provides an example means
    of executing an app+coordinator.
+
+ * `./Samples/AKS-scripts`: scripts to get a user started with
+   AMBROSIA on Kubernetes on Azure.
 
 (2) Client libraries:
 
