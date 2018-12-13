@@ -60,7 +60,8 @@ echo "Launching Client1 now:"
 ./run_helloworld_client.sh
 
 echo
-echo "Client finished, shutting down server."
+echo "Client finished, shutting down server in 5 seconds:"
+sleep 5
 kill $pid_server
 wait
 echo "Everything shut down.  All background processes done."
