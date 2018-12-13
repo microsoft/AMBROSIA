@@ -1,11 +1,13 @@
 Ambrosia: Robust Distributed Programming Made Easy and Efficient
 =======================================================================
 
- * Windows Build (net46/netcore): [![Windows Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Win-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=23)
+Windows Build (net46/netcore): [![Windows Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Win-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=23)
 
- * Linux Build (netcore): [![Linux Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Linux-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=24)
+Linux Build (netcore): [![Linux Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Linux-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=24)
 
- * Linux Docker Build: [![Linux Docker Build status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Linux-Docker?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=18) 
+Linux Docker Build: [![Linux Docker Build status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Linux-Docker?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=18) 
+ 
+ [![Gitter](https://img.shields.io/badge/chat-on%20gitter-yellow.svg)](https://gitter.im/AMBROSIA-resilient-systems/)
 
 
 Ambrosia is a programming language independent approach for authoring
