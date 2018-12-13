@@ -1,18 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
     <Platforms>x64</Platforms>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="AmbrosiaLibCS" Version="2018.12.12.1" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.192" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\GeneratedSourceFiles\Client1Interfaces\latest\Client1Interfaces.csproj" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <ProjectReference Include="..\GeneratedSourceFiles\Client1InterfacesNetCore\latest\Client1InterfacesNetCore.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+    <ProjectReference Include="..\GeneratedSourceFiles\Client1InterfacesNet46\latest\Client1InterfacesNet46.csproj" />
   </ItemGroup>
 
 </Project>
