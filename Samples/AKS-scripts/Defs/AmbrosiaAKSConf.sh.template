@@ -22,6 +22,10 @@
 # multiple instances, each of which contain multiple replicas).
 AMBROSIA_SERVICE_NAME=perftest
 
+# A fully-qualified container name IFF the container is already public and pullable.
+# If unset, the scripts will build an image locally and push it to a private registry.
+# PUBLIC_CONTAINER_NAME=ambrosia/ambrosia-perftest
+
 # Find this in the Azure portal or with `az account list --output table`
 AZURE_SUBSCRIPTION=PASTE_SUBSCRIPTION_ID_HERE
 # Where to put resources we create:
@@ -51,7 +55,7 @@ FILESHARE_SECRET_NAME=azure-fileshare-secret
 # These relate to how many / how big the resources provisioned are.
 
 # Values: Premium_LRS, Standard_GRS, Standard_LRS, Standard_RAGRS, Standard_ZRS
-AZ_STORAGE_SKU=Premium_LRS
+AZ_STORAGE_SKU=Standard_LRS
 AZ_STORAGE_TIER=Hot         # Hot or Cold
 
 # Values: Basic, Classic, Premium, Standard

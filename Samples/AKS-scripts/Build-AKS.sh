@@ -57,8 +57,8 @@ fi
 echo "Building the user's application Docker container..."
 pushd $SERVICE_SRC_PATH
 set -x
-$DOCKER build -t $DockerPrivateRegistry_URL/$AMBROSIA_CONTAINER_NAME .
-$DOCKER tag $DockerPrivateRegistry_URL/$AMBROSIA_CONTAINER_NAME $AMBROSIA_CONTAINER_NAME
+$DOCKER build -t $DockerPrivateRegistry_URL/$CONTAINER_NAME_ROOT .
+$DOCKER tag $DockerPrivateRegistry_URL/$CONTAINER_NAME_ROOT $AMBROSIA_CONTAINER_NAME
 set +x
 popd
 
@@ -67,9 +67,9 @@ popd
 ############################################
 echo "Pushing the service Docker container..."
 set -x
-time $DOCKER push $DockerPrivateRegistry_URL/$AMBROSIA_CONTAINER_NAME 
+time $DOCKER push $DockerPrivateRegistry_URL/$CONTAINER_NAME_ROOT 
 $AZ acr repository list --name $ACR_NAME
-$AZ acr repository show-tags --name $ACR_NAME --repository $AMBROSIA_CONTAINER_NAME
+$AZ acr repository show-tags --name $ACR_NAME --repository $CONTAINER_NAME_ROOT
 set +x
 
 echo "-----------Build-and-Push Finished-----------"
