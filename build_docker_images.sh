@@ -37,7 +37,7 @@ fi
 echo "================================================================================"
 echo
     
-$DOCKER build                       -t ${TAG1A} .
+$DOCKER build -t ${TAG1A} .
 
 if ! [[ ${DONT_BUILD_RELEASE_IMAGE:+defined} ]]; then
     echo;echo "Building Release Image: $TAG1B"; echo

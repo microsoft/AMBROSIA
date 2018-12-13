@@ -30,18 +30,17 @@ namespace Client1
             _server.ReceiveMessageFork("\n!! Client: Hello World 1!");
 
 	    Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\n!! Client: Press any key to continue");
+            Console.WriteLine("\n!! Client: Press enter to continue");
 	    Console.ResetColor();
-	    
-            Console.ReadKey();
+	                
+	    Console.Read(); // Console.ReadKey();
             _server.ReceiveMessageFork("\n!! Client: Hello World 2!");
             _server.ReceiveMessageFork("\n!! Client: Hello World 3!");
 
 	    Console.ForegroundColor = ConsoleColor.Yellow; 	    
-            Console.WriteLine("\n!! Client: Press any key to end");
-	    Console.ResetColor();
+            Console.WriteLine("\n!! Client: Press enter to end");
 
-            Console.ReadKey();
+            Console.Read(); // Console.ReadKey();
             Program.finishedTokenQ.Enqueue(0);
             return true;
         }
