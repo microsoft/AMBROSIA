@@ -20,8 +20,8 @@ else
 fi
 
 # Go and build the base images only if they are not found:
-if [ "$($DOCKER images -q ambrosia-dev)" == "" ]; then
-    echo "Could not find 'ambrosia-dev' image, attempting to build it."
+if [ "$($DOCKER images -q ambrosia/ambrosia-dev)" == "" ]; then
+    echo "Could not find 'ambrosia/ambrosia-dev' image, attempting to build it."
     # Top of Ambrosia source working dir:
     cd `dirname $0`/../../
     DONT_BUILD_RELEASE_IMAGE=1 ./build_docker_images.sh

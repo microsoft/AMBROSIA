@@ -76,7 +76,7 @@ case $PTI_MODE in
     set -x
 
     $DOCKER run --rm ${OPTS} \
-       ambrosia-perftest ./run_small_PTI_and_shutdown.sh $INSTPREF
+       ambrosia/ambrosia-perftest ./run_small_PTI_and_shutdown.sh $INSTPREF
     set +x
     ;;
     

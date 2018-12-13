@@ -7,7 +7,7 @@ set -xeuo pipefail
 
 # It is typically called WITHIN a docker container, like so:
 #
-#  docker run -it --rm --env AZURE_STORAGE_CONN_STRING="$AZURE_STORAGE_CONN_STRING" ambrosia-perftest  ./run_PTI_in_tmux.sh
+#  docker run -it --rm --env AZURE_STORAGE_CONN_STRING="$AZURE_STORAGE_CONN_STRING" ambrosia/ambrosia-perftest  ./run_PTI_in_tmux.sh
 #
 # ------------------------------------------------------------------------------
 

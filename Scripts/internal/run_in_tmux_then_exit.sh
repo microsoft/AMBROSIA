@@ -5,7 +5,7 @@ echo
 echo "Launching docker image then sleeping:"
 rm -f cont.id
 docker run -t --rm --cidfile cont.id \
-       --env AZURE_STORAGE_CONN_STRING="$AZURE_STORAGE_CONN_STRING" ambrosia-perftest \
+       --env AZURE_STORAGE_CONN_STRING="$AZURE_STORAGE_CONN_STRING" ambrosia/ambrosia-perftest \
        ./run_PTI_in_tmux.sh &
 
 TIME=25

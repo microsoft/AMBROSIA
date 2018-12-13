@@ -44,7 +44,7 @@ case $mode in
 
       # Application 2: Hello World Sample
       # ----------------------------------------
-      # docker --rm ambrosia-dev ./Samples/HelloWorld/build_dotnetcore.sh
+      # docker --rm ambrosia/ambrosia-dev ./Samples/HelloWorld/build_dotnetcore.sh
       
       # Application 3: NativeService
       # ----------------------------------------
