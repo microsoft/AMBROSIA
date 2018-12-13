@@ -49,7 +49,7 @@ case $mode in
       docker build -t ambrosia-hello .
       if [ ${AZURE_STORAGE_CONN_STRING:+defined} ]; then
 	        # Expects stdin, so we pipe 'yes' to it:
-	        docker run -it --rm --env "AZURE_STORAGE_CONN_STRING=$AZURE_STORAGE_CONN_STRING" \
+	        docker run --rm --env "AZURE_STORAGE_CONN_STRING=$AZURE_STORAGE_CONN_STRING" \
 		             ambrosia-hello bash -c 'yes|./run_helloworld_both.sh' \
 		          || echo "Allowed failure for now."
       fi
