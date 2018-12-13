@@ -10,29 +10,37 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ambrosia;
 using Mono.Options;
+using System.Reactive.Linq;
 
 namespace Analytics
 {
     [DataContract]
-    class Analytics : Immortal, IAnalytics
+    class Analytics : Immortal<IAnalyticsProxy>, IAnalytics
     {
         Subject<StreamEvent<Tweet>> _tweetConduit;
         Process _queryProcess;
+        IObservable<StreamEvent<Tweet>> _inputObservable;
 
         [DataMember]
         IDashboardProxy _dashboard;
 
+        [DataMember]
+        bool _serializedQueryOnce;
+
+
         public Analytics()
         {
+            _serializedQueryOnce = false;
         }
 
         protected override async Task<bool> OnFirstStart()
         {
-            Console.WriteLine("analytics starting entry point");
             _dashboard = GetProxy<IDashboardProxy>(DashboardServiceName);
-            var query = CreateQuery();
-            _queryProcess = query.Restore();
-            Console.WriteLine("analytics ending entry point");
+            lock (_dashboard)
+            {
+                var query = CreateQuery();
+                _queryProcess = query.Restore();
+            }
             return true;
         }
 
@@ -76,24 +84,67 @@ namespace Analytics
 
         public async Task OnNextAsync(StreamEvent<Tweet> next)
         {
-            _tweetConduit.OnNext(next);
+            lock (_dashboard)
+            {
+                if (_queryProcess != null)
+                {
+                    _tweetConduit.OnNext(next);
+                }
+            }
         }
 
         protected override void OnSave(Stream stream)
         {
             if (_queryProcess != null)
             {
-                _queryProcess.Checkpoint(stream);
+                lock (_dashboard)
+                {
+                    _queryProcess.Checkpoint(stream);
+                    _serializedQueryOnce = true;
+                }
             }
+        }
+
+        protected override void BecomingPrimary()
+        {
+            // Read Twitter auth information and topics of interest from App.config
+            var twitterConfig = ReadTwitterInputConfig();
+
+            // Create an observable of tweets with sentiment
+            _inputObservable = TwitterStream.Create(twitterConfig);
+
+            _inputObservable.ForEachAsync(
+                    x =>
+                    {
+                        if (x.IsData)
+                        {
+                            Console.WriteLine("{0}", x.ToString());
+                            thisProxy.OnNextFork(x);
+                        }
+                    });
         }
 
         protected override void OnRestore(Stream stream)
         {
-            if (stream.Length > 0)
+            if (_serializedQueryOnce)
             {
+                Console.WriteLine("Deserializing Trill Query!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 var query = CreateQuery();
                 _queryProcess = query.Restore(stream);
             }
+        }
+
+        public static TwitterConfig ReadTwitterInputConfig()
+        {
+            return new TwitterConfig
+            {
+                // Put your keys and secrets here
+                oauth_consumer_key = "s5ocdNJ2JnKi87ayC0Fpwto1f",
+                oauth_consumer_secret = "D7OH70N1QUhCMUYdbIQuqZFx6Dqc1mKiuHljT1Sv7Igh4scXqo",
+                oauth_token = "2547031843-C3Dt114eXNSYkZx83Xj1kBkL3AK4F4E76dWMmrD",
+                oauth_token_secret = "YlX6vSQoofKZp78Zf1j4hxGBiPSQbtmdVOCUjRiA5BDN2",
+                twitter_keywords = "Office Microsoft,Surface Microsoft,Phone Window,Windows 8,SQL Server,SharePoint,Bing,Skype,XBox,System Center,Microsoft,msftluv"
+            };
         }
     }
 
