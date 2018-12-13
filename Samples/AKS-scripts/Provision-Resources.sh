@@ -29,7 +29,9 @@ if [ "" == "$($AZ storage account list --output table --subscription $AZURE_SUBS
 then
     echo 
     set -x
-    time $AZ storage account create --name $AZURE_STORAGE_NAME -g $AZURE_RESOURCE_GROUP -l $AZURE_LOCATION
+    time $AZ storage account create --name $AZURE_STORAGE_NAME -g $AZURE_RESOURCE_GROUP -l $AZURE_LOCATION --sku $AZ_STORAGE_SKU
+    # "Account property accessTier is required for the request":
+    # --access-tier $AZ_STORAGE_TIER
     set +x    
 else
     echo "Storage account already exists, not creating. (az storage account list)"
@@ -45,7 +47,8 @@ echo "This step is idempotent:"
 set -x
 # TODO: May want to delete it to make sure the logs start fresh:
 # $AZ storage share delete --name $FILESHARE_NAME --account-name $ACR_NAME --account-key="$AZURE_STORAGE_KEY"
-$AZ storage share create --name $FILESHARE_NAME --quota "80" --account-name $ACR_NAME --account-key="$AZURE_STORAGE_KEY"
+$AZ storage share create --name $FILESHARE_NAME --quota "80" --connection-string="$AZURE_STORAGE_CONNECTION_STRING"
+# --account-name $AZURE_STORAGE_NAME --account-key="$AZURE_STORAGE_KEY"
 set +x
 
 echo
@@ -54,7 +57,7 @@ if [ "" == "$($AZ acr list --output table --subscription $AZURE_SUBSCRIPTION -g 
 then
     set -x
     # TODO: remove need for admin access here:
-    time $AZ acr create --name "$ACR_NAME" --resource-group "$AZURE_RESOURCE_GROUP" --sku Standard --admin-enabled true -l $AZURE_LOCATION
+    time $AZ acr create --name "$ACR_NAME" --resource-group "$AZURE_RESOURCE_GROUP" --sku $ACR_SKU --admin-enabled true -l $AZURE_LOCATION
     set +x
 else
     echo "Container registry already exists, not creating. (az acr list)"
@@ -70,7 +73,7 @@ if ! $AZ aks get-credentials --resource-group=$AZURE_RESOURCE_GROUP --name=$AZUR
 then
     echo "Kubernetes cluster not found, creating."
     set -x
-    time $AZ aks create --resource-group $AZURE_RESOURCE_GROUP --name=$AZURE_KUBERNETES_CLUSTER --node-count 2 --generate-ssh-keys -l $AZURE_LOCATION
+    time $AZ aks create --resource-group $AZURE_RESOURCE_GROUP --name=$AZURE_KUBERNETES_CLUSTER --node-count 2 --node-vm-size $AKS_VM_SIZE --generate-ssh-keys -l $AZURE_LOCATION
     $AZ aks get-credentials --resource-group=$AZURE_RESOURCE_GROUP --name=$AZURE_KUBERNETES_CLUSTER
     set +x
 else
