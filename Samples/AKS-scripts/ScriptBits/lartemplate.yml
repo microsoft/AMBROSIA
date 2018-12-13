@@ -18,7 +18,7 @@ spec :
             - name: #ACRSECRETNAME#
             containers:
             - name : #DEPLOYMENTNAME#
-              image : #REGISTRYURL#/#CONTAINTERNAME#
+              image : #FULLCONTAINERNAME#
               ports:
               - containerPort: #COORDPORT#
                 name: craport

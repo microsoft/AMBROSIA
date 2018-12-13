@@ -46,27 +46,36 @@ echo "--------Provision the file share if it does not exist--------"
 echo "This step is idempotent:"
 set -x
 # TODO: May want to delete it to make sure the logs start fresh:
-# $AZ storage share delete --name $FILESHARE_NAME --account-name $ACR_NAME --account-key="$AZURE_STORAGE_KEY"
-$AZ storage share create --name $FILESHARE_NAME --quota "80" --connection-string="$AZURE_STORAGE_CONNECTION_STRING"
-# --account-name $AZURE_STORAGE_NAME --account-key="$AZURE_STORAGE_KEY"
+# $AZ storage share delete --name $FILESHARE_NAME 
+time $AZ storage share create --name $FILESHARE_NAME --quota "80" --account-name $AZURE_STORAGE_NAME --account-key="$AZURE_STORAGE_KEY"
+#  --connection-string="$AZURE_STORAGE_CONNECTION_STRING"
+# Test the file share by uploading a file.
+echo "Hello World" > hello.txt
+time $AZ storage file upload -s $FILESHARE_NAME --source hello.txt
 set +x
 
-echo
-echo "---------Provision the Container registry if needed---------"
-if [ "" == "$($AZ acr list --output table --subscription $AZURE_SUBSCRIPTION -g $AZURE_RESOURCE_GROUP)" ];
-then
-    set -x
-    # TODO: remove need for admin access here:
-    time $AZ acr create --name "$ACR_NAME" --resource-group "$AZURE_RESOURCE_GROUP" --sku $ACR_SKU --admin-enabled true -l $AZURE_LOCATION
-    set +x
+
+if [ ${PUBLIC_CONTAINER_NAME:+defined} ]; then
+    echo "---------PUBLIC_CONTAINER_NAME set, not using Azure container registry---------"
 else
-    echo "Container registry already exists, not creating. (az acr list)"
+    echo
+    echo "---------Provision the Container registry if needed---------"
+    if [ "" == "$($AZ acr list --output table --subscription $AZURE_SUBSCRIPTION -g $AZURE_RESOURCE_GROUP)" ];
+    then
+	set -x
+	# TODO: remove need for admin access here:
+	time $AZ acr create --name "$ACR_NAME" --resource-group "$AZURE_RESOURCE_GROUP" \
+	     --sku $ACR_SKU --admin-enabled true -l $AZURE_LOCATION
+	set +x
+    else
+	echo "Container registry already exists, not creating. (az acr list)"
+    fi
+    echo "Now log into the Azure Container Registry:"
+    set -x
+    $AZ acr login --name "$ACR_NAME"
+    set +x
 fi
-echo "Now log into the Azure Container Registry:"
-set -x
-$AZ acr login --name "$ACR_NAME"
-set +x
-
+    
 echo
 echo "--------Provision the Kubernetes Cluster if it's not already there--------"
 if ! $AZ aks get-credentials --resource-group=$AZURE_RESOURCE_GROUP --name=$AZURE_KUBERNETES_CLUSTER 2>/dev/null ;

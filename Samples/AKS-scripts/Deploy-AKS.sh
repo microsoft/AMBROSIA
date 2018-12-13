@@ -63,18 +63,23 @@ source `dirname $0`/Defs/Set-Docker-Vars.sh
 echo "Generating K8s Deployment YAML from Template...."
 
 cp -f ScriptBits/lartemplate.yml $SERVICE_YML_FILE
-sed -i "s/#CONTAINTERNAME#/${AMBROSIA_CONTAINER_NAME}/g"    $SERVICE_YML_FILE
 sed -i "s/#AMBROSIAINSTANCE#/${AMBROSIA_INSTANCE_NAME}/g"   $SERVICE_YML_FILE
 sed -i "s/#SERVICEEXEFILE#/${AMBROSIA_SERVICE_NAME}/g"      $SERVICE_YML_FILE
 sed -i "s/#DEPLOYMENTNAME#/${UNIQUE_ID}/g"                  $SERVICE_YML_FILE
-sed -i "s/#REGISTRYURL#/${DockerPrivateRegistry_URL}/g"     $SERVICE_YML_FILE
-sed -i "s/#ACRSECRETNAME#/${ACR_SECRET_NAME}/g"             $SERVICE_YML_FILE
 sed -i "s/#FILESHARESECRETNAME#/${FILESHARE_SECRET_NAME}/g" $SERVICE_YML_FILE
 sed -i "s/#FILESHARENAME#/${FILESHARE_NAME}/g"              $SERVICE_YML_FILE
 
 sed -i "s/#COORDPORT#/${AMBROSIA_IMMORTALCOORDINATOR_PORT}/g" $SERVICE_YML_FILE
 sed -i "s/#LOCALPORT1#/${LOCALPORT1}/g"                       $SERVICE_YML_FILE
 sed -i "s/#LOCALPORT2#/${LOCALPORT2}/g"                       $SERVICE_YML_FILE
+
+if [ ${PUBLIC_CONTAINER_NAME:+defined} ]; then
+    sed -i "s|- name: #ACRSECRETNAME#|## None Needed|"             $SERVICE_YML_FILE    
+    sed -i "s|#FULLCONTAINERNAME#|${PUBLIC_CONTAINER_NAME}|"                            $SERVICE_YML_FILE
+else    
+    sed -i "s|#ACRSECRETNAME#|${ACR_SECRET_NAME}|"             $SERVICE_YML_FILE    
+    sed -i "s|#FULLCONTAINERNAME#|${DockerPrivateRegistry_URL}/${CONTAINER_NAME_ROOT}|" $SERVICE_YML_FILE
+fi
 
 # Use an alternate delimiter because the string contains forward slash:
 sed -i "s|#AZURECONNSTRING#|${AZURE_STORAGE_CONNECTION_STRING}|" $SERVICE_YML_FILE
