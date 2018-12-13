@@ -15,7 +15,7 @@ the cloud, and thus it assumes some prerequisites:
   * Kubernetes CLI (kubectl)
   * Docker command line tools
 
-The main entrypoint is "run-end-to-end-test.sh", which is designed to
+The main entrypoint is "run-end-to-end-perftest-example.sh", which is designed to
 be *modified* to suite your application.  It is initially configured
 to build and deploy the InternalImmortals/PerformanceTestInterruptable
 application, which consists of two pods that communicate with
@@ -40,7 +40,7 @@ from other Azure resources you may have running.)
 Step 2: provision and run
 -------------------------
 	
-    ./run-end-to-end-test.sh
+    ./run-end-to-end-perftest-example.sh
 	
 That's it!  The first time this script runs it will take a long time
 to provision the storage account, container registry, file share, and
@@ -48,7 +48,7 @@ Kubernetes cluster.  Running it again is safe, and it will run faster
 once these things have already been created.
 
 At the end of all that `kubectl get pods` should show two running
-pods.  Note that while the steps taken by `./run-end-to-end-test.sh`
+pods.  Note that while the steps taken by `./run-end-to-end-perftest-example.sh`
 should be idempotent, it does *not* provide safe "incremental builds"
 when things change.  Therefore you should take it upon yourself to
 clean up when modifying the Azure/AKS-related (e.g. the contents of
@@ -59,7 +59,8 @@ AmbrosiaAKSConf.sh):
 In contrast, changes to the *application* logic -- confined to the
 application Dockerfile and resulting Docker container -- do not
 require cleaning.  They can be rerun on the previously provisioned
-Azure resources, simply by reexecuting the run-end-to-end-test script.
+Azure resources, simply by reexecuting the
+run-end-to-end-perftest-example script.
 
 Note if you are RERUNNING this PerformanceTestInterruptable or another
 application then you typically want to *delete* the logs that are

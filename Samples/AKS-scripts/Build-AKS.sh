@@ -49,21 +49,16 @@ set +x
 
 # But first, we depend on the ambrosia-dev base image:
 # Go and build the base images only if they are not found:
-if [ "$($DOCKER images -q ambrosia-dev)" == "" ]; then
-    echo "Could not find 'ambrosia-dev' image, attempting to build it."
-    # Top of Ambrosia source working dir:
-    set -x
-    pushd `dirname $0`/../
-    ./build_docker_images.sh
-    popd
-    set +x
+if [ "$($DOCKER images -q ambrosia/ambrosia-dev)" == "" ]; then
+    echo "Could not find 'ambrosia/ambrosia-dev' image, attempting to fetch it."
+    docker pull ambrosia/ambrosia-dev
 fi
 
-echo "Building the service Docker container..."
+echo "Building the user's application Docker container..."
 pushd $SERVICE_SRC_PATH
 set -x
-$DOCKER build -t $DockerPrivateRegistry_URL/$AMBROSIA_CONTAINER_NAME .
-$DOCKER tag $DockerPrivateRegistry_URL/$AMBROSIA_CONTAINER_NAME $AMBROSIA_CONTAINER_NAME
+$DOCKER build -t $DockerPrivateRegistry_URL/$CONTAINER_NAME_ROOT .
+$DOCKER tag $DockerPrivateRegistry_URL/$CONTAINER_NAME_ROOT $AMBROSIA_CONTAINER_NAME
 set +x
 popd
 
@@ -72,9 +67,9 @@ popd
 ############################################
 echo "Pushing the service Docker container..."
 set -x
-time $DOCKER push $DockerPrivateRegistry_URL/$AMBROSIA_CONTAINER_NAME 
+time $DOCKER push $DockerPrivateRegistry_URL/$CONTAINER_NAME_ROOT 
 $AZ acr repository list --name $ACR_NAME
-$AZ acr repository show-tags --name $ACR_NAME --repository $AMBROSIA_CONTAINER_NAME
+$AZ acr repository show-tags --name $ACR_NAME --repository $CONTAINER_NAME_ROOT
 set +x
 
 echo "-----------Build-and-Push Finished-----------"

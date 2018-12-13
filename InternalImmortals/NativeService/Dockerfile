@@ -1,8 +1,8 @@
 # This Dockerfile demonstrates how we don't need to have the
-# "ambrosia" Docker image as our *parent* in order to use AMBROSIA.
+# "ambrosia/ambrosia" Docker image as our *parent* in order to use AMBROSIA.
 # We can also just use it as a convenient way to grab binary releases
 # of AMBROSIA.
-# FROM ambrosia
+# FROM ambrosia/ambrosia
 #
 # # We can use whatever we want as our parent image here:
 # FROM ubuntu
@@ -16,14 +16,14 @@
 # COPY --from=ambrosia /ambrosia/bin /ambrosia/bin
 # ----------------------------------------
 
-# FROM ambrosia
+# FROM ambrosia/ambrosia
 # [2018.12.08] right now,  running into:
 #   + Ambrosia RegisterInstance -i native1 --rp 50001 --sp 50002 -l ./ambrosia_logs/
 #   Error trying to upload service. Exception: Method not found: 'Remote.Linq.Expressions.Expression Remote.Linq.ExpressionTranslator.ToRemoteLinqExpression(System.Linq.Expressions.Expression, Aqua.TypeSystem.ITypeInfoProvider, System.Func`2<System.Linq.Expressions.Expression,Boolean>)'.
 
-# Oh, that's happening even on ambrosia-dev:
-FROM ambrosia-dev
-# We get build dependencies from ambrosia-dev, since it built the native library.
+# Oh, that's happening even on ambrosia/ambrosia-dev:
+FROM ambrosia/ambrosia-dev
+# We get build dependencies from ambrosia/ambrosia-dev, since it built the native library.
 # RUN apt-get update && \
 #     apt-get install -y make gcc
 # nmap

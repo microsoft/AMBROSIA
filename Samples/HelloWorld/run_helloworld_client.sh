@@ -37,6 +37,6 @@ clog=`mktemp client-coord.XXXX.log`
 set -x
 AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT1 \
 COORDTAG=CoordCli AMBROSIA_IMMORTALCOORDINATOR_LOG=$clog \
-  runAmbrosiaService.sh dotnet Client1/Publish/Client1.dll $CLIENTNAME $SERVERNAME
+  runAmbrosiaService.sh dotnet Client1/publish/Client1.dll $CLIENTNAME $SERVERNAME
 set +x
 echo "HelloWorld Client finished."
