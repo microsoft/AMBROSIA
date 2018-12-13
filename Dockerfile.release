@@ -1,4 +1,4 @@
-FROM ambrosia-dev as dev
+FROM ambrosia/ambrosia-dev as dev
 
 # The release does not require dotnet SDK to run Ambrosia binaries.
 # So we start with a generic Ubuntu image:

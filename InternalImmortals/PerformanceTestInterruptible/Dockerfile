@@ -1,5 +1,5 @@
 # TODO: should migrate to depend only on 'ambrosia' not 'ambrosia-dev':
-FROM ambrosia-dev
+FROM ambrosia/ambrosia-dev
 
 # For using Tmux inside the container:
 # ------------------------------------------
