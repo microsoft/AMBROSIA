@@ -73,7 +73,14 @@ within the AKS-scripts directory.  Within that config file, set:
 
      AMBROSIA_SERVICE_NAME=hello
 
-And now:
+And change any other parameters you like.  After that, run this script
+from the AKS-scripts directory:
 
-    ./run_helloworld_aks.sh
+    ./run-end-to-end-helloworld-example.sh
+
+After it completes successfully, you should see two pods deploying:
+
+    kubectl get pods
+
+    
 

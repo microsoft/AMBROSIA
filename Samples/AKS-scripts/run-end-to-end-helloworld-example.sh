@@ -35,7 +35,7 @@ if [ ${PUBLIC_CONTAINER_NAME:+defined} ]; then
     echo "This particular script expects to set that itself."
     exit 1
 fi
-export PUBLIC_CONTAINER_NAME=ambrosia/ambrosia-perftest
+export PUBLIC_CONTAINER_NAME=ambrosia/ambrosia-hello
 
 # This should perform IDEMPOTENT OPERATIONS
 #------------------------------------------
@@ -70,14 +70,17 @@ $KUBE get secrets
 echo
 echo "Deleting all pods in this test Kubernetes instance before redeploying"
 $KUBE get pods
-time $KUBE delete pods,deployments -l app=generated-perftestclient
-time $KUBE delete pods,deployments -l app=generated-perftestserver
+time $KUBE delete pods,deployments -l app=generated-helloclient
+time $KUBE delete pods,deployments -l app=generated-helloserver
 $KUBE get pods
 
-./Deploy-AKS.sh perftestserver \
-   'runAmbrosiaService.sh Server --sp '$LOCALPORT1' --rp '$LOCALPORT2' -j perftestclient -s perftestserver -n 1 -c'
-./Deploy-AKS.sh perftestclient \
-   'runAmbrosiaService.sh Job --sp '$LOCALPORT1' --rp '$LOCALPORT2' -j perftestclient -s perftestserver --mms 65536 -n 13 -c'
+export LOCALPORT1=2000
+export LOCALPORT2=2001
+./Deploy-AKS.sh helloserver 'runAmbrosiaService.sh --verbose dotnet Server/publish/Server.dll helloserver'
+
+export LOCALPORT1=1000
+export LOCALPORT2=1001
+./Deploy-AKS.sh helloclient 'runAmbrosiaService.sh --verbose dotnet Client1/publish/Client1.dll helloclient helloserver'
 
 set +x
 echo "-----------------------------------------------------------------------"
