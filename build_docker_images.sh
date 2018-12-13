@@ -11,10 +11,10 @@ set -euo pipefail
 # 
 # Run this inside a fresh working copy.
 
-TAG1A=ambrosia/ambrosia-dev
-TAG1B=ambrosia/ambrosia
-TAG2=ambrosia/ambrosia-perftest
-TAG3=ambrosia/ambrosia-nativeapp
+TAG1A=ambrosia-dev
+TAG1B=ambrosia
+TAG2=ambrosia-perftest
+TAG3=ambrosia-nativeapp
 
 if ! [[ ${DOCKER:+defined} ]]; then
    DOCKER=docker
