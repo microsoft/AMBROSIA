@@ -1,0 +1,15 @@
+﻿ <Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net46</TargetFramework>
+    </PropertyGroup>
+ <ItemGroup>
+     <PackageReference Include="AmbrosiaLibCS" Version="2018.12.12.1" />
+     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
+     <PackageReference Include="Mono.Options.Core" Version="1.0.0" />
+     <PackageReference Include="Remote.Linq" Version="5.8.1" />
+     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+     <ProjectReference Include="..\..\..\TwitterObservable\TwitterObservable.csproj" />
+     <PackageReference Update="Microsoft.NETCore.App=" Version="2.0.0=" />
+    </ItemGroup>
+</Project>
