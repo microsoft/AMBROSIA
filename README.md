@@ -1,11 +1,13 @@
-Ambrosia: Highly Robust Distributed Programming Made Easy and Efficient
+Ambrosia: Robust Distributed Programming Made Easy and Efficient
 =======================================================================
 
- * Windows Build (net46/netcore) [![Windows Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Win-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=23)
+Windows Build (net46/netcore): [![Windows Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Win-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=23)
 
- * Linux Build (netcore) [![Linux Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Linux-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=24)
+Linux Build (netcore): [![Linux Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Linux-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=24)
 
- * Linux Docker Build: [![Linux Docker Build status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Linux-Docker?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=18) 
+Linux Docker Build: [![Linux Docker Build status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Linux-Docker?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=18) 
+ 
+ [![Gitter](https://img.shields.io/badge/chat-on%20gitter-yellow.svg)](https://gitter.im/AMBROSIA-resilient-systems/)
 
 
 Ambrosia is a programming language independent approach for authoring
@@ -30,17 +32,20 @@ systems, or use overly expensive mechanisms.
 
 To learn more about Ambrosia's implementation and performance you can read our [whitepaper](https://www.microsoft.com/en-us/research/publication/a-m-b-r-o-s-i-a-providing-performant-virtual-resiliency-for-distributed-applications/).
 
+We invite developers wishing to build on or contribute to AMBROSIA to join our [gitter community](https://gitter.im/AMBROSIA-resilient-systems/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link).
+
 Table of Contents
 -----------
 * [AMBROSIA Concepts](#ambrosia-concepts)
 * [How it works](#how-it-works)
 * [Features](#features)
-* [Getting started]()
-    * [Windows]()
-    * [Kubernetes]()
+* [Quick start for application developers](#quick-start-for-application-developers)
+* [Quick start for AMBROSIA contributors](#quick-start-for-ambrosia-contributors)
 * [Reference](#reference)
-    * [Language Support](#language-support)
+    * [Dependencies](#dependecies)
+    * [Language support](#language-support)
     * [Usage](#usage)
+    * [Secure communication between services](#secure-communication-between-services)
     
 ## AMBROSIA Concepts
 
@@ -65,22 +70,20 @@ In addition, the language specific AMBROSIA binding provides a state serializer.
 ## Features
 Here is a list of features that AMBROSIA provides to application developers and deployers:
 
-* Register Instance, Add Replica
-* Debug Instance
+* Define a new service to run on AMBROSIA
+* Deploy services on AMBROSIA
+* Debug service instance
 * Active Active
 * Live Upgrades, Test Upgrades
 * RPC
-* Asynchronous RPC (beta)
+* Asynchronous RPC (alpha)
 
-Quick Start: Fetch a binary distribution
-----------------------------------------
+## Quick start for application developers
+Start with one of our [samples](https://github.com/Microsoft/AMBROSIA/tree/master/Samples) to get a service up and running on AMBROSIA. 
 
-FINISHME - 
+## Quick start for AMBROSIA contributors
 
-
-Quick Start: Build from Source
-------------------------------
-
+### Build from source
 Build the Ambrosia Immortal coordinator and C# client code generator
 with this Bash script:
 
@@ -90,12 +93,12 @@ Given a .NET Core SDK, this will work on Windows, Mac OS, or Linux.
 After that, you have an AMBROSIA binary distribution built inside the
 `./bin` directory within your working copy.
 
-Running a Sample
-----------------
-
-FINISHME - AmbrosiaDocs.md content will move here!!
+Also check out our [contributing guide](https://github.com/Microsoft/AMBROSIA/tree/master/CONTRIBUTING).
 
 ## Reference
+
+### Dependencies
+AMBROSIA currently requires an Azure subscription to write it's logs to replicated storage. In the future, we anticipate abstracting this component out to be able to use other storage options for logs. 
 
 ### Language Support
 AMBROSIA currently supports C# on both .NET Core and .NET Framework. We plan to exand this support with AMBROSIA bindings for other languages in the future. 
@@ -156,3 +159,6 @@ Options:
       --tu, --testingUpgrade Is testing upgrade.
   -h, --help                 show this message and exit
 ```
+
+### Secure communication between services
+Read about how to secure communications between distributed components deployed on AMBROSIA [here](https://github.com/Microsoft/AMBROSIA/blob/master/docs/SecuringComms.md).

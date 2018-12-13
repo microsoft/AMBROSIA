@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# This example uses PerformanceTestInterruptable.
+# See also the HelloWorld directory for a simpler example.
+
 if [ ! -e Defs/AmbrosiaAKSConf.sh ]; then
     echo "You're not ready yet!  (Defs/AmbrosiaAKSConf.sh does not exist)"
     echo    
@@ -12,28 +15,56 @@ if [ ! -e Defs/AmbrosiaAKSConf.sh ]; then
     exit 1
 fi
 
+while [ $# -ge 1 ]; do
+    case $1 in
+        --deploy-only) DEPLOY_ONLY=1; shift ;;
+        *)
+            echo "Unrecognized command line argument: $1"
+            exit 1 ;;
+    esac
+done
+
 echo "$0: Provision and run an AMBROSIA app on Azure Kubernetes Service"
 echo "Running with these user settings:"
 ( export ECHO_CORE_DEFS=1; source `dirname $0`/Defs/Common-Defs.sh)
 echo
 
+source Defs/Common-Defs.sh # For PUBLIC_CONTAINER_NAME
+if [ ${PUBLIC_CONTAINER_NAME:+defined} ]; then
+    echo "Error: Don't set PUBLIC_CONTAINER_NAME in your AmbrosiaAKSConf.sh."
+    echo "This particular script expects to set that itself."
+    exit 1
+fi
+export PUBLIC_CONTAINER_NAME=ambrosia/ambrosia-perftest
+
 # This should perform IDEMPOTENT OPERATIONS
 #------------------------------------------
 
-# STEP 0: Create Azure resources.
-./Provision-Resources.sh
+if ! [ ${DEPLOY_ONLY:+defined} ]; then
 
-# STEPs 1-3: Secrets and Authentication
-./Grant-AKS-access-ACR.sh 
-./Create-AKS-ServicePrincipal-Secret.sh # TODO: bypass if $servicePrincipalId/$servicePrincipalKey are set
-./Create-AKS-SMBFileShare-Secret.sh 
+    # STEP 0: Create Azure resources.
+    ./Provision-Resources.sh
 
-# STEP 4: Building and pushing Docker.
-./Build-AKS.sh  "../InternalImmortals/PerformanceTestInterruptible/"
+    # STEPs 1-3: Secrets and Authentication
+    if [ ${PUBLIC_CONTAINER_NAME:+defined} ]; then
+        echo "---------PUBLIC_CONTAINER_NAME set, not creating AKS/ACR auth setup---------"
+    else
+        ./Grant-AKS-access-ACR.sh
+        ./Create-AKS-ServicePrincipal-Secret.sh # TODO: bypass if $servicePrincipalId/$servicePrincipalKey are set
+    fi
+    ./Create-AKS-SMBFileShare-Secret.sh 
 
+    # STEP 4: Building and pushing Docker.
+    if [ ${PUBLIC_CONTAINER_NAME:+defined} ]; then
+        echo "---------PUBLIC_CONTAINER_NAME set, NOT building Docker container locally---------"
+    else
+        ./Build-AKS.sh  "../../InternalImmortals/PerformanceTestInterruptible/"
+    fi
+
+fi
+    
 # STEP 5: Deploy two pods.
 echo "-----------Pre-deploy cleanup-----------"
-source Defs/Common-Defs.sh
 echo "These are the secrets Kubernetes will use to access files/containers:"
 $KUBE get secrets
 echo
@@ -43,19 +74,10 @@ time $KUBE delete pods,deployments -l app=generated-perftestclient
 time $KUBE delete pods,deployments -l app=generated-perftestserver
 $KUBE get pods
 
-# Dummy version:
-# ./Deploy-AKS.sh perftestserver 'while true; do sleep 1; echo server `date +%s`; done'
-# ./Deploy-AKS.sh perftestclient 'while true; do sleep 1; echo client `date +%s`; done'
-
-# [2018.12.03] If we run a DUMMY SERVICE here, the Coordinators do get to a "Ready" state.
 ./Deploy-AKS.sh perftestserver \
    'runAmbrosiaService.sh Server --sp '$LOCALPORT1' --rp '$LOCALPORT2' -j perftestclient -s perftestserver -n 1 -c'
-#   'runAmbrosiaService.sh sleep 99999999'
-#   'runAmbrosiaService.sh yes'
-
 ./Deploy-AKS.sh perftestclient \
    'runAmbrosiaService.sh Job --sp '$LOCALPORT1' --rp '$LOCALPORT2' -j perftestclient -s perftestserver --mms 65536 -n 13 -c'
-#   'runAmbrosiaService.sh sleep 99999999'
 
 set +x
 echo "-----------------------------------------------------------------------"

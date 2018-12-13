@@ -11,7 +11,7 @@ set -euo pipefail
 # It should exit cleanly after the test is complete.
 #
 # This is often invoked within Docker:
-#   docker run -it --rm --env AZURE_STORAGE_CONN_STRING="$AZURE_STORAGE_CONN_STRING" ambrosia-perftest ./run_small_PTI_and_shutdown.sh
+#   docker run -it --rm --env AZURE_STORAGE_CONN_STRING="$AZURE_STORAGE_CONN_STRING" ambrosia/ambrosia-perftest ./run_small_PTI_and_shutdown.sh
 #
 # ------------------------------------------------------------------------------
 

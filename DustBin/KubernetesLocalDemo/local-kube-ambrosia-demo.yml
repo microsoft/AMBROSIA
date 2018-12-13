@@ -19,7 +19,7 @@ spec :
 #            hostNetwork: true
             containers:            
             - name : perftest-server 
-              image : ambrosia-perftest
+              image : ambrosia/ambrosia-perftest
               imagePullPolicy : "Never"
               ports:
               - containerPort: 1500
@@ -58,7 +58,7 @@ spec :
             dnsPolicy: Default
             containers:            
             - name : perftest-client
-              image : ambrosia-perftest
+              image : ambrosia/ambrosia-perftest
               imagePullPolicy : "Never"
               ports:
               - containerPort: 1500

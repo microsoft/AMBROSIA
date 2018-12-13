@@ -29,8 +29,8 @@ function DOCKRUN() {
     docker run --rm --env AZURE_STORAGE_CONN_STRING="$AZURE_STORAGE_CONN_STRING" $*
 }
 
-DOCKRUN ambrosia-perftest Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "/ambrosia_logs/"
-DOCKRUN ambrosia-perftest Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "/ambrosia_logs/"
+DOCKRUN ambrosia/ambrosia-perftest Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "/ambrosia_logs/"
+DOCKRUN ambrosia/ambrosia-perftest Ambrosia RegisterInstance -i $SERVERNAME --rp $PORT3 --sp $PORT4 -l "/ambrosia_logs/"
 
 rm server.id || true
 
@@ -39,12 +39,12 @@ rm server.id || true
 # "C:/Users/../vendor/git-for-windows/", incorrectly reinterpreting the path on
 # the host *host*.  For now, simply assume they're in PATH:
 DOCKRUN --env AMBROSIA_INSTANCE_NAME=$SERVERNAME --cidfile ./server.id \
-        ambrosia-perftest runAmbrosiaService.sh \
+        ambrosia/ambrosia-perftest runAmbrosiaService.sh \
         Server --rp $PORT4 --sp $PORT3 -j $CLIENTNAME -s $SERVERNAME -n 1 -c &
 
 sleep 10 # Clarifies output.
 
-DOCKRUN --env AMBROSIA_INSTANCE_NAME=$CLIENTNAME ambrosia-perftest runAmbrosiaService.sh \
+DOCKRUN --env AMBROSIA_INSTANCE_NAME=$CLIENTNAME ambrosia/ambrosia-perftest runAmbrosiaService.sh \
 	Job --rp $PORT2 --sp $PORT1 -j $CLIENTNAME -s $SERVERNAME --mms 65536 -n 2 -c
 
 echo "Job docker image exited cleanly, killing the server one."
@@ -56,6 +56,6 @@ docker ps
 
 echo "TwoContainers test mode completed."
 echo "Attempt a cleanup of our table metadata:"
-DOCKRUN ambrosia-perftest UnsafeDeregisterInstance $CLIENTNAME || true 
-DOCKRUN ambrosia-perftest UnsafeDeregisterInstance $SERVERNAME || true
+DOCKRUN ambrosia/ambrosia-perftest UnsafeDeregisterInstance $CLIENTNAME || true 
+DOCKRUN ambrosia/ambrosia-perftest UnsafeDeregisterInstance $SERVERNAME || true
 echo "All done."

@@ -47,7 +47,10 @@ export AMBROSIA_CONTAINER_NAME
 # These could be configurable, but we're setting boring defaults here instead:
 PREFIX="ambrosia-"
 POSTFIX="-container"
-AMBROSIA_CONTAINER_NAME="${PREFIX}${AMBROSIA_SERVICE_NAME}${POSTFIX}"
+if ! [ ${AMBROSIA_CONTAINER_NAME:+defined} ]; 
+then AMBROSIA_CONTAINER_NAME="${PREFIX}${AMBROSIA_SERVICE_NAME}${POSTFIX}"
+fi
+export AMBROSIA_CONTAINER_NAME
 
 export AMBROSIA_LOGDIR="/ambrosia_logs"
 

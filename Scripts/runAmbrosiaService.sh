@@ -28,7 +28,7 @@ then COORDTAG="ImmortalCoord"
 fi
 
 function print_usage() {
-    echo "USAGE: $0 <service-binary> <service-args>*"
+    echo "USAGE: $0 [--silent-coord] [--verbose] <service-binary> <service-args>*"
     echo    
     echo "This script takes a command (and arguments) that runs the application binary."
     echo "The script launches the ImmortalCoordinator in the background before launching"
@@ -48,6 +48,13 @@ function print_usage() {
     exit 1
 }
 
+while [ $# -ge 1 ]; do
+    case $1 in
+        --silent-coord) shift; AMBROSIA_SILENT_COORDINATOR=1 ;;
+        --verbose) shift; RUNAMBROSIA_VERBOSE=1 ;;
+        *) break ;;
+    esac
+done
 if [ $# -eq 0 ]; then print_usage; fi
 
 # Don't let this fail, it's just informative:
@@ -60,22 +67,27 @@ if ! [[ ${AMBROSIA_INSTANCE_NAME:+defined} ]]; then
     exit 1
 fi
 
+if   [[ ${RUNAMBROSIA_VERBOSE:+defined} ]];
+then function tag() { echo " $TAG $*"; }     
+else function tag() { return; }
+fi
+
 if [[ ${AMBROSIA_IMMORTALCOORDINATOR_PORT:+defined} ]];
 then
-    echo " $TAG Using environment var AMBROSIA_IMMORTALCOORDINATOR_PORT=$AMBROSIA_IMMORTALCOORDINATOR_PORT"
+    tag "Using environment var AMBROSIA_IMMORTALCOORDINATOR_PORT=$AMBROSIA_IMMORTALCOORDINATOR_PORT"
 else
     AMBROSIA_IMMORTALCOORDINATOR_PORT=1500
-    echo " $TAG Using default AMBROSIA_IMMORTALCOORDINATOR_PORT of $AMBROSIA_IMMORTALCOORDINATOR_PORT"
+    tag "Using default AMBROSIA_IMMORTALCOORDINATOR_PORT of $AMBROSIA_IMMORTALCOORDINATOR_PORT"
 fi
 
 if [[ "${AMBROSIA_IMMORTALCOORDINATOR_LOG:+defined}" ]]; then
     COORDLOG="${AMBROSIA_IMMORTALCOORDINATOR_LOG}"
-    echo " $TAG Responding to env var AMBROSIA_IMMORTALCOORDINATOR_LOG=$COORDLOG"
+    tag "Responding to env var AMBROSIA_IMMORTALCOORDINATOR_LOG=$COORDLOG"
 else
     # The canonical location, especially when running in a Docker container:
     COORDLOG=/var/log/ImmortalCoordinator.log
 fi
-
+    
 # Helper functions
 # --------------------------------------------------
 
@@ -132,23 +144,23 @@ function tail_tagged() {
 # Side effect: uses a log file on disk in the same directory as this script.
 # Side effect: runs a tail proycess in the background
 function start_immortal_coordinator() {
-    echo " $TAG Launching coordinator with: ImmortalCoordinator" $*
+    tag "Launching coordinator with: ImmortalCoordinator" $*
     if ! which ImmortalCoordinator 2> /dev/null; then
         echo "  ERROR $TAG - ImmortalCoordinator not found on path!"
         exit 1
     fi
     if [ -e "$COORDLOG" ]; then
-        echo " $TAG   Removing existing log file $COORDLOG"
+        tag "  Removing existing log file $COORDLOG"
         rm "$COORDLOG"
     fi
-    echo " $TAG   Creating zero-length log file at $COORDLOG"
+    tag "  Creating zero-length log file at $COORDLOG"
     if ! touch "$COORDLOG";
     then
         COORDLOG=`mktemp ImmortalCoordinator.XXXXXX.log`
         echo " ! WARNING $TAG: could not write coordinator log, using $COORDLOG instead."
         touch "$COORDLOG"
     fi
-    echo " $TAG   Redirecting output to: $COORDLOG"
+    tag "  Redirecting output to: $COORDLOG"
 
     if [[ ${AMBROSIA_SILENT_COORDINATOR:+defined} ]]; then
 	# OPTION (1): No output from Coordinator to stdout/stderr:
@@ -189,7 +201,7 @@ function start_immortal_coordinator() {
          echo "--------------------------------------------------------------"   
          exit 1;
     fi
-    echo " $TAG Coordinator looks ready."
+    tag "Coordinator looks ready."
 }
 
 # Script main body:
@@ -203,7 +215,7 @@ keep_monitoring=`mktemp healthMonitorContinue.XXXXXX`
 touch $keep_monitoring
 
 function monitor_health() {
-    echo " $TAG Health monitor starting, coord_pid=$coord_pid, app_pid=$app_pid"
+    tag "Health monitor starting, coord_pid=$coord_pid, app_pid=$app_pid"
     while [ -f $keep_monitoring ]; do
         sleep 2
         if ! kill -0 $coord_pid 2>/dev/null ; then
@@ -220,16 +232,16 @@ function monitor_health() {
             fi
         fi
     done
-    echo " $TAG Cleanly exiting health monitor background function..."
+    tag "Cleanly exiting health monitor background function..."
 }
 
 # Step 1: 
 start_immortal_coordinator -i $AMBROSIA_INSTANCE_NAME -p $AMBROSIA_IMMORTALCOORDINATOR_PORT
 
 # Step 2:
-echo " $TAG Launching app process alongside coordinator:"
+tag "Launching app process alongside coordinator:"
 # Test for interactive shell:
-if [ -e /dev/stdin ]; then
+if tty -s; then
     set -x
     $* < /dev/stdin &
     set +x
@@ -244,14 +256,14 @@ fi
 monitor_health &
 
 wait $app_pid
-echo " $TAG Ambrosia app cleanly exited ($APPNAME)"
+tag "Ambrosia app cleanly exited ($APPNAME)"
 if [ "$tail_pid" != "" ]; then
     kill $tail_pid
-    echo " $TAG  |-> Stopped echoing coordinator output (transient errors in shutdown not important)."
+    tag " |-> Stopped echoing coordinator output (transient errors in shutdown not important)."
 fi
-echo " $TAG  |-> Killing coordinator and health monitor function."
+tag " |-> Killing coordinator and health monitor function."
 rm -f $keep_monitoring
 
 kill $coord_pid || echo ok
-echo " $TAG  |-> Cleanup complete, exiting."
+tag " |-> Cleanup complete, exiting."
 # wait 

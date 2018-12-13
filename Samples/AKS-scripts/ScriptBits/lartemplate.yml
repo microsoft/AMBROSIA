@@ -18,7 +18,9 @@ spec :
             - name: #ACRSECRETNAME#
             containers:
             - name : #DEPLOYMENTNAME#
-              image : #REGISTRYURL#/#CONTAINTERNAME#
+              image : #FULLCONTAINERNAME#
+              tty: true
+              stdin: true
               ports:
               - containerPort: #COORDPORT#
                 name: craport

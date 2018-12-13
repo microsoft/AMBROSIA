@@ -7,6 +7,8 @@ For developers interested in adding to AMBROSIA, or developing new
 [language-level or RPC-framework bindings to AMBROSIA](#new-client-bindings),
 this document provides a few pointers.
 
+We invite developers wishing to build on or contribute to AMBROSIA to join our [gitter community](https://gitter.im/AMBROSIA-resilient-systems/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link).
+
 Overview of repository
 ----------------------
 
@@ -24,12 +26,12 @@ find.
  * `./DevTools`: additional console tools for interacting with the
    Azure metadata that supports an Ambrosia service.
 
- * `./AKS-scripts`: scripts to get a user started with AMBROSIA on
-   Kubernetes on Azure.
-
  * `./Scripts`: scripts used when running automated tests (CI) as well
    as the runAmbrosiaService.sh script which provides an example means
    of executing an app+coordinator.
+
+ * `./Samples/AKS-scripts`: scripts to get a user started with
+   AMBROSIA on Kubernetes on Azure.
 
 (2) Client libraries:
 
