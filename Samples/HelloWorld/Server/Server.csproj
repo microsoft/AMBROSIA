@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
     <Platforms>x64</Platforms>
   </PropertyGroup>
 
@@ -10,8 +10,11 @@
     <PackageReference Include="AmbrosiaLibCS" Version="2018.12.12.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\GeneratedSourceFiles\ServerInterfaces\latest\ServerInterfaces.csproj" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <ProjectReference Include="..\GeneratedSourceFiles\ServerInterfacesNetCore\latest\ServerInterfacesNetCore.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+    <ProjectReference Include="..\GeneratedSourceFiles\ServerInterfacesNet46\latest\ServerInterfacesNet46.csproj" />
   </ItemGroup>
 
 </Project>
