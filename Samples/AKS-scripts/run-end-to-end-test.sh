@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# This example uses PerformanceTestInterruptable.
+# See also the HelloWorld directory for a simpler example.
+
 if [ ! -e Defs/AmbrosiaAKSConf.sh ]; then
     echo "You're not ready yet!  (Defs/AmbrosiaAKSConf.sh does not exist)"
     echo    
@@ -29,7 +32,7 @@ echo
 ./Create-AKS-SMBFileShare-Secret.sh 
 
 # STEP 4: Building and pushing Docker.
-./Build-AKS.sh  "../InternalImmortals/PerformanceTestInterruptible/"
+./Build-AKS.sh  "../../InternalImmortals/PerformanceTestInterruptible/"
 
 # STEP 5: Deploy two pods.
 echo "-----------Pre-deploy cleanup-----------"

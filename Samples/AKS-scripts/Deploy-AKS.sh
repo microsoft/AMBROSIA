@@ -21,7 +21,7 @@ shift
 
 echo "-----------Begin Deploy-AKS ($AMBROSIA_INSTANCE_NAME)-----------"
 source `dirname $0`/Defs/Common-Defs.sh
-if [[ ! -v AZURE_STORAGE_CONNECTION_STRING ]]; then    
+if ! [ ${AZURE_STORAGE_CONNECTION_STRING:+defined} ]; then
     echo "$0: AZURE_STORAGE_CONNECTION_STRING not set, retrieving:"
     source `dirname $0`/Defs/Set-Storage-Vars.sh    
 fi
