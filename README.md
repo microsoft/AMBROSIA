@@ -40,6 +40,7 @@ Table of Contents
 * [Quick start for application developers](#quick-start-for-application-developers)
 * [Quick start for AMBROSIA contributors](#quick-start-for-ambrosia-contributors)
 * [Reference](#reference)
+    * [Dependencies](#dependecies)
     * [Language support](#language-support)
     * [Usage](#usage)
     * [Secure communication between services](#secure-communication-between-services)
@@ -93,6 +94,9 @@ After that, you have an AMBROSIA binary distribution built inside the
 Also check out our [contributing guide](https://github.com/Microsoft/AMBROSIA/tree/master/CONTRIBUTING).
 
 ## Reference
+
+### Dependencies
+AMBROSIA currently requires an Azure subscription to write it's logs to replicated storage. In the future, we anticipate abstracting to component out to be able to use other storage options for logs. 
 
 ### Language Support
 AMBROSIA currently supports C# on both .NET Core and .NET Framework. We plan to exand this support with AMBROSIA bindings for other languages in the future. 
