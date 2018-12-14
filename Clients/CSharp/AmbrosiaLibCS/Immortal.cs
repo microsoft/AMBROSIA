@@ -752,13 +752,13 @@ namespace Ambrosia
 
         public async Task<ResultAdditionalInfo> TryTakeCheckpointContinuationAsync(ResultAdditionalInfo currentResultAdditionalInfo)
         {
-            var result = (byte[])currentResultAdditionalInfo.Result;
+            var result = currentResultAdditionalInfo.Result;
             if (currentResultAdditionalInfo.AdditionalInfoType == ResultAdditionalInfoTypes.TakeCheckpoint)
             {
                 var sequenceNumber = await this.TakeTaskCheckpointAsync();
                 this.StartDispatchLoop();
                 var resultAdditionalInfo = await this.GetTaskToWaitForWithAdditionalInfoAsync(sequenceNumber); // Re-await original task
-                result = (byte[])resultAdditionalInfo.Result;
+                result = resultAdditionalInfo.Result;
             }
 
             return new ResultAdditionalInfo(result, currentResultAdditionalInfo.ResultType.Type);
