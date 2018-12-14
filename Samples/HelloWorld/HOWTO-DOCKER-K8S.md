@@ -64,7 +64,7 @@ Azure Kubernetes Service (AKS).
 For this step, you'll need a full source checkout of the AMBROSIA
 repository (e.g. use the git clone command above).  Within that
 working copy, should read through the documentation [in the
-AKS-scripts directory](../../AKS-scripts) before continuing here.
+AKS-scripts directory](../AKS-scripts) before continuing here.
 
 Back? Ok, let's proceed.
 
