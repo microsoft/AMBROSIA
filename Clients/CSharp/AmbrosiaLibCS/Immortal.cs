@@ -92,19 +92,16 @@ namespace Ambrosia
 
         protected abstract Task<bool> OnFirstStart();
 
-        protected Task<Task> OnFirstStartWrapper()
+        protected async Task OnFirstStartWrapper()
         {
-            return new Task<Task>(async () =>
+            try
             {
-                try
-                {
-                    await this.OnFirstStart().RunWithCheckpointing(ref this.SerializedTask);
-                }
-                catch (Exception ex)
-                {
-                    this.HandleExceptionWrapper(ex);
-                }
-            });
+                await this.OnFirstStart().RunWithCheckpointing(ref this.SerializedTask);
+            }
+            catch (Exception ex)
+            {
+                this.HandleExceptionWrapper(ex);
+            }
         }
 
         protected void HandleExceptionWrapper(Exception ex)
@@ -325,7 +322,7 @@ namespace Ambrosia
                                 //        , CancellationToken.None, TaskCreationOptions.DenyChildAttach
                                 //        , myTaskScheduler
                                 //    );
-                                this.OnFirstStartWrapper().Start();
+                                await this.OnFirstStartWrapper();
 
                                 break;
                             }
