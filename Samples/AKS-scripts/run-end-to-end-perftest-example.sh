@@ -77,7 +77,7 @@ $KUBE get pods
 ./Deploy-AKS.sh perftestserver \
    'runAmbrosiaService.sh Server --sp '$LOCALPORT1' --rp '$LOCALPORT2' -j perftestclient -s perftestserver -n 1 -c'
 ./Deploy-AKS.sh perftestclient \
-   'runAmbrosiaService.sh Job --sp '$LOCALPORT1' --rp '$LOCALPORT2' -j perftestclient -s perftestserver --mms 65536 -n $NUM_ROUNDS -c'
+   'runAmbrosiaService.sh Job --sp '$LOCALPORT1' --rp '$LOCALPORT2' -j perftestclient -s perftestserver --mms 65536 -n '$NUM_ROUNDS' -c'
 
 set +x
 echo "-----------------------------------------------------------------------"
