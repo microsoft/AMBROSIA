@@ -30,12 +30,12 @@ echo "Running with these user settings:"
 echo
 
 source Defs/Common-Defs.sh # For PUBLIC_CONTAINER_NAME
-if [ ${PUBLIC_CONTAINER_NAME:+defined} ]; then
-    echo "Error: Don't set PUBLIC_CONTAINER_NAME in your AmbrosiaAKSConf.sh."
-    echo "This particular script expects to set that itself."
-    exit 1
-fi
-export PUBLIC_CONTAINER_NAME=ambrosia/ambrosia-perftest
+PUBLIC_CONTAINER_NAME=${PUBLIC_CONTAINER_NAME:-"ambrosia/ambrosia-perftest"}
+export PUBLIC_CONTAINER_NAME
+
+# Leave it running for a long time by default:
+NUM_ROUNDS=${NUM_ROUNDS:-20}
+
 
 # This should perform IDEMPOTENT OPERATIONS
 #------------------------------------------
@@ -77,7 +77,7 @@ $KUBE get pods
 ./Deploy-AKS.sh perftestserver \
    'runAmbrosiaService.sh Server --sp '$LOCALPORT1' --rp '$LOCALPORT2' -j perftestclient -s perftestserver -n 1 -c'
 ./Deploy-AKS.sh perftestclient \
-   'runAmbrosiaService.sh Job --sp '$LOCALPORT1' --rp '$LOCALPORT2' -j perftestclient -s perftestserver --mms 65536 -n 13 -c'
+   'runAmbrosiaService.sh Job --sp '$LOCALPORT1' --rp '$LOCALPORT2' -j perftestclient -s perftestserver --mms 65536 -n $NUM_ROUNDS -c'
 
 set +x
 echo "-----------------------------------------------------------------------"
