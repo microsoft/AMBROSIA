@@ -15,8 +15,9 @@ namespace Ambrosia
         private static AmbrosiaCSRuntimeModes _runtimeMode;
         private static List<string> _assemblyNames;
         private static string _outputAssemblyName;
-        private static string _targetFramework;
-        private static string _binPath;
+        private static List<string> _targetFrameworks = new List<string>();
+        private static List<string> _frameworkToBinPathRaw = new List<string>();
+        private static Dictionary<string, string> _frameworkToBinPath = new Dictionary<string, string>();
 
         static void Main(string[] args)
         {
@@ -129,33 +130,43 @@ namespace Ambrosia
             var immortalSerializerSource = new ImmortalSerializerGenerator(generatedProxyNames, generatedProxyNamespaces).TransformText();
             sourceFiles.Add(new SourceFile { FileName = $"ImmortalSerializer.cs", SourceCode = immortalSerializerSource, });
 
-            var referenceLocations = new Dictionary<string, string>();
-            var assemblyFileNames = _assemblyNames.Select(Path.GetFileName).ToList();
-            foreach (var fileName in Directory.GetFiles(_binPath, "*.dll", SearchOption.TopDirectoryOnly)
-                .Union(Directory.GetFiles(_binPath, "*.exe", SearchOption.TopDirectoryOnly)))
+            var frameworkReferenceLocations = new Dictionary<string, Dictionary<string, string>>();
+            foreach (var fb in _frameworkToBinPath)
             {
-                var assemblyPath = Path.GetFullPath(fileName);
-                if (assemblyFileNames.Contains(Path.GetFileName(assemblyPath)))
+                var framework = fb.Key;
+                var binPath = fb.Value;
+                var assemblyFileNames = _assemblyNames.Select(Path.GetFileName).ToList();
+                foreach (var fileName in Directory.GetFiles(binPath, "*.dll", SearchOption.TopDirectoryOnly)
+                    .Union(Directory.GetFiles(binPath, "*.exe", SearchOption.TopDirectoryOnly)))
                 {
-                    continue;
-                }
+                    var assemblyPath = Path.GetFullPath(fileName);
+                    if (assemblyFileNames.Contains(Path.GetFileName(assemblyPath)))
+                    {
+                        continue;
+                    }
 
-                Assembly assembly;
-                try
-                {
-                    assembly = Assembly.LoadFile(assemblyPath);
-                }
-                catch (Exception)
-                {
-                    continue;
-                }
-                var assemblyName = assembly.GetName().Name;
-                var assemblyLocation = assembly.Location;
+                    Assembly assembly;
+                    try
+                    {
+                        assembly = Assembly.LoadFile(assemblyPath);
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+                    var assemblyName = assembly.GetName().Name;
+                    var assemblyLocation = assembly.Location;
 
-                var assemblyLocationUri = new Uri(assemblyLocation);
-                var assemblyLocationRelativePath = new Uri(Path.GetFullPath(directoryPath)).MakeRelativeUri(assemblyLocationUri).ToString();
-                referenceLocations.Add(assemblyName, assemblyLocationRelativePath);
+                    var assemblyLocationUri = new Uri(assemblyLocation);
+                    var assemblyLocationRelativePath = new Uri(Path.GetFullPath(directoryPath)).MakeRelativeUri(assemblyLocationUri).ToString();
+                    if (!frameworkReferenceLocations.ContainsKey(framework))
+                    {
+                        frameworkReferenceLocations.Add(framework, new Dictionary<string, string>());
+                    }
+                    frameworkReferenceLocations[framework].Add(assemblyName, assemblyLocationRelativePath);
+                }
             }
+            
 
             var conditionToPackageInfo = new Dictionary<string, List<Tuple<string, string, string>>>();
 
@@ -212,37 +223,46 @@ namespace Ambrosia
 $@"     <PackageReference {pi.Item1}=""{pi.Item2}"" Version=""{pi.Item3}"" />");
                 }
 
-                if (cpi.Key == String.Empty || cpi.Key == _targetFramework)
-                {
-                    conditionalPackageReferences.Add(
-$@" <ItemGroup>
+                conditionalPackageReferences.Add(
+                    cpi.Key != string.Empty
+                        ? $@" <ItemGroup Condition=""{cpi.Key}"">
+{string.Join("\n", packageReferences)}
+    </ItemGroup>
+"
+                        : $@" <ItemGroup>
 {string.Join("\n", packageReferences)}
     </ItemGroup>
 ");
-                }
             }
 
-            var references = new List<string>();
-            foreach (var rl in referenceLocations)
+            var referenceItemGroups = new List<string>();
+            foreach (var frl in frameworkReferenceLocations)
             {
-                references.Add(
-                    $@"     <Reference Include=""{rl.Key}"">
+                var references = new List<string>();
+                foreach (var rl in frl.Value)
+                {
+                    references.Add(
+                        $@"     <Reference Include=""{rl.Key}"">
             <HintPath>{rl.Value}</HintPath>
         </Reference>");
-            }
+                }
 
-            var referencesItemGroup =
-                $@" <ItemGroup>
+                var referencesItemGroup =
+                    $@" <ItemGroup Condition=""'$(TargetFramework)' == '{frl.Key}'"">
 {string.Join("\n", references)}
     </ItemGroup>
 ";
+                referenceItemGroups.Add(referencesItemGroup);
+            }
+
+            
 
             var projectFileSource =
 $@" <Project Sdk=""Microsoft.NET.Sdk"">
     <PropertyGroup>
-        <TargetFramework>{_targetFramework}</TargetFramework>
+        <TargetFrameworks>{string.Join(";", _targetFrameworks)}</TargetFrameworks>
     </PropertyGroup>
-{referencesItemGroup}{string.Join(string.Empty, conditionalPackageReferences)}</Project>";
+{string.Join(string.Empty, referenceItemGroups)}{string.Join(string.Empty, conditionalPackageReferences)}</Project>";
             var projectSourceFile =
                 new SourceFile() { FileName = $"{_outputAssemblyName}.csproj", SourceCode = projectFileSource };
             sourceFiles.Add(projectSourceFile);
@@ -279,8 +299,9 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
             var codeGenOptions = new OptionSet {
                 { "a|assembly=", "An input assembly name. [REQUIRED]", assemblyName => assemblyNames.Add(Path.GetFullPath(assemblyName)) },
                 { "o|outputAssemblyName=", "An output assembly name. [REQUIRED]", outputAssemblyName => _outputAssemblyName = outputAssemblyName },
-                { "f|targetFramework=", "The output assembly target framework. [REQUIRED]", f => _targetFramework = f },
-                { "b|binPath=", "The bin path containing the output assembly dependencies.", b => _binPath = b },
+                { "f|targetFramework=", "The output assembly target framework. [> 1 REQUIRED]", f => _targetFrameworks.Add(f) },
+                { "fb|frameworkToBinPath=", "The framework bin path containing the output assembly dependencies (format: <framework>;<binPath>).", fb => _frameworkToBinPathRaw.Add(fb)
+                },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 
@@ -320,14 +341,40 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
             var errorMessage = string.Empty;
             if (_assemblyNames.Count == 0) errorMessage += "At least one input assembly is required.";
             if (_outputAssemblyName == null) errorMessage += "Output assembly name is required.";
-            if (_targetFramework == null) errorMessage += "Target framework is required.";
+            if (_targetFrameworks.Count == 0) errorMessage += "At least one target framework is required.";
 
             var assemblyFilesNotFound = _assemblyNames.Where(an => !File.Exists(an)).ToList();
             if (assemblyFilesNotFound.Count > 0)
                 errorMessage += $"Unable to find the following assembly files:\n{string.Join("\n", assemblyFilesNotFound)}";
 
-            if (!Directory.Exists(_binPath))
-                errorMessage += $"Unable to find the dependencies bin path: {_binPath}";
+            foreach (var fb in _frameworkToBinPathRaw)
+            {
+                var data = fb.Split(';');
+                if (data.Length != 2)
+                {
+                    errorMessage += $"Wrong format for framework to binPath: {fb}";
+                    continue;
+                }
+
+                var framework = data[0];
+                var binPath = data[1];
+
+                if (!Directory.Exists(binPath))
+                {
+                    errorMessage += $"Unable to find the dependencies bin path: {binPath} for framework: {framework}";
+                    continue;
+                }
+
+                if (_frameworkToBinPath.ContainsKey(framework))
+                {
+                    errorMessage += $"Encountered more than one binPath for framework: {framework}";
+                    continue;
+                }
+
+                _frameworkToBinPath.Add(framework, binPath);
+            }
+
+            
 
             if (errorMessage != string.Empty)
             {

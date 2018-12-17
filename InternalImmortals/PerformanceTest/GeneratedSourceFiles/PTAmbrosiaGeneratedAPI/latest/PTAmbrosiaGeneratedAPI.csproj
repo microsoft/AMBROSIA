@@ -1,0 +1,213 @@
+ <Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
+    </PropertyGroup>
+ <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+     <Reference Include="AmbrosiaLibCS">
+            <HintPath>../../CodeGenDependencies/net46/AmbrosiaLibCS.dll</HintPath>
+        </Reference>
+     <Reference Include="Aqua">
+            <HintPath>../../CodeGenDependencies/net46/Aqua.dll</HintPath>
+        </Reference>
+     <Reference Include="CRA.ClientLibrary">
+            <HintPath>../../CodeGenDependencies/net46/CRA.ClientLibrary.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.Azure.KeyVault.Core">
+            <HintPath>../../CodeGenDependencies/net46/Microsoft.Azure.KeyVault.Core.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.CodeAnalysis.CSharp">
+            <HintPath>../../CodeGenDependencies/net46/Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.CodeAnalysis.CSharp.Scripting">
+            <HintPath>../../CodeGenDependencies/net46/Microsoft.CodeAnalysis.CSharp.Scripting.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.CodeAnalysis">
+            <HintPath>../../CodeGenDependencies/net46/Microsoft.CodeAnalysis.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.CodeAnalysis.Scripting">
+            <HintPath>../../CodeGenDependencies/net46/Microsoft.CodeAnalysis.Scripting.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.VisualStudio.Threading">
+            <HintPath>../../CodeGenDependencies/net46/Microsoft.VisualStudio.Threading.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.VisualStudio.Validation">
+            <HintPath>../../CodeGenDependencies/net46/Microsoft.VisualStudio.Validation.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.WindowsAzure.Storage">
+            <HintPath>../../CodeGenDependencies/net46/Microsoft.WindowsAzure.Storage.dll</HintPath>
+        </Reference>
+     <Reference Include="Mono.Options.Core">
+            <HintPath>../../CodeGenDependencies/net46/Mono.Options.Core.dll</HintPath>
+        </Reference>
+     <Reference Include="Newtonsoft.Json">
+            <HintPath>../../CodeGenDependencies/net46/Newtonsoft.Json.dll</HintPath>
+        </Reference>
+     <Reference Include="Remote.Linq">
+            <HintPath>../../CodeGenDependencies/net46/Remote.Linq.dll</HintPath>
+        </Reference>
+     <Reference Include="System.AppContext">
+            <HintPath>../../CodeGenDependencies/net46/System.AppContext.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Collections.Immutable">
+            <HintPath>../../CodeGenDependencies/net46/System.Collections.Immutable.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Console">
+            <HintPath>../../CodeGenDependencies/net46/System.Console.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Diagnostics.FileVersionInfo">
+            <HintPath>../../CodeGenDependencies/net46/System.Diagnostics.FileVersionInfo.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Diagnostics.StackTrace">
+            <HintPath>../../CodeGenDependencies/net46/System.Diagnostics.StackTrace.dll</HintPath>
+        </Reference>
+     <Reference Include="System.IO.Compression">
+            <HintPath>../../CodeGenDependencies/net46/System.IO.Compression.dll</HintPath>
+        </Reference>
+     <Reference Include="System.IO.FileSystem">
+            <HintPath>../../CodeGenDependencies/net46/System.IO.FileSystem.dll</HintPath>
+        </Reference>
+     <Reference Include="System.IO.FileSystem.Primitives">
+            <HintPath>../../CodeGenDependencies/net46/System.IO.FileSystem.Primitives.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Reflection.Metadata">
+            <HintPath>../../CodeGenDependencies/net46/System.Reflection.Metadata.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Runtime.Serialization.Primitives">
+            <HintPath>../../CodeGenDependencies/net46/System.Runtime.Serialization.Primitives.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Security.Cryptography.Algorithms">
+            <HintPath>../../CodeGenDependencies/net46/System.Security.Cryptography.Algorithms.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Security.Cryptography.Encoding">
+            <HintPath>../../CodeGenDependencies/net46/System.Security.Cryptography.Encoding.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Security.Cryptography.Primitives">
+            <HintPath>../../CodeGenDependencies/net46/System.Security.Cryptography.Primitives.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Security.Cryptography.X509Certificates">
+            <HintPath>../../CodeGenDependencies/net46/System.Security.Cryptography.X509Certificates.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Text.Encoding.CodePages">
+            <HintPath>../../CodeGenDependencies/net46/System.Text.Encoding.CodePages.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Threading.Tasks.Dataflow">
+            <HintPath>../../CodeGenDependencies/net46/System.Threading.Tasks.Dataflow.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Threading.Thread">
+            <HintPath>../../CodeGenDependencies/net46/System.Threading.Thread.dll</HintPath>
+        </Reference>
+     <Reference Include="System.ValueTuple">
+            <HintPath>../../CodeGenDependencies/net46/System.ValueTuple.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Xml.ReaderWriter">
+            <HintPath>../../CodeGenDependencies/net46/System.Xml.ReaderWriter.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Xml.XmlDocument">
+            <HintPath>../../CodeGenDependencies/net46/System.Xml.XmlDocument.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Xml.XPath">
+            <HintPath>../../CodeGenDependencies/net46/System.Xml.XPath.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Xml.XPath.XDocument">
+            <HintPath>../../CodeGenDependencies/net46/System.Xml.XPath.XDocument.dll</HintPath>
+        </Reference>
+     <Reference Include="Ambrosia">
+            <HintPath>../../CodeGenDependencies/net46/Ambrosia.exe</HintPath>
+        </Reference>
+     <Reference Include="CRA.Worker">
+            <HintPath>../../CodeGenDependencies/net46/CRA.Worker.exe</HintPath>
+        </Reference>
+    </ItemGroup>
+ <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+     <Reference Include="Ambrosia">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Ambrosia.dll</HintPath>
+        </Reference>
+     <Reference Include="AmbrosiaLibCS">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/AmbrosiaLibCS.dll</HintPath>
+        </Reference>
+     <Reference Include="Aqua">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Aqua.dll</HintPath>
+        </Reference>
+     <Reference Include="CRA.ClientLibrary">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/CRA.ClientLibrary.dll</HintPath>
+        </Reference>
+     <Reference Include="CRA.Worker">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/CRA.Worker.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.CodeAnalysis.CSharp">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.CodeAnalysis.CSharp.Scripting">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Microsoft.CodeAnalysis.CSharp.Scripting.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.CodeAnalysis">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Microsoft.CodeAnalysis.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.CodeAnalysis.Scripting">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Microsoft.CodeAnalysis.Scripting.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.VisualStudio.Threading">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Microsoft.VisualStudio.Threading.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.VisualStudio.Validation">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Microsoft.VisualStudio.Validation.dll</HintPath>
+        </Reference>
+     <Reference Include="Microsoft.WindowsAzure.Storage">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Microsoft.WindowsAzure.Storage.dll</HintPath>
+        </Reference>
+     <Reference Include="Mono.Options.Core">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Mono.Options.Core.dll</HintPath>
+        </Reference>
+     <Reference Include="Newtonsoft.Json">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Newtonsoft.Json.dll</HintPath>
+        </Reference>
+     <Reference Include="Remote.Linq">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/Remote.Linq.dll</HintPath>
+        </Reference>
+     <Reference Include="System.CodeDom">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/System.CodeDom.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Configuration.ConfigurationManager">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/System.Configuration.ConfigurationManager.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Memory">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/System.Memory.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Runtime.CompilerServices.Unsafe">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Security.AccessControl">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/System.Security.AccessControl.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Security.Cryptography.ProtectedData">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/System.Security.Cryptography.ProtectedData.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Security.Permissions">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/System.Security.Permissions.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Security.Principal.Windows">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/System.Security.Principal.Windows.dll</HintPath>
+        </Reference>
+     <Reference Include="System.Threading.Tasks.Dataflow">
+            <HintPath>../../CodeGenDependencies/netcoreapp2.0/System.Threading.Tasks.Dataflow.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+ <ItemGroup>
+     <PackageReference Include="AmbrosiaLibCS" Version="2018.12.12.1" />
+     <PackageReference Include="CRA" Version="2018.11.5.1" />
+     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
+     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
+     <PackageReference Include="Mono.Options.Core" Version="1.0.0" />
+     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+     <PackageReference Include="Remote.Linq" Version="5.8.1" />
+     <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
+     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
+     <PackageReference Update="Microsoft.NETCore.App=" Version="2.0.0=" />
+    </ItemGroup>
+ <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+     <PackageReference Include="System.CodeDom" Version="4.5.0" />
+     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+    </ItemGroup>
+</Project>

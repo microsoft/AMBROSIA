@@ -24,7 +24,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GeneratedSourceFiles\AnalyticsAPIGeneratedNet46\latest\AnalyticsAPIGeneratedNet46.csproj" />
     <ProjectReference Include="..\ServiceConfiguration\ServiceConfiguration.csproj" />
     <ProjectReference Include="..\TwitterObservable\TwitterObservable.csproj" />
   </ItemGroup>
