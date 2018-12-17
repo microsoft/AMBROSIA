@@ -9,13 +9,18 @@ if ( $env:AMBVARIANT ) {
 # Create the dependencies folder
 New-Item -ItemType Directory -Force -Path "CodeGenDependencies\net46\"
 Get-ChildItem "CodeGenDependencies\net46\" | Remove-Item
-Copy-Item "API\bin\$AMBVARIANT\*" -Force -Destination "CodeGenDependencies\net46\"
+Copy-Item "API\bin\x64\Debug\net46\*" -Force -Destination "CodeGenDependencies\net46\"
 # DANGER, WARNING, FIXME: it is UNSAFE to MERGE the outputs of two publish directories:
-Copy-Item "IJob\bin\$AMBVARIANT\*" -Force -Destination "CodeGenDependencies\net46\"
+Copy-Item "IJob\bin\x64\Debug\net46\*" -Force -Destination "CodeGenDependencies\net46\"
+
+New-Item -ItemType Directory -Force -Path "CodeGenDependencies\netcoreapp2.0\"
+Get-ChildItem "CodeGenDependencies\netcoreapp2.0" | Remove-Item
+Copy-Item "API\bin\Debug\netcoreapp2.0\publish\*" -Force -Destination "CodeGenDependencies\netcoreapp2.0\"
+Copy-Item "IJob\bin\Debug\netcoreapp2.0\publish\*" -Force -Destination "CodeGenDependencies\netcoreapp2.0\"
 
 Write-Host "Using variant of AmbrosiaCS.exe: $AMBVARIANT"
 
-Write-Host "Executing codegen command: ..\..\Clients\CSharp\AmbrosiaCS\bin\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=API\bin\$AMBVARIANT\ServerAPI.dll -a=IJob\bin\$AMBVARIANT\IJob.dll -o=PTIAmbrosiaGeneratedAPINet46 -f=net46 -b=CodeGenDependencies\net46"
+Write-Host "Executing codegen command: ..\..\Clients\CSharp\AmbrosiaCS\bin\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=API\bin\$AMBVARIANT\ServerAPI.dll -a=IJob\bin\$AMBVARIANT\IJob.dll -o=PTAmbrosiaGeneratedAPI -f=net46 -f=netcoreapp2.0 -fb=net46;CodeGenDependencies\net46 -fb=netcoreapp2.0;CodeGenDependencies\netcoreapp2.0"
 
 # Generate the assemblies, assumes an .exe which is created by a .Net Framework build:
-& "..\..\Clients\CSharp\AmbrosiaCS\bin\$AMBVARIANT\AmbrosiaCS.exe" CodeGen -a="API\bin\$AMBVARIANT\ServerAPI.dll" -a="IJob\bin\$AMBVARIANT\IJob.dll" -o="PTIAmbrosiaGeneratedAPINet46" -f="net46" -b="CodeGenDependencies\net46"
+& "..\..\Clients\CSharp\AmbrosiaCS\bin\$AMBVARIANT\AmbrosiaCS.exe" CodeGen -a="API\bin\$AMBVARIANT\ServerAPI.dll" -a="IJob\bin\$AMBVARIANT\IJob.dll" -o="PTIAmbrosiaGeneratedAPI" -f="net46" -f="netcoreapp2.0" -fb="net46;CodeGenDependencies\net46" -fb="netcoreapp2.0;CodeGenDependencies\netcoreapp2.0"
