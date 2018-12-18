@@ -1183,6 +1183,10 @@ namespace AmbrosiaTest
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             MyUtils.CleanupAzureTables("asyncbasic");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("asynckilljobtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("asynckillservertest");
+            Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);

@@ -1,0 +1,11 @@
+*X* Bytes per RPC	Throughput (GB/sec)
+*X* 65536	0.0141489302904291
+*X* 32768	0.012670993216158
+*X* 16384	0.00700406083610415
+*X* ---------- Summary -------------
+*X* - Total GBs Sent:3
+*X* - Total Time (secs):292.3714494
+*X* - Throughput (GB/Sec):0.010260919820169
+--------------------------------
+Bytes received: 3221225472
+DONE
