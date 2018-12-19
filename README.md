@@ -1,4 +1,4 @@
-Ambrosia: Robust Distributed Programming Made Easy and Efficient
+﻿Ambrosia: Robust Distributed Programming Made Easy and Efficient
 =======================================================================
 
 Windows Build (net46/netcore): [![Windows Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Win-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=23)
@@ -46,6 +46,7 @@ Table of Contents
     * [Language support](#language-support)
     * [Usage](#usage)
     * [Secure communication between services](#secure-communication-between-services)
+    * [Comparison to](#comparison-to)
     
 ## AMBROSIA Concepts
 
@@ -162,3 +163,6 @@ Options:
 
 ### Secure communication between services
 Read about how to secure communications between distributed components deployed on AMBROSIA [here](https://github.com/Microsoft/AMBROSIA/blob/master/docs/SecuringComms.md).
+
+### Comparison to
+[Orleans](https://github.com/Microsoft/AMBROSIA/blob/master/docs/OrleansComparison.md)
