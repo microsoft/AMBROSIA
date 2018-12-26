@@ -83,8 +83,15 @@ namespace <#= this.interfaceType.Namespace #>
             // Serialize arg<#= parIndex #>
             <#= Utilities.SerializeValue(parIndex) #>
 <# } #>
+            int taskId;
+			lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                while (!Immortal.DispatchTaskIdQueue.TryDequeue(out taskId)) { }
+            }
 
             ReleaseBufferAndSend();
+
+			Immortal.StartDispatchLoop();
 
 			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
             var currentResult = await taskToWaitFor;
@@ -97,7 +104,7 @@ namespace <#= this.interfaceType.Namespace #>
 				currentResult = await taskToWaitFor;
 			}			
 
-			<#= !voidMethod ? "var result =" : ""#> await Immortal.TryTakeCheckpointContinuationAsync(currentResult);
+			<#= !voidMethod ? "var result =" : ""#> await Immortal.TryTakeCheckpointContinuationAsync(currentResult, taskId);
 
 <# if (voidMethod) { #>
 			return;

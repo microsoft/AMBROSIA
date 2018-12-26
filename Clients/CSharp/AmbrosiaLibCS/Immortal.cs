@@ -76,10 +76,9 @@ namespace Ambrosia
         /// Used to pass responsibility for the Dispatch loop to the most recently created
         /// task.
         /// </summary>
-        protected ConcurrentQueue<int> dispatchTaskIdQueue = new ConcurrentQueue<int>();
-
-        private readonly object myLock = new object();
-        private readonly SameThreadTaskScheduler myTaskScheduler = new SameThreadTaskScheduler("AmbrosiaRPC");
+        public ConcurrentQueue<int> DispatchTaskIdQueue = new ConcurrentQueue<int>();
+        public readonly object DispatchTaskIdQueueLock = new object();
+        public readonly SameThreadTaskScheduler DispatchTaskScheduler = new SameThreadTaskScheduler("AmbrosiaRPC");
 
         /// <summary>
         /// If this is deployed with upgrade information, then this is the interface type that should be deployed.
@@ -272,12 +271,12 @@ namespace Ambrosia
             {
                 //Console.WriteLine("Waiting for next batch of messages from the LAR");
 
-                lock (myLock)
+                lock (DispatchTaskIdQueueLock)
                 {
-                    if (this.dispatchTaskIdQueue.Count > 1)
+                    if (this.DispatchTaskIdQueue.Count > 1)
                     {
                         int x;
-                        while (!this.dispatchTaskIdQueue.TryDequeue(out x)) { }
+                        while (!this.DispatchTaskIdQueue.TryDequeue(out x)) { }
                         break; // some other dispatch loop will take over, so just die.
                     }
                 }
@@ -320,8 +319,9 @@ namespace Ambrosia
                                 //Task.Factory.StartNew(
                                 //    () => this.OnFirstStart()
                                 //        , CancellationToken.None, TaskCreationOptions.DenyChildAttach
-                                //        , myTaskScheduler
+                                //        , DispatchTaskScheduler
                                 //    );
+
                                 await this.OnFirstStartWrapper();
 
                                 break;
@@ -424,7 +424,7 @@ namespace Ambrosia
                                 this._dispatcher.upgradedProxy = typedProxy;
 
                                 // Need to die now, so do that by exiting loop
-                                t.Start();
+                                t.Start(newImmortal.DispatchTaskScheduler);
                                 return;
 
                             }
@@ -523,6 +523,8 @@ namespace Ambrosia
                                             var errorMessage = $"Can't find sequence number {sequenceNumber} in cache";
                                             throw new InvalidOperationException(errorMessage);
                                         }
+
+                                        await Task.Yield();
                                     }
                                     else // receiving an RPC
                                     {
@@ -556,7 +558,7 @@ namespace Ambrosia
                                         Buffer.BlockCopy(_inputFlexBuffer.Buffer, _cursor, localBuffer, 0, lengthOfSerializedArguments);
 
                                         //// BUGBUG: This works only if we are single-threaded and doing only fire-and-forget messages!
-                                        //while (myTaskScheduler.NumberOfScheduledTasks() == myTaskScheduler.MaximumConcurrencyLevel)
+                                        //while (DispatchTaskScheduler.NumberOfScheduledTasks() == DispatchTaskScheduler.MaximumConcurrencyLevel)
                                         //{
                                         //    // just busy wait until there is a free thread in the scheduler
                                         //    // to handle this task.
@@ -565,7 +567,7 @@ namespace Ambrosia
                                         //Task.Factory.StartNew(
                                         //    () => _dispatcher.DispatchToMethod(methodId, fireAndForget, senderOfRPC, CurrentSequenceNumber, localBuffer, 0)
                                         //        , CancellationToken.None, TaskCreationOptions.DenyChildAttach
-                                        //        , myTaskScheduler
+                                        //        , DispatchTaskScheduler
                                         //    );
                                         try
                                         {
@@ -747,15 +749,20 @@ namespace Ambrosia
             ReleaseOutputLock();
         }
 
-        public async Task<ResultAdditionalInfo> TryTakeCheckpointContinuationAsync(ResultAdditionalInfo currentResultAdditionalInfo)
+        public async Task<ResultAdditionalInfo> TryTakeCheckpointContinuationAsync(ResultAdditionalInfo currentResultAdditionalInfo, int taskId)
         {
             var result = currentResultAdditionalInfo.Result;
             if (currentResultAdditionalInfo.AdditionalInfoType == ResultAdditionalInfoTypes.TakeCheckpoint)
             {
                 var sequenceNumber = await this.TakeTaskCheckpointAsync();
-                this.StartDispatchLoop();
+                //this.StartDispatchLoop();
                 var resultAdditionalInfo = await this.GetTaskToWaitForWithAdditionalInfoAsync(sequenceNumber); // Re-await original task
                 result = resultAdditionalInfo.Result;
+            }
+
+            lock (this.DispatchTaskIdQueueLock)
+            {
+                this.DispatchTaskIdQueue.Enqueue(taskId);
             }
 
             return new ResultAdditionalInfo(result, currentResultAdditionalInfo.ResultType.Type);
@@ -812,9 +819,12 @@ namespace Ambrosia
 
         public void StartDispatchLoop()
         {
-            var t = this.DispatchWrapper();
-            this.dispatchTaskIdQueue.Enqueue(t.Id);
-            t.Start();
+            lock (DispatchTaskIdQueueLock)
+            {
+                var t = this.DispatchWrapper();
+                this.DispatchTaskIdQueue.Enqueue(t.Id);
+                t.Start(this.DispatchTaskScheduler);
+            }
         }
 
         public Task<T> GetTaskToWaitForAsync<T>(long sequenceNumber)
@@ -978,15 +988,10 @@ namespace Ambrosia
             {
                 // Sending this RPC call might trigger an incoming call to this container.
                 // But the dispatch loop for this container might be blocked, so start up a new one.
-                var t = this.DispatchWrapper();
-                this.dispatchTaskIdQueue.Enqueue(t.Id);
-                //Console.WriteLine("Starting a new dispatch loop from StartRPC (task {0})", t.Id);
-                //t.Start(myTaskScheduler);
-                t.Start();
+                this.StartDispatchLoop();
             }
 
             return writablePage;
-
         }
 
         [AttributeUsage(AttributeTargets.Method)]
@@ -1319,11 +1324,7 @@ namespace Ambrosia
                     else
                     {
                         // Now that the state is restored, start listening for incoming messages
-                        var t = Dispatch();
-                        this.MyImmortal.dispatchTaskIdQueue.Enqueue(t.Id);
-                        //Console.WriteLine("Starting a new dispatch loop from StartRPC (task {0})", t.Id);
-                        //t.Start(myTaskScheduler);
-                        t.Start();
+                        this.MyImmortal.StartDispatchLoop();
                     }
                 }
                 else if (firstByte == AmbrosiaRuntime.takeCheckpointByte || firstByte == AmbrosiaRuntime.takeBecomingPrimaryCheckpointByte)
@@ -1405,10 +1406,7 @@ namespace Ambrosia
                     // The first step above means that the Dispatch loop will take care of calling the OnFirstStart method.
 
                     // Third, start the dispatch loop as a new task
-                    //Task.Factory.StartNew(() => Immortal.Dispatch());
-                    var t = Dispatch();
-                    this.MyImmortal.dispatchTaskIdQueue.Enqueue(t.Id);
-                    t.Start();
+                    this.MyImmortal.StartDispatchLoop();
                 }
                 else
                 {
@@ -1423,12 +1421,7 @@ namespace Ambrosia
 #endif
             }
 
-            public Task<Task> Dispatch()
-            {
-                return this.MyImmortal.DispatchWrapper();
-            }
-
-            public void EntryPoint() { this.MyImmortal.OnFirstStartWrapper(); }
+            public async Task EntryPoint() { await this.MyImmortal.OnFirstStartWrapper(); }
             protected void ReleaseBufferAndSend(bool doTheSend = true) { this.MyImmortal.ReleaseBufferAndSend(doTheSend: doTheSend); }
             public abstract Task<bool> DispatchToMethod(int methodId, RpcTypes.RpcType rpcType, string senderOfRPC, long sequenceNumber, byte[] buffer, int cursor);
 
