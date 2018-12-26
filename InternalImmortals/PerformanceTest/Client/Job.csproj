@@ -25,9 +25,6 @@
     <PackageReference Include="Mono.Options.Core" Version="1.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />    
-  </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
     <ProjectReference Include="..\GeneratedSourceFiles\PTAmbrosiaGeneratedAPINetCore\latest\PTAmbrosiaGeneratedAPINetCore.csproj" />
   </ItemGroup>
