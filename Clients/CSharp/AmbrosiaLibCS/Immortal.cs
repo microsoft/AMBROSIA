@@ -76,7 +76,9 @@ namespace Ambrosia
         /// Used to pass responsibility for the Dispatch loop to the most recently created
         /// task.
         /// </summary>
-        public ConcurrentQueue<int> DispatchTaskIdQueue = new ConcurrentQueue<int>();
+        [DataMember]
+        public SerializableQueue<int> DispatchTaskIdQueue = new SerializableQueue<int>();
+        [DataMember]
         public readonly object DispatchTaskIdQueueLock = new object();
         public readonly SameThreadTaskScheduler DispatchTaskScheduler = new SameThreadTaskScheduler("AmbrosiaRPC");
 
@@ -273,10 +275,10 @@ namespace Ambrosia
 
                 lock (DispatchTaskIdQueueLock)
                 {
-                    if (this.DispatchTaskIdQueue.Count > 1)
+                    if (this.DispatchTaskIdQueue.Data.Count > 1)
                     {
                         int x;
-                        while (!this.DispatchTaskIdQueue.TryDequeue(out x)) { }
+                        while (!this.DispatchTaskIdQueue.Data.TryDequeue(out x)) { }
                         break; // some other dispatch loop will take over, so just die.
                     }
                 }
@@ -762,7 +764,7 @@ namespace Ambrosia
 
             lock (this.DispatchTaskIdQueueLock)
             {
-                this.DispatchTaskIdQueue.Enqueue(taskId);
+                this.DispatchTaskIdQueue.Data.Enqueue(taskId);
             }
 
             return new ResultAdditionalInfo(result, currentResultAdditionalInfo.ResultType.Type);
@@ -822,7 +824,7 @@ namespace Ambrosia
             lock (DispatchTaskIdQueueLock)
             {
                 var t = this.DispatchWrapper();
-                this.DispatchTaskIdQueue.Enqueue(t.Id);
+                this.DispatchTaskIdQueue.Data.Enqueue(t.Id);
                 t.Start(this.DispatchTaskScheduler);
             }
         }
