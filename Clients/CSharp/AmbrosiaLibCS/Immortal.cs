@@ -755,7 +755,7 @@ namespace Ambrosia
             if (currentResultAdditionalInfo.AdditionalInfoType == ResultAdditionalInfoTypes.TakeCheckpoint)
             {
                 var sequenceNumber = await this.TakeTaskCheckpointAsync();
-                //this.StartDispatchLoop();
+                this.StartDispatchLoop();
                 var resultAdditionalInfo = await this.GetTaskToWaitForWithAdditionalInfoAsync(sequenceNumber); // Re-await original task
                 result = resultAdditionalInfo.Result;
             }
@@ -1319,7 +1319,7 @@ namespace Ambrosia
                     if (!string.IsNullOrEmpty(this.MyImmortal.SerializedTask.ToString()))
                     {
                         var resumeMainTask = new Task(async () => await this.MyImmortal.Resume());
-                        resumeMainTask.Start();
+                        resumeMainTask.Start(MyImmortal.DispatchTaskScheduler);
                     }
                     else
                     {
