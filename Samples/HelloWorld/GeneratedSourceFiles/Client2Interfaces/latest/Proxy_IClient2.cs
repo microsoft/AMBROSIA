@@ -56,8 +56,15 @@ arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
 Buffer.BlockCopy(arg0Bytes, 0, wp.PageBytes, wp.curLength, arg0Bytes.Length);
 wp.curLength += arg0Bytes.Length;
 
+            int taskId;
+			lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                while (!Immortal.DispatchTaskIdQueue.TryDequeue(out taskId)) { }
+            }
 
             ReleaseBufferAndSend();
+
+			Immortal.StartDispatchLoop();
 
 			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
             var currentResult = await taskToWaitFor;
@@ -70,7 +77,7 @@ wp.curLength += arg0Bytes.Length;
 				currentResult = await taskToWaitFor;
 			}			
 
-			 await Immortal.TryTakeCheckpointContinuationAsync(currentResult);
+			 await Immortal.TryTakeCheckpointContinuationAsync(currentResult, taskId);
 
 			return;
         }

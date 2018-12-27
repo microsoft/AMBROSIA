@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="AmbrosiaLibCS" Version="2018.12.14.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.192" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GeneratedSourceFiles\Client3Interfaces\latest\Client3Interfaces.csproj" />
+  </ItemGroup>
+
+</Project>
