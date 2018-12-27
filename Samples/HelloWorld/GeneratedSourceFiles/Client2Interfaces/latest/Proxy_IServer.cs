@@ -60,7 +60,7 @@ wp.curLength += arg0Bytes.Length;
             int taskId;
 			lock (Immortal.DispatchTaskIdQueueLock)
             {
-                while (!Immortal.DispatchTaskIdQueue.TryDequeue(out taskId)) { }
+                while (!Immortal.DispatchTaskIdQueue.Data.TryDequeue(out taskId)) { }
             }
 
             ReleaseBufferAndSend();
