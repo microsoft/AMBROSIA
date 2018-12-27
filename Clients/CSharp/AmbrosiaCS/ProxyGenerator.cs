@@ -310,7 +310,7 @@ namespace Ambrosia
             this.Write(@"            int taskId;
 			lock (Immortal.DispatchTaskIdQueueLock)
             {
-                while (!Immortal.DispatchTaskIdQueue.TryDequeue(out taskId)) { }
+                while (!Immortal.DispatchTaskIdQueue.Data.TryDequeue(out taskId)) { }
             }
 
             ReleaseBufferAndSend();
