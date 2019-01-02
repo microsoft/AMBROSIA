@@ -42,8 +42,15 @@ namespace Job
 
             // Serialize arguments
 
+            int taskId;
+			lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                while (!Immortal.DispatchTaskIdQueue.Data.TryDequeue(out taskId)) { }
+            }
 
             ReleaseBufferAndSend();
+
+			Immortal.StartDispatchLoop();
 
 			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
             var currentResult = await taskToWaitFor;
@@ -56,7 +63,7 @@ namespace Job
 				currentResult = await taskToWaitFor;
 			}			
 
-			 await Immortal.TryTakeCheckpointContinuationAsync(currentResult);
+			 await Immortal.TryTakeCheckpointContinuationAsync(currentResult, taskId);
 
 			return;
         }
