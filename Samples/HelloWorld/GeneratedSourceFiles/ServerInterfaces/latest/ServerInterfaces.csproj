@@ -6,7 +6,7 @@
 
     </ItemGroup>
  <ItemGroup>
-     <PackageReference Include="AmbrosiaLibCS" Version="2018.12.14.1" />
+     <PackageReference Include="AmbrosiaLibCS" Version="2019.1.2.1" />
      <PackageReference Include="CRA" Version="2018.11.5.1" />
      <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
      <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
