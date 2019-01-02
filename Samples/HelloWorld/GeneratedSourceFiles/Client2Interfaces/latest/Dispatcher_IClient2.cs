@@ -37,7 +37,7 @@ namespace Client2
             {
                 case 0:
                     // Entry point
-                    this.EntryPoint();
+                    await this.EntryPoint();
                     break;
                 case 1:
                     // SendMessageAsync
