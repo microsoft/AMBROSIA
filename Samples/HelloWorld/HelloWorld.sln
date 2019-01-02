@@ -38,10 +38,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client3Interfaces", "Genera
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client3", "Client3\Client3.csproj", "{34453487-3237-4E04-9FE9-0F32F489EE05}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ambrosia", "..\..\Ambrosia\Ambrosia\Ambrosia.csproj", "{09F74C26-9A8A-413B-8C95-589792EF6697}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmbrosiaLibCS", "..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj", "{3C294015-AD0D-464E-B0EC-AC4392E26755}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -136,18 +132,6 @@ Global
 		{34453487-3237-4E04-9FE9-0F32F489EE05}.Release|Any CPU.ActiveCfg = Release|x64
 		{34453487-3237-4E04-9FE9-0F32F489EE05}.Release|x64.ActiveCfg = Release|x64
 		{34453487-3237-4E04-9FE9-0F32F489EE05}.Release|x64.Build.0 = Release|x64
-		{09F74C26-9A8A-413B-8C95-589792EF6697}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{09F74C26-9A8A-413B-8C95-589792EF6697}.Debug|x64.ActiveCfg = Debug|x64
-		{09F74C26-9A8A-413B-8C95-589792EF6697}.Debug|x64.Build.0 = Debug|x64
-		{09F74C26-9A8A-413B-8C95-589792EF6697}.Release|Any CPU.ActiveCfg = Release|x64
-		{09F74C26-9A8A-413B-8C95-589792EF6697}.Release|x64.ActiveCfg = Release|x64
-		{09F74C26-9A8A-413B-8C95-589792EF6697}.Release|x64.Build.0 = Release|x64
-		{3C294015-AD0D-464E-B0EC-AC4392E26755}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{3C294015-AD0D-464E-B0EC-AC4392E26755}.Debug|x64.ActiveCfg = Debug|x64
-		{3C294015-AD0D-464E-B0EC-AC4392E26755}.Debug|x64.Build.0 = Debug|x64
-		{3C294015-AD0D-464E-B0EC-AC4392E26755}.Release|Any CPU.ActiveCfg = Release|x64
-		{3C294015-AD0D-464E-B0EC-AC4392E26755}.Release|x64.ActiveCfg = Release|x64
-		{3C294015-AD0D-464E-B0EC-AC4392E26755}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

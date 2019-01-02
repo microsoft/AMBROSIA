@@ -7,9 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\GeneratedSourceFiles\ServerInterfaces\latest\ServerInterfaces.csproj" />
   </ItemGroup>
 
