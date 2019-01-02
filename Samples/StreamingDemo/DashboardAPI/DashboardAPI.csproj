@@ -18,7 +18,7 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AmbrosiaLibCS" Version="2018.12.14.1" />
+    <PackageReference Include="AmbrosiaLibCS" Version="2019.1.2.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TwitterObservable\TwitterObservable.csproj" />
