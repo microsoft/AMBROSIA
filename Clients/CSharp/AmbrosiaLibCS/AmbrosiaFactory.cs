@@ -30,8 +30,7 @@ namespace Ambrosia
             {
                 case 0:
                     // Entry point
-                    //this.OnFirstStart();
-                    EntryPointAsync().Wait();
+                    await EntryPoint();
                     break;
 
                 default:
@@ -40,8 +39,6 @@ namespace Ambrosia
             }
             return true;
         }
-
-        private async Task EntryPointAsync() { this.EntryPoint(); }
     }
 
     public class AmbrosiaFactory
