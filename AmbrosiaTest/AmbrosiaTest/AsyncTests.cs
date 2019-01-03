@@ -191,8 +191,6 @@ namespace AmbrosiaTest
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true,false, AMB1.AMB_Version, "", true);
         }
 
-
-
         [TestMethod]
         public void AMB_Async_KillJob_Test()
         {
@@ -255,7 +253,7 @@ namespace AmbrosiaTest
             string logOutputFileName_Server = testName + "_Server.log";
             int serverProcessID = MyUtils.StartAsyncPerfServer("2001", "2000", serverName, logOutputFileName_Server);
 
-            // Give it 5seconds to do something before killing it
+            // Give it 5 seconds to do something before killing it
             Thread.Sleep(5000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
@@ -288,8 +286,12 @@ namespace AmbrosiaTest
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
 
+            // Give it a few seconds to make sure everything is started fine
+            Thread.Sleep(3000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
             // Verify integrity of Ambrosia logs by replaying
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version, "", true);
         }
 
         [TestMethod]
@@ -388,10 +390,8 @@ namespace AmbrosiaTest
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
 
             // Verify integrity of Ambrosia logs by replaying
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version, "", true);
         }
-
-
 
         [TestCleanup()]
         public void Cleanup()
