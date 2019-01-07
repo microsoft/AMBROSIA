@@ -1,8 +1,11 @@
-﻿ <Project Sdk="Microsoft.NET.Sdk">
+ <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net46</TargetFramework>
     </PropertyGroup>
  <ItemGroup>
+     <Reference Include="AmbrosiaLibCS">
+            <HintPath>../../CodeGenDependencies/net46/AmbrosiaLibCS.dll</HintPath>
+        </Reference>
      <Reference Include="Microsoft.CodeAnalysis.CSharp">
             <HintPath>../../CodeGenDependencies/net46/Microsoft.CodeAnalysis.CSharp.dll</HintPath>
         </Reference>
@@ -114,9 +117,12 @@
      <Reference Include="TwitterObservable">
             <HintPath>../../CodeGenDependencies/net46/TwitterObservable.dll</HintPath>
         </Reference>
+     <Reference Include="Ambrosia">
+            <HintPath>../../CodeGenDependencies/net46/Ambrosia.exe</HintPath>
+        </Reference>
     </ItemGroup>
  <ItemGroup>
-     <PackageReference Include="AmbrosiaLibCS" Version="2019.1.2.1" />
+     <PackageReference Include="AmbrosiaLibCS" Version="2019.1.7.1" />
      <PackageReference Include="CRA" Version="2018.11.5.1" />
      <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
      <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
