@@ -66,7 +66,7 @@ public class SameThreadTaskScheduler : System.Threading.Tasks.TaskScheduler, IDi
 
     private Thread StartThread(string name)
     {
-        var t = new Thread(MyThread) { Name = name };
+        var t = new Thread(MyThread) { Name = name, IsBackground = true};
         using (var start = new Barrier(2))
         {
             t.Start(start);
