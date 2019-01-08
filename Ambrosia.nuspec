@@ -6,7 +6,7 @@
     <title>AmbrosiaLibCS</title>
     <authors>Ambrosia</authors>
     <owners>Microsoft</owners>
-    <projectUrl>https://msrfranklin.visualstudio.com/_projects</projectUrl>
+    <projectUrl>https://github.com/Microsoft/AMBROSIA</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The AmbrosiaLibCS Binary Distribution</description>
     <releaseNotes>None yet</releaseNotes>

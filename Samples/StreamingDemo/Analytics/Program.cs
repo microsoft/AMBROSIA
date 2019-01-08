@@ -36,11 +36,8 @@ namespace Analytics
         protected override async Task<bool> OnFirstStart()
         {
             _dashboard = GetProxy<IDashboardProxy>(DashboardServiceName);
-            lock (_dashboard)
-            {
-                var query = CreateQuery();
-                _queryProcess = query.Restore();
-            }
+            var query = CreateQuery();
+            _queryProcess = query.Restore();
             return true;
         }
 
@@ -84,12 +81,9 @@ namespace Analytics
 
         public async Task OnNextAsync(StreamEvent<Tweet> next)
         {
-            lock (_dashboard)
+            if (_queryProcess != null)
             {
-                if (_queryProcess != null)
-                {
-                    _tweetConduit.OnNext(next);
-                }
+                _tweetConduit.OnNext(next);
             }
         }
 
@@ -97,11 +91,8 @@ namespace Analytics
         {
             if (_queryProcess != null)
             {
-                lock (_dashboard)
-                {
-                    _queryProcess.Checkpoint(stream);
-                    _serializedQueryOnce = true;
-                }
+                _queryProcess.Checkpoint(stream);
+                _serializedQueryOnce = true;
             }
         }
 

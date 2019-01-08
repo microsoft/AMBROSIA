@@ -37,7 +37,7 @@ namespace Client1
             {
                 case 0:
                     // Entry point
-                    this.EntryPoint();
+                    await this.EntryPoint();
                     break;
             }
 

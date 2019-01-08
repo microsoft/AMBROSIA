@@ -18,7 +18,7 @@ namespace Ambrosia
     /// Class to produce the template output
     /// </summary>
     
-    #line 1 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+    #line 1 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
     internal partial class DispatcherGenerator : DispatcherGeneratorBase
     {
@@ -32,7 +32,7 @@ namespace Ambrosia
                     "\r\nusing Ambrosia;\r\nusing static Ambrosia.StreamCommunicator;\r\nusing LocalAmbrosi" +
                     "aRuntime;\r\n\r\nnamespace ");
             
-            #line 14 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 14 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.interfaceType.Namespace));
             
             #line default
@@ -40,7 +40,7 @@ namespace Ambrosia
             this.Write("\r\n{\r\n    /// <summary>\r\n    /// This class runs in the process of the object that" +
                     " implements the interface ");
             
-            #line 17 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 17 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.interfaceType.Name));
             
             #line default
@@ -49,21 +49,21 @@ namespace Ambrosia
                     "tiated in ImmortalFactory.CreateServer when a bootstrapper registers a container" +
                     "\r\n    /// that supports the interface ");
             
-            #line 20 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 20 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.interfaceType.Name));
             
             #line default
             #line hidden
             this.Write(".\r\n    /// </summary>\r\n    class ");
             
-            #line 22 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 22 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
             
             #line default
             #line hidden
             this.Write(" : Immortal.Dispatcher\r\n    {\r\n        private readonly ");
             
-            #line 24 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 24 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(interfaceType.Name));
             
             #line default
@@ -71,7 +71,7 @@ namespace Ambrosia
             this.Write(" instance;\r\n\t\tprivate readonly ExceptionSerializer exceptionSerializer = new Exce" +
                     "ptionSerializer(new List<Type>());\r\n\r\n        public ");
             
-            #line 27 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 27 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
             
             #line default
@@ -81,14 +81,14 @@ namespace Ambrosia
         {
             this.instance = (");
             
-            #line 30 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 30 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(interfaceType.Name));
             
             #line default
             #line hidden
             this.Write(") z;\r\n        }\r\n\r\n        public  ");
             
-            #line 33 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 33 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
             
             #line default
@@ -98,7 +98,7 @@ namespace Ambrosia
         {
             this.instance = (");
             
-            #line 36 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 36 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(interfaceType.Name));
             
             #line default
@@ -112,11 +112,11 @@ namespace Ambrosia
             {
                 case 0:
                     // Entry point
-                    this.EntryPoint();
+                    await this.EntryPoint();
                     break;
 ");
             
-            #line 47 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 47 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
 
     foreach (var M in this.methods) {
       var idNumber = M.idNumber;
@@ -128,21 +128,21 @@ namespace Ambrosia
             #line hidden
             this.Write("                case ");
             
-            #line 53 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 53 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(idNumber));
             
             #line default
             #line hidden
             this.Write(":\r\n                    // ");
             
-            #line 54 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 54 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Name));
             
             #line default
             #line hidden
             this.Write("Async\r\n                    {\r\n                        // deserialize arguments\r\n");
             
-            #line 57 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 57 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
 
         foreach (var p in M.Parameters) {
           var parIndex = p.Position;
@@ -153,56 +153,56 @@ namespace Ambrosia
             #line hidden
             this.Write("\r\n            // arg");
             
-            #line 63 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 63 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parIndex));
             
             #line default
             #line hidden
             this.Write(": ");
             
-            #line 63 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 63 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(p.TypeName));
             
             #line default
             #line hidden
             this.Write("\r\n            ");
             
-            #line 64 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 64 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Utilities.DeserializeValue(p.ParameterType, parName)));
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 65 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 65 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  } 
             
             #line default
             #line hidden
             this.Write("                        // call the method\r\n");
             
-            #line 67 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 67 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  if (!voidMethod) { 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t\tvar p_");
             
-            #line 68 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 68 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Parameters.Count()));
             
             #line default
             #line hidden
             this.Write(" = default(");
             
-            #line 68 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 68 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.ReturnType.Name));
             
             #line default
             #line hidden
             this.Write(");\r\n");
             
-            #line 69 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 69 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  } 
             
             #line default
@@ -210,49 +210,49 @@ namespace Ambrosia
             this.Write("\t\t\t\t\t\tbyte[] argExBytes = null;\r\n\t\t\t\t\t\tint argExSize = 0;\r\n\t\t\t\t\t\tException currEx" +
                     " = null;\r\n\t\t\t\t\t\tint arg");
             
-            #line 73 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 73 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Parameters.Count()));
             
             #line default
             #line hidden
             this.Write("Size = 0;\r\n\t\t\t\t\t\tbyte[] arg");
             
-            #line 74 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 74 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Parameters.Count()));
             
             #line default
             #line hidden
             this.Write("Bytes = null;\r\n\r\n\t\t\t\t\t\ttry \r\n\t\t\t\t\t\t{\r\n");
             
-            #line 78 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 78 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  if (!voidMethod) { 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t\t\tp_");
             
-            #line 79 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 79 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Parameters.Count()));
             
             #line default
             #line hidden
             this.Write(" =\r\n");
             
-            #line 80 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 80 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  } 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t\t\t\tawait this.instance.");
             
-            #line 81 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 81 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Name));
             
             #line default
             #line hidden
             this.Write("Async(");
             
-            #line 81 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 81 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parameterString));
             
             #line default
@@ -261,7 +261,7 @@ namespace Ambrosia
                     "\n                        if (!rpcType.IsFireAndForget())\r\n                      " +
                     "  {\r\n");
             
-            #line 90 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 90 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  if (!voidMethod) { 
             
             #line default
@@ -269,21 +269,21 @@ namespace Ambrosia
             this.Write("                            // serialize result and send it back\r\n\t\t\t\t\t\tif (currE" +
                     "x != null)\r\n\t\t\t\t\t\t{\r\n\t\t\t");
             
-            #line 94 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 94 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Utilities.ComputeExceptionSize()));
             
             #line default
             #line hidden
             this.Write("\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\telse \r\n\t\t\t\t\t\t{\r\n\t\t\t");
             
-            #line 98 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 98 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Utilities.ComputeArgumentSize(M.ReturnType, M.Parameters.Count())));
             
             #line default
             #line hidden
             this.Write("\r\n\t\t\t\t\t\t}\r\n");
             
-            #line 100 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 100 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  } else { 
             
             #line default
@@ -291,14 +291,14 @@ namespace Ambrosia
             this.Write("                            // serialize result and send it back (there isn\'t one" +
                     ")\r\n                            arg");
             
-            #line 102 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 102 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Parameters.Count()));
             
             #line default
             #line hidden
             this.Write("Size = 0;\r\n");
             
-            #line 103 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 103 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  } 
             
             #line default
@@ -306,42 +306,42 @@ namespace Ambrosia
             this.Write("                            var wp = this.StartRPC_ReturnValue(senderOfRPC, seque" +
                     "nceNumber, currEx == null ? arg");
             
-            #line 104 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 104 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Parameters.Count()));
             
             #line default
             #line hidden
             this.Write("Size : argExSize, currEx == null ? ");
             
-            #line 104 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 104 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(!voidMethod ? "ReturnValueTypes.ReturnValue" : "ReturnValueTypes.EmptyReturnValue"));
             
             #line default
             #line hidden
             this.Write(" : ReturnValueTypes.Exception);\r\n\r\n");
             
-            #line 106 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 106 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  if (!voidMethod) { 
             
             #line default
             #line hidden
             this.Write("\t\r\n\t\t\t\t\t\tif (currEx != null)\r\n\t\t\t\t\t\t{\r\n\t\t\t");
             
-            #line 109 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 109 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Utilities.SerializeException()));
             
             #line default
             #line hidden
             this.Write("\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\telse \r\n\t\t\t\t\t\t{\r\n            ");
             
-            #line 113 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 113 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Utilities.SerializeValue(M.Parameters.Count())));
             
             #line default
             #line hidden
             this.Write("\r\n\t\t\t\t\t\t}\r\n");
             
-            #line 115 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 115 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  } 
             
             #line default
@@ -349,7 +349,7 @@ namespace Ambrosia
             this.Write("                            this.ReleaseBufferAndSend();\r\n                       " +
                     " }\r\n                    }\r\n                    break;\r\n");
             
-            #line 120 "C:\Git\Franklin\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 120 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  } 
             
             #line default

@@ -1,4 +1,4 @@
-Ambrosia: Robust Distributed Programming Made Easy and Efficient
+﻿Ambrosia: Robust Distributed Programming Made Easy and Efficient
 =======================================================================
 
 Windows Build (net46/netcore): [![Windows Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Win-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=23)
@@ -46,6 +46,7 @@ Table of Contents
     * [Language support](#language-support)
     * [Usage](#usage)
     * [Secure communication between services](#secure-communication-between-services)
+    * [Comparison to](#comparison-to)
     
 ## AMBROSIA Concepts
 
@@ -98,7 +99,7 @@ Also check out our [contributing guide](https://github.com/Microsoft/AMBROSIA/tr
 ## Reference
 
 ### Dependencies
-AMBROSIA currently requires an Azure subscription to write it's logs to replicated storage. In the future, we anticipate abstracting this component out to be able to use other storage options for logs. 
+AMBROSIA currently requires an Azure subscription to write its logs to replicated storage. In the future, we anticipate abstracting this component out to be able to use other storage options for logs. 
 
 ### Language Support
 AMBROSIA currently supports C# on both .NET Core and .NET Framework. We plan to exand this support with AMBROSIA bindings for other languages in the future. 
@@ -162,3 +163,6 @@ Options:
 
 ### Secure communication between services
 Read about how to secure communications between distributed components deployed on AMBROSIA [here](https://github.com/Microsoft/AMBROSIA/blob/master/docs/SecuringComms.md).
+
+### Comparison to
+[Orleans](https://github.com/Microsoft/AMBROSIA/blob/master/docs/OrleansComparison.md)

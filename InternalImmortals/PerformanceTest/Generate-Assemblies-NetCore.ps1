@@ -17,4 +17,4 @@ Write-Host "Using variant of AmbrosiaCS.exe: $AMBVARIANTCORE"
 Write-Host "Executing codegen command: dotnet ..\..\Clients\CSharp\AmbrosiaCS\bin\$AMBVARIANTCORE\AmbrosiaCS.dll CodeGen -a=API\bin\$AMBVARIANTCORE\ServerAPI.dll -a=ClientAPI\bin\$AMBVARIANTCORE\ClientAPI.dll -o=PTAmbrosiaGeneratedAPI -f=net46 -f=netcoreapp2.0 -fb=net46;CodeGenDependencies\net46 -fb=netcoreapp2.0;CodeGenDependencies\netcoreapp2.0"
 
 # Generate the assemblies, assumes an .exe which is created by a .Net Framework build:
-& dotnet "..\..\Clients\CSharp\AmbrosiaCS\bin\$AMBVARIANTCORE\AmbrosiaCS.dll"CodeGen -a="API\bin\$AMBVARIANTCORE\ServerAPI.dll" -a="ClientAPI\bin\$AMBVARIANTCORE\ClientAPI.dll" -o="PTAmbrosiaGeneratedAPI" -f="net46" -f="netcoreapp2.0" -fb="net46;CodeGenDependencies\net46" -fb="netcoreapp2.0;CodeGenDependencies\netcoreapp2.0"
+& dotnet "..\..\Clients\CSharp\AmbrosiaCS\bin\$AMBVARIANTCORE\AmbrosiaCS.dll" CodeGen -a="API\bin\$AMBVARIANTCORE\ServerAPI.dll" -a="ClientAPI\bin\$AMBVARIANTCORE\ClientAPI.dll" -o="PTAmbrosiaGeneratedAPI" -f="net46" -f="netcoreapp2.0" -fb="net46;CodeGenDependencies\net46" -fb="netcoreapp2.0;CodeGenDependencies\netcoreapp2.0"
