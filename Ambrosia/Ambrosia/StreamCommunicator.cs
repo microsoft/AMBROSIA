@@ -255,15 +255,29 @@ namespace Ambrosia
         }
 
 
-        public static async Task<int> ReadIntFixedAsync(this Stream stream)
+        public static async Task<int> ReadIntFixedAsync(this Stream stream, CancellationToken ct)
         {
             var value = new byte[4];
-            var readTask = stream.ReadAllRequiredBytesAsync(value, 0, value.Length);
-            await readTask;
+            await stream.ReadAllRequiredBytesAsync(value, 0, value.Length, ct);
             int intValue = value[0]
-                | (int)value[1] << 0x8
-                | (int)value[2] << 0x10
-                | (int)value[3] << 0x18;
+                           | (int)value[1] << 0x8
+                           | (int)value[2] << 0x10
+                           | (int)value[3] << 0x18;
+            return intValue;
+        }
+
+        public static async Task<long> ReadLongFixedAsync(this Stream stream, CancellationToken ct)
+        {
+            var value = new byte[8];
+            await stream.ReadAllRequiredBytesAsync(value, 0, value.Length, ct);
+            long intValue = value[0]
+                            | (long)value[1] << 0x8
+                            | (long)value[2] << 0x10
+                            | (long)value[3] << 0x18
+                            | (long)value[4] << 0x20
+                            | (long)value[5] << 0x28
+                            | (long)value[6] << 0x30
+                            | (long)value[7] << 0x38;
             return intValue;
         }
 
