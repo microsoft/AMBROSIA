@@ -364,7 +364,6 @@ namespace AmbrosiaTest
             // if (File.Exists(AmbrosiaLibCSExe) == false)
             //     Assert.Fail("<VerifyTestEnvironment> Missing AmbrosiaLibcs dll. Expecting:" + AmbrosiaLibCSExe);
 
-            /*
             string perfTestJobFile = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + "\\job.exe";
             if (File.Exists(perfTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
@@ -372,7 +371,7 @@ namespace AmbrosiaTest
             string perfTestServerFile = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + "\\server.exe";
             if (File.Exists(perfTestServerFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
-*/
+
             string perfAsyncTestJobFile = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + "\\job.exe";
             if (File.Exists(perfAsyncTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest job.exe. Expecting:" + perfAsyncTestJobFile);
@@ -1183,6 +1182,12 @@ namespace AmbrosiaTest
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             MyUtils.CleanupAzureTables("asyncbasic");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("asynckilljobtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("asynckillservertest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("asyncreplaylatest");
             Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more

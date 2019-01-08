@@ -42,7 +42,7 @@ namespace <#= this.interfaceType.Namespace #>
             {
                 case 0:
                     // Entry point
-                    this.EntryPoint();
+                    await this.EntryPoint();
                     break;
 <#
     foreach (var M in this.methods) {

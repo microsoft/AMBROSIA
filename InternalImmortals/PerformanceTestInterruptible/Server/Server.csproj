@@ -30,7 +30,6 @@
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
     <ProjectReference Include="..\GeneratedSourceFiles\PTIAmbrosiaGeneratedAPI\latest\PTIAmbrosiaGeneratedAPI.csproj" />
   </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
