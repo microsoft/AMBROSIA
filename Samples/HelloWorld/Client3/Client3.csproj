@@ -5,9 +5,13 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <Platforms>x64</Platforms>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.192" />
+  </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GeneratedSourceFiles\ServerInterfaces\latest\ServerInterfaces.csproj" />
+    <ProjectReference Include="..\GeneratedSourceFiles\Client3Interfaces\latest\Client3Interfaces.csproj" />
   </ItemGroup>
 
 </Project>
