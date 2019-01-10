@@ -145,6 +145,9 @@
     <Compile Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\SerializableException.cs">
       <Link>SerializableException.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\SerializableQueue.cs">
+      <Link>SerializableQueue.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\SerializableTaskCompletionSource.cs">
       <Link>SerializableTaskCompletionSource.cs</Link>
     </Compile>
