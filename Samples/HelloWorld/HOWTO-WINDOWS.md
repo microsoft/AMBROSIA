@@ -119,4 +119,5 @@ Ambrosia generates code for the interface proxies. To make this sample easy to r
 
 3. Build HelloWorld.sln. This now picks up the freshly generated source files.
 
-* Important note: If you are running Client3, in order to have recovery supported, you must build steps 1 and 3 in `Debug` configuration.
+* Important note: If you are running Client3, build stages 1, 3 in `Debug` Configuration. At this time we require any Immortal making Async calls (in contrast to Fork calls), and the associated generated project, to be compiled in `Debug` configuration mode. 
+This is due to a current limitation in our ability to serialize .NET tasks which will hopefully be overcome in the future.
