@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>AmbrosiaLibCSDebug</id>
-    <version>0.8.0</version>
+    <version>0.8.1</version>
     <title>AmbrosiaLibCS.Debug</title>
     <authors>Ambrosia</authors>
     <owners>Microsoft</owners>
