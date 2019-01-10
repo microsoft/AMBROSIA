@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
@@ -6,7 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AmbrosiaLibCS" Version="2019.1.7.1" />
+    <PackageReference Include="AmbrosiaLibCS" Version="2019.1.7.1" Condition="'$(Configuration)' == 'Release' " />
+    <PackageReference Include="AmbrosiaLibCSDebug" Version="2019.1.8.1" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
 
 </Project>
