@@ -166,9 +166,8 @@ namespace Ambrosia
                     frameworkReferenceLocations[framework].Add(assemblyName, assemblyLocationRelativePath);
                 }
             }
-            
 
-            var conditionToPackageInfo = new Dictionary<string, List<Tuple<string, string, string>>>();
+            var conditionToPackageInfo = new Dictionary<string, List<Tuple<string, string, string, string>>>();
 
             var execAssembly = Assembly.GetExecutingAssembly();
             var projFile = Path.Combine(Path.GetDirectoryName(execAssembly.Location), $@"{execAssembly.GetName().Name}.csproj");
@@ -193,6 +192,9 @@ namespace Ambrosia
 
                     var versionAttribute = attributes.FirstOrDefault(a => a.Name == "Version");
 
+                    var conditionAttribute = attributes.FirstOrDefault(a => a.Name == "Condition");
+                    var packageCondition = conditionAttribute?.Value;
+
                     string packageVersion;
                     if (versionAttribute == null)
                     {
@@ -207,9 +209,9 @@ namespace Ambrosia
 
                     if (!conditionToPackageInfo.ContainsKey(condition))
                     {
-                        conditionToPackageInfo.Add(condition, new List<Tuple<string, string, string>>());
+                        conditionToPackageInfo.Add(condition, new List<Tuple<string, string, string, string>>());
                     }
-                    conditionToPackageInfo[condition].Add(new Tuple<string, string, string>(packageMode, packageName, packageVersion));
+                    conditionToPackageInfo[condition].Add(new Tuple<string, string, string, string>(packageMode, packageName, packageVersion, packageCondition));
                 }
             }
 
@@ -219,8 +221,9 @@ namespace Ambrosia
                 var packageReferences = new List<string>();
                 foreach (var pi in cpi.Value)
                 {
+                    var condition = pi.Item4 == null ? string.Empty : $@"Condition=""{pi.Item4}""";
                     packageReferences.Add(
-$@"     <PackageReference {pi.Item1}=""{pi.Item2}"" Version=""{pi.Item3}"" />");
+$@"     <PackageReference {pi.Item1}=""{pi.Item2}"" Version=""{pi.Item3}"" {condition} />");
                 }
 
                 conditionalPackageReferences.Add(
@@ -235,34 +238,12 @@ $@"     <PackageReference {pi.Item1}=""{pi.Item2}"" Version=""{pi.Item3}"" />");
 ");
             }
 
-            var referenceItemGroups = new List<string>();
-            foreach (var frl in frameworkReferenceLocations)
-            {
-                var references = new List<string>();
-                foreach (var rl in frl.Value)
-                {
-                    references.Add(
-                        $@"     <Reference Include=""{rl.Key}"">
-            <HintPath>{rl.Value}</HintPath>
-        </Reference>");
-                }
-
-                var referencesItemGroup =
-                    $@" <ItemGroup Condition=""'$(TargetFramework)' == '{frl.Key}'"">
-{string.Join("\n", references)}
-    </ItemGroup>
-";
-                referenceItemGroups.Add(referencesItemGroup);
-            }
-
-            
-
             var projectFileSource =
 $@" <Project Sdk=""Microsoft.NET.Sdk"">
     <PropertyGroup>
         <TargetFrameworks>{string.Join(";", _targetFrameworks)}</TargetFrameworks>
     </PropertyGroup>
-{string.Join(string.Empty, referenceItemGroups)}{string.Join(string.Empty, conditionalPackageReferences)}</Project>";
+{string.Join(string.Empty, conditionalPackageReferences)}</Project>";
             var projectSourceFile =
                 new SourceFile() { FileName = $"{_outputAssemblyName}.csproj", SourceCode = projectFileSource };
             sourceFiles.Add(projectSourceFile);
