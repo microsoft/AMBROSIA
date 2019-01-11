@@ -16,8 +16,6 @@ namespace Ambrosia
         private static List<string> _assemblyNames;
         private static string _outputAssemblyName;
         private static List<string> _targetFrameworks = new List<string>();
-        private static List<string> _frameworkToBinPathRaw = new List<string>();
-        private static Dictionary<string, string> _frameworkToBinPath = new Dictionary<string, string>();
 
         static void Main(string[] args)
         {
@@ -129,43 +127,6 @@ namespace Ambrosia
 
             var immortalSerializerSource = new ImmortalSerializerGenerator(generatedProxyNames, generatedProxyNamespaces).TransformText();
             sourceFiles.Add(new SourceFile { FileName = $"ImmortalSerializer.cs", SourceCode = immortalSerializerSource, });
-
-            var frameworkReferenceLocations = new Dictionary<string, Dictionary<string, string>>();
-            foreach (var fb in _frameworkToBinPath)
-            {
-                var framework = fb.Key;
-                var binPath = fb.Value;
-                var assemblyFileNames = _assemblyNames.Select(Path.GetFileName).ToList();
-                foreach (var fileName in Directory.GetFiles(binPath, "*.dll", SearchOption.TopDirectoryOnly)
-                    .Union(Directory.GetFiles(binPath, "*.exe", SearchOption.TopDirectoryOnly)))
-                {
-                    var assemblyPath = Path.GetFullPath(fileName);
-                    if (assemblyFileNames.Contains(Path.GetFileName(assemblyPath)))
-                    {
-                        continue;
-                    }
-
-                    Assembly assembly;
-                    try
-                    {
-                        assembly = Assembly.LoadFile(assemblyPath);
-                    }
-                    catch (Exception)
-                    {
-                        continue;
-                    }
-                    var assemblyName = assembly.GetName().Name;
-                    var assemblyLocation = assembly.Location;
-
-                    var assemblyLocationUri = new Uri(assemblyLocation);
-                    var assemblyLocationRelativePath = new Uri(Path.GetFullPath(directoryPath)).MakeRelativeUri(assemblyLocationUri).ToString();
-                    if (!frameworkReferenceLocations.ContainsKey(framework))
-                    {
-                        frameworkReferenceLocations.Add(framework, new Dictionary<string, string>());
-                    }
-                    frameworkReferenceLocations[framework].Add(assemblyName, assemblyLocationRelativePath);
-                }
-            }
 
             var conditionToPackageInfo = new Dictionary<string, List<Tuple<string, string, string, string>>>();
 
@@ -281,8 +242,6 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
                 { "a|assembly=", "An input assembly name. [REQUIRED]", assemblyName => assemblyNames.Add(Path.GetFullPath(assemblyName)) },
                 { "o|outputAssemblyName=", "An output assembly name. [REQUIRED]", outputAssemblyName => _outputAssemblyName = outputAssemblyName },
                 { "f|targetFramework=", "The output assembly target framework. [> 1 REQUIRED]", f => _targetFrameworks.Add(f) },
-                { "fb|frameworkToBinPath=", "The framework bin path containing the output assembly dependencies (format: <framework>;<binPath>).", fb => _frameworkToBinPathRaw.Add(fb)
-                },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 
@@ -327,35 +286,6 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
             var assemblyFilesNotFound = _assemblyNames.Where(an => !File.Exists(an)).ToList();
             if (assemblyFilesNotFound.Count > 0)
                 errorMessage += $"Unable to find the following assembly files:\n{string.Join("\n", assemblyFilesNotFound)}";
-
-            foreach (var fb in _frameworkToBinPathRaw)
-            {
-                var data = fb.Split(';');
-                if (data.Length != 2)
-                {
-                    errorMessage += $"Wrong format for framework to binPath: {fb}";
-                    continue;
-                }
-
-                var framework = data[0];
-                var binPath = data[1];
-
-                if (!Directory.Exists(binPath))
-                {
-                    errorMessage += $"Unable to find the dependencies bin path: {binPath} for framework: {framework}";
-                    continue;
-                }
-
-                if (_frameworkToBinPath.ContainsKey(framework))
-                {
-                    errorMessage += $"Encountered more than one binPath for framework: {framework}";
-                    continue;
-                }
-
-                _frameworkToBinPath.Add(framework, binPath);
-            }
-
-            
 
             if (errorMessage != string.Empty)
             {

@@ -2,7 +2,6 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFrameworks>net46</TargetFrameworks>
-    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -25,7 +24,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GeneratedSourceFiles\AnalyticsAPIGenerated\latest\AnalyticsAPIGenerated.csproj" />
+    <ProjectReference Include="..\DashboardAPI\DashboardAPI.csproj" />
     <ProjectReference Include="..\TwitterObservable\TwitterObservable.csproj" />
   </ItemGroup>
 </Project>

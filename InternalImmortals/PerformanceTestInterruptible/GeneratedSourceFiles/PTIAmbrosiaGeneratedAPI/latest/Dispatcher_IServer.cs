@@ -6,29 +6,29 @@ using Ambrosia;
 using static Ambrosia.StreamCommunicator;
 using LocalAmbrosiaRuntime;
 
-namespace Client2
+namespace Server
 {
     /// <summary>
-    /// This class runs in the process of the object that implements the interface IClient2
+    /// This class runs in the process of the object that implements the interface IServer
     /// and communicates with the local Ambrosia runtime.
     /// It is instantiated in ImmortalFactory.CreateServer when a bootstrapper registers a container
-    /// that supports the interface IClient2.
+    /// that supports the interface IServer.
     /// </summary>
-    class IClient2_Dispatcher_Implementation : Immortal.Dispatcher
+    class IServer_Dispatcher_Implementation : Immortal.Dispatcher
     {
-        private readonly IClient2 instance;
+        private readonly IServer instance;
 		private readonly ExceptionSerializer exceptionSerializer = new ExceptionSerializer(new List<Type>());
 
-        public IClient2_Dispatcher_Implementation(Immortal z, ImmortalSerializerBase myImmortalSerializer, string serviceName, int receivePort, int sendPort, bool setupConnections)
+        public IServer_Dispatcher_Implementation(Immortal z, ImmortalSerializerBase myImmortalSerializer, string serviceName, int receivePort, int sendPort, bool setupConnections)
             : base(z, myImmortalSerializer, serviceName, receivePort, sendPort, setupConnections)
         {
-            this.instance = (IClient2) z;
+            this.instance = (IServer) z;
         }
 
-        public  IClient2_Dispatcher_Implementation(Immortal z, ImmortalSerializerBase myImmortalSerializer, string localAmbrosiaRuntime, Type newInterface, Type newImmortalType, int receivePort, int sendPort)
+        public  IServer_Dispatcher_Implementation(Immortal z, ImmortalSerializerBase myImmortalSerializer, string localAmbrosiaRuntime, Type newInterface, Type newImmortalType, int receivePort, int sendPort)
             : base(z, myImmortalSerializer, localAmbrosiaRuntime, newInterface, newImmortalType, receivePort, sendPort)
         {
-            this.instance = (IClient2) z;
+            this.instance = (IServer) z;
         }
 
         public override async Task<bool> DispatchToMethod(int methodId, RpcTypes.RpcType rpcType, string senderOfRPC, long sequenceNumber, byte[] buffer, int cursor)
@@ -37,20 +37,20 @@ namespace Client2
             {
                 case 0:
                     // Entry point
-                    this.EntryPoint();
+                    await this.EntryPoint();
                     break;
                 case 1:
-                    // SendMessageAsync
+                    // MAsync
                     {
                         // deserialize arguments
 
-            // arg0: System.String
+            // arg0: System.Byte[]
             var p_0_ValueLength = buffer.ReadBufferedInt(cursor);
 cursor += IntSize(p_0_ValueLength);
 var p_0_ValueBuffer = new byte[p_0_ValueLength];
 Buffer.BlockCopy(buffer, cursor, p_0_ValueBuffer, 0, p_0_ValueLength);
 cursor += p_0_ValueLength;
-var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
+var p_0 = p_0_ValueBuffer;
 
                         // call the method
 						byte[] argExBytes = null;
@@ -61,7 +61,7 @@ var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
 
 						try 
 						{
-								await this.instance.SendMessageAsync(p_0);
+								await this.instance.MAsync(p_0);
 						}
 						catch (Exception ex)
 						{
@@ -79,17 +79,17 @@ var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
                     }
                     break;
                 case 2:
-                    // ReceiveKeyboardInputAsync
+                    // AmIHealthyAsync
                     {
                         // deserialize arguments
 
-            // arg0: System.String
+            // arg0: System.DateTime
             var p_0_ValueLength = buffer.ReadBufferedInt(cursor);
 cursor += IntSize(p_0_ValueLength);
 var p_0_ValueBuffer = new byte[p_0_ValueLength];
 Buffer.BlockCopy(buffer, cursor, p_0_ValueBuffer, 0, p_0_ValueLength);
 cursor += p_0_ValueLength;
-var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
+var p_0 = Ambrosia.BinarySerializer.Deserialize<System.DateTime>(p_0_ValueBuffer);
 
                         // call the method
 						byte[] argExBytes = null;
@@ -100,7 +100,7 @@ var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
 
 						try 
 						{
-								await this.instance.ReceiveKeyboardInputAsync(p_0);
+								await this.instance.AmIHealthyAsync(p_0);
 						}
 						catch (Exception ex)
 						{
@@ -112,6 +112,36 @@ var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
                             // serialize result and send it back (there isn't one)
                             arg1Size = 0;
                             var wp = this.StartRPC_ReturnValue(senderOfRPC, sequenceNumber, currEx == null ? arg1Size : argExSize, currEx == null ? ReturnValueTypes.EmptyReturnValue : ReturnValueTypes.Exception);
+
+                            this.ReleaseBufferAndSend();
+                        }
+                    }
+                    break;
+                case 3:
+                    // PrintBytesReceivedAsync
+                    {
+                        // deserialize arguments
+                        // call the method
+						byte[] argExBytes = null;
+						int argExSize = 0;
+						Exception currEx = null;
+						int arg0Size = 0;
+						byte[] arg0Bytes = null;
+
+						try 
+						{
+								await this.instance.PrintBytesReceivedAsync();
+						}
+						catch (Exception ex)
+						{
+							currEx = ex;
+						}
+
+                        if (!rpcType.IsFireAndForget())
+                        {
+                            // serialize result and send it back (there isn't one)
+                            arg0Size = 0;
+                            var wp = this.StartRPC_ReturnValue(senderOfRPC, sequenceNumber, currEx == null ? arg0Size : argExSize, currEx == null ? ReturnValueTypes.EmptyReturnValue : ReturnValueTypes.Exception);
 
                             this.ReleaseBufferAndSend();
                         }

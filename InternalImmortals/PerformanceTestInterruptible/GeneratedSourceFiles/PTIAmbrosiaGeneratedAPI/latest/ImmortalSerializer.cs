@@ -11,7 +11,7 @@ using System.Xml;
 using Ambrosia;
 using static Ambrosia.StreamCommunicator;
 using Server;
-using Client1;
+using JobAPI;
 
 namespace Ambrosia
 {
@@ -25,7 +25,7 @@ namespace Ambrosia
 			base.KnownTypes = new SerializableType[] 
 			{
 				new SerializableType(typeof(IServerProxy_Implementation)),
-				new SerializableType(typeof(IClient1Proxy_Implementation)),
+				new SerializableType(typeof(IJobProxy_Implementation)),
 				new SerializableType(this.GetType())
 			};
 		}

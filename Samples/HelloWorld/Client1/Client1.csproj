@@ -8,12 +8,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.192" />
   </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
-    <ProjectReference Include="..\GeneratedSourceFiles\Client1InterfacesNetCore\latest\Client1InterfacesNetCore.csproj" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
-    <ProjectReference Include="..\GeneratedSourceFiles\Client1InterfacesNet46\latest\Client1InterfacesNet46.csproj" />
+  <ItemGroup>
+    <ProjectReference Include="..\GeneratedSourceFiles\Client1Interfaces\latest\Client1Interfaces.csproj" />
   </ItemGroup>
 
 </Project>
