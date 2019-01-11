@@ -17,7 +17,7 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AmbrosiaLibCS" Version="2019.1.7.1" Condition="'$(Configuration)' == 'Release' "/>
+    <PackageReference Include="AmbrosiaLibCS" Version="0.8.2" Condition="'$(Configuration)' == 'Release' " />
     <PackageReference Include="AmbrosiaLibCSDebug" Version="2019.1.8.1" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="CRA" Version="2018.11.5.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
