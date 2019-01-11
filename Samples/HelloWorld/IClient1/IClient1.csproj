@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="AmbrosiaLibCS" Version="2019.1.7.1" Condition="'$(Configuration)' == 'Release' " />
-    <PackageReference Include="AmbrosiaLibCSDebug" Version="2019.1.8.1" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="AmbrosiaLibCSDebug" Version="0.8.2" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
 
 </Project>
