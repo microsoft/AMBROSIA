@@ -58,7 +58,7 @@ namespace Job
         protected override async Task<bool> OnFirstStart()
         {
 #if DEBUG
-            Console.WriteLine("Starting up in client container. Running performance test against:" + _perfServer);
+            Console.WriteLine("*X* Starting up in client container. Running performance test against:" + _perfServer);
 #endif
 
             _server = GetProxy<IServerProxy>(_perfServer);
@@ -179,7 +179,7 @@ namespace Job
             }
 
 #if DEBUG
-            Console.WriteLine("Connecting to: " + _perfServer + "....");
+            Console.WriteLine("*X* Connecting to: " + _perfServer + "....");
 #endif
 
             var myClient = new Job(_perfServer, _maxMessageSize, _numRounds, _descendingSize);

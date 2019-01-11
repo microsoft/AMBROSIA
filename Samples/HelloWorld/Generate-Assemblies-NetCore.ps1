@@ -19,7 +19,10 @@ Write-Host "Executing codegen command: dotnet $env:AMBROSIATOOLS\x64\Release\net
 
 Write-Host "Executing codegen command: $env:AMBROSIATOOLS\x64\Release\netcoreapp2.0\AmbrosiaCS.dll CodeGen -a=ServerAPI\bin\$env:AMBVARIANT\IServer.dll -a=IClient2\bin\$env:AMBVARIANT\IClient2.dll -o=Client2Interfaces -f=netcoreapp2.0 -b=CodeGenDependencies\netcoreapp2.0"
 
+Write-Host "Executing codegen command: $env:AMBROSIATOOLS\x64\Release\netcoreapp2.0\AmbrosiaCS.dll CodeGen -a=ServerAPI\bin\$env:AMBVARIANT\IServer.dll -a=IClient3\bin\$env:AMBVARIANT\IClient3.dll -o=Client2Interfaces -f=netcoreapp2.0 -b=CodeGenDependencies\netcoreapp2.0"
+
 # Generate the assemblies, assumes an .exe which is created by a .Net Framework build:
-& dotnet $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -a="IClient1\bin\$env:AMBVARIANT\IClient1.dll" -o=Client1InterfacesNetCore -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
-& dotnet $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -a="IClient2\bin\$env:AMBVARIANT\IClient2.dll" -o=Client2InterfacesNetCore -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
-& dotnet $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -o=ServerInterfacesNetCore -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
+& dotnet $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -o=ServerInterfaces -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
+& dotnet $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -a="IClient1\bin\$env:AMBVARIANT\IClient1.dll" -o=Client1Interfaces -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
+& dotnet $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -a="IClient2\bin\$env:AMBVARIANT\IClient2.dll" -o=Client2Interfaces -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"
+& dotnet $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.dll CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -a="IClient3\bin\$env:AMBVARIANT\IClient3.dll" -o=Client3Interfaces -f="netcoreapp2.0" -b="CodeGenDependencies\netcoreapp2.0"

@@ -154,7 +154,7 @@ namespace Job
             }
 
 #if DEBUG
-            Console.WriteLine("Connecting to: "+ _perfServer + "....");
+            Console.WriteLine("*X* Connecting to: " + _perfServer + "....");
 #endif
 
             var myClient = new Job(_perfServer, _numRounds);

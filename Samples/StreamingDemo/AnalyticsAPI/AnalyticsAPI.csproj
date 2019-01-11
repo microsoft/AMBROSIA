@@ -18,7 +18,8 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AmbrosiaLibCS" Version="2019.1.7.1" />
+    <PackageReference Include="AmbrosiaLibCS" Version="0.8.2" Condition="'$(Configuration)' == 'Release' " />
+    <PackageReference Include="AmbrosiaLibCSDebug" Version="0.8.2" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="Trill">
       <Version>2018.3.2.1</Version>
     </PackageReference>

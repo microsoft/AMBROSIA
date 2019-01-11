@@ -1,6 +1,6 @@
 # How to run the HelloWorld Sample (on Windows with .NET Core)
 
-This sample shows two immortals communicating, a client and a server. You can build and run it locally to get a quick idea of how Ambrosia operates. The solution contains two alternate versions of the client (Client1 and Client2), only one of which is used at a time.  Client1 demonstrates basic communication, while Client2 demonstrates nondeterministic input using an impulse handler.
+This sample shows two immortals communicating, a client and a server. You can build and run it locally to get a quick idea of how Ambrosia operates. The solution contains three alternate versions of the client (Client1, Client2 and Client3), only one of which is used at a time.  Client1 demonstrates basic communication, Client2 demonstrates nondeterministic input using an impulse handler and Client3 demonstrates using asynchronous calls.
 
 ## Quick Build
 
@@ -109,13 +109,15 @@ dotnet UnsafeDeregisterInstance.dll client
 
 Of course, if you delete those, you have to re-register them in order to run HelloWorld again.
 
-## Full Build w/ Code Generation
+## Full Build w/ Code Generation *
 
 Ambrosia generates code for the interface proxies. To make this sample easy to run, we have already included the generated code, so you don't have to run code generation just to build and run the HelloWorld sample. However, if you want to experiment with it or make any changes to the interfaces, here is how you can run the code generation step.
 
-1. Build the projects `IClient1`, `IClient2` and `IServer`. This generates the binaries used by the code generation step.
+1. Build the projects `IClient1`, `IClient2`, `IClient3` and `IServer`. This generates the binaries used by the code generation step.
 
-2. Run code generation by executing `Generate-Assemblies-NetCore.ps1`. This overwrites the content of the projects `Client1Interfaces`, `Client2Interfaces` and `ServerInterfaces` with generated code.
+2. Run code generation by executing `Generate-Assemblies-NetCore.ps1`. This overwrites the content of the projects `Client1Interfaces`, `Client2Interfaces`. `Client3Interfaces` and `ServerInterfaces` with generated code.
 
 3. Build HelloWorld.sln. This now picks up the freshly generated source files.
 
+* Important note: If you are running Client3, build stages 1, 3 in `Debug` Configuration. At this time we require any Immortal making Async calls (in contrast to Fork calls), and the associated generated project, to be compiled in `Debug` configuration mode. 
+This is due to a current limitation in our ability to serialize .NET tasks which will hopefully be overcome in the future.

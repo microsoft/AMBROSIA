@@ -308,7 +308,7 @@ namespace Ambrosia
                         case AmbrosiaRuntime.InitalMessageByte:
                             {
 #if DEBUG
-                                Console.WriteLine("Received an initial message");
+                                Console.WriteLine("*X* Received an initial message");
 #endif
 
                                 _cursor++;
@@ -331,7 +331,7 @@ namespace Ambrosia
                         case AmbrosiaRuntime.checkpointByte:
                             {
 #if DEBUG
-                                Console.WriteLine("Received a checkpoint message");
+                                Console.WriteLine("*X* Received a checkpoint message");
 #endif
                                 // TODO: this message should contain a (serialized - doh!) checkpoint. Restore the state.
                                 _cursor++;
@@ -348,7 +348,7 @@ namespace Ambrosia
                         case AmbrosiaRuntime.takeCheckpointByte:
                             {
 #if DEBUG
-                                Console.WriteLine("Received a take checkpoint message");
+                                Console.WriteLine("*X* Received a take checkpoint message");
 #endif
                                 _cursor++;
 
@@ -360,7 +360,7 @@ namespace Ambrosia
                         case AmbrosiaRuntime.takeBecomingPrimaryCheckpointByte:
                             {
 #if DEBUG
-                                Console.WriteLine("Received a take checkpoint message");
+                                Console.WriteLine("*X* Received a take checkpoint message");
 #endif
                                 _cursor++;
 
@@ -376,13 +376,13 @@ namespace Ambrosia
                                 if (firstByte == AmbrosiaRuntime.upgradeTakeCheckpointByte)
                                 {
 #if DEBUG
-                                    Console.WriteLine("Received a upgrade and take checkpoint message");
+                                    Console.WriteLine("*X* Received a upgrade and take checkpoint message");
 #endif
                                 }
                                 else
                                 {
 #if DEBUG
-                                    Console.WriteLine("Received a upgrade service message");
+                                    Console.WriteLine("*X* Received a upgrade service message");
 #endif
                                 }
                                 _cursor++;
@@ -491,7 +491,7 @@ namespace Ambrosia
 
                                         //Console.WriteLine("Received RPC call to method with id: {0} and seq no.: {1}", methodId, CurrentSequenceNumber);
 #if DEBUG
-                                        Console.WriteLine($"Got response for {sequenceNumber} from {senderOfRPC}");
+                                        Console.WriteLine($"*X* Got response for {sequenceNumber} from {senderOfRPC}");
 #endif
 
                                         if (this.CallCache.Data.TryRemove(sequenceNumber, out var taskCompletionSource))
@@ -745,7 +745,7 @@ namespace Ambrosia
             }
             _ambrosiaSendToStream.Flush();
 #if DEBUG
-            Console.WriteLine("Sent checkpoint back to LAR");
+            Console.WriteLine("*X* Sent checkpoint back to LAR");
 #endif
             _ambrosiaSendToConnectionRecord.BufferedOutput.UnlockOutputBuffer();
             ReleaseOutputLock();
@@ -982,7 +982,7 @@ namespace Ambrosia
                 taskToWaitFor = new SerializableTaskCompletionSource(typeof(T), newSequenceNumber);
                 this.CallCache.Data.TryAdd(newSequenceNumber, taskToWaitFor);
 #if DEBUG
-                Console.WriteLine("Sent request for {0}", newSequenceNumber);
+                Console.WriteLine("*X* Sent request for {0}", newSequenceNumber);
 #endif
             }
 
@@ -1117,7 +1117,7 @@ namespace Ambrosia
                 if (disposing)
                 {
 #if DEBUG
-                    Console.WriteLine("Dispatcher disposing");
+                    Console.WriteLine("*X* Dispatcher disposing");
 #endif
                     // TODO: dispose managed state (managed objects).
                     this.cancelTokenSource.Cancel(true);
@@ -1203,7 +1203,7 @@ namespace Ambrosia
             public InstanceProxy(string remoteAmbrosiaRuntime, bool attachNeeded)
             {
 #if DEBUG
-                Console.WriteLine($"InstanceProxy created to communicate with {remoteAmbrosiaRuntime}. (Attach: {attachNeeded})");
+                Console.WriteLine($"*X* InstanceProxy created to communicate with {remoteAmbrosiaRuntime}. (Attach: {attachNeeded})");
 #endif
                 this.remoteAmbrosiaRuntime = remoteAmbrosiaRuntime;
                 this.remoteAmbrosiaBytes = Encoding.UTF8.GetBytes(this.remoteAmbrosiaRuntime);
@@ -1213,7 +1213,7 @@ namespace Ambrosia
                 {
                     Immortal.AcquireOutputLock(3);
 #if DEBUG
-                    Console.WriteLine("Sending attach message to: " + this.remoteAmbrosiaRuntime);
+                    Console.WriteLine("*X* Sending attach message to: " + this.remoteAmbrosiaRuntime);
 #endif
                     // Send attach message to the remote Ambrosia Runtime
                     var destinationBytes = Encoding.UTF8.GetBytes(this.remoteAmbrosiaRuntime);
@@ -1286,7 +1286,7 @@ namespace Ambrosia
             public void Start()
             {
 #if DEBUG
-                Console.WriteLine("Start Start()");
+                Console.WriteLine("*X* Start Start()");
 #endif
                 var inputFlexBuffer = new FlexReadBuffer();
                 int commitID = MyImmortal._ambrosiaReceiveFromStream.ReadIntFixed();
@@ -1305,7 +1305,7 @@ namespace Ambrosia
                 {
                     // Then this container is recovering
 #if DEBUG
-                    Console.WriteLine("Received a checkpoint message");
+                    Console.WriteLine("*X* Received a checkpoint message");
 #endif
                     // TODO: this message should contain a (serialized - doh!) checkpoint. Restore the state.
                     var sizeOfCheckpoint = inputFlexBuffer.Buffer.ReadBufferedLong(cursor);
@@ -1316,7 +1316,7 @@ namespace Ambrosia
                     }
                     MyImmortal._immortalSerializer = this.MyImmortalSerializer;
 #if DEBUG
-                    Console.WriteLine($"Deserialized: {this.MyImmortal.ToString()}");
+                    Console.WriteLine($"*X* Deserialized: {this.MyImmortal.ToString()}");
 #endif
                     if (!string.IsNullOrEmpty(this.MyImmortal.SerializedTask.ToString()))
                     {
@@ -1335,13 +1335,13 @@ namespace Ambrosia
                     if (firstByte == AmbrosiaRuntime.takeCheckpointByte)
                     {
 #if DEBUG
-                        Console.WriteLine("Received a take checkpoint message");
+                        Console.WriteLine("*X* Received a take checkpoint message");
 #endif
                     }
                     else
                     {
 #if DEBUG
-                        Console.WriteLine("Received a take becoming primary checkpoint message");
+                        Console.WriteLine("*X* Received a take becoming primary checkpoint message");
 #endif
                     }
                     int sizeOfMessage;
@@ -1363,7 +1363,7 @@ namespace Ambrosia
                     }
 
 #if DEBUG
-                    Console.WriteLine("Sent initial message to LAR");
+                    Console.WriteLine("*X* Sent initial message to LAR");
 #endif
 
                     //// Side effect of calling StartRPC is to kick off the Dispatch loop in a different thread
@@ -1396,7 +1396,7 @@ namespace Ambrosia
 
 
 #if DEBUG
-                    Console.WriteLine("Sent checkpoint back to LAR");
+                    Console.WriteLine("*X* Sent checkpoint back to LAR");
 #endif
 
                     if (firstByte == AmbrosiaRuntime.takeBecomingPrimaryCheckpointByte)
@@ -1419,7 +1419,7 @@ namespace Ambrosia
                     throw new Exception(s);
                 }
 #if DEBUG
-                Console.WriteLine("End Start()");
+                Console.WriteLine("*X* End Start()");
 #endif
             }
 
