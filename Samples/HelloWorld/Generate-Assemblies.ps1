@@ -1,25 +1,33 @@
 # Perform the code-generation step for this example application.
+if ( $env:AMBVARIANT ) {
+    $AMBVARIANT = $env:AMBVARIANT
+} else {
+    $AMBVARIANT="x64\Debug\net46"
+}
 
-$env:AMBVARIANT="x64\Debug\net46"
-$env:AMBROSIATOOLS="..\..\Clients\CSharp\AmbrosiaCS\bin"
+if ( $env:AMBROSIATOOLS ) {
+    $AMBROSIATOOLS=$env:AMBROSIATOOLS
+} else {
+    $AMBROSIATOOLS = "..\..\Clients\CSharp\AmbrosiaCS\bin"
+}
 
-# FIXME: Change this script to depend on the binary distribution of AMBROSIA
-# rather than the source tree.
-$ambrosiaPath="..\.."
-
-# Create an empty codegen dependencies folder
-New-Item -ItemType Directory -Force -Path "CodeGenDependencies\net46" | Out-Null
-Get-ChildItem "CodeGenDependencies\net46\" | Remove-Item
-
-Write-Host "Using variant of CodeGen.exe: $env:AMBVARIANT"
-
-Write-Host "Executing codegen command: $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$env:AMBVARIANT\IServer.dll -o=ServerInterfacesNet46 -f=net46 -b=CodeGenDependencies\net46"
-
-Write-Host "Executing codegen command: $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$env:AMBVARIANT\IServer.dll -a=IClient1\bin\$env:AMBVARIANT\IClient1.dll -o=Client1InterfacesNet46 -f=net46 -b=CodeGenDependencies\net46"
-
-Write-Host "Executing codegen command: $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$env:AMBVARIANT\IServer.dll -a=IClient2\bin\$env:AMBVARIANT\IClient2.dll -o=Client2InterfacesNet46 -f=net46 -b=CodeGenDependencies\net46"
+Write-Host "Using variant of AmbrosiaCS: $AMBVARIANT"
 
 # Generate the assemblies, assumes an .exe which is created by a .Net Framework build:
-& $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -o=ServerInterfacesNet46 -f="net46" -b="CodeGenDependencies\net46"
-& $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -a="IClient1\bin\$env:AMBVARIANT\IClient1.dll" -o=Client1InterfacesNet46 -f="net46" -b="CodeGenDependencies\net46"
-& $env:AMBROSIATOOLS\$env:AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$env:AMBVARIANT\IServer.dll" -a="IClient2\bin\$env:AMBVARIANT\IClient2.dll" -o=Client2InterfacesNet46 -f="net46" -b="CodeGenDependencies\net46"
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$AMBVARIANT\IServer.dll -o=ServerInterfaces -f=net46 -f=netcoreapp2.0"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$AMBVARIANT\IServer.dll" -o=ServerInterfaces -f="net46" -f="netcoreapp2.0"
+
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$AMBVARIANT\IServer.dll -a=IClient1\bin\$AMBVARIANT\IClient1.dll -o=Client1Interfaces -f=net46 -f=netcoreapp2.0"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$AMBVARIANT\IServer.dll" -a="IClient1\bin\$AMBVARIANT\IClient1.dll" -o=Client1Interfaces -f="net46" -f="netcoreapp2.0"
+
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$AMBVARIANT\IServer.dll -a=IClient2\bin\$AMBVARIANT\IClient2.dll -o=Client2Interfaces -f=net46 -f=netcoreapp2.0"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$AMBVARIANT\IServer.dll" -a="IClient2\bin\$AMBVARIANT\IClient2.dll" -o=Client2Interfaces -f="net46" -f="netcoreapp2.0"
+
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$AMBVARIANT\IServer.dll -a=IClient3\bin\$AMBVARIANT\IClient3.dll -o=Client3Interfaces -f=net46 -f=netcoreapp2.0"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$AMBVARIANT\IServer.dll" -a="IClient3\bin\$AMBVARIANT\IClient3.dll" -o=Client3Interfaces -f="net46" -f="netcoreapp2.0"
+
+
+
+
+
+
