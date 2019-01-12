@@ -146,7 +146,7 @@ The next line makes such a call to ReceiveMessage. Each call has two forms: the 
 
 This is a good time to break the execution of Client1, Server, or both. If either or both is restarted, they will correctly recover to the state prior to breaking.
 
-After pressing <Enter>, the program continue, sending two more messages. The last action of OnFirstStart is to enqueue a token into a global AsyncQueue called finishedTokenQ, which up receipt, will exit the program (see below):
+After pressing Enter, the program continues, sending two more messages. The last action of OnFirstStart is to enqueue a token into a global AsyncQueue called finishedTokenQ, which up receipt, will exit the program (see below):
 
 ```
         public static AsyncQueue<int> finishedTokenQ;
