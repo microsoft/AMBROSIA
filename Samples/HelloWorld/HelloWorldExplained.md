@@ -85,7 +85,7 @@ Another thing to note in main, is the existence of receivePort and sendPort. The
 
 Finally, obseerve serviceName in the Deploy call, which is the name of this particular Ambrosia instance that is being initialized or recovered. This name is stored in an Azure Table which contains a directory of Ambrosia instances, and the logical connections between instances. Note that a single instance can have many replicas, all with the same service name.
 
-Client1
+Client1 - The Basics
 -----------
 Client1 is a simple example of an Amborsia job, in the sense that it is a distributed component which completes. In particular, it sends 3 messages to Server, reading a line from the user after the first message is sent. Reading this line gives us an opportunity to break Client1 and restart it, initiating recovery. Even though the job sends a message and is restarted, only 3 messages will arrive at Server.
 
@@ -178,10 +178,10 @@ After pressing <Enter>, the program continue, sending two more messages. The las
 ```
 Also, note that the server instance name, which is "server" by default, is passed into the constructor for Client1 in the Deploy call.
 
-Client2
+Client2 - Handling Non-Determinism
 -----------
 Under Construction
 
-Client3
+Client3 - Async calls (Experimental)
 -----------
 Under Construction
