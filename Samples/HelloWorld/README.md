@@ -16,4 +16,6 @@ your tooling environment:
  * [HOWTO-DOCKER-K8S.md](./HOWTO-DOCKER-K8S.md): Build and run inside
    containers using Docker.
 
+[HelloWorldExplained.md](./HelloWorldExplained.md) Explains the actual code in this Hello World sample.
+
 
