@@ -10,7 +10,7 @@ Immortal Coordinators. The interface is called `ISecureStreamConnectionDescripto
 
 For example, suppose we wish to use a dummy security wrapper that simply passes the stream without securing it. See 
 [here](https://github.com/Microsoft/CRA/blob/master/src/CRA.ClientLibrary/Security/DummySecureStreamConnectionDescriptor.cs)
-for such an example. We would provide the information to Amborosia when invoking the Immortal Coordinator, as follows.
+for such an example. We would provide the information to Ambrosia when invoking the Immortal Coordinator, as follows.
 
     dotnet ImmortalCoordinator.dll --instanceName=client1 --port=1500 -an=CRA.ClientLibrary -ac=CRA.ClientLibrary.DummySecureStreamConnectionDescriptor
     dotnet ImmortalCoordinator.dll --instanceName=server1 --port=2500 -an=CRA.ClientLibrary -ac=CRA.ClientLibrary.DummySecureStreamConnectionDescriptor
