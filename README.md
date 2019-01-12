@@ -102,7 +102,7 @@ Also check out our [contributing guide](https://github.com/Microsoft/AMBROSIA/tr
 AMBROSIA currently requires an Azure subscription to write its logs to replicated storage. In the future, we anticipate abstracting this component out to be able to use other storage options for logs. 
 
 ### Language Support
-AMBROSIA currently supports C# on both .NET Core and .NET Framework. We plan to exand this support with AMBROSIA bindings for other languages in the future. 
+AMBROSIA currently supports C# on both .NET Core and .NET Framework. We plan to expand this support with AMBROSIA bindings for other languages in the future. 
 
 ### Usage
 ```
