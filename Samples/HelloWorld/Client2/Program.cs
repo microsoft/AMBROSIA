@@ -27,10 +27,10 @@ namespace Client2
         {
             while (true)
             {
+                Thread.Sleep(2000);
                 Console.Write("Enter a message (hit ENTER to send): ");
                 string input = Console.ReadLine();
                 thisProxy.ReceiveKeyboardInputFork(input);
-                Thread.Sleep(1000);
             }
         }
 
@@ -45,13 +45,6 @@ namespace Client2
         {
             Console.WriteLine("Sending keyboard input {0}", input);
             _server.ReceiveMessageFork(input);
-        }
-
-        public async Task SendMessageAsync(string message)
-        {
-            Console.WriteLine("Sending message to server: " + message);
-            int numMessages = await _server.ReceiveMessageAsync(message);
-            Console.WriteLine("Sent message to server! Server has received " + numMessages + " messages.");
         }
 
         protected override async Task<bool> OnFirstStart()
