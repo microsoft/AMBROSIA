@@ -18,6 +18,13 @@ ENV PATH="${PATH}:/ambrosia/InternalImmortals/PerformanceTestInterruptible/Clien
 
 # This Dockerfile is an example of adding the application
 # *piece-by-piece* to enable incremental rebuilds.
+ADD IJob /ambrosia/InternalImmortals/PerformanceTestInterruptible/IJob
+WORKDIR /ambrosia/InternalImmortals/PerformanceTestInterruptible
+RUN dotnet publish $BLDFLAGS IJob/IJob.csproj
+
+# DANGER, WARNING, FIXME: it is UNSAFE to dotnet publish twice to the same absolute path:
+ADD API /ambrosia/InternalImmortals/PerformanceTestInterruptible/API
+RUN dotnet publish $BLDFLAGS API/ServerAPI.csproj
 
 # Run the code-generation tool:
 RUN rm -rf ./GeneratedSourceFiles && \
