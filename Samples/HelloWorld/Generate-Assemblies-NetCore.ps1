@@ -5,6 +5,7 @@ if ( $env:AMBVARIANTCORE ) {
 } else {
     $AMBVARIANTCORE = "x64\Debug\netcoreapp2.0"
 }
+
 if ( $env:AMBVARIANTCORERELEASE ) {
     $AMBVARIANTCORERELEASE=$env:AMBVARIANTCORERELEASE
 } else {
