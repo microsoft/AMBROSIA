@@ -81,16 +81,184 @@ Each time the Immortal is recovered or relocated, or an active replica created, 
 
 Note that currently, each process can only have one Immortal, due to global data structures which aren't currenly sharable. This limitation could, however, change eventually.
 
-The other thing to note in main, is the existence of receivePort and sendPort. The two variables are passed into the Deploy method, and are the two ports which this process uses to communicate with its local ImmortalCoordinator. Specifically, each instance consists of two running processes which run in the same VM/machine/container, and which fail and recover together. When logically creating instances with the Ambrosia RegisterInstance command, these ports are specified in reverse, which is to say that the ImmortalCoordinator's receive port is the application process's send port, and visa-versa.
+Another thing to note in main, is the existence of receivePort and sendPort. The two variables are passed into the Deploy method, and are the two ports which this process uses to communicate with its local ImmortalCoordinator. Specifically, each instance consists of two running processes which run in the same VM/machine/container, and which fail and recover together. When logically creating instances with the Ambrosia RegisterInstance command, these ports are specified in reverse, which is to say that the ImmortalCoordinator's receive port is the application process's send port, and visa-versa.
 
-Client1
+Finally, obseerve serviceName in the Deploy call, which is the name of this particular Ambrosia instance that is being initialized or recovered. This name is stored in an Azure Table which contains a directory of Ambrosia instances, and the logical connections between instances. Note that a single instance can have many replicas, all with the same service name.
+
+Client1 - The Basics
 -----------
-Under Construction
+Client1 is a simple example of an Amborsia job, in the sense that it is a distributed component which completes. In particular, it sends 3 messages to Server, reading a line from the user after the first message is sent. Reading this line gives us an opportunity to break Client1 and restart it, initiating recovery. Even though the job sends a message and is restarted, only 3 messages will arrive at Server.
 
-Client2
+In this case, Client1 has no public methods, so the interface is empty:
+```
+    public interface IClient1
+    {
+    }
+```
+
+Nevertheless, codegen is needed, because each Immortal runs a codegen step which includes its own interface, and all the interfaces of all the other Immortals it will make calls on. In this case, that includes IServer. We are now ready to look at the code for the Client1 Immortal:
+
+```
+    [DataContract]
+    class Client1 : Immortal<IClient1Proxy>, IClient1
+    {
+        [DataMember]
+        private string _serverName;
+
+        [DataMember]
+        private IServerProxy _server;
+
+        public Client1(string serverName)
+        {
+            _serverName = serverName;
+        }
+
+        protected override async Task<bool> OnFirstStart()
+        {
+            _server = GetProxy<IServerProxy>(_serverName);
+
+
+            _server.ReceiveMessageFork("\n!! Client: Hello World 1!");
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\n!! Client: Sent message 1.");
+            Console.WriteLine("\n!! Client: Press enter to continue (will send 2&3)");
+            Console.ResetColor();
+
+            Console.ReadLine();
+            _server.ReceiveMessageFork("\n!! Client: Hello World 2!");
+            _server.ReceiveMessageFork("\n!! Client: Hello World 3!");
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\n!! Client: Press enter to shutdown.");
+
+            Console.ReadLine();
+            Program.finishedTokenQ.Enqueue(0);
+            return true;
+        }
+    }
+```
+In addition to the aspects already familiar from Server, note that our constructor is no longer empty. The construstor is used to pass information from the hosting program to the Immortal instance, prior to initialization or recovery. In this case, that includes the name of the Server instance, called "server" by default. This is passed into the constructor because we will need to establish a connection to server before making method calls on it.
+
+As a consequence, the first line of OnFirstStart makes the connection to the specified Server instance using GetProxy. The return value of this call is an object which contains all public method calls on the specified instance.
+
+The next line makes such a call to ReceiveMessage. Each call has two forms: the fork form is a form of message passing, where the call is made asynchronously, is not awaitable, and whose return value is ignored. The second from is async, which is awaitable (see Client3). The fork version of the call is by far the most performant and is generally encouraged. The async version has the advantage of being more flexible in its use, but is considered experimental due to important current limitations, which will hopefully be relaxed over time. In this case, we simply send the ReceiveMessage call and continue, immediately writing a couple lines and waiting on user input.
+
+This is a good time to break the execution of Client1, Server, or both. If either or both is restarted, they will correctly recover to the state prior to breaking.
+
+After pressing Enter, the program continues, sending two more messages. The last action of OnFirstStart is to enqueue a token into a global AsyncQueue called finishedTokenQ, which up receipt, will exit the program (see below):
+
+```
+        public static AsyncQueue<int> finishedTokenQ;
+
+        static void Main(string[] args)
+        {
+            finishedTokenQ = new AsyncQueue<int>();
+
+            int receivePort = 1001;
+            int sendPort = 1000;
+            string clientInstanceName = "client";
+            string serverInstanceName = "server";
+
+            if (args.Length >= 1)
+            {
+                clientInstanceName = args[0];
+            }
+
+            if (args.Length == 2)
+            {
+                serverInstanceName = args[1];
+            }
+
+            using (var c = AmbrosiaFactory.Deploy<IClient1>(clientInstanceName, new Client1(serverInstanceName), receivePort, sendPort))
+            {
+                finishedTokenQ.DequeueAsync().Wait();
+            }
+        }
+```
+Also, note that the server instance name, which is "server" by default, is passed into the constructor for Client1 in the Deploy call.
+
+Understanding Recovery for Client1
 -----------
-Under Construction
+Let's assume that Client1 and its associated ImmortalCoordinator were exited (e.g. Ctrl-C) and restarted when user input was requested. Let's go through the recovery actions taken by Ambrosia: 
 
-Client3
+* First, it is important to understand that when a service is started for the first time, an initial checkpoint is taken which represents the state of the Immortal just prior to the execution of OnFirstStart. Since no additional checkpoint was taken, recovery begins by deserializing the initial state of the Immortal.
+* Next, recovery replays all method calls which occurred prior to failure. In this case, we execute OnFirstStart from the initial state. During this execution, we again generate the first message to server, and ask for user input. Note that once all methods have been replayed (i.e. the application method invocation has happened), the recovering Immortal reconnects to previously connected Immortals. Part of that reconnection involves determining which method calls have already been received by the various parties, and ensures exactly once method delivery/execution everywhere. In this case, if server received the method call before client was killed, it will not be resent. If, however, the message was never actually received by server, the reconstructed method call is sent.
+
+Client2 - Handling Non-Determinism
+-----------
+In the Client1 example, the messages sent to server were predetermined and written into the actual Client1 code. What if, instead, we wanted to send a message typed in by the user? This is problematic, because in order for the above recovery strategy to work correctly, it would require a user to retype the same messages during recovery. In fact, Client1 has the following problem: if failure happened after the user pressed Enter, but before it completed, the user would be required to press Enter again after recovery!
+
+In order to handle such situations, Ambrosia has a feature called impulse methods. Impulse methods are specially labelled publically callable methods which capture non-replayable information coming into the system. Typically, outside information, like user input, is passed into Ambrosia as parameters to these method calls. These parameter values are logged by Ambrosia, prior to calling the associated impulse methods, guaranteeing that the data isn't lost. Like other method calls, they are called using instance proxies, and are defined in Immortals like any other method. They differ from other methods in two important ways:
+
+* Only the impulse calls which are logged (which happens prior to calling the method) are guaranteed to survive failure. For instance, if outside information, like user input, is collected by the program, but the program crashes prior to that input being logged, that information will be lost.
+* Impulse methods are not allowed to be called during recovery, since recovery must return the system to a replayably deterministic state. As a result, impulse methods are typically called by background threads, which can only be started after recovery is complete (see below).
+
+In this case, Client2 has an impulse method, called ReceiveKeyboardInput, which receives messages strings entered by the user, and sends them to server. As a result, Client2 has a non-empty interface IClient2:
+
+```
+    public interface IClient2
+    {
+        [ImpulseHandler]
+        void ReceiveKeyboardInput(string message);
+    }
+```
+Note the attribute [ImpulseHandler], which is defined in AmbrosiaLibCS, which specifies that ReceiveKeyboardInput is an impulse method.
+
+Next, let's look at the actual Immortal Client2:
+
+```
+    [DataContract]
+    class Client2 : Immortal<IClient2Proxy>, IClient2
+    {
+        [DataMember]
+        private string _serverName;
+
+        [DataMember]
+        private IServerProxy _server;
+
+        public Client2(string serverName)
+        {
+            _serverName = serverName;
+        }
+
+        void InputLoop()
+        {
+            while (true)
+            {
+                Console.Write("Enter a message (hit ENTER to send): ");
+                string input = Console.ReadLine();
+                thisProxy.ReceiveKeyboardInputFork(input);
+                Thread.Sleep(1000);
+            }
+        }
+
+        protected override void BecomingPrimary()
+        {
+            Console.WriteLine("Finished initializing state/recovering");
+            Thread timerThread = new Thread(InputLoop);
+            timerThread.Start();
+        }
+
+        public async Task ReceiveKeyboardInputAsync(string input)
+        {
+            Console.WriteLine("Sending keyboard input {0}", input);
+            _server.ReceiveMessageFork(input);
+        }
+
+        protected override async Task<bool> OnFirstStart()
+        {
+            _server = GetProxy<IServerProxy>(_serverName);
+            return true;
+        }
+    }
+```
+First, note that our impulse method, ReceiveKeyboardInputAsync, looks like any other public method, and simply calls server's ReceiveMessage. The difference is in how ReceiveKeyboardInputAsync is called. Rather than being called from a replayable method like OnFirstStart, it's called from a background thread that is started from BecomingPrimary. 
+
+BecomingPrimary is an overloadable method for performing actions after recovery is complete, but before servicing the first method calls post-recovery. By putting our user message requesting loop in the thread created during BecomingPrimary, we ensure that ReceiveKeyboardInputAsync will not be called during recovery.
+
+Despite the non-deterministic user input, Client2 is replayably deterministic, logging all user input in calls to ReceiveKeyboardInput, and readers are encouraged to interrupt and restart the client and server to observe behavior on both the client and the server.
+
+Client3 - Async calls (Experimental)
 -----------
 Under Construction

@@ -12,7 +12,6 @@ namespace Client2
     /// </summary>
     public interface IClient2
     {
-        Task SendMessageAsync(System.String p_0);
         Task ReceiveKeyboardInputAsync(System.String p_0);
     }
 
@@ -23,8 +22,6 @@ namespace Client2
     [Ambrosia.InstanceProxy(typeof(IClient2))]
     public interface IClient2Proxy
     {
-        Task SendMessageAsync(System.String p_0);
-        void SendMessageFork(System.String p_0);
         void ReceiveKeyboardInputFork(System.String p_0);
     }
 }

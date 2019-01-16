@@ -29,19 +29,19 @@ namespace Client1
 
             _server.ReceiveMessageFork("\n!! Client: Hello World 1!");
 
-	    Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("\n!! Client: Sent message 1.");
             Console.WriteLine("\n!! Client: Press enter to continue (will send 2&3)");
-	    Console.ResetColor();
-	                
-	    Console.ReadLine(); // Console.ReadKey();
+            Console.ResetColor();
+
+            Console.ReadLine();
             _server.ReceiveMessageFork("\n!! Client: Hello World 2!");
             _server.ReceiveMessageFork("\n!! Client: Hello World 3!");
 
-	    Console.ForegroundColor = ConsoleColor.Yellow; 	    
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("\n!! Client: Press enter to shutdown.");
 
-            Console.ReadLine(); // Console.ReadKey();
+            Console.ReadLine();
             Program.finishedTokenQ.Enqueue(0);
             return true;
         }
