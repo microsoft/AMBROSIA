@@ -79,7 +79,7 @@ case $mode in
       # Build Application 2: Hello World Sample
       # ----------------------------------------
       cd "$AMBROSIA_ROOT"/Samples/HelloWorld
-      echo "HelloWorld: First make sure a straight-to-the-solution build works:"
+      #echo "HelloWorld: First make sure a straight-to-the-solution build works:"
       #dotnet publish -c $CONF -f $FMWK HelloWorld.sln
       echo "HelloWorld: Then make sure it builds from scratch:"
       rm -rf GeneratedSourceFiles
