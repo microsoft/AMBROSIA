@@ -20,16 +20,16 @@ ENV PATH="${PATH}:/ambrosia/InternalImmortals/PerformanceTestInterruptible/Clien
 # *piece-by-piece* to enable incremental rebuilds.
 ADD IJob /ambrosia/InternalImmortals/PerformanceTestInterruptible/IJob
 WORKDIR /ambrosia/InternalImmortals/PerformanceTestInterruptible
-RUN dotnet publish $BLDFLAGS IJob/IJob.csproj
+RUN dotnet publish -o publish $BLDFLAGS IJob/IJob.csproj
 
 # DANGER, WARNING, FIXME: it is UNSAFE to dotnet publish twice to the same absolute path:
 ADD API /ambrosia/InternalImmortals/PerformanceTestInterruptible/API
-RUN dotnet publish $BLDFLAGS API/ServerAPI.csproj
+RUN dotnet publish -o publish $BLDFLAGS API/ServerAPI.csproj
 
 # Run the code-generation tool:
 RUN rm -rf ./GeneratedSourceFiles && \
     mkdir -p GeneratedSourceFiles 
-RUN AmbrosiaCS CodeGen -a IJob/bin/Release/netcoreapp2.0/linux-x64/IJob.dll -a API/bin/Release/netcoreapp2.0/linux-x64/ServerAPI.dll -o PTIAmbrosiaGeneratedAPI -f netcoreapp2.0 -f net46
+RUN AmbrosiaCS CodeGen -a IJob/publish/IJob.dll -a API/publish/ServerAPI.dll -o PTIAmbrosiaGeneratedAPI -f netcoreapp2.0 -f net46
 
 # Be wary: absolute paths have rather different behavior for dotnet publish.
 ENV BUILDIT="dotnet publish -o publish $BLDFLAGS"
