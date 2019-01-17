@@ -2043,8 +2043,7 @@ namespace Ambrosia
                 SetupAzureConnections();
             }
             ServiceInitializationMessage = null;
-            Thread localListenerThread = new Thread(() => LocalListener());
-            localListenerThread.IsBackground = true;
+            Thread localListenerThread = new Thread(() => LocalListener()) { IsBackground = true };
             localListenerThread.Start();
         }
 
