@@ -2044,6 +2044,7 @@ namespace Ambrosia
             }
             ServiceInitializationMessage = null;
             Thread localListenerThread = new Thread(() => LocalListener());
+            localListenerThread.IsBackground = true;
             localListenerThread.Start();
         }
 
