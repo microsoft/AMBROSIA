@@ -11,7 +11,7 @@ using System.Xml;
 using Ambrosia;
 using static Ambrosia.StreamCommunicator;
 using Server;
-using Job;
+using JobAPI;
 
 namespace Ambrosia
 {
