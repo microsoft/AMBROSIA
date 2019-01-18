@@ -1,0 +1,10 @@
+*X* InstanceProxy created to communicate with . (Attach: False)
+*X* Start Start()
+*X* Received a take becoming primary checkpoint message
+*X* Sent initial message to LAR
+*X* Sent checkpoint back to LAR
+Becoming a primary now
+*X* End Start()
+*X* Press enter to terminate program.
+*X* Received an initial message
+*X* Server in Entry Point
