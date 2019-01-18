@@ -5,6 +5,11 @@
 
 # Create the dependencies folder for codegen (based on the codegen script in
 # PerformanceTestInterruptible)
+If (!(Test-Path GraphicalImmortalAPI\bin\x64\Debug\net46\)) {
+    Write-Output "Codegen failure: GraphicalImmortalAPI (x64, net46) build output is missing."
+    Write-Output "Compile the GraphicalImmortalAPI project before running this script."
+    exit
+}
 New-Item -ItemType Directory -Force -Path "CodeGenDependencies\net46" | Out-Null
 Get-ChildItem "CodeGenDependencies\net46\" | Remove-Item
 Copy-Item "GraphicalImmortalAPI\bin\x64\Debug\net46\*" -Force -Destination "CodeGenDependencies\net46\"
@@ -14,7 +19,7 @@ $ambrosiaExe = "..\..\Clients\CSharp\AmbrosiaCS\bin\x64\Debug\net46\AmbrosiaCS.e
 $inputAssembly = "GraphicalImmortalAPI\bin\x64\Debug\net46\GraphicalImmortalAPI.dll"
 If (!(Test-Path $ambrosiaExe))
 {
-    Write-Output "Codegen failure: Ambrosia EXE is missing."
+    Write-Output "Codegen failure: AmbrosiaCS.exe is missing."
     exit
 }
 If (!(Test-Path $inputAssembly))
