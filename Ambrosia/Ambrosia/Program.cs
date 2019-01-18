@@ -2799,7 +2799,6 @@ namespace Ambrosia
         private async Task ToDataStreamAsync(Stream writeToStream,
                                              string destString,
                                              CancellationToken ct)
-
         {
             OutputConnectionRecord outputConnectionRecord;
             if (destString.Equals(_serviceName))
@@ -2822,19 +2821,10 @@ namespace Ambrosia
             }
             try
             {
-                lock (outputConnectionRecord)
-                {
-                    if (outputConnectionRecord.WillResetConnection)
-                    {
-                        // Register our immediate intent to set the connection. This unblocks output writers which may be important for unlocking the outputConnectionRecord
-                        outputConnectionRecord.ResettingConnection = true;
-                    }
-
-                    // Reset the output cursor if it exists
-                    outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
-                    outputConnectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
-                    outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
-                }
+                // Reset the output cursor if it exists
+                outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
+                outputConnectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
+                outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
                 // Process replay message
                 var inputFlexBuffer = new FlexReadBuffer();
                 await FlexReadBuffer.DeserializeAsync(writeToStream, inputFlexBuffer, ct);
@@ -2843,12 +2833,12 @@ namespace Ambrosia
                 var commitSeqNo = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1);
                 var commitSeqNoReplayable = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1 + StreamCommunicator.LongSize(commitSeqNo));
                 inputFlexBuffer.ResetBuffer();
-                lock (outputConnectionRecord)
+                if (outputConnectionRecord.ConnectingAfterRestart)
                 {
-                    if (outputConnectionRecord.ConnectingAfterRestart)
+                    // We've been through recovery (at least partially), and have scrubbed all ephemeral calls. Must now rebase
+                    // seq nos using the markers which were sent by the listener. Must first take locks to ensure no interference
+                    lock (outputConnectionRecord)
                     {
-                        // We've been through recovery (at least partially), and have scrubbed all ephemeral calls. Must now rebase
-                        // seq nos using the markers which were sent by the listener. Must first take locks to ensure no interference
                         // Don't think I actually need this lock, but can't hurt and shouldn't affect perf.
                         outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                         outputConnectionRecord.BufferedOutput.RebaseSeqNosInBuffer(commitSeqNo, commitSeqNoReplayable);
@@ -2856,27 +2846,32 @@ namespace Ambrosia
                         outputConnectionRecord.ConnectingAfterRestart = false;
                         outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
                     }
+                }
 
-                    // If recovering, make sure event replay will be filtered out
-                    outputConnectionRecord.ReplayFrom = commitSeqNo;
+                // If recovering, make sure event replay will be filtered out
+                outputConnectionRecord.ReplayFrom = commitSeqNo;
 
-                    if (outputConnectionRecord.WillResetConnection)
+                if (outputConnectionRecord.WillResetConnection)
+                {
+                    // Register our immediate intent to set the connection. This unblocks output writers
+                    outputConnectionRecord.ResettingConnection = true;
+                    // This lock avoids interference with buffering RPCs
+                    lock (outputConnectionRecord)
                     {
-                        // This lock avoids interference with buffering RPCs
                         // If first reconnect/connect after reset, simply adjust the seq no for the first sent message to the received commit seq no
                         outputConnectionRecord.ResettingConnection = false;
                         outputConnectionRecord.LastSeqNoFromLocalService = outputConnectionRecord.BufferedOutput.AdjustFirstSeqNoTo(commitSeqNo);
                         outputConnectionRecord.WillResetConnection = false;
                     }
-                    outputConnectionRecord.LastSeqSentToReceiver = commitSeqNo - 1;
+                }
+                outputConnectionRecord.LastSeqSentToReceiver = commitSeqNo - 1;
 
-                    // Enqueue a replay send
-                    if (outputConnectionRecord._sendsEnqueued == 0)
-                    {
+                // Enqueue a replay send
+                if (outputConnectionRecord._sendsEnqueued == 0)
+                {
 
-                        Interlocked.Increment(ref outputConnectionRecord._sendsEnqueued);
-                        outputConnectionRecord.DataWorkQ.Enqueue(-1);
-                    }
+                    Interlocked.Increment(ref outputConnectionRecord._sendsEnqueued);
+                    outputConnectionRecord.DataWorkQ.Enqueue(-1);
                 }
 
                 // Make sure enough recovery output has been produced before we allow output to start being sent, which means that the next
@@ -2891,17 +2886,11 @@ namespace Ambrosia
                     {
                         // This is a send output
                         Interlocked.Decrement(ref outputConnectionRecord._sendsEnqueued);
-
-                        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Code to manually trim for performance testing
-                        //                    int placeToTrimTo = outputConnectionRecord.LastSeqNoFromLocalService;
-                        // Console.WriteLine("send to {0}", outputConnectionRecord.LastSeqNoFromLocalService);
                         outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                         outputConnectionRecord.placeInOutput =
-                                await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput, reconnecting);
+                                                        await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput, reconnecting);
                         reconnecting = false;
                         outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
-                        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Code to manually trim for performance testing
-                        //                    outputConnectionRecord.TrimTo = placeToTrimTo;
                     }
                 }
             }
