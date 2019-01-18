@@ -750,7 +750,11 @@ namespace Ambrosia
         internal long TrimAndUnbufferNonreplayableCalls(long trimSeqNo,
                                                         long matchingReplayableSeqNo)
         {
-            // No locking necessary since this should only get called during recovery before replay and before a checkpooint is sent to service
+            if (trimSeqNo < 1)
+            {
+                return matchingReplayableSeqNo;
+            }
+            // No locking necessary since this should only get called during recovery before replay and before a checkpoint is sent to service
             // First trim
             long highestTrimmedSeqNo = -1;
             while (!_bufferQ.IsEmpty())
@@ -788,6 +792,7 @@ namespace Ambrosia
                     }
                     Buffer.BlockCopy(currentHead.PageBytes, readBufferPos, currentHead.PageBytes, 0, currentHead.PageBytes.Length - readBufferPos);
                     currentHead.LowestSeqNo += trimSeqNo - currentHead.LowestSeqNo + 1;
+                    currentHead.curLength -= readBufferPos;
                     break;
                 }
             }
@@ -879,7 +884,6 @@ namespace Ambrosia
         public long _sendsEnqueued;
         public AmbrosiaRuntime MyAmbrosia { get; set; }
         public bool WillResetConnection { get; set; }
-        public bool ResettingConnection { get; set; }
         public bool ConnectingAfterRestart { get; set; }
         // The latest trim location on the other side. An associated trim message MAY have already been sent
         public long RemoteTrim { get; set; }
@@ -887,6 +891,7 @@ namespace Ambrosia
         public long RemoteTrimReplayable { get; set; }
         // The seq no of the last RPC sent to the receiver
         public long LastSeqSentToReceiver;
+        internal volatile bool ResettingConnection;
 
         public OutputConnectionRecord(AmbrosiaRuntime inAmbrosia)
         {
@@ -1134,8 +1139,12 @@ namespace Ambrosia
                             outputs[kv.Key] = outputConnectionRecord;
                             Console.WriteLine("Adding output:{0}", kv.Key);
                         }
-                        outputConnectionRecord.RemoteTrim = Math.Max(kv.Value.First, outputConnectionRecord.RemoteTrim);
-                        outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.Second, outputConnectionRecord.RemoteTrimReplayable);
+                        // Make sure RemoteTrim and RemoteTrimReplayable are atomically updated w.r.t. send
+                        lock (outputConnectionRecord)
+                        {
+                            outputConnectionRecord.RemoteTrim = Math.Max(kv.Value.First, outputConnectionRecord.RemoteTrim);
+                            outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.Second, outputConnectionRecord.RemoteTrimReplayable);
+                        }
                         if (outputConnectionRecord.ControlWorkQ.IsEmpty)
                         {
                             outputConnectionRecord.ControlWorkQ.Enqueue(-2);
@@ -2813,10 +2822,19 @@ namespace Ambrosia
             }
             try
             {
-                // Reset the output cursor if it exists
-                outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
-                outputConnectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
-                outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
+                lock (outputConnectionRecord)
+                {
+                    if (outputConnectionRecord.WillResetConnection)
+                    {
+                        // Register our immediate intent to set the connection. This unblocks output writers which may be important for unlocking the outputConnectionRecord
+                        outputConnectionRecord.ResettingConnection = true;
+                    }
+
+                    // Reset the output cursor if it exists
+                    outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
+                    outputConnectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
+                    outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
+                }
                 // Process replay message
                 var inputFlexBuffer = new FlexReadBuffer();
                 await FlexReadBuffer.DeserializeAsync(writeToStream, inputFlexBuffer, ct);
@@ -2825,12 +2843,12 @@ namespace Ambrosia
                 var commitSeqNo = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1);
                 var commitSeqNoReplayable = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1 + StreamCommunicator.LongSize(commitSeqNo));
                 inputFlexBuffer.ResetBuffer();
-                if (outputConnectionRecord.ConnectingAfterRestart)
+                lock (outputConnectionRecord)
                 {
-                    // We've been through recovery (at least partially), and have scrubbed all ephemeral calls. Must now rebase
-                    // seq nos using the markers which were sent by the listener. Must first take locks to ensure no interference
-                    lock (outputConnectionRecord)
+                    if (outputConnectionRecord.ConnectingAfterRestart)
                     {
+                        // We've been through recovery (at least partially), and have scrubbed all ephemeral calls. Must now rebase
+                        // seq nos using the markers which were sent by the listener. Must first take locks to ensure no interference
                         // Don't think I actually need this lock, but can't hurt and shouldn't affect perf.
                         outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                         outputConnectionRecord.BufferedOutput.RebaseSeqNosInBuffer(commitSeqNo, commitSeqNoReplayable);
@@ -2838,32 +2856,27 @@ namespace Ambrosia
                         outputConnectionRecord.ConnectingAfterRestart = false;
                         outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
                     }
-                }
 
-                // If recovering, make sure event replay will be filtered out
-                outputConnectionRecord.ReplayFrom = commitSeqNo;
+                    // If recovering, make sure event replay will be filtered out
+                    outputConnectionRecord.ReplayFrom = commitSeqNo;
 
-                if (outputConnectionRecord.WillResetConnection)
-                {
-                    // Register our immediate intent to set the connection. This unblocks output writers
-                    outputConnectionRecord.ResettingConnection = true;
-                    // This lock avoids interference with buffering RPCs
-                    lock (outputConnectionRecord)
+                    if (outputConnectionRecord.WillResetConnection)
                     {
+                        // This lock avoids interference with buffering RPCs
                         // If first reconnect/connect after reset, simply adjust the seq no for the first sent message to the received commit seq no
                         outputConnectionRecord.ResettingConnection = false;
                         outputConnectionRecord.LastSeqNoFromLocalService = outputConnectionRecord.BufferedOutput.AdjustFirstSeqNoTo(commitSeqNo);
                         outputConnectionRecord.WillResetConnection = false;
                     }
-                }
-                outputConnectionRecord.LastSeqSentToReceiver = commitSeqNo - 1;
+                    outputConnectionRecord.LastSeqSentToReceiver = commitSeqNo - 1;
 
-                // Enqueue a replay send
-                if (outputConnectionRecord._sendsEnqueued == 0)
-                {
+                    // Enqueue a replay send
+                    if (outputConnectionRecord._sendsEnqueued == 0)
+                    {
 
-                    Interlocked.Increment(ref outputConnectionRecord._sendsEnqueued);
-                    outputConnectionRecord.DataWorkQ.Enqueue(-1);
+                        Interlocked.Increment(ref outputConnectionRecord._sendsEnqueued);
+                        outputConnectionRecord.DataWorkQ.Enqueue(-1);
+                    }
                 }
 
                 // Make sure enough recovery output has been produced before we allow output to start being sent, which means that the next
@@ -2883,7 +2896,6 @@ namespace Ambrosia
                         //                    int placeToTrimTo = outputConnectionRecord.LastSeqNoFromLocalService;
                         // Console.WriteLine("send to {0}", outputConnectionRecord.LastSeqNoFromLocalService);
                         outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
-                        var placeAtCall = outputConnectionRecord.LastSeqSentToReceiver;
                         outputConnectionRecord.placeInOutput =
                                 await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput, reconnecting);
                         reconnecting = false;
@@ -2963,8 +2975,13 @@ namespace Ambrosia
                     if (lastRemoteTrim < outputConnectionRecord.RemoteTrim)
                     {
                         // This is a send watermark
-                        lastRemoteTrim = outputConnectionRecord.RemoteTrim;
-                        var lastRemoteTrimReplayable = outputConnectionRecord.RemoteTrimReplayable;
+                        // Get the new watermarks without interference from commit
+                        long lastRemoteTrimReplayable;
+                        lock (outputConnectionRecord)
+                        {
+                            lastRemoteTrim = outputConnectionRecord.RemoteTrim;
+                            lastRemoteTrimReplayable = outputConnectionRecord.RemoteTrimReplayable;
+                        }
                         watermarkStream.Position = 0;
                         var watermarkLength = 1 + StreamCommunicator.LongSize(lastRemoteTrim) + StreamCommunicator.LongSize(lastRemoteTrimReplayable);
                         watermarkStream.WriteInt(watermarkLength);
@@ -3045,10 +3062,10 @@ namespace Ambrosia
             {
                 Console.WriteLine("restoring input:{0}", sourceString);
             }
-            inputConnectionRecord.DataConnectionStream = (NetworkStream)readFromStream;
             await SendReplayMessageAsync(readFromStream, inputConnectionRecord.LastProcessedID + 1, inputConnectionRecord.LastProcessedReplayableID + 1, ct);
             // Create new input task for monitoring new input
             Task inputTask;
+            inputConnectionRecord.DataConnectionStream = (NetworkStream)readFromStream;
             inputTask = InputDataListenerAsync(inputConnectionRecord, sourceString, ct);
             await inputTask;
         }
@@ -3128,23 +3145,26 @@ namespace Ambrosia
 
                         // Find the appropriate connection record
                         var outputConnectionRecord = _outputs[inputName];
-                        // Check to make sure this is progress, otherwise, can ignore
-                        if (commitSeqNo > outputConnectionRecord.TrimTo && !outputConnectionRecord.WillResetConnection && !outputConnectionRecord.ConnectingAfterRestart)
+                        lock (outputConnectionRecord)
                         {
-                            outputConnectionRecord.TrimTo = Math.Max(outputConnectionRecord.TrimTo, commitSeqNo);
-                            outputConnectionRecord.ReplayableTrimTo = Math.Max(outputConnectionRecord.ReplayableTrimTo, replayableCommitSeqNo);
-                            if (outputConnectionRecord.ControlWorkQ.IsEmpty)
+                            // Check to make sure this is progress, otherwise, can ignore
+                            if (commitSeqNo > outputConnectionRecord.TrimTo && !outputConnectionRecord.WillResetConnection && !outputConnectionRecord.ConnectingAfterRestart)
                             {
-                                outputConnectionRecord.ControlWorkQ.Enqueue(-2);
-                            }
-                            lock (_committer._trimWatermarks)
-                            {
-                                _committer._trimWatermarks[inputName] = replayableCommitSeqNo;
+                                outputConnectionRecord.TrimTo = Math.Max(outputConnectionRecord.TrimTo, commitSeqNo);
+                                outputConnectionRecord.ReplayableTrimTo = Math.Max(outputConnectionRecord.ReplayableTrimTo, replayableCommitSeqNo);
+                                if (outputConnectionRecord.ControlWorkQ.IsEmpty)
+                                {
+                                    outputConnectionRecord.ControlWorkQ.Enqueue(-2);
+                                }
+                                lock (_committer._trimWatermarks)
+                                {
+                                    _committer._trimWatermarks[inputName] = replayableCommitSeqNo;
+                                }
                             }
                         }
                         break;
                     default:
-			// Bubble the exception up to CRA
+                        // Bubble the exception up to CRA
                         throw new Exception("Illegal leading byte in input control message");
                         break;
                 }
@@ -3249,7 +3269,7 @@ namespace Ambrosia
                     break;
 
                 default:
-		    // Bubble the exception up to CRA
+                    // Bubble the exception up to CRA
                     throw new Exception("Illegal leading byte in input data message");
             }
         }
@@ -3332,8 +3352,12 @@ namespace Ambrosia
                     outputConnectionRecord = new OutputConnectionRecord(this);
                     _outputs[kv.Key] = outputConnectionRecord;
                 }
-                outputConnectionRecord.RemoteTrim = Math.Max (kv.Value.LastProcessedID, outputConnectionRecord.RemoteTrim);
-                outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.LastProcessedReplayableID, outputConnectionRecord.RemoteTrimReplayable);
+                // Make sure RemoteTrim and RemoteTrimReplayable are atomically updated w.r.t. send
+                lock (outputConnectionRecord)
+                {
+                    outputConnectionRecord.RemoteTrim = Math.Max(kv.Value.LastProcessedID, outputConnectionRecord.RemoteTrim);
+                    outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.LastProcessedReplayableID, outputConnectionRecord.RemoteTrimReplayable);
+                }
                 if (outputConnectionRecord.ControlWorkQ.IsEmpty)
                 {
                     outputConnectionRecord.ControlWorkQ.Enqueue(-2);
