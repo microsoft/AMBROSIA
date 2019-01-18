@@ -53,7 +53,6 @@ cursor += p_0_ValueLength;
 var p_0 = p_0_ValueBuffer;
 
                         // call the method
-						var p_1 = default(Byte[]);
 						byte[] argExBytes = null;
 						int argExSize = 0;
 						Exception currEx = null;
@@ -62,7 +61,6 @@ var p_0 = p_0_ValueBuffer;
 
 						try 
 						{
-							p_1 =
 								await this.instance.MAsync(p_0);
 						}
 						catch (Exception ex)
@@ -72,73 +70,37 @@ var p_0 = p_0_ValueBuffer;
 
                         if (!rpcType.IsFireAndForget())
                         {
-                            // serialize result and send it back
-						if (currEx != null)
-						{
-			var argExObject = this.exceptionSerializer.Serialize(currEx);
-argExBytes = Ambrosia.BinarySerializer.Serialize(argExObject);
-argExSize = IntSize(argExBytes.Length) + argExBytes.Length;
+                            // serialize result and send it back (there isn't one)
+                            arg1Size = 0;
+                            var wp = this.StartRPC_ReturnValue(senderOfRPC, sequenceNumber, currEx == null ? arg1Size : argExSize, currEx == null ? ReturnValueTypes.EmptyReturnValue : ReturnValueTypes.Exception);
 
-						}
-						else 
-						{
-			arg1Bytes = p_1;
-arg1Size = IntSize(arg1Bytes.Length) + arg1Bytes.Length;
-
-						}
-                            var wp = this.StartRPC_ReturnValue(senderOfRPC, sequenceNumber, currEx == null ? arg1Size : argExSize, currEx == null ? ReturnValueTypes.ReturnValue : ReturnValueTypes.Exception);
-
-	
-						if (currEx != null)
-						{
-			wp.curLength += wp.PageBytes.WriteInt(wp.curLength, argExBytes.Length);
-Buffer.BlockCopy(argExBytes, 0, wp.PageBytes, wp.curLength, argExBytes.Length);
-wp.curLength += argExBytes.Length;
-
-						}
-						else 
-						{
-            wp.curLength += wp.PageBytes.WriteInt(wp.curLength, arg1Bytes.Length);
-Buffer.BlockCopy(arg1Bytes, 0, wp.PageBytes, wp.curLength, arg1Bytes.Length);
-wp.curLength += arg1Bytes.Length;
-
-						}
                             this.ReleaseBufferAndSend();
                         }
                     }
                     break;
                 case 2:
-                    // PrintMessageAsync
+                    // AmIHealthyAsync
                     {
                         // deserialize arguments
 
-            // arg0: System.String
+            // arg0: System.DateTime
             var p_0_ValueLength = buffer.ReadBufferedInt(cursor);
 cursor += IntSize(p_0_ValueLength);
 var p_0_ValueBuffer = new byte[p_0_ValueLength];
 Buffer.BlockCopy(buffer, cursor, p_0_ValueBuffer, 0, p_0_ValueLength);
 cursor += p_0_ValueLength;
-var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
-
-
-            // arg1: System.Double
-            var p_1_ValueLength = buffer.ReadBufferedInt(cursor);
-cursor += IntSize(p_1_ValueLength);
-var p_1_ValueBuffer = new byte[p_1_ValueLength];
-Buffer.BlockCopy(buffer, cursor, p_1_ValueBuffer, 0, p_1_ValueLength);
-cursor += p_1_ValueLength;
-var p_1 = Ambrosia.BinarySerializer.Deserialize<System.Double>(p_1_ValueBuffer);
+var p_0 = Ambrosia.BinarySerializer.Deserialize<System.DateTime>(p_0_ValueBuffer);
 
                         // call the method
 						byte[] argExBytes = null;
 						int argExSize = 0;
 						Exception currEx = null;
-						int arg2Size = 0;
-						byte[] arg2Bytes = null;
+						int arg1Size = 0;
+						byte[] arg1Bytes = null;
 
 						try 
 						{
-								await this.instance.PrintMessageAsync(p_0,p_1);
+								await this.instance.AmIHealthyAsync(p_0);
 						}
 						catch (Exception ex)
 						{
@@ -148,8 +110,8 @@ var p_1 = Ambrosia.BinarySerializer.Deserialize<System.Double>(p_1_ValueBuffer);
                         if (!rpcType.IsFireAndForget())
                         {
                             // serialize result and send it back (there isn't one)
-                            arg2Size = 0;
-                            var wp = this.StartRPC_ReturnValue(senderOfRPC, sequenceNumber, currEx == null ? arg2Size : argExSize, currEx == null ? ReturnValueTypes.EmptyReturnValue : ReturnValueTypes.Exception);
+                            arg1Size = 0;
+                            var wp = this.StartRPC_ReturnValue(senderOfRPC, sequenceNumber, currEx == null ? arg1Size : argExSize, currEx == null ? ReturnValueTypes.EmptyReturnValue : ReturnValueTypes.Exception);
 
                             this.ReleaseBufferAndSend();
                         }

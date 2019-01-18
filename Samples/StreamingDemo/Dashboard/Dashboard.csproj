@@ -21,7 +21,7 @@
     <PackageReference Include="AmbrosiaLibCS" Version="0.8.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GeneratedSourceFiles\DashboardAPIGeneratedNet46\latest\DashboardAPIGeneratedNet46.csproj" />
+    <ProjectReference Include="..\GeneratedSourceFiles\DashboardAPIGenerated\latest\DashboardAPIGenerated.csproj" />
     <ProjectReference Include="..\ServiceConfiguration\ServiceConfiguration.csproj" />
   </ItemGroup>
 </Project>

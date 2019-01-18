@@ -4,7 +4,7 @@ using Ambrosia;
 using System.Threading.Tasks;
 using static Ambrosia.StreamCommunicator;
 
-namespace Job
+namespace JobAPI
 {
     /// <summary>
     // Generated from IJob by the proxy generation.
@@ -12,6 +12,8 @@ namespace Job
     /// </summary>
     public interface IJob
     {
+        Task JobContinueAsync(System.Int32 p_0,System.Int64 p_1,JobAPI.BoxedDateTime p_2);
+        Task MAsync(System.Byte[] p_0);
         Task PrintBytesReceivedAsync();
     }
 
@@ -22,6 +24,10 @@ namespace Job
     [Ambrosia.InstanceProxy(typeof(IJob))]
     public interface IJobProxy
     {
+        Task JobContinueAsync(System.Int32 p_0,System.Int64 p_1,JobAPI.BoxedDateTime p_2);
+        void JobContinueFork(System.Int32 p_0,System.Int64 p_1,JobAPI.BoxedDateTime p_2);
+        Task MAsync(System.Byte[] p_0);
+        void MFork(System.Byte[] p_0);
         Task PrintBytesReceivedAsync();
         void PrintBytesReceivedFork();
     }
