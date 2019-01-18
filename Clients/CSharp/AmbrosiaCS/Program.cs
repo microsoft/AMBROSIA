@@ -15,8 +15,7 @@ namespace Ambrosia
         private static AmbrosiaCSRuntimeModes _runtimeMode;
         private static List<string> _assemblyNames;
         private static string _outputAssemblyName;
-        private static string _targetFramework;
-        private static string _binPath;
+        private static List<string> _targetFrameworks = new List<string>();
 
         static void Main(string[] args)
         {
@@ -129,34 +128,6 @@ namespace Ambrosia
             var immortalSerializerSource = new ImmortalSerializerGenerator(generatedProxyNames, generatedProxyNamespaces).TransformText();
             sourceFiles.Add(new SourceFile { FileName = $"ImmortalSerializer.cs", SourceCode = immortalSerializerSource, });
 
-            var referenceLocations = new Dictionary<string, string>();
-            var assemblyFileNames = _assemblyNames.Select(Path.GetFileName).ToList();
-            foreach (var fileName in Directory.GetFiles(_binPath, "*.dll", SearchOption.TopDirectoryOnly)
-                .Union(Directory.GetFiles(_binPath, "*.exe", SearchOption.TopDirectoryOnly)))
-            {
-                var assemblyPath = Path.GetFullPath(fileName);
-                if (assemblyFileNames.Contains(Path.GetFileName(assemblyPath)))
-                {
-                    continue;
-                }
-
-                Assembly assembly;
-                try
-                {
-                    assembly = Assembly.LoadFile(assemblyPath);
-                }
-                catch (Exception)
-                {
-                    continue;
-                }
-                var assemblyName = assembly.GetName().Name;
-                var assemblyLocation = assembly.Location;
-
-                var assemblyLocationUri = new Uri(assemblyLocation);
-                var assemblyLocationRelativePath = new Uri(Path.GetFullPath(directoryPath)).MakeRelativeUri(assemblyLocationUri).ToString();
-                referenceLocations.Add(assemblyName, assemblyLocationRelativePath);
-            }
-
             var conditionToPackageInfo = new Dictionary<string, List<Tuple<string, string, string, string>>>();
 
             var execAssembly = Assembly.GetExecutingAssembly();
@@ -216,20 +187,22 @@ namespace Ambrosia
 $@"     <PackageReference {pi.Item1}=""{pi.Item2}"" Version=""{pi.Item3}"" {condition} />");
                 }
 
-                if (cpi.Key == String.Empty || cpi.Key == _targetFramework)
-                {
-                    conditionalPackageReferences.Add(
-$@" <ItemGroup>
+                conditionalPackageReferences.Add(
+                    cpi.Key != string.Empty
+                        ? $@" <ItemGroup Condition=""{cpi.Key}"">
+{string.Join("\n", packageReferences)}
+    </ItemGroup>
+"
+                        : $@" <ItemGroup>
 {string.Join("\n", packageReferences)}
     </ItemGroup>
 ");
-                }
             }
 
             var projectFileSource =
 $@" <Project Sdk=""Microsoft.NET.Sdk"">
     <PropertyGroup>
-        <TargetFramework>{_targetFramework}</TargetFramework>
+        <TargetFrameworks>{string.Join(";", _targetFrameworks)}</TargetFrameworks>
     </PropertyGroup>
 {string.Join(string.Empty, conditionalPackageReferences)}</Project>";
             var projectSourceFile =
@@ -268,8 +241,7 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
             var codeGenOptions = new OptionSet {
                 { "a|assembly=", "An input assembly name. [REQUIRED]", assemblyName => assemblyNames.Add(Path.GetFullPath(assemblyName)) },
                 { "o|outputAssemblyName=", "An output assembly name. [REQUIRED]", outputAssemblyName => _outputAssemblyName = outputAssemblyName },
-                { "f|targetFramework=", "The output assembly target framework. [REQUIRED]", f => _targetFramework = f },
-                { "b|binPath=", "The bin path containing the output assembly dependencies.", b => _binPath = b },
+                { "f|targetFramework=", "The output assembly target framework. [> 1 REQUIRED]", f => _targetFrameworks.Add(f) },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 
@@ -309,14 +281,11 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
             var errorMessage = string.Empty;
             if (_assemblyNames.Count == 0) errorMessage += "At least one input assembly is required.";
             if (_outputAssemblyName == null) errorMessage += "Output assembly name is required.";
-            if (_targetFramework == null) errorMessage += "Target framework is required.";
+            if (_targetFrameworks.Count == 0) errorMessage += "At least one target framework is required.";
 
             var assemblyFilesNotFound = _assemblyNames.Where(an => !File.Exists(an)).ToList();
             if (assemblyFilesNotFound.Count > 0)
                 errorMessage += $"Unable to find the following assembly files:\n{string.Join("\n", assemblyFilesNotFound)}";
-
-            if (!Directory.Exists(_binPath))
-                errorMessage += $"Unable to find the dependencies bin path: {_binPath}";
 
             if (errorMessage != string.Empty)
             {
