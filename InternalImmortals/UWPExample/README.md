@@ -26,15 +26,14 @@ directory, and run `Generate-Assemblies.ps1`.
 5. Build the UWPExample solution again. Everything should compile successfully.
 
 6. Register your Immortals using `Ambrosia.exe`. Open up a command prompt, change directories to
-`AMBROSIA\Ambrosia\Ambrosia\bin\x64\Debug\net46`, and run these commands (these commands will
-result in the Ambrosia log files going in the `C:\ambrosialogs` directory):
-
-    .\Ambrosia.exe RegisterInstance -i=uwptestclientA -rp=1000 -sp=1001 -l=C:\ambrosialogs\
-    .\Ambrosia.exe RegisterInstance -i=uwptestclientB -rp=2000 -sp=2001 -l=C:\ambrosialogs\
-
-Each command will produce a message saying
+`AMBROSIA\Ambrosia\Ambrosia\bin\x64\Debug\net46`, and run the commands below (these commands will
+result in the Ambrosia log files going in the `C:\ambrosialogs\` directory). Each command will
+produce a message saying
 `The CRA instance appears to be down. Restart it and this vertex will be instantiated automatically`.
 This message is normal and does not mean that anything went wrong.
+
+        .\Ambrosia.exe RegisterInstance -i=uwptestclientA -rp=1000 -sp=1001 -l=C:\ambrosialogs\
+        .\Ambrosia.exe RegisterInstance -i=uwptestclientB -rp=2000 -sp=2001 -l=C:\ambrosialogs\
 
 7. First we'll run the .NET Framework version of the drawing app, in the "GraphicalApp" project.
 We'll start the first instance of GraphicalApp in Visual Studio, so that you can debug any crashes.
