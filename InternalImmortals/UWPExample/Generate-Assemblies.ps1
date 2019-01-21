@@ -3,17 +3,6 @@
 # program generates a project with .NET Framework and .NET Core targets, but UWP apps can only
 # reference UWP or .NET Standard projects.
 
-# Create the dependencies folder for codegen (based on the codegen script in
-# PerformanceTestInterruptible)
-If (!(Test-Path GraphicalImmortalAPI\bin\x64\Debug\net46\)) {
-    Write-Output "Codegen failure: GraphicalImmortalAPI (x64, net46) build output is missing."
-    Write-Output "Compile the GraphicalImmortalAPI project before running this script."
-    exit
-}
-New-Item -ItemType Directory -Force -Path "CodeGenDependencies\net46" | Out-Null
-Get-ChildItem "CodeGenDependencies\net46\" | Remove-Item
-Copy-Item "GraphicalImmortalAPI\bin\x64\Debug\net46\*" -Force -Destination "CodeGenDependencies\net46\"
-
 # Generate the assembly and source files
 $ambrosiaExe = "..\..\Clients\CSharp\AmbrosiaCS\bin\x64\Debug\net46\AmbrosiaCS.exe"
 $inputAssembly = "GraphicalImmortalAPI\bin\x64\Debug\net46\GraphicalImmortalAPI.dll"
@@ -27,7 +16,7 @@ If (!(Test-Path $inputAssembly))
     Write-Output "Codegen failure: input assembly is missing (should be located at $inputAssembly)."
     exit
 }
-Invoke-Expression "$ambrosiaExe CodeGen -a=`"$inputAssembly`" -o=`"GraphicalImmortalAPIGenerated`" -f=`"net46`" -b=`"CodeGenDependencies\net46`""
+& $ambrosiaExe CodeGen -a="$inputAssembly" -o="GraphicalImmortalAPIGenerated" -f="net46"
 
 # Copy the source files into the GraphicalImmortalAPIGeneratedUWP project
 If (!(Test-Path GeneratedSourceFiles))
