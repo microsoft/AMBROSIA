@@ -168,8 +168,14 @@ namespace Ambrosia
                 writeToStream.WriteInt(keyEncoding.Length);
                 writeToStream.Write(keyEncoding, 0, keyEncoding.Length);
                 writeToStream.WriteLongFixed(entry.Value.LastSeqNoFromLocalService);
-                var trimTo = entry.Value.TrimTo;
-                var replayableTrimTo = entry.Value.ReplayableTrimTo;
+                // Lock to ensure atomic update of both variables due to race in InputControlListenerAsync
+                long trimTo;
+                long replayableTrimTo;
+                lock (entry.Value._trimLock)
+                {
+                    trimTo = entry.Value.TrimTo;
+                    replayableTrimTo = entry.Value.ReplayableTrimTo;
+                }
                 writeToStream.WriteLongFixed(trimTo);
                 writeToStream.WriteLongFixed(replayableTrimTo);
                 entry.Value.BufferedOutput.Serialize(writeToStream);
@@ -438,7 +444,7 @@ namespace Ambrosia
                 if (posToStart == 0)
                 {
                     // We are starting to send contents of the page. Send everything
-                    numReplayableMessagesToSend = (int) curBuffer.TotalReplayableMessages;
+                    numReplayableMessagesToSend = (int)curBuffer.TotalReplayableMessages;
                 }
                 else
                 {
@@ -490,8 +496,8 @@ namespace Ambrosia
                 _owningOutputRecord.LastSeqSentToReceiver += numRPCs;
 
                 // Must handle cases where trim came in during the actual send and reset or pushed the iterator
-                if ((_owningOutputRecord.placeInOutput != null) && 
-                    ((_owningOutputRecord.placeInOutput.PageEnumerator != bufferEnumerator) || 
+                if ((_owningOutputRecord.placeInOutput != null) &&
+                    ((_owningOutputRecord.placeInOutput.PageEnumerator != bufferEnumerator) ||
                     _owningOutputRecord.placeInOutput.PagePos == -1))
                 {
                     // Trim replaced the enumerator. Must reset
@@ -597,7 +603,7 @@ namespace Ambrosia
             ReleaseAppendLock();
             while (!_pool.TryDequeue(out bufferPage))
             {
-                if (_owningRuntime.Recovering || _owningOutputRecord.ResettingConnection || 
+                if (_owningRuntime.Recovering || _owningOutputRecord.ResettingConnection ||
                     _owningRuntime.CheckpointingService || _owningOutputRecord.ConnectingAfterRestart)
                 {
                     var newBufferPageBytes = new byte[Math.Max(defaultPageSize, writeLength)];
@@ -750,6 +756,10 @@ namespace Ambrosia
         internal long TrimAndUnbufferNonreplayableCalls(long trimSeqNo,
                                                         long matchingReplayableSeqNo)
         {
+            if (trimSeqNo < 1)
+            {
+                return matchingReplayableSeqNo;
+            }
             // No locking necessary since this should only get called during recovery before replay and before a checkpooint is sent to service
             // First trim
             long highestTrimmedSeqNo = -1;
@@ -776,7 +786,7 @@ namespace Ambrosia
                 {
                     // May need to remove some data from the page
                     int readBufferPos = 0;
-                    for (var i = currentHead.LowestSeqNo; i <= trimSeqNo; i++ )
+                    for (var i = currentHead.LowestSeqNo; i <= trimSeqNo; i++)
                     {
                         int eventSize = currentHead.PageBytes.ReadBufferedInt(readBufferPos);
                         var methodID = currentHead.PageBytes.ReadBufferedInt(readBufferPos + StreamCommunicator.IntSize(eventSize) + 2);
@@ -788,6 +798,7 @@ namespace Ambrosia
                     }
                     Buffer.BlockCopy(currentHead.PageBytes, readBufferPos, currentHead.PageBytes, 0, currentHead.PageBytes.Length - readBufferPos);
                     currentHead.LowestSeqNo += trimSeqNo - currentHead.LowestSeqNo + 1;
+                    currentHead.curLength -= readBufferPos;
                     break;
                 }
             }
@@ -825,7 +836,7 @@ namespace Ambrosia
             return nextReplayableSeqNo - 1;
         }
 
-        internal void RebaseSeqNosInBuffer(long commitSeqNo, 
+        internal void RebaseSeqNosInBuffer(long commitSeqNo,
                                            long commitSeqNoReplayable)
         {
             var seqNoDiff = commitSeqNo - commitSeqNoReplayable;
@@ -879,7 +890,6 @@ namespace Ambrosia
         public long _sendsEnqueued;
         public AmbrosiaRuntime MyAmbrosia { get; set; }
         public bool WillResetConnection { get; set; }
-        public bool ResettingConnection { get; set; }
         public bool ConnectingAfterRestart { get; set; }
         // The latest trim location on the other side. An associated trim message MAY have already been sent
         public long RemoteTrim { get; set; }
@@ -887,6 +897,9 @@ namespace Ambrosia
         public long RemoteTrimReplayable { get; set; }
         // The seq no of the last RPC sent to the receiver
         public long LastSeqSentToReceiver;
+        internal volatile bool ResettingConnection;
+        internal object _trimLock = new object();
+        internal object _remoteTrimLock = new object();
 
         public OutputConnectionRecord(AmbrosiaRuntime inAmbrosia)
         {
@@ -1134,8 +1147,12 @@ namespace Ambrosia
                             outputs[kv.Key] = outputConnectionRecord;
                             Console.WriteLine("Adding output:{0}", kv.Key);
                         }
-                        outputConnectionRecord.RemoteTrim = Math.Max(kv.Value.First, outputConnectionRecord.RemoteTrim);
-                        outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.Second, outputConnectionRecord.RemoteTrimReplayable);
+                        // Must lock to atomically update due to race with ToControlStreamAsync
+                        lock (outputConnectionRecord._remoteTrimLock)
+                        {
+                            outputConnectionRecord.RemoteTrim = Math.Max(kv.Value.First, outputConnectionRecord.RemoteTrim);
+                            outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.Second, outputConnectionRecord.RemoteTrimReplayable);
+                        }
                         if (outputConnectionRecord.ControlWorkQ.IsEmpty)
                         {
                             outputConnectionRecord.ControlWorkQ.Enqueue(-2);
@@ -1446,7 +1463,8 @@ namespace Ambrosia
                                            string outputToUpdate,
                                            long newSeqNo,
                                            long newReplayableSeqNo,
-                                           ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+                                           ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                           InputConnectionRecord associatedInputConnectionRecord)
             {
                 var copyFromBuffer = copyFromFlexBuffer.Buffer;
                 var length = copyFromFlexBuffer.Length;
@@ -1484,6 +1502,10 @@ namespace Ambrosia
                     // Check if the compare and swap succeeded, otherwise try again
                     if (origVal == localStatus)
                     {
+                        // We are now preventing recovery until addrow finishes and all resulting commits have completed. We can safely update
+                        // LastProcessedID and LastProcessedReplayableID
+                        associatedInputConnectionRecord.LastProcessedID = newSeqNo;
+                        associatedInputConnectionRecord.LastProcessedReplayableID = newReplayableSeqNo;
                         if (sealing)
                         {
                             // This call successfully sealed the buffer. Remember we still have an extra
@@ -2523,63 +2545,63 @@ namespace Ambrosia
                     // Do an async message read. Note that the async aspect of this is slow.
                     FlexReadBuffer.Deserialize(_localServiceReceiveFromStream, localServiceBuffer);
                     ProcessSyncLocalMessage(ref localServiceBuffer, batchServiceBuffer);
-/* Disabling because of BUGBUG. Eats checkpoint bytes in some circumstances before checkpointer can deal with it.
-                    // Process more messages from the local service if available before going async again, doing this here because
-                    // not all language shims will be good citizens here, and we may need to process small messages to avoid inefficiencies
-                    // in LAR.
-                    int curPosInBuffer = 0;
-                    int readBytes = 0;
-                    while (readBytes != 0 || _localServiceReceiveFromStream.DataAvailable)
-                    {
-                        // Read data into buffer to avoid lock contention of reading directly from the stream
-                        while ((_localServiceReceiveFromStream.DataAvailable && readBytes < bufferSize) || !bytes.EnoughBytesForReadBufferedInt(0, readBytes))
-                        {
-                            readBytes += _localServiceReceiveFromStream.Read(bytes, readBytes, bufferSize - readBytes);
-                        }
-                        // Continue loop as long as we can meaningfully read a message length
-                        var memStream = new MemoryStream(bytes, 0, readBytes);
-                        while (bytes.EnoughBytesForReadBufferedInt(curPosInBuffer, readBytes - curPosInBuffer))
-                        {
-                            // Read the length of the next message
-                            var messageSize = memStream.ReadInt();
-                            var messageSizeSize = StreamCommunicator.IntSize(messageSize);
-                            memStream.Position -= messageSizeSize;
-                            if (curPosInBuffer + messageSizeSize + messageSize > readBytes)
-                            {
-                                // didn't read the full message into the buffer. It must be torn
-                                if (messageSize + messageSizeSize > bufferSize)
-                                {
-                                    // Buffer isn't big enough to hold the whole torn event even if empty. Increase the buffer size so the message can fit.
-                                    bufferSize = messageSize + messageSizeSize;
-                                    var newBytes = new byte[bufferSize];
-                                    Buffer.BlockCopy(bytes, curPosInBuffer, newBytes, 0, readBytes - curPosInBuffer);
-                                    bytes = newBytes;
-                                    bytesBak = new byte[bufferSize];
-                                    readBytes -= curPosInBuffer;
-                                    curPosInBuffer = 0;
-                                }
-                                break;
-                            }
-                            else
-                            {
-                                // Count this message since it is fully in the buffer
-                                FlexReadBuffer.Deserialize(memStream, localServiceBuffer);
-                                ProcessSyncLocalMessage(ref localServiceBuffer, batchServiceBuffer);
-                                curPosInBuffer += messageSizeSize + messageSize;
-                            }
-                        }
-                        memStream.Dispose();
-                        // Shift torn message to the beginning unless it is the first one
-                        if (curPosInBuffer > 0)
-                        {
-                            Buffer.BlockCopy(bytes, curPosInBuffer, bytesBak, 0, readBytes - curPosInBuffer);
-                            var tempBytes = bytes;
-                            bytes = bytesBak;
-                            bytesBak = tempBytes;
-                            readBytes -= curPosInBuffer;
-                            curPosInBuffer = 0;
-                        }
-                    }  */
+                    /* Disabling because of BUGBUG. Eats checkpoint bytes in some circumstances before checkpointer can deal with it.
+                                        // Process more messages from the local service if available before going async again, doing this here because
+                                        // not all language shims will be good citizens here, and we may need to process small messages to avoid inefficiencies
+                                        // in LAR.
+                                        int curPosInBuffer = 0;
+                                        int readBytes = 0;
+                                        while (readBytes != 0 || _localServiceReceiveFromStream.DataAvailable)
+                                        {
+                                            // Read data into buffer to avoid lock contention of reading directly from the stream
+                                            while ((_localServiceReceiveFromStream.DataAvailable && readBytes < bufferSize) || !bytes.EnoughBytesForReadBufferedInt(0, readBytes))
+                                            {
+                                                readBytes += _localServiceReceiveFromStream.Read(bytes, readBytes, bufferSize - readBytes);
+                                            }
+                                            // Continue loop as long as we can meaningfully read a message length
+                                            var memStream = new MemoryStream(bytes, 0, readBytes);
+                                            while (bytes.EnoughBytesForReadBufferedInt(curPosInBuffer, readBytes - curPosInBuffer))
+                                            {
+                                                // Read the length of the next message
+                                                var messageSize = memStream.ReadInt();
+                                                var messageSizeSize = StreamCommunicator.IntSize(messageSize);
+                                                memStream.Position -= messageSizeSize;
+                                                if (curPosInBuffer + messageSizeSize + messageSize > readBytes)
+                                                {
+                                                    // didn't read the full message into the buffer. It must be torn
+                                                    if (messageSize + messageSizeSize > bufferSize)
+                                                    {
+                                                        // Buffer isn't big enough to hold the whole torn event even if empty. Increase the buffer size so the message can fit.
+                                                        bufferSize = messageSize + messageSizeSize;
+                                                        var newBytes = new byte[bufferSize];
+                                                        Buffer.BlockCopy(bytes, curPosInBuffer, newBytes, 0, readBytes - curPosInBuffer);
+                                                        bytes = newBytes;
+                                                        bytesBak = new byte[bufferSize];
+                                                        readBytes -= curPosInBuffer;
+                                                        curPosInBuffer = 0;
+                                                    }
+                                                    break;
+                                                }
+                                                else
+                                                {
+                                                    // Count this message since it is fully in the buffer
+                                                    FlexReadBuffer.Deserialize(memStream, localServiceBuffer);
+                                                    ProcessSyncLocalMessage(ref localServiceBuffer, batchServiceBuffer);
+                                                    curPosInBuffer += messageSizeSize + messageSize;
+                                                }
+                                            }
+                                            memStream.Dispose();
+                                            // Shift torn message to the beginning unless it is the first one
+                                            if (curPosInBuffer > 0)
+                                            {
+                                                Buffer.BlockCopy(bytes, curPosInBuffer, bytesBak, 0, readBytes - curPosInBuffer);
+                                                var tempBytes = bytes;
+                                                bytes = bytesBak;
+                                                bytesBak = tempBytes;
+                                                readBytes -= curPosInBuffer;
+                                                curPosInBuffer = 0;
+                                            }
+                                        }  */
                 }
             }
             catch (Exception e)
@@ -2613,7 +2635,7 @@ namespace Ambrosia
                     Console.WriteLine("Reading a checkpoint {0} bytes", _lastReceivedCheckpointSize);
                     LastReceivedCheckpoint = localServiceBuffer;
                     // Block this thread until checkpointing is complete
-                    while (LastReceivedCheckpoint != null) { Thread.Yield();};
+                    while (LastReceivedCheckpoint != null) { Thread.Yield(); };
                     break;
 
                 case attachToByte:
@@ -2688,7 +2710,7 @@ namespace Ambrosia
                     break;
 
                 default:
-		    // This one really should terminate the process; no recovery allowed.
+                    // This one really should terminate the process; no recovery allowed.
                     OnError(0, "Illegal leading byte in local message");
                     break;
             }
@@ -2755,7 +2777,7 @@ namespace Ambrosia
                     writablePage.HighestSeqNo = _shuffleOutputRecord.LastSeqNoFromLocalService + 1;
 
                     var methodID = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1);
-                    if (RpcBuffer.Buffer[restOfRPCOffset + 1 + StreamCommunicator.IntSize(methodID)] != (byte) RpcTypes.RpcType.Impulse)
+                    if (RpcBuffer.Buffer[restOfRPCOffset + 1 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
                     {
                         writablePage.UnsentReplayableMessages++;
                         writablePage.TotalReplayableMessages++;
@@ -2941,6 +2963,7 @@ namespace Ambrosia
             var sizeBytes = inputFlexBuffer.LengthLength;
             // Get the seqNo of the replay/filter point
             var lastRemoteTrim = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1);
+            long lastRemoteTrimReplayable;
 
             // This code dequeues output producing tasks and runs them
             long currentTrim = -1;
@@ -2963,8 +2986,13 @@ namespace Ambrosia
                     if (lastRemoteTrim < outputConnectionRecord.RemoteTrim)
                     {
                         // This is a send watermark
-                        lastRemoteTrim = outputConnectionRecord.RemoteTrim;
-                        var lastRemoteTrimReplayable = outputConnectionRecord.RemoteTrimReplayable;
+                        // Must lock to atomically read due to races with CheckpointAsync and SendInputWatermarks
+                        lock (outputConnectionRecord._remoteTrimLock)
+                        {
+
+                            lastRemoteTrim = outputConnectionRecord.RemoteTrim;
+                            lastRemoteTrimReplayable = outputConnectionRecord.RemoteTrimReplayable;
+                        }
                         watermarkStream.Position = 0;
                         var watermarkLength = 1 + StreamCommunicator.LongSize(lastRemoteTrim) + StreamCommunicator.LongSize(lastRemoteTrimReplayable);
                         watermarkStream.WriteInt(watermarkLength);
@@ -3102,7 +3130,7 @@ namespace Ambrosia
             while (true)
             {
                 await FlexReadBuffer.DeserializeAsync(inputRecord.DataConnectionStream, inputFlexBuffer, ct);
-                await ProcessInputMessage(inputRecord, inputName, inputFlexBuffer);
+                await ProcessInputMessageAsync(inputRecord, inputName, inputFlexBuffer);
             }
         }
 
@@ -3131,8 +3159,12 @@ namespace Ambrosia
                         // Check to make sure this is progress, otherwise, can ignore
                         if (commitSeqNo > outputConnectionRecord.TrimTo && !outputConnectionRecord.WillResetConnection && !outputConnectionRecord.ConnectingAfterRestart)
                         {
-                            outputConnectionRecord.TrimTo = Math.Max(outputConnectionRecord.TrimTo, commitSeqNo);
-                            outputConnectionRecord.ReplayableTrimTo = Math.Max(outputConnectionRecord.ReplayableTrimTo, replayableCommitSeqNo);
+                            // Lock to ensure atomic update of both variables due to race in AmbrosiaSerialize
+                            lock (outputConnectionRecord._trimLock)
+                            {
+                                outputConnectionRecord.TrimTo = Math.Max(outputConnectionRecord.TrimTo, commitSeqNo);
+                                outputConnectionRecord.ReplayableTrimTo = Math.Max(outputConnectionRecord.ReplayableTrimTo, replayableCommitSeqNo);
+                            }
                             if (outputConnectionRecord.ControlWorkQ.IsEmpty)
                             {
                                 outputConnectionRecord.ControlWorkQ.Enqueue(-2);
@@ -3144,31 +3176,32 @@ namespace Ambrosia
                         }
                         break;
                     default:
-			// Bubble the exception up to CRA
+                        // Bubble the exception up to CRA
                         throw new Exception("Illegal leading byte in input control message");
                         break;
                 }
             }
         }
 
-        private async Task ProcessInputMessage(InputConnectionRecord inputRecord,
-                                               string inputName,
-                                               FlexReadBuffer inputFlexBuffer)
+        private async Task ProcessInputMessageAsync(InputConnectionRecord inputRecord,
+                                                    string inputName,
+                                                    FlexReadBuffer inputFlexBuffer)
         {
             var sizeBytes = inputFlexBuffer.LengthLength;
             switch (inputFlexBuffer.Buffer[sizeBytes])
             {
                 case RPCByte:
                     var methodID = inputFlexBuffer.Buffer.ReadBufferedInt(sizeBytes + 2);
-                    if (inputFlexBuffer.Buffer[sizeBytes + 2 + StreamCommunicator.IntSize(methodID)] != (byte) RpcTypes.RpcType.Impulse)
+                    long newFileSize;
+                    if (inputFlexBuffer.Buffer[sizeBytes + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
                     {
-                        inputRecord.LastProcessedReplayableID++;
+                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
                     }
-                    inputRecord.LastProcessedID++;
-                    var newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID, inputRecord.LastProcessedReplayableID, _outputs);
+                    else
+                    {
+                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID, _outputs, inputRecord);
+                    }
                     inputFlexBuffer.ResetBuffer();
-                    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Uncomment for testing
-                    //Console.WriteLine("Received {0}", inputRecord.LastProcessedID);
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
                     {
                         // Make sure only one input thread is moving to the next log file. Won't break the system if we don't do this, but could result in
@@ -3186,13 +3219,9 @@ namespace Ambrosia
                     var memStream = new MemoryStream(inputFlexBuffer.Buffer, restOfBatchOffset, inputFlexBuffer.Length - restOfBatchOffset);
                     var numRPCs = memStream.ReadInt();
                     var numReplayableRPCs = memStream.ReadInt();
-                    inputRecord.LastProcessedID += numRPCs;
-                    inputRecord.LastProcessedReplayableID += numReplayableRPCs;
-                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID, inputRecord.LastProcessedReplayableID, _outputs);
+                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numReplayableRPCs, _outputs, inputRecord);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
-                    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Uncomment for testing
-                    //Console.WriteLine("Received {0}", inputRecord.LastProcessedID);
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
                     {
                         // Move to next log if checkpoints aren't manual, and we've hit the trigger size
@@ -3204,13 +3233,9 @@ namespace Ambrosia
                     restOfBatchOffset = inputFlexBuffer.LengthLength + 1;
                     memStream = new MemoryStream(inputFlexBuffer.Buffer, restOfBatchOffset, inputFlexBuffer.Length - restOfBatchOffset);
                     numRPCs = memStream.ReadInt();
-                    inputRecord.LastProcessedID += numRPCs;
-                    inputRecord.LastProcessedReplayableID += numRPCs;
-                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID, inputRecord.LastProcessedReplayableID, _outputs);
+                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numRPCs, _outputs, inputRecord);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
-                    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Uncomment for testing
-                    //Console.WriteLine("Received {0}", inputRecord.LastProcessedID);
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
                     {
                         // Make sure only one input thread is moving to the next log file. Won't break the system if we don't do this, but could result in
@@ -3230,8 +3255,7 @@ namespace Ambrosia
                     GetSystemTimePreciseAsFileTime(out time);
                     memStream.WriteLongFixed(time);
                     // Treat as RPC
-                    inputRecord.LastProcessedID++;
-                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID, inputRecord.LastProcessedReplayableID, _outputs);
+                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     break;
@@ -3242,14 +3266,13 @@ namespace Ambrosia
                     GetSystemTimePreciseAsFileTime(out time);
                     memStream.WriteLongFixed(time);
                     // Treat as RPC
-                    inputRecord.LastProcessedID++;
-                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID, inputRecord.LastProcessedReplayableID, _outputs);
+                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     break;
 
                 default:
-		    // Bubble the exception up to CRA
+                    // Bubble the exception up to CRA
                     throw new Exception("Illegal leading byte in input data message");
             }
         }
@@ -3332,8 +3355,12 @@ namespace Ambrosia
                     outputConnectionRecord = new OutputConnectionRecord(this);
                     _outputs[kv.Key] = outputConnectionRecord;
                 }
-                outputConnectionRecord.RemoteTrim = Math.Max (kv.Value.LastProcessedID, outputConnectionRecord.RemoteTrim);
-                outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.LastProcessedReplayableID, outputConnectionRecord.RemoteTrimReplayable);
+                // Must lock to atomically update due to race with ToControlStreamAsync
+                lock (outputConnectionRecord._remoteTrimLock)
+                {
+                    outputConnectionRecord.RemoteTrim = Math.Max(kv.Value.LastProcessedID, outputConnectionRecord.RemoteTrim);
+                    outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.LastProcessedReplayableID, outputConnectionRecord.RemoteTrimReplayable);
+                }
                 if (outputConnectionRecord.ControlWorkQ.IsEmpty)
                 {
                     outputConnectionRecord.ControlWorkQ.Enqueue(-2);
@@ -3411,7 +3438,7 @@ namespace Ambrosia
                     OnError(MissingCheckpoint, "No checkpoint/logs directory");
                 }
                 var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
-                if (!LogWriter.FileExists(Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion, 
+                if (!LogWriter.FileExists(Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion,
                                                        "server" + "chkpt" + lastCommittedCheckpoint)))
                 {
                     OnError(MissingCheckpoint, "Missing checkpoint " + lastCommittedCheckpoint.ToString());
@@ -3463,8 +3490,8 @@ namespace Ambrosia
             _sharded = false;
             _coral = ClientLibrary;
 
-	    Console.WriteLine("Logs directory: {0}", _serviceLogPath);
-	    
+            Console.WriteLine("Logs directory: {0}", _serviceLogPath);
+
             if (createService == null)
             {
                 if (LogWriter.DirectoryExists(_serviceLogPath + _serviceName + "_" + _currentVersion))
@@ -3544,7 +3571,7 @@ namespace Ambrosia
                     var replicaName = $"{_instanceName}{_replicaNumber}";
                     AmbrosiaRuntimeParams param = new AmbrosiaRuntimeParams();
                     param.createService = _recoveryMode == AmbrosiaRecoveryModes.A
-                        ? (bool?) null
+                        ? (bool?)null
                         : (_recoveryMode != AmbrosiaRecoveryModes.N);
                     param.pauseAtStart = _isPauseAtStart;
                     param.persistLogs = _isPersistLogs;
@@ -3600,7 +3627,7 @@ namespace Ambrosia
             var options = ParseOptions(args, out var shouldShowHelp);
             ValidateOptions(options, shouldShowHelp);
         }
-         
+
         private static OptionSet ParseOptions(string[] args, out bool shouldShowHelp)
         {
             var showHelp = false;
@@ -3638,7 +3665,7 @@ namespace Ambrosia
             }.AddMany(registerInstanceOptionSet);
 
             var debugInstanceOptionSet = basicOptions.AddMany(new OptionSet {
-                
+
                 { "c|checkpoint=", "The checkpoint # to load.", c => _checkpointToLoad = long.Parse(c) },
                 { "cv|currentVersion=", "The version # to debug.", cv => _currentVersion = int.Parse(cv) },
                 { "tu|testingUpgrade", "Is testing upgrade.", u => _isTestingUpgrade = true },

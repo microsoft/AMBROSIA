@@ -263,3 +263,5 @@ ModelManifest.xml
 # Local launch settings
 **/launchSettings.json
 CodeGenDependencies
+
+**/publish/*
