@@ -52,7 +52,7 @@ Note the lack of any logging code, reconnection or retry code, or explicit instr
 * Given the same input method calls in the same order, the Immortal must arrive at an equivalent state, and generate the same outgoing instance method calls in the same order.
 * The Immortal author must provide a way to serialize Immortal instances, through DataContract, so that deserialization will create an Immortal with equivalent state.
 
-The first requirement is trivially accomplished through Ambrosia's threading and dispatch model. In Ambrosia, all method calls are executed serially, unless an async call is made, as in Client3. Since there are no outgoing method calls in Server, all ReceiveMessageAsync calls are executed one by one to completion, guaranteeing requirement the first requirement.
+The first requirement is trivially accomplished through Ambrosia's threading and dispatch model. In Ambrosia, all method calls are executed serially, unless an async call is made, as in Client3. Since there are no outgoing method calls in Server, all ReceiveMessageAsync calls are executed one by one to completion, guaranteeing the first requirement.
 
 The second requirement is met by labeling the class as DataContract, and labeling the _messagesReceived member as DataMember. This ensures that _messagesReceived is protected, and in the case of failure, will be reconstituted to the correct value when recovery occurs. Note that not all members must be labled in this way, as they may be computed from other members, or may not be important to serialize (e.g. rendering state).
 
