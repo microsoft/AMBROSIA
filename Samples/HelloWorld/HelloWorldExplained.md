@@ -194,7 +194,7 @@ In order to handle such situations, Ambrosia has a feature called impulse method
 * Only the impulse calls which are logged (which happens prior to calling the method) are guaranteed to survive failure. For instance, if outside information, like user input, is collected by the program, but the program crashes prior to that input being logged, that information will be lost.
 * Impulse methods are not allowed to be called during recovery, since recovery must return the system to a replayably deterministic state. As a result, impulse methods are typically called by background threads, which can only be started after recovery is complete (see below).
 
-In this case, Client2 has an impulse method, called ReceiveKeyboardInput, which receives messages strings entered by the user, and sends them to server. As a result, Client2 has a non-empty interface IClient2:
+In this case, Client2 has an impulse method, called ReceiveKeyboardInput, which receives message strings entered by the user, and sends them to server. As a result, Client2 has a non-empty interface IClient2:
 
 ```
     public interface IClient2
@@ -255,9 +255,21 @@ Next, let's look at the actual Immortal Client2:
 ```
 First, note that our impulse method, ReceiveKeyboardInputAsync, looks like any other public method, and simply calls server's ReceiveMessage. The difference is in how ReceiveKeyboardInputAsync is called. Rather than being called from a replayable method like OnFirstStart, it's called from a background thread that is started from BecomingPrimary. 
 
-BecomingPrimary is an overloadable method for performing actions after recovery is complete, but before servicing the first method calls post-recovery. By putting our user message requesting loop in the thread created during BecomingPrimary, we ensure that ReceiveKeyboardInputAsync will not be called during recovery.
+BecomingPrimary is an overloadable method for performing actions after recovery is complete, but before servicing the first method calls after recovery. By putting our user input requesting loop in the thread created during BecomingPrimary, we ensure that ReceiveKeyboardInputAsync will not be called during recovery.
 
-Despite the non-deterministic user input, Client2 is replayably deterministic, logging all user input in calls to ReceiveKeyboardInput, and readers are encouraged to interrupt and restart the client and server to observe behavior on both the client and the server.
+Despite the non-deterministic user input, Client2 is replayably deterministic, logging all user input in calls to ReceiveKeyboardInput, and readers are encouraged to interrupt and restart the client and server to observe behavior.
+
+Understanding Recovery for Client2
+-----------
+Let's assume that Client2 and its associated ImmortalCoordinator were exited (e.g. Ctrl-C) and restarted after user input was entered, and the associated impulses called. Let's go through the recovery actions taken by Ambrosia:
+
+If we are starting from the initial checkpoint, OnFirstStart is re-executed, which has no real effect since we had previously made the connection to the server anyway.
+
+The previously logged impulse calls are then executed serially in their original order, resulting in a series of buffered outgoing calls to the server. After all logged calls are executed, recovery is over, and BecomingPrimary is called. At this point, the user may start entering new input, resulting in the buffering of outgoing impulse calls to itself, if reconnection to itself has not yet happened.
+
+Once the instance is reconnected to itself, any buffered impulse calls are sent to itself and, after being logged, executed. These executed impulses may result in further buffered calls to the server if server reconnection has not yet happened.
+
+Note that the server will have received some portion of the buffered calls, in the order in which they are reproduced, but may not have received some of the last buffered calls, including possible new calls made after becoming primary. Upon reconnection, unsent calls from client3 are sent to the server.
 
 Client3 - Async calls (Experimental)
 -----------
