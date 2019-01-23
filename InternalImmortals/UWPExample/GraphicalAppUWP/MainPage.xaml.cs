@@ -38,14 +38,12 @@ namespace GraphicalAppUWP
         private static string CLIENT_1_THIS_NAME = "uwptestclientA";
         private static string CLIENT_1_REMOTE_NAME = "uwptestclientB";
         private static int CLIENT_1_CRA_PORT = 1500;
-        private static string CLIENT_1_INSTANCE_NAME = "uwptestclientA0";
 
         private static int CLIENT_2_RECEIVE_PORT = 2001;
         private static int CLIENT_2_SEND_PORT = 2000;
         private static string CLIENT_2_THIS_NAME = "uwptestclientB";
         private static string CLIENT_2_REMOTE_NAME = "uwptestclientA";
         private static int CLIENT_2_CRA_PORT = 2500;
-        private static string CLIENT_2_INSTANCE_NAME = "uwptestclientB0";
 
         private class ImmortalThreadStartParams
         {
@@ -65,7 +63,8 @@ namespace GraphicalAppUWP
 
         private class CRAWorkerThreadStartParams
         {
-            public string _instanceName;
+            public string _craInstanceName;
+            public string _ambrosiaInstanceName;
             public string _ipAddress;
             public int _port;
             public string _storageConnectionString;
@@ -73,15 +72,15 @@ namespace GraphicalAppUWP
             public int _streamsPoolSize;
             public string _thisServiceName;
 
-            public CRAWorkerThreadStartParams(string instanceName, string ipAddress, int port, string storageConnectionString, ISecureStreamConnectionDescriptor descriptor, int streamsPoolSize, string thisServiceName)
+            public CRAWorkerThreadStartParams(string craInstanceName, string ipAddress, int port, string storageConnectionString, ISecureStreamConnectionDescriptor descriptor, int streamsPoolSize, string ambrosiaInstanceName)
             {
-                _instanceName = instanceName;
+                _craInstanceName = craInstanceName;
                 _ipAddress = ipAddress;
                 _port = port;
                 _storageConnectionString = storageConnectionString;
                 _descriptor = descriptor;
                 _streamsPoolSize = streamsPoolSize;
-                _thisServiceName = thisServiceName;
+                _ambrosiaInstanceName = ambrosiaInstanceName;
             }
         }
 
@@ -140,9 +139,9 @@ namespace GraphicalAppUWP
             }
         }
 
-        private void StartImmortal(int receivePort, int sendPort, string thisServiceName, string remoteServiceName)
+        private void StartImmortal(int receivePort, int sendPort, string thisInstanceName, string remoteInstanceName)
         {
-            ImmortalThreadStartParams threadParams = new ImmortalThreadStartParams(receivePort, sendPort, thisServiceName, remoteServiceName);
+            ImmortalThreadStartParams threadParams = new ImmortalThreadStartParams(receivePort, sendPort, thisInstanceName, remoteInstanceName);
             Thread thread = new Thread(new ParameterizedThreadStart(RunImmortal));
             thread.IsBackground = true;
             thread.Start(threadParams);
@@ -158,13 +157,13 @@ namespace GraphicalAppUWP
             }
         }
 
-        private void StartCRAWorker(string instanceName, int port, string thisServiceName)
+        private void StartCRAWorker(string craInstanceName, int port, string ambrosiaInstanceName)
         {
             string ipAddress = GetLocalIPAddress();
             string storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
             int connectionsPoolPerWorker = 1000;
 
-            CRAWorkerThreadStartParams threadParams = new CRAWorkerThreadStartParams(instanceName, ipAddress, port, storageConnectionString, null, connectionsPoolPerWorker, thisServiceName);
+            CRAWorkerThreadStartParams threadParams = new CRAWorkerThreadStartParams(craInstanceName, ipAddress, port, storageConnectionString, null, connectionsPoolPerWorker, ambrosiaInstanceName);
             Thread thread = new Thread(new ParameterizedThreadStart(RunCRAWorker));
             thread.IsBackground = true;
             thread.Start(threadParams);
@@ -174,14 +173,14 @@ namespace GraphicalAppUWP
         {
             CRAWorkerThreadStartParams threadParams = (CRAWorkerThreadStartParams)obj;
             worker = new CRAWorker(
-                threadParams._instanceName,
+                threadParams._craInstanceName,
                 threadParams._ipAddress,
                 threadParams._port,
                 threadParams._storageConnectionString,
                 threadParams._descriptor,
                 threadParams._streamsPoolSize);
             worker.DisableDynamicLoading();
-            worker.SideloadVertex(new AmbrosiaRuntime(), threadParams._thisServiceName);
+            worker.SideloadVertex(new AmbrosiaRuntime(), threadParams._ambrosiaInstanceName);
             worker.Start();
         }
 
@@ -217,35 +216,34 @@ namespace GraphicalAppUWP
 
         private void startButton_Click(object sender, RoutedEventArgs e)
         {
+            string thisInstanceName = thisInstanceTextBox.Text;
+
             int craPort = int.Parse(craPortTextBox.Text);
-            string instanceName = thisInstanceTextBox.Text;
-            string thisServiceName = thisServiceTextBox.Text;
-            StartCRAWorker(instanceName, craPort, thisServiceName);
+            string replicaName = thisInstanceName + "0";
+            StartCRAWorker(replicaName, craPort, thisInstanceName);
 
             int receivePort = int.Parse(receivePortTextBox.Text);
             int sendPort = int.Parse(sendPortTextBox.Text);
-            string remoteServiceName = remoteServiceTextBox.Text;
-            StartImmortal(receivePort, sendPort, thisServiceName, remoteServiceName);
+            string remoteInstanceName = remoteInstanceTextBox.Text;
+            StartImmortal(receivePort, sendPort, thisInstanceName, remoteInstanceName);
         }
 
         private void client1PresetsButton_Click(object sender, RoutedEventArgs e)
         {
             receivePortTextBox.Text = CLIENT_1_RECEIVE_PORT.ToString();
             sendPortTextBox.Text = CLIENT_1_SEND_PORT.ToString();
-            thisServiceTextBox.Text = CLIENT_1_THIS_NAME;
-            remoteServiceTextBox.Text = CLIENT_1_REMOTE_NAME;
+            thisInstanceTextBox.Text = CLIENT_1_THIS_NAME;
+            remoteInstanceTextBox.Text = CLIENT_1_REMOTE_NAME;
             craPortTextBox.Text = CLIENT_1_CRA_PORT.ToString();
-            thisInstanceTextBox.Text = CLIENT_1_INSTANCE_NAME;
         }
 
         private void client2PresetsButton_Click(object sender, RoutedEventArgs e)
         {
             receivePortTextBox.Text = CLIENT_2_RECEIVE_PORT.ToString();
             sendPortTextBox.Text = CLIENT_2_SEND_PORT.ToString();
-            thisServiceTextBox.Text = CLIENT_2_THIS_NAME;
-            remoteServiceTextBox.Text = CLIENT_2_REMOTE_NAME;
+            thisInstanceTextBox.Text = CLIENT_2_THIS_NAME;
+            remoteInstanceTextBox.Text = CLIENT_2_REMOTE_NAME;
             craPortTextBox.Text = CLIENT_2_CRA_PORT.ToString();
-            thisInstanceTextBox.Text = CLIENT_2_INSTANCE_NAME;
         }
     }
 }
