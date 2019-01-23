@@ -46,14 +46,10 @@ directories to `AMBROSIA\InternalImmortals\UWPExample\GraphicalApp\bin\x64\Debug
 `GraphicalApp.exe`. Click "Load client 2 presets" and then click "Start." Wait a few seconds, and
 you should see your drawing from client 1 show up in this client.
 
-9. Cleanup: When you exit the instance of GraphicalApp started from the command line, it might keep
-running in the background (due to a bug that will be fixed soon). To kill it, open Task Manager, go
-to the "Details" tab, and then kill the process named "GraphialApp.exe."
-
-10. More cleanup: To delete the log files, go to the directory you entered in step 6
+9. Cleanup: To delete the log files, go to the directory you entered in step 6
 (`C:\ambrosialogs`) and delete all the files there.
 
-11. To run the UWP version of the drawing app, follow the same instructions as in step 7 above, but
+10. To run the UWP version of the drawing app, follow the same instructions as in step 7 above, but
 start the "GraphicalAppUWP" project instead. The UWP version of the app may take longer to start
 up, due to the fact that UWP has long socket timeouts under certain circumstances, but it should
 start accepting drawing input after around 50 seconds.
