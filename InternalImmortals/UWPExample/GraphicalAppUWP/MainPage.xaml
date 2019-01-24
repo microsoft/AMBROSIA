@@ -12,21 +12,19 @@
         <Border BorderBrush="Black" HorizontalAlignment="Stretch" Margin="450,0,0,0" BorderThickness="5,5,5,5" VerticalAlignment="Stretch">
             <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="canvas" PointerMoved="canvas_PointerMoved" PointerPressed="canvas_PointerPressed" PointerReleased="canvas_PointerReleased" Background="White"/>
         </Border>
-        <Button x:Name="startButton" Content="Start" HorizontalAlignment="Left" Margin="80,521,0,0" VerticalAlignment="Top" Click="startButton_Click"/>
+        <Button x:Name="startButton" Content="Start" HorizontalAlignment="Left" Margin="80,500,0,0" VerticalAlignment="Top" Click="startButton_Click"/>
         <Button x:Name="client1PresetsButton" Content="Load client 1 presets" HorizontalAlignment="Left" Margin="86,95,0,0" VerticalAlignment="Top" Click="client1PresetsButton_Click"/>
         <Button x:Name="client2PresetsButton" Content="Load client 2 presets" HorizontalAlignment="Left" Margin="86,148,0,0" VerticalAlignment="Top" Click="client2PresetsButton_Click"/>
         <TextBlock HorizontalAlignment="Left" Margin="91,222,0,0" Text="Receive Port" TextWrapping="Wrap" VerticalAlignment="Top"/>
         <TextBlock HorizontalAlignment="Left" Margin="108,265,0,0" Text="Send Port" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        <TextBlock HorizontalAlignment="Left" Margin="52,308,0,0" Text="This Service Name" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        <TextBlock HorizontalAlignment="Left" Margin="26,351,0,0" Text="Remote Service Name" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="43,308,0,0" Text="This Instance Name" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="18,351,0,0" Text="Remote Instance Name" TextWrapping="Wrap" VerticalAlignment="Top"/>
         <TextBox x:Name="receivePortTextBox" HorizontalAlignment="Left" Height="38" Margin="177,213,0,0" Text="" VerticalAlignment="Top" Width="186"/>
         <TextBox x:Name="sendPortTextBox" HorizontalAlignment="Left" Height="38" Margin="177,256,0,0" Text="" VerticalAlignment="Top" Width="186"/>
-        <TextBox x:Name="thisServiceTextBox" HorizontalAlignment="Left" Height="38" Margin="177,299,0,0" Text="" VerticalAlignment="Top" Width="186"/>
-        <TextBox x:Name="remoteServiceTextBox" HorizontalAlignment="Left" Height="38" Margin="177,342,0,0" Text="" VerticalAlignment="Top" Width="186"/>
+        <TextBox x:Name="thisInstanceTextBox" HorizontalAlignment="Left" Height="38" Margin="177,299,0,0" Text="" VerticalAlignment="Top" Width="186"/>
+        <TextBox x:Name="remoteInstanceTextBox" HorizontalAlignment="Left" Height="38" Margin="177,342,0,0" Text="" VerticalAlignment="Top" Width="186"/>
         <TextBox x:Name="craPortTextBox" HorizontalAlignment="Left" Height="38" Margin="177,412,0,0" Text="" VerticalAlignment="Top" Width="186"/>
-        <TextBox x:Name="thisInstanceTextBox" HorizontalAlignment="Left" Height="38" Margin="177,455,0,0" Text="" VerticalAlignment="Top" Width="186"/>
         <TextBlock HorizontalAlignment="Left" Margin="60,421,0,0" Text="CRA Worker Port" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        <TextBlock HorizontalAlignment="Left" Margin="43,464,0,0" Text="This Instance Name" TextWrapping="Wrap" VerticalAlignment="Top"/>
 
     </Grid>
 </Page>

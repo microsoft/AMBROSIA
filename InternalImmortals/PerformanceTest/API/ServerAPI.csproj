@@ -16,7 +16,4 @@
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^netcoreapp\d'))">
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
-  </ItemGroup>
 </Project>

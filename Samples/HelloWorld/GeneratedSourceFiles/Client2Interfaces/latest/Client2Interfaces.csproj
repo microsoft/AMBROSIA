@@ -1,6 +1,6 @@
-﻿ <Project Sdk="Microsoft.NET.Sdk">
+ <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>netcoreapp2.0;net46</TargetFrameworks>
+        <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
     </PropertyGroup>
  <ItemGroup>
      <PackageReference Include="AmbrosiaLibCS" Version="0.8.2" Condition="'$(Configuration)' == 'Release' " />
