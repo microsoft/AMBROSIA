@@ -577,9 +577,9 @@ namespace AmbrosiaTest
         //  
         //****************************
         [TestMethod]
-        public void AMB_Async_ActiveActive_FullTest()
+        public void AMB_Async_ActiveActive_KillAllTest()
         {
-            string testName = "asyncactiveactivefull";
+            string testName = "asyncactiveactivekillall";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
@@ -781,9 +781,9 @@ namespace AmbrosiaTest
             string logOutputFileName_ImmCoord4_Restarted = testName + "_ImmCoord4_Restarted.log";
             int ImmCoordProcessID4_Restarted = MyUtils.StartImmCoord(clientJobName, 4500, logOutputFileName_ImmCoord4_Restarted, true, 0);
             string logOutputFileName_ClientJob1_Restarted = testName + "_ClientJob1_Restarted.log";
-                        int clientJobProcessID_Restarted1 = MyUtils.StartAsyncPerfClientJob("4001", "4000", clientJobName, serverName, "1", logOutputFileName_ClientJob1_Restarted);
-            //int clientJobProcessID_Restarted1 = 0;
-            //*#*#* At this point attach debugger to PT process
+            //int clientJobProcessID_Restarted1 = MyUtils.StartAsyncPerfClientJob("4001", "4000", clientJobName, serverName, "1", logOutputFileName_ClientJob1_Restarted);
+            int clientJobProcessID_Restarted1 = 0;
+            //*#*#* At this point attach debugger to PT process if running perf client or run PT job.exe separately
 
             string logOutputFileName_ImmCoord5_Restarted = testName + "_ImmCoord5_Restarted.log";
             int ImmCoordProcessID5_Restarted = MyUtils.StartImmCoord(clientJobName, 5500, logOutputFileName_ImmCoord5_Restarted, true, 1);
