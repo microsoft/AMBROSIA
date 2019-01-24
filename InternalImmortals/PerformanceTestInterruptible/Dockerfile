@@ -29,7 +29,7 @@ RUN dotnet publish -o publish $BLDFLAGS API/ServerAPI.csproj
 # Run the code-generation tool:
 RUN rm -rf ./GeneratedSourceFiles && \
     mkdir -p GeneratedSourceFiles 
-RUN AmbrosiaCS CodeGen -a IJob/publish/IJob.dll -a API/publish/ServerAPI.dll -o PTIAmbrosiaGeneratedAPI -f netcoreapp2.0 -f net46
+RUN AmbrosiaCS CodeGen -a IJob/publish/IJob.dll -a API/publish/ServerAPI.dll -p IJob/IJob.csproj -p API/ServerAPI.csproj -o PTIAmbrosiaGeneratedAPI -f netcoreapp2.0 -f net46
 
 # Be wary: absolute paths have rather different behavior for dotnet publish.
 ENV BUILDIT="dotnet publish -o publish $BLDFLAGS"
