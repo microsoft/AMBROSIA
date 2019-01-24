@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis.CSharp;
+using Mono.Options;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
-using Mono.Options;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace Ambrosia
 {
@@ -14,6 +14,7 @@ namespace Ambrosia
     {
         private static AmbrosiaCSRuntimeModes _runtimeMode;
         private static List<string> _assemblyNames;
+        private static List<string> _projectFiles;
         private static string _outputAssemblyName;
         private static List<string> _targetFrameworks = new List<string>();
 
@@ -128,85 +129,123 @@ namespace Ambrosia
             var immortalSerializerSource = new ImmortalSerializerGenerator(generatedProxyNames, generatedProxyNamespaces).TransformText();
             sourceFiles.Add(new SourceFile { FileName = $"ImmortalSerializer.cs", SourceCode = immortalSerializerSource, });
 
-            var conditionToPackageInfo = new Dictionary<string, List<Tuple<string, string, string, string>>>();
+            var conditionToPackageInfo = new Dictionary<string, Dictionary<string, HashSet<PackageReferenceInfo>>>();
+            var conditionToProjectReference = new Dictionary<string, HashSet<string>>();
 
             var execAssembly = Assembly.GetExecutingAssembly();
             var projFile = Path.Combine(Path.GetDirectoryName(execAssembly.Location), $@"{execAssembly.GetName().Name}.csproj");
-            var doc = XDocument.Load(projFile);
+            _projectFiles.Add(projFile);
 
-            foreach (var itemGroup in doc.Descendants("ItemGroup"))
+            var defaultConditionString = string.Empty;
+            foreach (var projectFile in _projectFiles)
             {
-                var itemGroupCondition = itemGroup.Attributes().FirstOrDefault(a => a.Name == "Condition");
-                var condition = itemGroupCondition == null ? string.Empty : itemGroupCondition.Value;
+                var doc = XDocument.Load(projectFile);
 
-                foreach (var packageReference in itemGroup.Descendants("PackageReference"))
+                foreach (var itemGroup in doc.Descendants("ItemGroup"))
                 {
-                    var elements = packageReference.Elements();
-                    var attributes = packageReference.Attributes().ToList();
-                    var packageIncludeAttribute = attributes.FirstOrDefault(a => a.Name == "Include");
-                    var packageUpdateAttribute = attributes.FirstOrDefault(a => a.Name == "Update");
-                    if (packageIncludeAttribute == null && packageUpdateAttribute == null) continue;
+                    var itemGroupCondition = itemGroup.Attributes().FirstOrDefault(a => a.Name == "Condition");
+                    var condition = itemGroupCondition == null ? defaultConditionString : itemGroupCondition.Value;
 
-                    var packageNameAttribute = packageIncludeAttribute ?? packageUpdateAttribute;
-                    var packageName = packageNameAttribute.Value;
-                    var packageMode = packageNameAttribute.Name.ToString();
-
-                    var versionAttribute = attributes.FirstOrDefault(a => a.Name == "Version");
-
-                    var conditionAttribute = attributes.FirstOrDefault(a => a.Name == "Condition");
-                    var packageCondition = conditionAttribute?.Value;
-
-                    string packageVersion;
-                    if (versionAttribute == null)
+                    foreach (var packageReference in itemGroup.Descendants("PackageReference"))
                     {
-                        var packageVersionElement = elements.FirstOrDefault(e => e.Name == "Version");
-                        if (packageVersionElement == null) continue;
-                        packageVersion = packageVersionElement.Value;
-                    }
-                    else
-                    {
-                        packageVersion = versionAttribute.Value;
+                        var elements = packageReference.Elements();
+                        var attributes = packageReference.Attributes().ToList();
+                        var packageIncludeAttribute = attributes.FirstOrDefault(a => a.Name == "Include");
+                        var packageUpdateAttribute = attributes.FirstOrDefault(a => a.Name == "Update");
+                        if (packageIncludeAttribute == null && packageUpdateAttribute == null) continue;
+
+                        var packageNameAttribute = packageIncludeAttribute ?? packageUpdateAttribute;
+                        var packageName = packageNameAttribute.Value;
+
+                        var versionAttribute = attributes.FirstOrDefault(a => a.Name == "Version");
+
+                        string packageVersion;
+                        if (versionAttribute == null)
+                        {
+                            var packageVersionElement = elements.FirstOrDefault(e => e.Name == "Version");
+                            if (packageVersionElement == null) continue;
+                            packageVersion = packageVersionElement.Value;
+                        }
+                        else
+                        {
+                            packageVersion = versionAttribute.Value;
+                        }
+
+                        if (!conditionToPackageInfo.ContainsKey(condition))
+                        {
+                            conditionToPackageInfo.Add(condition, new Dictionary<string, HashSet<PackageReferenceInfo>>());
+                        }
+
+                        var packageReferenceInfo = new PackageReferenceInfo(packageName, packageVersion, packageReference.ToString());
+                        if (!conditionToPackageInfo[condition].ContainsKey(packageName))
+                        {
+                            conditionToPackageInfo[condition].Add(packageName, new HashSet<PackageReferenceInfo>());
+                        }
+
+                        conditionToPackageInfo[condition][packageName].Add(packageReferenceInfo);
                     }
 
-                    if (!conditionToPackageInfo.ContainsKey(condition))
+                    foreach (var projectReference in itemGroup.Descendants("ProjectReference"))
                     {
-                        conditionToPackageInfo.Add(condition, new List<Tuple<string, string, string, string>>());
+                        var attributes = projectReference.Attributes().ToList();
+                        var projectIncludeAttribute = attributes.FirstOrDefault(a => a.Name == "Include");
+                        var projectPath = projectIncludeAttribute.Value;
+                        var formerBasePath = new Uri(new FileInfo(projectFile).Directory.FullName);
+                        var currentBasePath = new Uri(new DirectoryInfo(directoryPath).FullName);
+                        var projectPathUri = new Uri(formerBasePath, projectPath);
+                        var newRelativePath = currentBasePath.MakeRelativeUri(projectPathUri);
+
+                        if (!conditionToProjectReference.ContainsKey(condition))
+                        {
+                            conditionToProjectReference.Add(condition, new HashSet<string>());
+                        }
+
+                        conditionToProjectReference[condition].Add(projectReference.ToString().Replace(projectPath.ToString(), newRelativePath.ToString()));
                     }
-                    conditionToPackageInfo[condition].Add(new Tuple<string, string, string, string>(packageMode, packageName, packageVersion, packageCondition));
                 }
+            }
+
+            var defaultConditionInfo = conditionToPackageInfo.ContainsKey(defaultConditionString) ? conditionToPackageInfo[defaultConditionString] : null;
+
+            foreach (var cp in conditionToPackageInfo)
+            {
+                foreach (var nameToInfo in cp.Value)
+                {
+                    var packageInfos = new HashSet<PackageReferenceInfo>(nameToInfo.Value.Union(
+                        defaultConditionInfo == null || !defaultConditionInfo.ContainsKey(nameToInfo.Key)
+                            ? new List<PackageReferenceInfo>() : defaultConditionInfo[nameToInfo.Key].ToList()));
+
+                    if (packageInfos.Count > 1)
+                    {
+                        Console.WriteLine($"WARNING: Detected multiple versions of package {nameToInfo.Key} : {string.Join(",", packageInfos.Select(pi => pi.PackageVersion))}");
+                    }
+                }                
             }
 
             var conditionalPackageReferences = new List<string>();
             foreach (var cpi in conditionToPackageInfo)
             {
-                var packageReferences = new List<string>();
-                foreach (var pi in cpi.Value)
-                {
-                    var condition = pi.Item4 == null ? string.Empty : $@"Condition=""{pi.Item4}""";
-                    packageReferences.Add(
-$@"     <PackageReference {pi.Item1}=""{pi.Item2}"" Version=""{pi.Item3}"" {condition} />");
-                }
-
-                conditionalPackageReferences.Add(
-                    cpi.Key != string.Empty
-                        ? $@" <ItemGroup Condition=""{cpi.Key}"">
-{string.Join("\n", packageReferences)}
-    </ItemGroup>
-"
-                        : $@" <ItemGroup>
-{string.Join("\n", packageReferences)}
-    </ItemGroup>
-");
+                conditionalPackageReferences.Add($"<ItemGroup{(cpi.Key != string.Empty ? $" Condition=\"{cpi.Key}\"" : string.Empty)}>{string.Join("\n", cpi.Value.SelectMany(v => v.Value).Select(pri => pri.ReferenceString))}</ItemGroup>");
             }
 
-            var projectFileSource =
+            var conditionalProjectReferences = new List<string>();
+            foreach (var cpi in conditionToProjectReference)
+            {
+                conditionalProjectReferences.Add($"<ItemGroup{(cpi.Key != string.Empty ? $" Condition=\"{cpi.Key}\"" : string.Empty)}>{string.Join("\n", cpi.Value)}</ItemGroup>");
+            }
+
+                var projectFileSource =
 $@" <Project Sdk=""Microsoft.NET.Sdk"">
-    <PropertyGroup>
-        <TargetFrameworks>{string.Join(";", _targetFrameworks)}</TargetFrameworks>
-    </PropertyGroup>
-{string.Join(string.Empty, conditionalPackageReferences)}</Project>";
-            var projectSourceFile =
-                new SourceFile() { FileName = $"{_outputAssemblyName}.csproj", SourceCode = projectFileSource };
+        <PropertyGroup>
+            <TargetFrameworks>{string.Join(";", _targetFrameworks)}</TargetFrameworks>
+        </PropertyGroup>
+        {string.Join(string.Empty, conditionalPackageReferences)}
+        {string.Join(string.Empty, conditionalProjectReferences)}
+    </Project>";
+
+            var projectFileXml = XDocument.Parse(projectFileSource);
+
+            var projectSourceFile = new SourceFile { FileName = $"{_outputAssemblyName}.csproj", SourceCode = projectFileXml.ToString() };
             sourceFiles.Add(projectSourceFile);
 
             var trees = sourceFiles
@@ -238,10 +277,12 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
         {
             var showHelp = false;
             var assemblyNames = new List<string>();
+            var projectFiles = new List<string>();
             var codeGenOptions = new OptionSet {
-                { "a|assembly=", "An input assembly name. [REQUIRED]", assemblyName => assemblyNames.Add(Path.GetFullPath(assemblyName)) },
+                { "a|assembly=", "An input assembly file location. [REQUIRED]", a => assemblyNames.Add(Path.GetFullPath(a)) },
                 { "o|outputAssemblyName=", "An output assembly name. [REQUIRED]", outputAssemblyName => _outputAssemblyName = outputAssemblyName },
                 { "f|targetFramework=", "The output assembly target framework. [> 1 REQUIRED]", f => _targetFrameworks.Add(f) },
+                { "p|project=", "An input project file location for reference resolution. ", p => projectFiles.Add(Path.GetFullPath(p)) },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 
@@ -272,6 +313,7 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
 
             shouldShowHelp = showHelp;
             _assemblyNames = assemblyNames;
+            _projectFiles = projectFiles;
 
             return codeGenOptions;
         }
@@ -286,6 +328,10 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
             var assemblyFilesNotFound = _assemblyNames.Where(an => !File.Exists(an)).ToList();
             if (assemblyFilesNotFound.Count > 0)
                 errorMessage += $"Unable to find the following assembly files:\n{string.Join("\n", assemblyFilesNotFound)}";
+
+            var projectFilesNotFound = _projectFiles.Where(pf => !File.Exists(pf)).ToList();
+            if (_projectFiles.Count > 0 && projectFilesNotFound.Count > 0)
+                errorMessage += $"Unable to find the following project files:\n{string.Join("\n", projectFilesNotFound)}";
 
             if (errorMessage != string.Empty)
             {
@@ -314,6 +360,42 @@ $@" <Project Sdk=""Microsoft.NET.Sdk"">
             {
                 ShowHelp(modeToOption.Value, modeToOption.Key);
             }
+        }
+    }
+
+    public class PackageReferenceInfo : IEquatable<PackageReferenceInfo>
+    {
+        public string PackageName { get; }
+
+        public string PackageVersion { get; }
+
+        public string ReferenceString { get; }
+
+        public PackageReferenceInfo(string packageName, string packageVersion, string referenceString)
+        {
+            this.PackageName = packageName;
+            this.PackageVersion = packageVersion;
+            this.ReferenceString = referenceString;
+        }
+
+        public bool Equals(PackageReferenceInfo other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return string.Equals(PackageName, other.PackageName) && string.Equals(PackageVersion, other.PackageVersion);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((PackageReferenceInfo) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (PackageName + PackageVersion).GetHashCode();
         }
     }
 

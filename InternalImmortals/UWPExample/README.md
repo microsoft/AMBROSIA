@@ -2,6 +2,58 @@ This solution contains a simple collaborative drawing UWP app built on top of Am
 a .NET Framework version of the app. Both the UWP version and the .NET Framework version use the
 same type of Immortal to communicate with each other.
 
+Quick start
+===========
+
+These instructions describe how to build Ambrosia and the UWPExample solution from source and run
+both versions of the collaborative drawing app.
+
+1. Open Visual Studio, open `AMBROSIA\Ambrosia\Ambrosia.sln`, and build it. Make sure the build
+platform is set to x64.
+
+2. Open `AMBROSIA\InternalImmortals\UWPExample\UWPExample.sln` and build it (again making sure the
+build platform is set to x64). Not all of the projects in the solution will compile successfully,
+because we haven't run the codegen script yet (which we do in the next step). The "AmbrosiaCS" and
+"GraphicalImmortalAPI" projects should compile successfully, though, and those projects are what
+we need to run codegen in the next step.
+
+3. Open a PowerShell prompt, change directories to the `AMBROSIA\InternalImmortals\UWPExample`
+directory, and run `Generate-Assemblies.ps1`.
+
+4. Go back to Visual Studio, and in the UWPExample solution, right-click on the
+"GraphicalImmortalAPIGenerated" project and select "Reload project."
+
+5. Build the UWPExample solution again. Everything should compile successfully.
+
+6. Register your Immortals using `Ambrosia.exe`. Open up a command prompt, change directories to
+`AMBROSIA\Ambrosia\Ambrosia\bin\x64\Debug\net46`, and run the commands below (these commands will
+result in the Ambrosia log files going in the `C:\ambrosialogs\` directory). Each command will
+produce a message saying
+`The CRA instance appears to be down. Restart it and this vertex will be instantiated automatically`.
+This message is normal and does not mean that anything went wrong.
+
+        .\Ambrosia.exe RegisterInstance -i=uwptestclientA -rp=1000 -sp=1001 -l=C:\ambrosialogs\
+        .\Ambrosia.exe RegisterInstance -i=uwptestclientB -rp=2000 -sp=2001 -l=C:\ambrosialogs\
+
+7. First we'll run the .NET Framework version of the drawing app, in the "GraphicalApp" project.
+We'll start the first instance of GraphicalApp in Visual Studio, so that you can debug any crashes.
+Go back to the UWPExample solution in Visual Studio, set the startup project to "GraphicalApp," and
+click Start. Once the window opens, click "Load client 1 presets" and then click "Start." Wait a
+few seconds, and then you should be able to draw on the screen.
+
+8. We'll start a second instance of GraphicalApp on the command line. Open a command prompt, change
+directories to `AMBROSIA\InternalImmortals\UWPExample\GraphicalApp\bin\x64\Debug`, and run
+`GraphicalApp.exe`. Click "Load client 2 presets" and then click "Start." Wait a few seconds, and
+you should see your drawing from client 1 show up in this client.
+
+9. Cleanup: To delete the log files, go to the directory you entered in step 6
+(`C:\ambrosialogs`) and delete all the files there.
+
+10. To run the UWP version of the drawing app, follow the same instructions as in step 7 above, but
+start the "GraphicalAppUWP" project instead. The UWP version of the app may take longer to start
+up, due to the fact that UWP has long socket timeouts under certain circumstances, but it should
+start accepting drawing input after around 50 seconds.
+
 Known issues with UWP
 =====================
 
