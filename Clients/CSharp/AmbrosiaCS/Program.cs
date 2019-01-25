@@ -190,8 +190,8 @@ namespace Ambrosia
                         var attributes = projectReference.Attributes().ToList();
                         var projectIncludeAttribute = attributes.FirstOrDefault(a => a.Name == "Include");
                         var projectPath = projectIncludeAttribute.Value;
-                        var formerBasePath = new Uri(new FileInfo(projectFile).Directory.FullName);
-                        var currentBasePath = new Uri(new DirectoryInfo(directoryPath).FullName);
+                        var formerBasePath = new Uri(new FileInfo(projectFile).Directory.FullName + Path.DirectorySeparatorChar);
+                        var currentBasePath = new Uri(new DirectoryInfo(directoryPath).FullName + Path.DirectorySeparatorChar);
                         var projectPathUri = new Uri(formerBasePath, projectPath);
                         var newRelativePath = currentBasePath.MakeRelativeUri(projectPathUri);
 
