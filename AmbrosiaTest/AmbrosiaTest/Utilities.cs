@@ -1189,6 +1189,10 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("asyncreplaylatest");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("asyncactiveactivebasic");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("asyncactiveactivekillall");
+            Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
