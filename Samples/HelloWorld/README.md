@@ -18,4 +18,5 @@ your tooling environment:
 
 [HelloWorldExplained.md](./HelloWorldExplained.md) Explains the actual code in this Hello World sample.
 
+[TimeTravel-Windows.md](./TimeTravel-Windows.md) Explains how to use Ambrosia's time travel debugging feature with HelloWorld.
 
