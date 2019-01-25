@@ -47,7 +47,7 @@ dotnet Ambrosia.dll RegisterInstance -i=client -rp=1000 -sp=1001 -l=C:\logs\
 dotnet Ambrosia.dll RegisterInstance -i=server -rp=2000 -sp=2001 -l=C:\logs\
 ```
 
-You should see messages "The CRA instance appears to be down. Restart it and this vertex will be instantiated automatically". That means everything is working as expected! We've now logically defined our instances, which means that other instances can connect to them and even perform method calls reliably, although the methods won't execute until the instances are actually started.
+You should see messages "The CRA instance appears to be down. Restart it and this vertex will be instantiated automatically". That means everything is working as expected! We've now logically defined our instances, which means that other instances can connect to them and even perform method calls reliably, although the methods won't actually execute until the instances are started.
 
 ### Running the application
 
