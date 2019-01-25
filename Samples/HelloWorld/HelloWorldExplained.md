@@ -52,7 +52,7 @@ Note the lack of any logging code, reconnection or retry code, or explicit instr
 * Given the same input method calls in the same order, the Immortal must arrive at an equivalent state, and generate the same outgoing instance method calls in the same order.
 * The Immortal author must provide a way to serialize Immortal instances, through DataContract, so that deserialization will create an Immortal with equivalent state.
 
-The first requirement is trivially accomplished through Ambrosia's threading and dispatch model. In Ambrosia, all method calls are executed serially, unless an async call is made, as in Client3. Since there are no outgoing method calls in Server, all ReceiveMessageAsync calls are executed one by one to completion, guaranteeing requirement the first requirement.
+The first requirement is trivially accomplished through Ambrosia's threading and dispatch model. In Ambrosia, all method calls are executed serially, unless an async call is made, as in Client3. Since there are no outgoing method calls in Server, all ReceiveMessageAsync calls are executed one by one to completion, guaranteeing the first requirement.
 
 The second requirement is met by labeling the class as DataContract, and labeling the _messagesReceived member as DataMember. This ensures that _messagesReceived is protected, and in the case of failure, will be reconstituted to the correct value when recovery occurs. Note that not all members must be labled in this way, as they may be computed from other members, or may not be important to serialize (e.g. rendering state).
 
@@ -83,7 +83,7 @@ Note that currently, each process can only have one Immortal, due to global data
 
 Another thing to note in main, is the existence of receivePort and sendPort. The two variables are passed into the Deploy method, and are the two ports which this process uses to communicate with its local ImmortalCoordinator. Specifically, each instance consists of two running processes which run in the same VM/machine/container, and which fail and recover together. When logically creating instances with the Ambrosia RegisterInstance command, these ports are specified in reverse, which is to say that the ImmortalCoordinator's receive port is the application process's send port, and visa-versa.
 
-Finally, obseerve serviceName in the Deploy call, which is the name of this particular Ambrosia instance that is being initialized or recovered. This name is stored in an Azure Table which contains a directory of Ambrosia instances, and the logical connections between instances. Note that a single instance can have many replicas, all with the same service name.
+Finally, observe serviceName in the Deploy call, which is the name of this particular Ambrosia instance that is being initialized or recovered. This name is stored in an Azure Table which contains a directory of Ambrosia instances, and the logical connections between instances. Note that a single instance can have many replicas, all with the same service name.
 
 Client1 - The Basics
 -----------
@@ -140,13 +140,13 @@ Nevertheless, codegen is needed, because each Immortal runs a codegen step which
 ```
 In addition to the aspects already familiar from Server, note that our constructor is no longer empty. The construstor is used to pass information from the hosting program to the Immortal instance, prior to initialization or recovery. In this case, that includes the name of the Server instance, called "server" by default. This is passed into the constructor because we will need to establish a connection to server before making method calls on it.
 
-As a consequence, the first line of OnFirstStart makes the connection to the specified Server instance using GetProxy. The return value of this call is an object which contains all public method calls on the specified instance.
+As a consequence, the first line of OnFirstStart makes the connection to the specified Server instance using GetProxy. The return value of this call is an object which contains all public method calls on the specified instance. Note that the member holding the Server proxy is labaled a datamember. As a result, the GetProxy method only needs to be called once in OnFirstStart, since recovery will automatically reconstitute the proxy.
 
-The next line makes such a call to ReceiveMessage. Each call has two forms: the fork form is a form of message passing, where the call is made asynchronously, is not awaitable, and whose return value is ignored. The second from is async, which is awaitable (see Client3). The fork version of the call is by far the most performant and is generally encouraged. The async version has the advantage of being more flexible in its use, but is considered experimental due to important current limitations, which will hopefully be relaxed over time. In this case, we simply send the ReceiveMessage call and continue, immediately writing a couple lines and waiting on user input.
+The next line calls server's ReceiveMessageFork method. Note that each Ambrosia call has two forms: the fork form is a form of message passing, where the call is made asynchronously, is not awaitable, and whose return value is ignored. The second form is async, which is awaitable (see Client3). The fork version of the call is by far the most performant and is generally encouraged. The async version has the advantage of being more flexible in its use, but has serious limitations, fundamental to the nature of async calls in recoverable frameworks like Ambrosia. In this case, we do the ReceiveMessageFork call and continue, immediately writing a couple lines and waiting on user input.
 
 This is a good time to break the execution of Client1, Server, or both. If either or both is restarted, they will correctly recover to the state prior to breaking.
 
-After pressing Enter, the program continues, sending two more messages. The last action of OnFirstStart is to enqueue a token into a global AsyncQueue called finishedTokenQ, which up receipt, will exit the program (see below):
+After pressing Enter, the program continues, sending two more messages. The last action of OnFirstStart is to enqueue a token into a global AsyncQueue called finishedTokenQ, which upon receipt, will exit the program (see below):
 
 ```
         public static AsyncQueue<int> finishedTokenQ;
@@ -183,7 +183,7 @@ Understanding Recovery for Client1
 Let's assume that Client1 and its associated ImmortalCoordinator were exited (e.g. Ctrl-C) and restarted when user input was requested. Let's go through the recovery actions taken by Ambrosia: 
 
 * First, it is important to understand that when a service is started for the first time, an initial checkpoint is taken which represents the state of the Immortal just prior to the execution of OnFirstStart. Since no additional checkpoint was taken, recovery begins by deserializing the initial state of the Immortal.
-* Next, recovery replays all method calls which occurred prior to failure. In this case, we execute OnFirstStart from the initial state. During this execution, we again generate the first message to server, and ask for user input. Note that once all methods have been replayed (i.e. the application method invocation has happened), the recovering Immortal reconnects to previously connected Immortals. Part of that reconnection involves determining which method calls have already been received by the various parties, and ensures exactly once method delivery/execution everywhere. In this case, if server received the method call before client was killed, it will not be resent. If, however, the message was never actually received by server, the reconstructed method call is sent.
+* Next, recovery replays all method calls which occurred since the recovered checkpoint was taken. In this case, we execute OnFirstStart from the initial state. During this execution, we again generate the first message to server, and ask for user input. Note that once all methods have been replayed (i.e. the application method invocation has happened), the recovering Immortal reconnects to previously connected Immortals. Part of that reconnection involves determining which method calls have already been received by the various parties, and ensures exactly once method delivery/execution everywhere. In this case, if server received the method call before client was killed, it will not be resent. If, however, the message was never actually received by server, the reconstructed method call is sent.
 
 Client2 - Handling Non-Determinism
 -----------
@@ -194,7 +194,7 @@ In order to handle such situations, Ambrosia has a feature called impulse method
 * Only the impulse calls which are logged (which happens prior to calling the method) are guaranteed to survive failure. For instance, if outside information, like user input, is collected by the program, but the program crashes prior to that input being logged, that information will be lost.
 * Impulse methods are not allowed to be called during recovery, since recovery must return the system to a replayably deterministic state. As a result, impulse methods are typically called by background threads, which can only be started after recovery is complete (see below).
 
-In this case, Client2 has an impulse method, called ReceiveKeyboardInput, which receives messages strings entered by the user, and sends them to server. As a result, Client2 has a non-empty interface IClient2:
+In this case, Client2 has an impulse method, called ReceiveKeyboardInput, which receives message strings entered by the user, and sends them to server. As a result, Client2 has a non-empty interface IClient2:
 
 ```
     public interface IClient2
@@ -255,9 +255,21 @@ Next, let's look at the actual Immortal Client2:
 ```
 First, note that our impulse method, ReceiveKeyboardInputAsync, looks like any other public method, and simply calls server's ReceiveMessage. The difference is in how ReceiveKeyboardInputAsync is called. Rather than being called from a replayable method like OnFirstStart, it's called from a background thread that is started from BecomingPrimary. 
 
-BecomingPrimary is an overloadable method for performing actions after recovery is complete, but before servicing the first method calls post-recovery. By putting our user message requesting loop in the thread created during BecomingPrimary, we ensure that ReceiveKeyboardInputAsync will not be called during recovery.
+BecomingPrimary is an overloadable method for performing actions after recovery is complete, but before servicing the first method calls after recovery. By putting our user input requesting loop in the thread created during BecomingPrimary, we ensure that ReceiveKeyboardInputAsync will not be called during recovery.
 
-Despite the non-deterministic user input, Client2 is replayably deterministic, logging all user input in calls to ReceiveKeyboardInput, and readers are encouraged to interrupt and restart the client and server to observe behavior on both the client and the server.
+Despite the non-deterministic user input, Client2 is replayably deterministic, logging all user input in calls to ReceiveKeyboardInput, and readers are encouraged to interrupt and restart the client and server to observe behavior.
+
+Understanding Recovery for Client2
+-----------
+Let's assume that Client2 and its associated ImmortalCoordinator were exited (e.g. Ctrl-C) and restarted after user input was entered, and the associated impulses called. Let's go through the recovery actions taken by Ambrosia:
+
+If we are starting from the initial checkpoint, OnFirstStart is re-executed, which has no real effect since we had previously made the connection to the server anyway.
+
+The previously logged impulse calls are then executed serially in their original order, resulting in a series of buffered outgoing calls to the server. After all logged calls are executed, recovery is over, and BecomingPrimary is called. At this point, the user may start entering new input, resulting in the buffering of outgoing impulse calls to itself, if reconnection to itself has not yet happened.
+
+Once the instance is reconnected to itself, any buffered impulse calls are sent to itself and, after being logged, executed. These executed impulses may result in further buffered calls to the server if server reconnection has not yet happened.
+
+Note that the server will have received some portion of the buffered calls, in the order in which they are reproduced, but may not have received some of the last buffered calls, including possible new calls made after becoming primary. Upon reconnection, unsent calls from client3 are sent to the server.
 
 Client3 - Async calls (Experimental)
 -----------

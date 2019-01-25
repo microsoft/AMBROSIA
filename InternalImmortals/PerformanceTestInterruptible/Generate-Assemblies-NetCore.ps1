@@ -14,5 +14,5 @@ if ( $env:AMBROSIATOOLS ) {
 Write-Host "Using variant of AmbrosiaCS: $AMBVARIANTCORE"
 
 # Generate the assemblies, assumes an .exe which is created by a .Net Framework build:
-Write-Host "Executing codegen command: dotnet $AMBROSIATOOLS\$AMBVARIANTCORE\AmbrosiaCS.dll CodeGen -a=API\bin\$AMBVARIANTCORE\ServerAPI.dll -a=IJob\bin\$AMBVARIANTCORE\IJob.dll -o=PTIAmbrosiaGeneratedAPI -f=net46 -f=netcoreapp2.0"
-& dotnet $AMBROSIATOOLS\$AMBVARIANTCORE\AmbrosiaCS.dll CodeGen -a="API\bin\$AMBVARIANTCORE\ServerAPI.dll" -a="IJob\bin\$AMBVARIANTCORE\IJob.dll" -o="PTIAmbrosiaGeneratedAPI" -f="net46" -f="netcoreapp2.0"
+Write-Host "Executing codegen command: dotnet $AMBROSIATOOLS\$AMBVARIANTCORE\AmbrosiaCS.dll CodeGen -a=API\bin\$AMBVARIANTCORE\ServerAPI.dll -a=IJob\bin\$AMBVARIANTCORE\IJob.dll -p=API\ServerAPI.csproj -p=IJob\IJob.csproj -o=PTIAmbrosiaGeneratedAPI -f=net46 -f=netcoreapp2.0"
+& dotnet $AMBROSIATOOLS\$AMBVARIANTCORE\AmbrosiaCS.dll CodeGen -a="API\bin\$AMBVARIANTCORE\ServerAPI.dll" -a="IJob\bin\$AMBVARIANTCORE\IJob.dll" -p="API\ServerAPI.csproj" -p="IJob\IJob.csproj" -o="PTIAmbrosiaGeneratedAPI" -f="net46" -f="netcoreapp2.0"

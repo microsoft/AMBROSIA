@@ -291,8 +291,8 @@ namespace AmbrosiaTest
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
 
             //****************** MTF Settings ***************
-            //int numRounds = 5; long totalNumBytesReceived = 5368709120;  int maxMminsToWaitToFinish = 5;
-            int numRounds = 25; long totalNumBytesReceived = 26843545600;  int maxMminsToWaitToFinish = 30;
+            int numRounds = 5; long totalNumBytesReceived = 5368709120;  int maxMminsToWaitToFinish = 5;
+            //int numRounds = 25; long totalNumBytesReceived = 26843545600;  int maxMminsToWaitToFinish = 30;
             //int numRounds = 100; long totalNumBytesReceived = 107374182400; int maxMminsToWaitToFinish = 80; // 15 mins
             //int numRounds = 500; long totalNumBytesReceived = 536870912000; int maxMminsToWaitToFinish = 160; // about 1.5 hrs
             //int numRounds = 1000; long totalNumBytesReceived = 1073741824000; int maxMminsToWaitToFinish = 320; // 3 hrs or so
