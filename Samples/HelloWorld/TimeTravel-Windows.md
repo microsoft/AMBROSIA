@@ -1,6 +1,7 @@
-Time Travel Debugging with Hello World
 
-=======================================================================
+Time Travel Debugging with Hello World
+========================================
+
 One of Ambrosia's most compelling features is its ability to debug applications by rerunning them from logs, optionally with a debugger attached. Being able to debug in this fashion frequently eliminates the need for application writers to generate logs in the hopes that information contained in those logs will be useful for later debugging.
 
 Note that debugging is an offline activity, which does not use service metadata, or even the internet. Debugging is performed in a completely isolated manner for an individual instance, and will not have any effect on a running deployment of that instance, or any instances which communicate with the debugged instance.
