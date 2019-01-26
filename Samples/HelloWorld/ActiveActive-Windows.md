@@ -61,14 +61,14 @@ To run the HelloWorld server first replica:
 
 ```bat
 cd Server\bin\x64\Debug\netcoreapp2.0
-dotnet Server.dll -rp=3001 -sp=3000
+dotnet Server.dll 3001 3000
 ```
 
 To run the HelloWorld server second replica:
 
 ```bat
 cd Server\bin\x64\Debug\netcoreapp2.0
-dotnet Server.dll -rp=4001 -sp=4000
+dotnet Server.dll 4001 4000
 ```
 
 To run the HelloWorld client, in the fourth console window:
