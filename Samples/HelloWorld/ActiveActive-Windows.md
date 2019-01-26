@@ -71,7 +71,7 @@ cd Server\bin\x64\Debug\netcoreapp2.0
 dotnet Server.dll 4001 4000
 ```
 
-To run the HelloWorld client, in the fourth console window:
+To run the HelloWorld client:
 
 ```bat
 cd Client1\bin\x64\Debug\netcoreapp2.0
