@@ -3564,6 +3564,7 @@ namespace Ambrosia
                         _isTestingUpgrade, _serviceReceiveFromPort, _serviceSendToPort);
                     return;
                 case LocalAmbrosiaRuntimeModes.AddReplica:
+                    param.activeActive = _isActiveActive = true;
                 case LocalAmbrosiaRuntimeModes.RegisterInstance:
                     var client = new CRAClientLibrary(Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING"));
                     client.DisableArtifactUploading();
