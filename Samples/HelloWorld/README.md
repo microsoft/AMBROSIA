@@ -20,3 +20,5 @@ your tooling environment:
 
 [TimeTravel-Windows.md](./TimeTravel-Windows.md) Explains how to use Ambrosia's time travel debugging feature with HelloWorld.
 
+[ActiveActive-Windows.md](./ActiveActive-Windows.md) Explains how to make the server in HelloWorld highly available by using active standbys.
+
