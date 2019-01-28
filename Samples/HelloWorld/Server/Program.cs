@@ -41,9 +41,17 @@ namespace Server
             int sendPort = 2000;
             string serviceName = "server";
 
-            if (args.Length == 1)
+            if (args.Length >= 1)
             {
-                serviceName = args[0];
+                receivePort = int.Parse(args[0]);
+            }
+            if (args.Length >= 2)
+            {
+                sendPort = int.Parse(args[1]);
+            }
+            if (args.Length == 3)
+            {
+                serviceName = args[2];
             }
 
             using (var c = AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
