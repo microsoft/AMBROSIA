@@ -126,7 +126,7 @@ namespace CRA.Worker
                 { "i|instanceName=", "The instance name [REQUIRED].", n => _instanceName = n },
                 { "p|port=", "An port number [REQUIRED].", p => _port = Int32.Parse(p) },
                 {"aa|activeActive", "Is active-active enabled.", aa => _isActiveActive = true},
-                { "r|replicaNum=", "The replica #", r => _replicaNumber = int.Parse(r) },
+                { "r|replicaNum=", "The replica #", r => { _replicaNumber = int.Parse(r); _isActiveActive=true; } },
                 { "an|assemblyName=", "The secure network assembly name.", an => _secureNetworkAssemblyName = an },
                 { "ac|assemblyClass=", "The secure network assembly class.", ac => _secureNetworkClassName = ac },
                 { "ip|IPAddr=", "Override automatic self IP detection", i => _ipAddress = i },
