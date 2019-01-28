@@ -78,3 +78,22 @@ cd Client1\bin\x64\Debug\netcoreapp2.0
 dotnet Client1.dll
 ```
 Like the AddReplica gesture, the server ImmortalCoordinator calls may use a -aa flag, although it's not necessary since this was already established when registering the server instance and its replicas.
+
+To observe failover, CTRL-C the first started server process and its associated immortal coordinator. This should be the primary. Observe that the last started server replica becomes the new primary, which is reflected in the output of the ImmortalCoordinator for that replica. Restart the first server processes. This now becomes an active secondary. You may do this as many times as you like, observing how primary responsibility ping-pongs between the first and third server.
+
+Note that even if we kill both the first and third servers, the second never becomes the primary. The second server has the responsibility of taking checkpoints, and, as a result, is not allowed to become primary. This choice avoids a pathologically bad scenario discovered and written about in:
+
+```bat
+Badrish Chandramouli, Jonathan Goldstein:
+Shrink - Prescribing Resiliency Solutions for Streaming. PVLDB 10(5): 505-516 (2017)
+```
+
+As a result, other than the first copy of an instance ever started, which takes the first checkpoint and runs as primary, if all copies of instances are killed and restarted, they come up the following order:
+
+1) Checkpoint taking secondary, which can never become primary
+2) Primary
+3) Secondary (which can become primary)
+4) Secondary (which can become primary)
+5) ...
+
+Note that new secondaries can be registered and started dynamically, allowing Ambrosia to adjust an instance's availability while running.
