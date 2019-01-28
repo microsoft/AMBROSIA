@@ -34,7 +34,7 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string byteSize = "3221225472";
+            string byteSize = "2147483648";
 
             Utilities MyUtils = new Utilities();
 
@@ -82,14 +82,14 @@ namespace AmbrosiaTest
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "3",logOutputFileName_ClientJob);
+            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "2",logOutputFileName_ClientJob);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
             int serverProcessID = MyUtils.StartAsyncPerfServer("2001", "2000", serverName, logOutputFileName_Server);
 
             //Delay until client is done - also check Server just to make sure
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 20, false, testName, true); // number of bytes processed
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 45, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 10, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
@@ -121,7 +121,7 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string byteSize = "3221225472";
+            string byteSize = "2147483648";
 
             Utilities MyUtils = new Utilities();
 
@@ -169,14 +169,14 @@ namespace AmbrosiaTest
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "3", logOutputFileName_ClientJob);
+            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "2", logOutputFileName_ClientJob);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
             int serverProcessID = MyUtils.StartAsyncPerfServer("2001", "2000", serverName, logOutputFileName_Server);
 
             //Delay until client is done - also check Server just to make sure
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 20, false, testName, true); // number of bytes processed
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 45, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 10, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
@@ -199,7 +199,7 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string byteSize = "3221225472";
+            string byteSize = "2147483648";
 
             Utilities MyUtils = new Utilities();
 
@@ -247,7 +247,7 @@ namespace AmbrosiaTest
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "3", logOutputFileName_ClientJob);
+            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "2", logOutputFileName_ClientJob);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -267,10 +267,10 @@ namespace AmbrosiaTest
 
             // Restart Job Process
             string logOutputFileName_ClientJob_Restarted = testName + "_ClientJob_Restarted.log";
-            int clientJobProcessID_Restarted = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "3", logOutputFileName_ClientJob_Restarted);
+            int clientJobProcessID_Restarted = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "2", logOutputFileName_ClientJob_Restarted);
 
             //Delay until client is done - also check Server just to make sure
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted, byteSize, 15, false, testName, true); // Total bytes received
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted, byteSize, 45, false, testName, true); // Total bytes received
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
@@ -302,7 +302,7 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string byteSize = "3221225472";
+            string byteSize = "2147483648";
 
             Utilities MyUtils = new Utilities();
 
@@ -350,7 +350,7 @@ namespace AmbrosiaTest
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "3", logOutputFileName_ClientJob);
+            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("1001", "1000", clientJobName, serverName, "2", logOutputFileName_ClientJob);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -373,7 +373,7 @@ namespace AmbrosiaTest
             int serverProcessID_Restarted = MyUtils.StartAsyncPerfServer("2001", "2000", serverName, logOutputFileName_Server_Restarted);
 
             //Delay until client is done - also check Server just to make sure
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_Restarted, byteSize, 25, false, testName, true);  // Total Bytes received needs to be accurate
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_Restarted, byteSize, 35, false, testName, true);  // Total Bytes received needs to be accurate
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
@@ -409,7 +409,7 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string byteSize = "3221225472";
+            string byteSize = "2147483648";
             string newPrimary = "NOW I'm Primary";
 
             Utilities MyUtils = new Utilities();
@@ -517,7 +517,7 @@ namespace AmbrosiaTest
 
             //start Client Job 
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("4001", "4000", clientJobName, serverName, "3", logOutputFileName_ClientJob);
+            int clientJobProcessID = MyUtils.StartAsyncPerfClientJob("4001", "4000", clientJobName, serverName, "2", logOutputFileName_ClientJob);
 
             // Give it 10 seconds to do something before killing it
             Thread.Sleep(10000);
@@ -537,7 +537,7 @@ namespace AmbrosiaTest
             int serverProcessID_Restarted1 = MyUtils.StartAsyncPerfServer("1001", "1000", serverName, logOutputFileName_Server1_Restarted);
 
             //Delay until finished ... looking at the most recent primary (server3) but also verify others hit done too
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server3, byteSize, 30, false, testName, true);  // Total Bytes received needs to be accurate
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server3, byteSize, 55, false, testName, true);  // Total Bytes received needs to be accurate
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server2, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_Restarted, byteSize, 15, false, testName, true);
@@ -583,7 +583,7 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string byteSize = "3221225472";
+            string byteSize = "1073741824";
             string newPrimary = "NOW I'm Primary";
 
             // If failures in queue, set a flag to not run tests or clean up - helps debug tests that failed by keeping in proper state
@@ -782,8 +782,6 @@ namespace AmbrosiaTest
             int ImmCoordProcessID4_Restarted = MyUtils.StartImmCoord(clientJobName, 4500, logOutputFileName_ImmCoord4_Restarted, true, 0);
             string logOutputFileName_ClientJob1_Restarted = testName + "_ClientJob1_Restarted.log";
             int clientJobProcessID_Restarted1 = MyUtils.StartAsyncPerfClientJob("4001", "4000", clientJobName, serverName, "1", logOutputFileName_ClientJob1_Restarted);
-            //int clientJobProcessID_Restarted1 = 0;
-            //*#*#* At this point attach debugger to PT process if running perf client or run PT job.exe separately with line .StartAsyncPerfClientJob commented out
 
             string logOutputFileName_ImmCoord5_Restarted = testName + "_ImmCoord5_Restarted.log";
             int ImmCoordProcessID5_Restarted = MyUtils.StartImmCoord(clientJobName, 5500, logOutputFileName_ImmCoord5_Restarted, true, 1);

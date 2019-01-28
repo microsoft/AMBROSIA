@@ -28631,12 +28631,12 @@
 *X* Got response for 114688 from asyncreplaylatestserver
 *X* 16384	ì
 *X* ---------- Summary -------------
-*X* - Total GBs Sent:3
+*X* - Total GBs Sent:2
 *X* - Total Time (secs):158.6396262
 *X* - Throughput (GB/Sec):0.0189107858601346
 --------------------------------
 *X* Sent request for 114689
 *X* Got response for 114689 from asyncreplaylatestserver
-Bytes received: 3221225472
+Bytes received: 2147483648
 DONE
 *X* Dispatcher disposing
