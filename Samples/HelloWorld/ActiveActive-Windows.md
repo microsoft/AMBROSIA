@@ -26,7 +26,7 @@ To run all these, instead of 2 process pairs, we now need 4 (8 processes and con
 
  ```bat
  cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.0
- dotnet ImmortalCoordinator.dll -instanceName=server -port=2500 -aa
+ dotnet ImmortalCoordinator.dll -instanceName=server -port=2500
 ```
 
 To run the client ImmortalCoordinator:
@@ -77,4 +77,4 @@ To run the HelloWorld client:
 cd Client1\bin\x64\Debug\netcoreapp2.0
 dotnet Client1.dll
 ```
-
+Like the AddReplica gesture, the server ImmortalCoordinator calls may use a -aa flag, although it's not necessary since this was already established when registering the server instance and its replicas.
