@@ -307,86 +307,76 @@ namespace Ambrosia
             
             #line default
             #line hidden
-            this.Write(@"            int taskId;
-			lock (Immortal.DispatchTaskIdQueueLock)
-            {
-                while (!Immortal.DispatchTaskIdQueue.Data.TryDequeue(out taskId)) { }
-            }
-
-            ReleaseBufferAndSend();
-
-			Immortal.StartDispatchLoop();
-
-			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
-            var currentResult = await taskToWaitFor;
-
-			var isSaved = await Immortal.TrySaveContextContinuationAsync(currentResult);
-
-			if (isSaved)
-			{
-				taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
-				currentResult = await taskToWaitFor;
-			}			
-
-			");
+            this.Write("            int taskId;\r\n\t\t\tlock (Immortal.DispatchTaskIdQueueLock)\r\n            " +
+                    "{\r\n                while (!Immortal.DispatchTaskIdQueue.Data.TryDequeue(out task" +
+                    "Id)) { }\r\n            }\r\n\r\n            ReleaseBufferAndSend();\r\n\r\n\t\t\tImmortal.St" +
+                    "artDispatchLoop();\r\n\r\n\t\t\tvar taskToWaitFor = Immortal.CallCache.Data[asyncContex" +
+                    "t.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();\r\n            var cu" +
+                    "rrentResult = await taskToWaitFor;\r\n\r\n\t\t\twhile (currentResult.AdditionalInfoType" +
+                    " != ResultAdditionalInfoTypes.SetResult)\r\n            {\r\n                switch " +
+                    "(currentResult.AdditionalInfoType)\r\n                {\r\n                    case " +
+                    "ResultAdditionalInfoTypes.SaveContext:\r\n                        await Immortal.S" +
+                    "aveTaskContextAsync();\r\n                        taskToWaitFor = Immortal.CallCac" +
+                    "he.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();\r" +
+                    "\n                        break;\r\n                    case ResultAdditionalInfoTy" +
+                    "pes.TakeCheckpoint:\r\n                        var sequenceNumber = await Immortal" +
+                    ".TakeTaskCheckpointAsync();\r\n                        Immortal.StartDispatchLoop(" +
+                    ");\r\n                        taskToWaitFor = Immortal.GetTaskToWaitForWithAdditio" +
+                    "nalInfoAsync(sequenceNumber);\r\n                        break;\r\n                }" +
+                    "\r\n\r\n                currentResult = await taskToWaitFor;\r\n            }\r\n\r\n     " +
+                    "       lock (Immortal.DispatchTaskIdQueueLock)\r\n            {\r\n                I" +
+                    "mmortal.DispatchTaskIdQueue.Data.Enqueue(taskId);\r\n            }\t\r\n");
             
-            #line 107 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(!voidMethod ? "var result =" : ""));
-            
-            #line default
-            #line hidden
-            this.Write(" await Immortal.TryTakeCheckpointContinuationAsync(currentResult, taskId);\r\n\r\n");
-            
-            #line 109 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 121 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
  if (voidMethod) { 
             
             #line default
             #line hidden
             this.Write("\t\t\treturn;\r\n");
             
-            #line 111 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 123 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
  } else { 
             
             #line default
             #line hidden
             this.Write("\t\t\treturn (");
             
-            #line 112 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 124 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(returnTypeName));
             
             #line default
             #line hidden
-            this.Write(") result.Result;\r\n");
+            this.Write(") currentResult.Result;\r\n");
             
-            #line 113 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 125 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
  } 
             
             #line default
             #line hidden
             this.Write("        }\r\n");
             
-            #line 115 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 127 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
  } 
             
             #line default
             #line hidden
             this.Write("\r\n        void ");
             
-            #line 117 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 129 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(generatedClientInterfaceName));
             
             #line default
             #line hidden
             this.Write(".");
             
-            #line 117 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 129 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Name));
             
             #line default
             #line hidden
             this.Write("Fork(");
             
-            #line 117 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 129 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parameterDeclarationString));
             
             #line default
@@ -395,7 +385,7 @@ namespace Ambrosia
                     "  // Compute size of serialized arguments\r\n            var totalArgSize = 0;\r\n\r\n" +
                     "");
             
-            #line 124 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 136 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
 
         foreach (var p in M.Parameters) {
           var parIndex = p.Position;
@@ -405,77 +395,77 @@ namespace Ambrosia
             #line hidden
             this.Write("            // Argument ");
             
-            #line 128 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 140 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parIndex));
             
             #line default
             #line hidden
             this.Write("\r\n\t\t\tint arg");
             
-            #line 129 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 141 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parIndex));
             
             #line default
             #line hidden
             this.Write("Size = 0;\r\n\t\t\tbyte[] arg");
             
-            #line 130 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 142 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parIndex));
             
             #line default
             #line hidden
             this.Write("Bytes = null;\r\n\r\n            ");
             
-            #line 132 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 144 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Utilities.ComputeArgumentSize(p.ParameterType, p.Position)));
             
             #line default
             #line hidden
             this.Write("\r\n            totalArgSize += arg");
             
-            #line 133 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 145 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parIndex));
             
             #line default
             #line hidden
             this.Write("Size;\r\n");
             
-            #line 134 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 146 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
  } 
             
             #line default
             #line hidden
             this.Write("\r\n            var wp = this.StartRPC<");
             
-            #line 136 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 148 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(voidMethod ? "object" : returnTypeName));
             
             #line default
             #line hidden
             this.Write(">(");
             
-            #line 136 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 148 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(idNumber));
             
             #line default
             #line hidden
             this.Write(" /* method identifier for ");
             
-            #line 136 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 148 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Name));
             
             #line default
             #line hidden
             this.Write(" */, totalArgSize, out rpcTask, ");
             
-            #line 136 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 148 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(isImpulseHandler ? "RpcTypes.RpcType.Impulse" : "RpcTypes.RpcType.FireAndForget"));
             
             #line default
             #line hidden
             this.Write(");\r\n\r\n            // Serialize arguments\r\n\r\n");
             
-            #line 140 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 152 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
 
         foreach (var p in M.Parameters) {
           var parIndex = p.Position;
@@ -485,21 +475,21 @@ namespace Ambrosia
             #line hidden
             this.Write("\r\n            // Serialize arg");
             
-            #line 145 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 157 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parIndex));
             
             #line default
             #line hidden
             this.Write("\r\n            ");
             
-            #line 146 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 158 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Utilities.SerializeValue(p.Position)));
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 147 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 159 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
  } 
             
             #line default
@@ -507,28 +497,28 @@ namespace Ambrosia
             this.Write("\r\n            this.ReleaseBufferAndSend();\r\n            return;\r\n        }\r\n\r\n   " +
                     "     private ");
             
-            #line 153 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 165 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(voidMethod ? "object" : returnTypeName));
             
             #line default
             #line hidden
             this.Write("\r\n        ");
             
-            #line 154 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 166 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Name));
             
             #line default
             #line hidden
             this.Write("_ReturnValue(byte[] buffer, int cursor)\r\n        {\r\n");
             
-            #line 156 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 168 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
  if (voidMethod) { 
             
             #line default
             #line hidden
             this.Write("            // buffer will be an empty byte array since the method ");
             
-            #line 157 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 169 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Name));
             
             #line default
@@ -536,28 +526,28 @@ namespace Ambrosia
             this.Write(" returns void\r\n            // so nothing to read, just getting called is the sign" +
                     "al to return to the client\r\n            return this;\r\n");
             
-            #line 160 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 172 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
  } else { 
             
             #line default
             #line hidden
             this.Write("            // deserialize return value\r\n            ");
             
-            #line 162 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 174 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Utilities.DeserializeValue(M.ReturnType, "returnValue")));
             
             #line default
             #line hidden
             this.Write("\r\n            return returnValue;\r\n");
             
-            #line 164 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 176 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
  } 
             
             #line default
             #line hidden
             this.Write("        }\r\n");
             
-            #line 166 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
+            #line 178 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ProxyGenerator.tt"
 
     }
 
