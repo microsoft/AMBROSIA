@@ -1332,7 +1332,6 @@ namespace Ambrosia
                 {
                     _myAmbrosia.OnError(5, "Tried to wakeup committer when not asleep 2");
                 }
-                await TryCommitAsync(this._myAmbrosia._outputs);
             }
 
             byte[] _checkTempBytes = new byte[8];
@@ -2179,8 +2178,6 @@ namespace Ambrosia
                 Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
                 await MoveServiceToNextLogFileAsync(true, true);
                 InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
-                // Shake loose initialization message
-                await _committer.TryCommitAsync(_outputs);
             }
         }
 
@@ -2262,6 +2259,10 @@ namespace Ambrosia
                 _checkpointWriter = null;
             }
             await _committer.WakeupAsync();
+            // This is a safe place to try to commit, because if this is called during recovery,
+            // it's after replace and moving to the next log file. Note that this will also have the effect
+            // of shaking loose the initialization message, ensuring liveliness.
+            await _committer.TryCommitAsync(_outputs);
         }
 
         //==============================================================================================================
@@ -3224,8 +3225,13 @@ namespace Ambrosia
                     memStream.Dispose();
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
                     {
-                        // Move to next log if checkpoints aren't manual, and we've hit the trigger size
-                        await MoveServiceToNextLogFileAsync();
+                        // Make sure only one input thread is moving to the next log file. Won't break the system if we don't do this, but could result in
+                        // empty log files
+                        if (Interlocked.CompareExchange(ref _movingToNextLog, 1, 0) == 0)
+                        {
+                            await MoveServiceToNextLogFileAsync();
+                            _movingToNextLog = 0;
+                        }
                     }
                     break;
 
