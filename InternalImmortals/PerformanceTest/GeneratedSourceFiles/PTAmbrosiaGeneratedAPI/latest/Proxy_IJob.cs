@@ -55,16 +55,28 @@ namespace Job
 			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
             var currentResult = await taskToWaitFor;
 
-			var isSaved = await Immortal.TrySaveContextContinuationAsync(currentResult);
+			while (currentResult.AdditionalInfoType != ResultAdditionalInfoTypes.SetResult)
+            {
+                switch (currentResult.AdditionalInfoType)
+                {
+                    case ResultAdditionalInfoTypes.SaveContext:
+                        await Immortal.SaveTaskContextAsync();
+                        taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+                        break;
+                    case ResultAdditionalInfoTypes.TakeCheckpoint:
+                        var sequenceNumber = await Immortal.TakeTaskCheckpointAsync();
+                        Immortal.StartDispatchLoop();
+                        taskToWaitFor = Immortal.GetTaskToWaitForWithAdditionalInfoAsync(sequenceNumber);
+                        break;
+                }
 
-			if (isSaved)
-			{
-				taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
-				currentResult = await taskToWaitFor;
-			}			
+                currentResult = await taskToWaitFor;
+            }
 
-			 await Immortal.TryTakeCheckpointContinuationAsync(currentResult, taskId);
-
+            lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                Immortal.DispatchTaskIdQueue.Data.Enqueue(taskId);
+            }	
 			return;
         }
 
