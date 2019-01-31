@@ -7,6 +7,7 @@
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <projectUrl>https://github.com/Microsoft/AMBROSIA</projectUrl>
+	<licenseUrl>https://github.com/Microsoft/AMBROSIA/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The AmbrosiaLibCS Binary Distribution - Debug version</description>
     <releaseNotes>None yet</releaseNotes>
