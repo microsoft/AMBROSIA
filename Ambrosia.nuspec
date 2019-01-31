@@ -4,13 +4,13 @@
     <id>AmbrosiaLibCS</id>
     <version>1.0.0</version>
     <title>AmbrosiaLibCS</title>
-    <authors>Ambrosia</authors>
+    <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <projectUrl>https://github.com/Microsoft/AMBROSIA</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The AmbrosiaLibCS Binary Distribution</description>
     <releaseNotes>None yet</releaseNotes>
-    <copyright>Copyright (C) 2018 Microsoft Corporation</copyright>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <language>en-US</language>
     <dependencies>
       <dependency id="Microsoft.CodeAnalysis.Scripting" version="2.7.0" />
