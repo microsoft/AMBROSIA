@@ -24,6 +24,8 @@ namespace GraphicalImmortalImpl
         [DataMember]
         private bool _prevOtherMouseDown = false;
 
+        private bool _doneRecovering = false;
+
         public GraphicalImmortal(string remoteName)
         {
             _remoteName = remoteName;
@@ -93,6 +95,16 @@ namespace GraphicalImmortalImpl
         {
             _remoteProxy = GetProxy<IGraphicalImmortalProxy>(_remoteName);
             return true;
+        }
+
+        protected override void BecomingPrimary()
+        {
+            _doneRecovering = true;
+        }
+
+        public bool DoneRecovering()
+        {
+            return _doneRecovering;
         }
     }
 }

@@ -108,7 +108,10 @@ namespace GraphicalAppUWP
                 return;
             }
 
-            immortal.HandleUserInputExternal((int)pointerPosInternal.X, (int)pointerPosInternal.Y, pointerDownInternal);
+            if (immortal.DoneRecovering())
+            {
+                immortal.HandleUserInputExternal((int)pointerPosInternal.X, (int)pointerPosInternal.Y, pointerDownInternal);
+            }
 
             canvas.Children.Clear();
 
