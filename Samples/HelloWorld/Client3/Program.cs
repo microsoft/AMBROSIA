@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace Client3
 {
+    // Because this Immortal makes async calls, it, and the associated generated proxies and base classes, must be
+    // compiled DEBUG. For an explanation, see HelloWorldExplained.
     [DataContract]
     class Client3 : Immortal<IClient3Proxy>, IClient3
     {
