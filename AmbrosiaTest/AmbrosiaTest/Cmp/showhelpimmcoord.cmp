@@ -1,0 +1,14 @@
+Instance name is required.Port number is required.
+Worker for Common Runtime for Applications (CRA) [http://github.com/Microsoft/CRA]
+Usage: ImmortalCoordinator.exe [OPTIONS]
+Options:
+  -i, --instanceName=VALUE   The instance name [REQUIRED].
+  -p, --port=VALUE           An port number [REQUIRED].
+      --aa, --activeActive   Is active-active enabled.
+  -r, --replicaNum=VALUE     The replica #
+      --an, --assemblyName=VALUE
+                             The secure network assembly name.
+      --ac, --assemblyClass=VALUE
+                             The secure network assembly class.
+      --ip, --IPAddr=VALUE   Override automatic self IP detection
+  -h, --help                 show this message and exit
