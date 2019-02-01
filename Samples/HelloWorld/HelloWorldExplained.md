@@ -273,4 +273,63 @@ Note that the server will have received some portion of the buffered calls, in t
 
 Client3 - Async calls (Experimental)
 -----------
-Under Construction
+This client demonstrates Ambrosia's ability to make remote method calls in an async manner, just like calling regular async methods in C#. While this can be a very useful feature for some Immortals, there are important limitations associated with async method invocation. Note that these issues are endemic to implementing virtual resiliency in languages like C#. These limitations, their cause, and best practices will be discussed at the end of this section of the guide.
+
+Client3, like Client1, has no externally callable methods. As a result, the interface is empty:
+
+```
+    public interface IClient3
+    {
+    }
+```
+
+Client3 makes 2 ReceiveMessageAsync calls, awaiting each one before continuing:
+
+```
+    [DataContract]
+    class Client3 : Immortal<IClient3Proxy>, IClient3
+    {
+        [DataMember]
+        private string _serverName;
+
+        [DataMember]
+        private IServerProxy _server;
+
+        public Client3(string serverName)
+        {
+            _serverName = serverName;
+        }
+
+        protected override async Task<bool> OnFirstStart()
+        {
+            _server = GetProxy<IServerProxy>(_serverName);
+            Console.ForegroundColor = ConsoleColor.Yellow;
+
+            var t1 = _server.ReceiveMessageAsync("\n!! Client: Hello World 3 Message #1!");
+            Console.WriteLine("\n!! Client: Sent message #1.");
+
+            var res1 = await t1;
+            Console.WriteLine($"\n!! Client: Message #1 completed. Server acknowledges processing {res1} messages.");
+
+            var t2 = _server.ReceiveMessageAsync("\n!! Client: Hello World 3 Message #2!");
+            Console.WriteLine("\n!! Client: Sent message #2.");
+
+            var res2 = await t2;
+            Console.WriteLine($"\n!! Client: Message #2 completed. Server acknowledges processing {res2} messages.");
+
+            Console.WriteLine("\n!! Client: Shutting down");
+            Program.finishedTokenQ.Enqueue(0);
+            return true;
+        }
+    }
+```
+
+First, note that the generated IServerProxy automatically contains an async version of ReceiveMessage, which we simply use like any other C# async call. Similarly, we may await the completion of the call just as other async methods in C#. In Ambrosia, there is one dispatch thread which dispatches all Ambrosia method calls. When an async call on another instance is made, as in the call to ReceiveMessageAsync, the dispatch thread becomes free to process any incoming method calls, as well as return values for previously made async calls to other instances. Since there is only one dispatch thread, which is shared for both processing incoming method calls, as well as processing continuations of awaiting method calls, there is no parallel execution, although there is concurrent execution.
+
+Understanding Recovery for Client3
+-----------
+To better understand the implications of using async calls, we walk through a possible execution and recovery of Client3. Consider the case where Client3 is run after the server is defined, but down. Client3 will successfully connect to the server, since it has been created. When the first ReceiveMessageAsync is called, the call is queued up for delivery once the server comes back up. The first output message is then printed on the screen. Once we hit the first await, execution of OnFirstStart is suspended until the server receives the first method call, executes it, and returns the result. Note that while OnFirstStart is suspended, other Client3 methods, if there were any, could be invoked by other instances. In this case, there are no methods to call, so Client3 will simply wait.
+
+If we killed Client3 at this point and restarted, OnFirstStart would be replayed, and the system would return to the exact same state it was in before Client3 was killed. Note that if a checkpoint were taken while OnFirstStart was suspended, that checkpoint would include a serialized version of the task being awaited. That task and its state would then be recovered as part of recovering Client3.
+
+As soon as the server comes back up, the method call would be sent, and eventually executed. Since the call was made async, the return value would eventually arrive, and OnFirstStart would be woken up and continue. In this manner, Client3 would run until OnFirstStart completed, enqueueing a token in finishedTokenQ, killing Client3.
