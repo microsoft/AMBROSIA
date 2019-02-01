@@ -33,7 +33,7 @@ namespace Client3
             Console.WriteLine("\n!! Client: Press enter to continue (will await message #1)");
             Console.ResetColor();
 
-            Console.ReadLine(); // Console.ReadKey();
+            Console.ReadLine();
 
             var res1 = await t1;
             Console.WriteLine($"\n!! Client: Message #1 completed. Server acknowledges processing {res1} messages.");
@@ -46,7 +46,7 @@ namespace Client3
             Console.WriteLine("\n!! Client: Press enter to continue (will await message #2)");
             Console.ResetColor();
 
-            Console.ReadLine(); // Console.ReadKey();
+            Console.ReadLine();
 
             var res2 = await t2;
             Console.WriteLine($"\n!! Client: Message #2 completed. Server acknowledges processing {res2} messages.");
@@ -54,7 +54,7 @@ namespace Client3
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("\n!! Client: Press enter to shutdown.");
 
-            Console.ReadLine(); // Console.ReadKey();
+            Console.ReadLine();
             Program.finishedTokenQ.Enqueue(0);
             return true;
         }
