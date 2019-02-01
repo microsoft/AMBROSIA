@@ -182,7 +182,7 @@ Understanding Recovery for Client1
 -----------
 Let's assume that Client1 and its associated ImmortalCoordinator were exited (e.g. Ctrl-C) and restarted when user input was requested. Let's go through the recovery actions taken by Ambrosia: 
 
-* First, it is important to understand that when a service is started for the first time, an initial checkpoint is taken which represents the state of the Immortal just prior to the execution of OnFirstStart. Since no additional checkpoint was taken, recovery begins by deserializing the initial state of the Immortal.
+* First, it is important to understand that when an instance is started for the first time, an initial checkpoint is taken which represents the state of the Immortal just prior to the execution of OnFirstStart. Since no additional checkpoint was taken, recovery begins by deserializing the initial state of the Immortal.
 * Next, recovery replays all method calls which occurred since the recovered checkpoint was taken. In this case, we execute OnFirstStart from the initial state. During this execution, we again generate the first message to server, and ask for user input. Note that once all methods have been replayed (i.e. the application method invocation has happened), the recovering Immortal reconnects to previously connected Immortals. Part of that reconnection involves determining which method calls have already been received by the various parties, and ensures exactly once method delivery/execution everywhere. In this case, if server received the method call before client was killed, it will not be resent. If, however, the message was never actually received by server, the reconstructed method call is sent.
 
 Client2 - Handling Non-Determinism
@@ -271,7 +271,7 @@ Once the instance is reconnected to itself, any buffered impulse calls are sent 
 
 Note that the server will have received some portion of the buffered calls, in the order in which they are reproduced, but may not have received some of the last buffered calls, including possible new calls made after becoming primary. Upon reconnection, unsent calls from client3 are sent to the server.
 
-Client3 - Async calls (Experimental)
+Client3 - Async calls (See caveats, limitations, and best practices at the end before running)
 -----------
 This client demonstrates Ambrosia's ability to make remote method calls in an async manner, just like calling regular async methods in C#. While this can be a very useful feature for some Immortals, there are important limitations associated with async method invocation. Note that these issues are endemic to implementing virtual resiliency in languages like C#. These limitations, their cause, and best practices will be discussed at the end of this section of the guide.
 
@@ -333,3 +333,25 @@ To better understand the implications of using async calls, we walk through a po
 If we killed Client3 at this point and restarted, OnFirstStart would be replayed, and the system would return to the exact same state it was in before Client3 was killed. Note that if a checkpoint were taken while OnFirstStart was suspended, that checkpoint would include a serialized version of the task being awaited. That task and its state would then be recovered as part of recovering Client3.
 
 As soon as the server comes back up, the method call would be sent, and eventually executed. Since the call was made async, the return value would eventually arrive, and OnFirstStart would be woken up and continue. In this manner, Client3 would run until OnFirstStart completed, enqueueing a token in finishedTokenQ, killing Client3.
+
+Caveats, Limitations, and Best Practices for Async method calls
+-----------
+In order to create checkpoints with suspended methods that made async calls, we serialize the task associated with the method call that makes the async call. This is functionality not officially supported by the C# runtime, and is provided by a library available on Nuget which relies on how the state machine for async programs is created by the C# compiler. Because of this, we have issue #1:
+
+1) All Immortals, and code generated proxies/base classes used by those Immortals MUST BE COMPILED DEBUG. This disables performance optimizations which potentially change how the async state machine is generated.
+
+Also, one of Ambrosia's most useful features is its ability to run logs and patch live instances with new versions of Immortals which don't change the state or remove method calls (see [TimeTravel-Windows.md](./TimeTravel-Windows.md)). Since code modifications can affect the state machine for async, we have issue #2:
+
+2) There is no guarantee that code patches which don't disrupt Immortal APIs and state can recover checkpoints produced by instances making async calls.
+
+Finally, Ambrosia has a very useful live instance upgrade capability which allows code upgrades, even if state and APIs change. Because suspended tasks have associated call stacks which may no longer even correspond to possible stacks in new code versions:
+
+3) There is no guarantee that live instance upgrades will work on instances making async calls.
+
+Note that issues 2 and 3 are quite fundamental to languages using C#s style of async, and will likely not be improved over time. Issue #1, however, is addressable, although it is not in scope at this time for the Ambrosia project.
+
+In summary, the above limitations and caveats lead us to the following best practice for using async calls:
+
+ * Async calls are reasonable to make within jobs, but not services, unless service updates/upgrades are always started from an initial state, rather than a recovered state.
+ 
+This best practice comes from the assumption that you will not try to suspend, repair, and continue a job, but rather, will restart it. On the other hand, services must be able to evolve over time. Of course, if service modifications are not rolled out using Ambrosia recovery, but rather, are always started from an initial state, and take over after the old code is retired, async calls are fine.
