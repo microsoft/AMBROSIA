@@ -1,0 +1,19 @@
+Job name is required.
+Server name is required.
+Send port is required.
+Receive port is required.
+
+Usage: Job.exe [OPTIONS]
+Options:
+  -j, --jobName=VALUE        The service name of the job [REQUIRED].
+  -s, --serverName=VALUE     The service name of the server [REQUIRED].
+      --rp, --receivePort=VALUE
+                             The service receive from port [REQUIRED].
+      --sp, --sendPort=VALUE The service send to port. [REQUIRED]
+      --mms, --maxMessageSize=VALUE
+                             The maximum message size.
+  -n, --numOfRounds=VALUE    The number of rounds.
+      --nds, --noDescendingSize
+                             Disable message descending size.
+  -c, --autoContinue         Is continued automatically at start
+  -h, --help                 show this message and exit

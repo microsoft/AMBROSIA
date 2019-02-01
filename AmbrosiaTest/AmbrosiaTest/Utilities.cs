@@ -51,7 +51,7 @@ namespace AmbrosiaTest
         // when = false, the test will run under the assumption that .Net Core files in AmbrosiaTest\bin\x64\debug (or release) directory (from netcoreapp2.0 directory)
         // .NET CORE only has DLLs, so no AMB exe so run by using "dotnet"
         //*********
-        static bool NetFrameworkTestRun = true;
+        public bool NetFrameworkTestRun = true;
 
         // Returns the Process ID of the process so you then can something with it
         // Currently output to file using ">", but using cmd.exe to do that.
