@@ -19,6 +19,9 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Immortal.md" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="CRA" Version="2018.11.5.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
