@@ -83,7 +83,7 @@ This type of message signals the immortal to take a checkpoint at its current st
 
 ### TakeBecomingPrimaryCheckpoint
 
-This type of message signals the immortal to take a checkpoint at its current state, as with TakeCheckpoint above. This message also signals the Immortal to call BecomingPrimary().
+This type of message signals the Immortal to take a checkpoint at its current state, as with TakeCheckpoint above. This message also signals the Immortal to call BecomingPrimary().
 
 #### Message format:
 
@@ -93,19 +93,47 @@ This type of message signals the immortal to take a checkpoint at its current st
 
 - **R** - Determines the type of the RPC call ( = AmbrosiaRuntime.takeBecomingPrimaryCheckpointByte)
 
+### UpgradeService
 
+This type of message signals the Immortal to upgrade. The current Immortal creates an instance of the upgraded Immortal type. All the fields from the current Immortal instance are copied into the new Immortal instance. The new Immortal instance is then being started by starting a new Dispatch loop with the same single-threaded task scheduler and the same Task Id queue. The current Immortal's Dispatch loop would then commit suicide once the new Dispatch loop takes over. The new Dispatch loop will have the current Immortal's remaining number of bytes to read handed over to it, in order to continue processing messages from the same point.
 
-AMBROSIA Messages are serialized in the following way: 
+**Note:** The upgraded Immortal type is defined upon deploying the service when using the following AmbrosiaFactory.Deploy Method:
 
-Every AMBROSIA message starts with an RPC type byte which determines the type of the RPC.
+```c#
+public static IDisposable Deploy<T, T2, Z2>(string serviceName, Immortal instance, int receivePort, int sendPort)
+```
 
-* Request RPCs:
+#### Message format:
+
+| Field Name | R    |
+| ---------- | ---- |
+| Field Type | byte |
+
+- **R** - Determines the type of the RPC call ( = AmbrosiaRuntime.upgradeServiceByte)
+
+### UpgradeServiceTakeCheckpoint
+
+This type of message signals the Immortal to upgrade, similarly to UpgradeService. It also signals the upgraded immortal to take a checkpoint at the time of creation (after the pervious Immortal's state has been copied over).
+
+#### Message format:
+
+| Field Name | R    |
+| ---------- | ---- |
+| Field Type | byte |
+
+- **R** - Determines the type of the RPC call ( = AmbrosiaRuntime.upgradeServiceTakeCheckpointByte)
+
+### RPC
+
+* #### Request RPCs:
+
+  ##### Message format:
 
   | Field Name     | R    | ret  | m    | b    | lFR    | n    | args   |
   | -------------- | ---- | ---- | ---- | ---- | ------ | ---- | ------ |
   | **Field Type** | byte | byte | int  | int  | byte[] | long | byte[] |
 
-  * **R** - Determines the type of the RPC call (constants defined in AmbrosiaRuntime)
+  * **R** - Determines the type of the RPC call (= RPCByte)
   * **ret** - Determines the type of the return value (None = 0, in the case of a request RPC)
   * **m** - The method ID for the method to call
   * **b** - Size of the sender name (Required only if RPC is not fire and forget - defined in RpcType.IsFireAndForget())
@@ -113,15 +141,16 @@ Every AMBROSIA message starts with an RPC type byte which determines the type of
   * **n** - Contains the sequence number of the request matching the response
   * **args** - Contains serialized arguments, number and size baked into the generated code
 
-* Response RPCs:
+* #### Response RPCs:
+
+  ##### Message format:
 
   | Field Name     | R    | ret  | n    | returnValue |
   | -------------- | :--- | :--- | :--- | :---------- |
   | **Field Type** | byte | byte | long | T           |
 
-  * **R** - Determines the type of the RPC call (constants defined in AmbrosiaRuntime)  
+  * **R** - Determines the type of the RPC call (= RPCByte)  
   * **ret** - Determines the type of the return value (values defined by enum ReturnValueTypes)  
   * **n** - Contains the sequence number of the request matching the response  
   * **returnValue** - Contains a return value of type T (defined in the signature of the method called in the RPC request)
 
-**Note:** There are more RPC types (e.g. InitialMessage, TakeCheckpoint etc.) with simpler protocols which are easily deduced from the code
