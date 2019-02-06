@@ -125,7 +125,11 @@ This type of message signals the Immortal to upgrade, similarly to UpgradeServic
 
 ### RPC
 
+RPCs are divided into Request RPCs, which trigger the Immortal to run a method defined in the user-defined interface (and returning a Response RPC if the method is not a Fire-and-Forget method) and Response RPCs which return a return value for a previously sent Request RPC. Method Ids are assigned upon code-generation and are used to encode the method for the Immortal to run. The matching between requests and responses is done by matching sequence numbers.
+
 * #### Request RPCs:
+
+  
 
   ##### Message format:
 
@@ -153,4 +157,3 @@ This type of message signals the Immortal to upgrade, similarly to UpgradeServic
   * **ret** - Determines the type of the return value (values defined by enum ReturnValueTypes)  
   * **n** - Contains the sequence number of the request matching the response  
   * **returnValue** - Contains a return value of type T (defined in the signature of the method called in the RPC request)
-
