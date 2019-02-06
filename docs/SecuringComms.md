@@ -1,3 +1,8 @@
+---
+layout: default
+title: Secure Communications
+nav_order: 3
+---
 # Securing Ambrosia Communications
 
 This document describes how deployers of the Immortal Coordinator may secure all communications between coordinators. Immortal
