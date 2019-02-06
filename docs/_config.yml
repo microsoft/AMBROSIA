@@ -16,5 +16,4 @@ aux_links:
       - "//github.com/Microsoft/AMBROSIA"
 
 
-
-# search_enabled: true
+search_enabled: true
