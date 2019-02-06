@@ -1,0 +1,20 @@
+
+remote_theme: pmarsceill/just-the-docs
+
+title: AMBROSIA
+
+description: Robust distributed programming made easy and efficient
+
+# baseurl: "/ambrosia/" 
+
+
+
+aux_links:
+
+    "AMBROSIA on GitHub":
+
+      - "//github.com/Microsoft/AMBROSIA"
+
+
+
+# search_enabled: true
