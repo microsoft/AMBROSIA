@@ -185,7 +185,7 @@ namespace Ambrosia
             while (true)
             {
                 var nextEntry = await _ambrosiaSendToConnectionRecord.WorkQ.DequeueAsync();
-                AcquireOutputLock(1);
+                _outputLock.Acquire(1);
                 if (nextEntry == -1)
                 {
                     // This is a send output
@@ -193,7 +193,7 @@ namespace Ambrosia
                     _ambrosiaSendToConnectionRecord.placeInOutput =
                             await _ambrosiaSendToConnectionRecord.BufferedOutput.SendAsync(_ambrosiaSendToStream, _ambrosiaSendToConnectionRecord.placeInOutput);
                 }
-                ReleaseOutputLock();
+                _outputLock.Release();
             }
         }
 
@@ -722,7 +722,7 @@ namespace Ambrosia
         private async Task TakeCheckpointAsync()
         {
             // wait for quiesence
-            AcquireOutputLock(2);
+            _outputLock.Acquire(2);
             _ambrosiaSendToConnectionRecord.BufferedOutput.LockOutputBuffer();
 
             // Save current task state unless just resumed from a serialized task
@@ -748,7 +748,7 @@ namespace Ambrosia
             Console.WriteLine("*X* Sent checkpoint back to LAR");
 #endif
             _ambrosiaSendToConnectionRecord.BufferedOutput.UnlockOutputBuffer();
-            ReleaseOutputLock();
+            _outputLock.Release();
         }
 
         public async Task<ResultAdditionalInfo> TryTakeCheckpointContinuationAsync(ResultAdditionalInfo currentResultAdditionalInfo, int taskId)
@@ -1087,28 +1087,38 @@ namespace Ambrosia
         }
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-        volatile private int _quiesce;
-        private long _outputLock;
 
-        internal void AcquireOutputLock(long lockVal = 1)
+        public class CustomLock
         {
-            while (true)
+            public long Value;
+
+            public CustomLock(long value)
             {
-                var origVal = Interlocked.CompareExchange(ref _outputLock, lockVal, 0);
-                if (origVal == 0)
+                this.Value = value;
+            }
+
+            internal void Acquire(long lockVal = 1)
+            {
+                while (true)
                 {
-                    // We have the lock
-                    break;
+                    var origVal = Interlocked.CompareExchange(ref this.Value, lockVal, 0);
+                    if (origVal == 0)
+                    {
+                        // We have the lock
+                        break;
+                    }
                 }
+            }
+
+            internal void Release()
+            {
+                Interlocked.Exchange(ref this.Value, 0);
             }
         }
 
-        internal void ReleaseOutputLock()
-        {
-            Interlocked.Exchange(ref _outputLock, 0);
-        }
-
+        private bool disposedValue = false; // To detect redundant calls
+        volatile private int _quiesce;
+        private CustomLock _outputLock = new CustomLock(0);
 
         protected virtual void Dispose(bool disposing)
         {
@@ -1211,7 +1221,7 @@ namespace Ambrosia
 
                 if (attachNeeded)
                 {
-                    Immortal.AcquireOutputLock(3);
+                    Immortal._outputLock.Acquire(3);
 #if DEBUG
                     Console.WriteLine("*X* Sending attach message to: " + this.remoteAmbrosiaRuntime);
 #endif
@@ -1223,7 +1233,7 @@ namespace Ambrosia
                     Immortal._ambrosiaSendToStream.WriteByte(AmbrosiaRuntime.attachToByte);
                     // Write Destination
                     Immortal._ambrosiaSendToStream.Write(destinationBytes, 0, destinationBytes.Length);
-                    Immortal.ReleaseOutputLock();
+                    Immortal._outputLock.Release();
                 }
             }
 
@@ -1350,7 +1360,7 @@ namespace Ambrosia
                     // That way, if recovery happens after the first checkpoint (i.e., before a second checkpoint)
                     // this message will get sent back to this container so it will restart properly
                     {
-                        MyImmortal.AcquireOutputLock(2);
+                        MyImmortal._outputLock.Acquire(2);
                         var initialMessageBytes = Encoding.UTF8.GetBytes("hello");
                         var initialMessageSize = initialMessageBytes.Length;
                         sizeOfMessage = 1 + IntSize(initialMessageSize) + initialMessageSize;
@@ -1359,7 +1369,7 @@ namespace Ambrosia
                         MyImmortal._ambrosiaSendToStream.WriteInt(initialMessageSize);
                         MyImmortal._ambrosiaSendToStream.Write(initialMessageBytes, 0, initialMessageSize);
                         MyImmortal._ambrosiaSendToStream.Flush();
-                        MyImmortal.ReleaseOutputLock();
+                        MyImmortal._outputLock.Release();
                     }
 
 #if DEBUG
@@ -1376,7 +1386,7 @@ namespace Ambrosia
 
                     {
                         // wait for quiesence
-                        MyImmortal.AcquireOutputLock(2);
+                        MyImmortal._outputLock.Acquire(2);
                         MyImmortal._ambrosiaSendToConnectionRecord.BufferedOutput.LockOutputBuffer();
 
                         var checkpointSize = this.MyImmortal._immortalSerializer.SerializeSize(this.MyImmortal);
@@ -1391,7 +1401,7 @@ namespace Ambrosia
                         MyImmortal._ambrosiaSendToStream.Flush();
 
                         MyImmortal._ambrosiaSendToConnectionRecord.BufferedOutput.UnlockOutputBuffer();
-                        MyImmortal.ReleaseOutputLock();
+                        MyImmortal._outputLock.Release();
                     }
 
 
