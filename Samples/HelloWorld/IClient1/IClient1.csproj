@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AmbrosiaLibCS" Version="1.0.0" Condition="'$(Configuration)' == 'Release' " />
-    <PackageReference Include="AmbrosiaLibCSDebug" Version="1.0.0" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="AmbrosiaLibCS" Version="1.0.1" Condition="'$(Configuration)' == 'Release' " />
+    <PackageReference Include="AmbrosiaLibCSDebug" Version="1.0.1" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
 
 </Project>
