@@ -129,7 +129,7 @@ RPCs are divided into Request RPCs, which trigger the Immortal to run a method d
 
 * #### Request RPCs:
 
-  
+  In the case of a request RPC, the Immortal will call its dispatcher instance (of the auto-generated Dispatcher implementation) which will handle the method call (and return a response, if one is required). 
 
   ##### Message format:
 
@@ -147,6 +147,10 @@ RPCs are divided into Request RPCs, which trigger the Immortal to run a method d
 
 * #### Response RPCs:
 
+  In the case of an RPC containing a response, the Immortal will "wake up" the task awaiting this response and perform a context switch to this task (the context switch would always result in switching to the woken-up task, as it is the only task running in parallel to the current task).
+
+  In the case of an RPC containing an exception as its return value, the exception would be set in the awaiting task, and the same context switch will be made to that task. 
+
   ##### Message format:
 
   | Field Name     | R    | ret  | n    | returnValue |
@@ -157,3 +161,30 @@ RPCs are divided into Request RPCs, which trigger the Immortal to run a method d
   * **ret** - Determines the type of the return value (values defined by enum ReturnValueTypes)  
   * **n** - Contains the sequence number of the request matching the response  
   * **returnValue** - Contains a return value of type T (defined in the signature of the method called in the RPC request)
+
+### RPCBatch
+
+In this case, we are receiving a batch of RPC messages.
+
+#### Message format:
+
+| Field Name | R    | nRPC | RPC  | RPC  | ...  |
+| ---------- | ---- | ---- | ---- | ---- | ---- |
+| Field Type | byte | int  |      |      |      |
+
+* **R** - Determines the type of the RPC call (= RPCBatchByte)
+* **nRPC** - Number of RPCs in the batch
+* **RPCs** - Batch of RPC messages in the format described above
+
+### CountReplayableRPCBatch
+
+#### Message format:
+
+| Field Name | R    | nRPC | nRRPC | RPC  | RPC  | ...  |
+| ---------- | ---- | ---- | ----- | ---- | ---- | ---- |
+| Field Type | byte | int  | int   |      |      |      |
+
+- **R** - Determines the type of the RPC call (= RPCBatchByte)
+- **nRPC** - Number of RPCs in the batch
+- **nRRPC** - Number of replayable RPCs in the batch
+- **RPCs** - Batch of RPC messages in the format described above
