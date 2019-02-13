@@ -44,4 +44,12 @@ The *TaskIdToSequenceNumber* is matching between the TaskId associated with the 
 
 Once a TakeCheckpoint message gets in, we start by going over each TaskCompletionSource in the *CallCache* and set its result, signaling it to save its current sequence number and TaskId into the *TaskIdToSequenceNumber* cache. We will also pick the first **awaited** TaskCompletionSource to actually take the checkpoint. After each Task completes saving its context or taking a checkpoint, we create a new TaskCompletionSource for it to await.
 
-**Note:** *TaskIdToSequenceNumber* is used in the process of the state serialization
+*TaskIdToSequenceNumber* is used in the process of the state serialization, when serializing Task objects returned by async calls. This allows the following scenario:
+
+```c#
+var task1 = this._server.MAsync(buffer);
+...
+var result1 = await task1;
+```
+
+Notice that in this case, if a TakeCheckpoint message was received anywhere between the *async* call and the *await*, *task1* should be serialized as part of the call stack. Since Task is not a serializable type, we switch the Task object with the matching TaskCompletionSource (for the same sequence number) upon serialization, which is completed only if a result had been obtained prior to taking the checkpoint. 
