@@ -25,6 +25,11 @@ namespace Client2
 
         void IClient2Proxy.ReceiveKeyboardInputFork(System.String p_0)
         {
+			if (!Immortal.IsPrimary)
+			{
+                throw new Exception("Unable to send an Impulse RPC while not being primary.");
+			}
+
             SerializableTaskCompletionSource rpcTask;
 
             // Compute size of serialized arguments
