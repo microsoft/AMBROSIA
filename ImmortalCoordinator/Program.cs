@@ -9,27 +9,20 @@ using System.Reflection;
 using Ambrosia;
 using Mono.Options;
 
-namespace CRA.Worker
+namespace ImmortalCoordinator
 {
-    class Program
+    public static class ImmortalCoordinator
     {
-        private static string _instanceName;
-        private static int _port = -1;
-        private static string _ipAddress;
-        private static string _secureNetworkAssemblyName;
-        private static string _secureNetworkClassName;
-        private static bool _isActiveActive = false;
-        private static int _replicaNumber = 0;
 
-        static void Main(string[] args)
+        public static void Start(string instanceName, int port, string ipAddress,
+            string secureNetworkAssemblyName, string secureNetworkClassName, bool isActiveActive,
+            int replicaNumber)
         {
-            ParseAndValidateOptions(args);
+            var replicaName = $"{instanceName}{replicaNumber}";
 
-            var replicaName = $"{_instanceName}{_replicaNumber}";
-
-            if (_ipAddress == null)
+            if (ipAddress == null)
             {
-                _ipAddress = GetLocalIPAddress();
+                ipAddress = GetLocalIPAddress();
             }
 
             string storageConnectionString = null;
@@ -43,7 +36,7 @@ namespace CRA.Worker
                 storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
             }
 
-            if (!_isActiveActive && _replicaNumber != 0)
+            if (!isActiveActive && replicaNumber != 0)
             {
                 throw new InvalidOperationException("Can't specify a replica number without the activeActive flag");
             }
@@ -75,23 +68,23 @@ namespace CRA.Worker
             }
 
             ISecureStreamConnectionDescriptor descriptor = null;
-            if (_secureNetworkClassName != null)
+            if (secureNetworkClassName != null)
             {
                 Type type;
-                if (_secureNetworkAssemblyName != null)
+                if (secureNetworkAssemblyName != null)
                 {
-                    var assembly = Assembly.Load(_secureNetworkAssemblyName);
-                    type = assembly.GetType(_secureNetworkClassName);
+                    var assembly = Assembly.Load(secureNetworkAssemblyName);
+                    type = assembly.GetType(secureNetworkClassName);
                 }
                 else
                 {
-                    type = Type.GetType(_secureNetworkClassName);
+                    type = Type.GetType(secureNetworkClassName);
                 }
                 descriptor = (ISecureStreamConnectionDescriptor)Activator.CreateInstance(type);
             }
 
             var worker = new CRAWorker
-                (replicaName, _ipAddress, _port,
+                (replicaName, ipAddress, port,
                 storageConnectionString, descriptor, connectionsPoolPerWorker);
 
             worker.DisableDynamicLoading();
@@ -111,6 +104,25 @@ namespace CRA.Worker
                 }
             }
             throw new InvalidOperationException("Local IP Address Not Found!");
+        }
+    }
+
+    class Program
+    {
+        private static string _instanceName;
+        private static int _port = -1;
+        private static string _ipAddress;
+        private static string _secureNetworkAssemblyName;
+        private static string _secureNetworkClassName;
+        private static bool _isActiveActive = false;
+        private static int _replicaNumber = 0;
+
+        static void Main(string[] args)
+        {
+            ParseAndValidateOptions(args);
+
+            ImmortalCoordinator.Start(_instanceName, _port, _ipAddress, _secureNetworkAssemblyName,
+                _secureNetworkClassName, _isActiveActive, _replicaNumber);
         }
 
         private static void ParseAndValidateOptions(string[] args)

@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ambrosia", "..\..\..\Ambros
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "adv-file-ops", "..\..\..\Ambrosia\adv-file-ops\adv-file-ops.vcxproj", "{5852AC33-6B01-44F5-BAF3-2AAF796E8449}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImmortalCoordinator", "..\..\..\ImmortalCoordinator\ImmortalCoordinator.csproj", "{FF38A63F-1A5F-4ED0-93A0-E8C9F0DC8E23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -38,6 +40,10 @@ Global
 		{5852AC33-6B01-44F5-BAF3-2AAF796E8449}.Debug|x64.Build.0 = Release|x64
 		{5852AC33-6B01-44F5-BAF3-2AAF796E8449}.Release|x64.ActiveCfg = Release|x64
 		{5852AC33-6B01-44F5-BAF3-2AAF796E8449}.Release|x64.Build.0 = Release|x64
+		{FF38A63F-1A5F-4ED0-93A0-E8C9F0DC8E23}.Debug|x64.ActiveCfg = Debug|x64
+		{FF38A63F-1A5F-4ED0-93A0-E8C9F0DC8E23}.Debug|x64.Build.0 = Debug|x64
+		{FF38A63F-1A5F-4ED0-93A0-E8C9F0DC8E23}.Release|x64.ActiveCfg = Release|x64
+		{FF38A63F-1A5F-4ED0-93A0-E8C9F0DC8E23}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

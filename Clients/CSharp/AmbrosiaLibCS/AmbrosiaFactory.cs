@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
 using Ambrosia;
+using System.Threading;
 
 namespace Ambrosia
 {
@@ -157,6 +158,23 @@ namespace Ambrosia
 
             return serverContainer;
 
+        }
+
+        public static IDisposable DeployWithImmCoord<T>(string serviceName, Immortal instance,
+            int receivePort, int sendPort, int immCoordPort, bool isActiveActive, int replicaNum)
+        {
+            Thread immCoordThread = new Thread(new ThreadStart(() => {
+                ImmortalCoordinator.ImmortalCoordinator.Start(serviceName, immCoordPort, null,
+                    null, null, isActiveActive, replicaNum);
+            }))
+            {
+                IsBackground = true
+            };
+            immCoordThread.Start();
+
+            IDisposable serverContainer = Deploy<T>(serviceName, instance, receivePort, sendPort);
+
+            return serverContainer;
         }
     }
 }
