@@ -43,6 +43,8 @@ namespace Ambrosia
         private static FlexReadBuffer _inputFlexBuffer;
         private static int _cursor;
 
+        public bool IsPrimary = false;
+
         [DataMember]
         [CopyFromDeserializedImmortal]
         public StringBuilder SerializedTask = new StringBuilder();
@@ -365,6 +367,7 @@ namespace Ambrosia
                                 _cursor++;
 
                                 await this.TakeCheckpointAsync();
+                                this.IsPrimary = true;
                                 this.BecomingPrimary();
 
                                 break;
@@ -414,6 +417,7 @@ namespace Ambrosia
                                 if (firstByte == AmbrosiaRuntime.upgradeTakeCheckpointByte)
                                 {
                                     await newImmortal.TakeCheckpointAsync();
+                                    newImmortal.IsPrimary = true;
                                     newImmortal.BecomingPrimary();
                                 }
 
@@ -1411,6 +1415,7 @@ namespace Ambrosia
 
                     if (firstByte == AmbrosiaRuntime.takeBecomingPrimaryCheckpointByte)
                     {
+                        this.MyImmortal.IsPrimary = true;
                         this.MyImmortal.BecomingPrimary();
                     }
 
