@@ -87,7 +87,7 @@ namespace GraphicalApp
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if (immortal != null)
+            if (immortal != null && immortal.DoneRecovering())
             {
                 immortal.HandleUserInputExternal(_mousePosInternal.X, _mousePosInternal.Y, _mouseDownInternal);
             }
