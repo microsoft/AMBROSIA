@@ -135,6 +135,11 @@ wp.curLength += arg0Bytes.Length;
 
         void IServerProxy.AmIHealthyFork(System.DateTime p_0)
         {
+			if (!Immortal.IsPrimary)
+			{
+                throw new Exception("Unable to send an Impulse RPC while not being primary.");
+			}
+
             SerializableTaskCompletionSource rpcTask;
 
             // Compute size of serialized arguments
