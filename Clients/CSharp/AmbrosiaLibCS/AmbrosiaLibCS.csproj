@@ -11,6 +11,8 @@
     <RootNamespace>AmbrosiaLibCS</RootNamespace>
     <ApplicationIcon />
     <StartupObject />
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>../../../Ambrosia/Ambrosia.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
     <DefineConstants>NETFRAMEWORK</DefineConstants>
