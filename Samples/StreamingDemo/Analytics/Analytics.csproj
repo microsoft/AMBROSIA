@@ -18,7 +18,6 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Mono.Options.Core" Version="1.0.0" />
     <PackageReference Include="Trill">
       <Version>2018.3.2.1</Version>
     </PackageReference>

@@ -30,7 +30,6 @@
     <PackageReference Include="WindowsAzure.Storage">
       <Version>9.3.3</Version>
     </PackageReference>
-    <PackageReference Include="Mono.Options.Core" Version="1.0.0" />
     <PackageReference Include="CRA" Version="2018.11.5.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
