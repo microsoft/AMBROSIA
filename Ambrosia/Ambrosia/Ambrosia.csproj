@@ -54,10 +54,4 @@
       <Version>4.5.0</Version>
     </PackageReference>
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Mono.Options.Core">
-      <HintPath>..\..\..\..\Users\talzacc\.nuget\packages\mono.options.core\1.0.0\lib\netstandard1.3\Mono.Options.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 </Project>
