@@ -548,6 +548,39 @@ namespace Ambrosia
                                                            long firstSeqNo,
                                                            bool reconnecting)
         {
+            if (reconnecting)
+            {
+                var bufferE = _bufferQ.GetEnumerator();
+                while (bufferE.MoveNext())
+                {
+                    var curBuffer = bufferE.Current;
+                    Debug.Assert(curBuffer.LowestSeqNo <= firstSeqNo);
+                    int skipEvents = 0;
+                    if (curBuffer.HighestSeqNo >= firstSeqNo)
+                    {
+                        // We need to send some or all of this buffer
+                        skipEvents = (int)(Math.Max(0, firstSeqNo - curBuffer.LowestSeqNo));
+                    }
+                    else
+                    {
+                        skipEvents = 0;
+                    }
+                    int bufferPos = 0;
+                    AcquireAppendLock(2);
+                    curBuffer.UnsentReplayableMessages = curBuffer.TotalReplayableMessages;
+                    for (int i = 0; i < skipEvents; i++)
+                    {
+                        int eventSize = curBuffer.PageBytes.ReadBufferedInt(bufferPos);
+                        var methodID = curBuffer.PageBytes.ReadBufferedInt(bufferPos + StreamCommunicator.IntSize(eventSize) + 2);
+                        if (curBuffer.PageBytes[bufferPos + StreamCommunicator.IntSize(eventSize) + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
+                        {
+                            curBuffer.UnsentReplayableMessages--;
+                        }
+                        bufferPos += eventSize + StreamCommunicator.IntSize(eventSize);
+                    }
+                    ReleaseAppendLock();
+                }
+            }
             var bufferEnumerator = _bufferQ.GetEnumerator();
             // Scan through pages from head to tail looking for events to output
             while (bufferEnumerator.MoveNext())
@@ -560,7 +593,8 @@ namespace Ambrosia
                     int skipEvents = (int)(Math.Max(0, firstSeqNo - curBuffer.LowestSeqNo));
 
                     int bufferPos = 0;
-                    if (reconnecting)
+                    if (true) // BUGBUG We are temporarily disabling this optimization which avoids unnecessary locking as reconnecting is not a sufficient criteria: We found a case where input is arriving during reconnection where counting was getting disabled incorrectly. Further investigation is required.
+//                    if (reconnecting) // BUGBUG We are temporarily disabling this optimization which avoids unnecessary locking as reconnecting is not a sufficient criteria: We found a case where input is arriving during reconnection where counting was getting disabled incorrectly. Further investigation is required.
                     {
                         // We need to reset how many replayable messages have been sent. We want to minimize the use of
                         // this codepath because of the expensive locking, which can compete with new RPCs getting appended
