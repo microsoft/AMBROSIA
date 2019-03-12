@@ -548,7 +548,7 @@ namespace Ambrosia
                                                            long firstSeqNo,
                                                            bool reconnecting)
         {
-            if (reconnecting)
+/*            if (reconnecting)
             {
                 var bufferE = _bufferQ.GetEnumerator();
                 while (bufferE.MoveNext())
@@ -580,7 +580,7 @@ namespace Ambrosia
                     }
                     ReleaseAppendLock();
                 }
-            }
+            }*/
             var bufferEnumerator = _bufferQ.GetEnumerator();
             // Scan through pages from head to tail looking for events to output
             while (bufferEnumerator.MoveNext())
