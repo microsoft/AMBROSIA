@@ -9,7 +9,6 @@ using static Ambrosia.ServiceConfiguration;
 using System.Threading;
 using System.Threading.Tasks;
 using Ambrosia;
-using Mono.Options;
 using System.Reactive.Linq;
 
 namespace Analytics
