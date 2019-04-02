@@ -1185,7 +1185,7 @@ namespace AmbrosiaTest
             int clientJobProcessID_Restarted3 = MyUtils.StartPerfClientJob("6001", "6000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob3_Restarted);
             
             //Delay until finished ... looking at the primary (server1) but also verify others hit done too
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_Restarted, byteSize, 45, false, testName, true);  // Total Bytes received needs to be accurate
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_Restarted, byteSize, 75, false, testName, true);  // Total Bytes received needs to be accurate
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server2_Restarted, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server3_Restarted, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob1_Restarted, byteSize, 15, false, testName, true);
