@@ -280,7 +280,8 @@ namespace Ambrosia
                 for (int i = 0; i < t.GetGenericArguments().Length; i++)
                 {
                     Type genericType = t.GetGenericArguments()[i];
-                    sb.Append(genericType.FullName);
+                    var genericTypeDefinitionInfo = GetTypeDefinitionInformation(genericType);
+                    sb.Append(genericTypeDefinitionInfo.Namespace + "." + genericTypeDefinitionInfo.Name);
                     if (i < t.GetGenericArguments().Length - 1)
                     {
                         sb.Append(",");
