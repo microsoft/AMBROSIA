@@ -1062,7 +1062,8 @@ namespace Ambrosia
                 }
                 else
                 {
-                    OnError(AzureOperationError, "Error retrieving info from Azure");
+                    string taskExceptionString = myTask.Exception == null ? "" : " Task exception: " + myTask.Exception;
+                    OnError(AzureOperationError, "Error retrieving info from Azure." + taskExceptionString);
                 }
             }
             else
