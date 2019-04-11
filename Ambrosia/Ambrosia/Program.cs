@@ -1068,7 +1068,7 @@ namespace Ambrosia
             }
             else
             {
-                OnError(AzureOperationError, "Error retrieving info from Azure");
+                OnError(AzureOperationError, "Error retrieving info from Azure. The reference to the server instance table was not initialized.");
             }
             // Make compiler happy
             return null;
