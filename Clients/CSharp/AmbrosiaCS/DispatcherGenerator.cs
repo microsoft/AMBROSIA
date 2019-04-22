@@ -200,29 +200,28 @@ namespace Ambrosia
             
             #line default
             #line hidden
-            this.Write(");\r\n");
+            this.Write(");\r\n\t\t\t\t\t\tbyte[] argExBytes = null;\r\n\t\t\t\t\t\tbyte[] arg");
             
-            #line 69 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
- } 
-            
-            #line default
-            #line hidden
-            this.Write("\t\t\t\t\t\tbyte[] argExBytes = null;\r\n\t\t\t\t\t\tint argExSize = 0;\r\n\t\t\t\t\t\tException currEx" +
-                    " = null;\r\n\t\t\t\t\t\tint arg");
-            
-            #line 73 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
+            #line 70 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Parameters.Count()));
             
             #line default
             #line hidden
-            this.Write("Size = 0;\r\n\t\t\t\t\t\tbyte[] arg");
+            this.Write("Bytes = null;\r\n");
+            
+            #line 71 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
+ } 
+            
+            #line default
+            #line hidden
+            this.Write("\t\t\t\t\t\tint argExSize = 0;\r\n\t\t\t\t\t\tException currEx = null;\r\n\t\t\t\t\t\tint arg");
             
             #line 74 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(M.Parameters.Count()));
             
             #line default
             #line hidden
-            this.Write("Bytes = null;\r\n\r\n\t\t\t\t\t\ttry \r\n\t\t\t\t\t\t{\r\n");
+            this.Write("Size = 0;\r\n\r\n\t\t\t\t\t\ttry \r\n\t\t\t\t\t\t{\r\n");
             
             #line 78 "C:\Git\AMBROSIA\Clients\CSharp\AmbrosiaCS\DispatcherGenerator.tt"
  if (!voidMethod) { 

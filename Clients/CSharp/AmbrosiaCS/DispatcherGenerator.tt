@@ -66,12 +66,12 @@ namespace <#= this.interfaceType.Namespace #>
                         // call the method
 <# if (!voidMethod) { #>
 						var p_<#= M.Parameters.Count() #> = default(<#= M.ReturnType.Name #>);
-<# } #>
 						byte[] argExBytes = null;
+						byte[] arg<#= M.Parameters.Count() #>Bytes = null;
+<# } #>
 						int argExSize = 0;
 						Exception currEx = null;
 						int arg<#= M.Parameters.Count() #>Size = 0;
-						byte[] arg<#= M.Parameters.Count() #>Bytes = null;
 
 						try 
 						{

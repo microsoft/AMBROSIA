@@ -55,10 +55,10 @@ var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
                         // call the method
 						var p_1 = default(Int32);
 						byte[] argExBytes = null;
+						byte[] arg1Bytes = null;
 						int argExSize = 0;
 						Exception currEx = null;
 						int arg1Size = 0;
-						byte[] arg1Bytes = null;
 
 						try 
 						{

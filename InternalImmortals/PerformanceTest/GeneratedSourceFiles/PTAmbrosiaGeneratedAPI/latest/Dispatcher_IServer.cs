@@ -55,10 +55,10 @@ var p_0 = p_0_ValueBuffer;
                         // call the method
 						var p_1 = default(Byte[]);
 						byte[] argExBytes = null;
+						byte[] arg1Bytes = null;
 						int argExSize = 0;
 						Exception currEx = null;
 						int arg1Size = 0;
-						byte[] arg1Bytes = null;
 
 						try 
 						{
@@ -130,11 +130,9 @@ cursor += p_1_ValueLength;
 var p_1 = Ambrosia.BinarySerializer.Deserialize<System.Double>(p_1_ValueBuffer);
 
                         // call the method
-						byte[] argExBytes = null;
 						int argExSize = 0;
 						Exception currEx = null;
 						int arg2Size = 0;
-						byte[] arg2Bytes = null;
 
 						try 
 						{
@@ -160,11 +158,9 @@ var p_1 = Ambrosia.BinarySerializer.Deserialize<System.Double>(p_1_ValueBuffer);
                     {
                         // deserialize arguments
                         // call the method
-						byte[] argExBytes = null;
 						int argExSize = 0;
 						Exception currEx = null;
 						int arg0Size = 0;
-						byte[] arg0Bytes = null;
 
 						try 
 						{
