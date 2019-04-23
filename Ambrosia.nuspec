@@ -1,8 +1,8 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0"?>
 <package >
   <metadata>
     <id>AmbrosiaLibCS</id>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <title>AmbrosiaLibCS</title>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
@@ -31,4 +31,7 @@
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\Ambrosia.dll" target="lib\netcoreapp2.0" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\Ambrosia.pdb" target="lib\netcoreapp2.0" />
   </files>
+  <contentFiles>
+    <files include="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\adv-file-ops.dll" buildAction="None" copyToOutput="true" flatten="true" />
+  </contentFiles>
 </package>
