@@ -21,7 +21,7 @@
       <dependency id="Microsoft.VisualStudio.Validation" version="15.3.58" />     
     </dependencies>
     <contentFiles>
-      <files include="cs/any/adv-file-ops.dll" buildAction="None" copyToOutput="true" />
+      <files include="cs/net46/adv-file-ops.dll" buildAction="None" copyToOutput="true" />
     </contentFiles>
   </metadata>
   <files>
