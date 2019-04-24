@@ -21,7 +21,7 @@
       <dependency id="Microsoft.VisualStudio.Validation" version="15.3.58" />     
     </dependencies>
     <contentFiles>
-      <files include="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\adv-file-ops.dll" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="adv-file-ops.dll" buildAction="None" copyToOutput="true" />
     </contentFiles>
   </metadata>
   <files>
@@ -33,5 +33,6 @@
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\AmbrosiaLibCS.pdb" target="lib\netcoreapp2.0" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\Ambrosia.dll" target="lib\netcoreapp2.0" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\Ambrosia.pdb" target="lib\netcoreapp2.0" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\adv-file-ops.dll" target="contentFiles" />
   </files>
 </package>
