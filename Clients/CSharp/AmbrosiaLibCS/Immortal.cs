@@ -212,7 +212,23 @@ namespace Ambrosia
 
             // Generate client container proxy and cache it.
             var typeOfT = typeof(T);
-            var proxyClass = typeOfT.Assembly.GetType(typeOfT.FullName + "_Implementation");
+
+            Type proxyClass;
+
+            try
+            {
+                proxyClass = typeOfT.Assembly.GetType(typeOfT.FullName + "_Implementation");
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Failed while trying to get the types for proxy type {typeOfT.FullName}", e);
+            }
+
+            if (proxyClass == null)
+            {
+                throw new InvalidOperationException($"Couldn't find {typeOfT.FullName}_Implementation in {typeOfT.Assembly.FullName}");
+            }
+
             InstanceProxy.Immortal = this;
             var instance = Activator.CreateInstance(proxyClass, serviceName, attachNeeded);
 
@@ -1283,7 +1299,19 @@ namespace Ambrosia
                     // need to set the self-proxy field
                     var getProxyMethodDef = typeof(Immortal).GetMethod("GetProxy", BindingFlags.NonPublic | BindingFlags.Instance);
                     var genericProxyMethod = getProxyMethodDef.MakeGenericMethod(baseType.GetGenericArguments().First());
-                    var selfProxy = genericProxyMethod.Invoke(myImmortal, new object[] { "", false, });
+
+                    object selfProxy;
+                    try
+                    {
+                        selfProxy = genericProxyMethod.Invoke(myImmortal, new object[] { "", false, });
+                    }
+                    catch (TargetInvocationException e)
+                    {
+                        throw new InvalidOperationException(
+                            "Failed to create the Dispatcher. Ensure that the type of the immortal inherits from Immortal<instance proxy type> where \"instance proxy type\" is the name of the type marked with the Ambrosia.InstanceProxy attribute.",
+                            e);
+                    }
+
                     var selfProxyField = baseType.GetField("thisProxy", BindingFlags.NonPublic | BindingFlags.Instance);
                     selfProxyField.SetValue(myImmortal, selfProxy);
                 }
