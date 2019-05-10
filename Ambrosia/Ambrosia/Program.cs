@@ -267,8 +267,73 @@ namespace Ambrosia
                     {
                         var methodId = PageBytes.ReadBufferedInt(cursor);
                         cursor += StreamCommunicator.IntSize(methodId);
-                        var fireAndForget = (PageBytes[cursor++] == (byte)1);
+                        var fireAndForget = (PageBytes[cursor] == (byte)1) || (PageBytes[cursor] == (byte)2);
+                        cursor++;
 
+                        string senderOfRPC = null;
+                        long sequenceNumber = 0;
+
+                        if (!fireAndForget)
+                        {
+                            // read return address and sequence number
+                            var senderOfRPCLength = PageBytes.ReadBufferedInt(cursor);
+                            var sizeOfSender = StreamCommunicator.IntSize(senderOfRPCLength);
+                            cursor += sizeOfSender;
+                            senderOfRPC = Encoding.UTF8.GetString(PageBytes, cursor, senderOfRPCLength);
+                            cursor += senderOfRPCLength;
+                            sequenceNumber = PageBytes.ReadBufferedLong(cursor);
+                            cursor += StreamCommunicator.LongSize(sequenceNumber);
+                            //Console.WriteLine("Received RPC call to method with id: {0} and sequence number {1}", methodId, sequenceNumber);
+                        }
+                        else
+                        {
+
+                            //Console.WriteLine("Received fire-and-forget RPC call to method with id: {0}", methodId);
+                        }
+
+                        var lengthOfSerializedArguments = endIndexOfCurrentRPC - cursor;
+                        cursor += lengthOfSerializedArguments;
+                    }
+                }
+            }
+
+            internal void CheckSendBytes(int posToStart,
+                                         int numRPCs,
+                                         int bytes)
+            {
+                int cursor = posToStart;
+                for (int i = 0; i < numRPCs; i++)
+                {
+                    var lengthOfCurrentRPC = PageBytes.ReadBufferedInt(cursor);
+                    cursor += StreamCommunicator.IntSize(lengthOfCurrentRPC);
+                    var endIndexOfCurrentRPC = cursor + lengthOfCurrentRPC;
+                    if (endIndexOfCurrentRPC > curLength)
+                    {
+                        Console.WriteLine("RPC Exceeded length of Page!!");
+                        throw new Exception("RPC Exceeded length of Page!!");
+                    }
+
+                    var shouldBeRPCByte = PageBytes[cursor];
+                    if (shouldBeRPCByte != AmbrosiaRuntime.RPCByte)
+                    {
+                        Console.WriteLine("UNKNOWN BYTE: {0}!!", shouldBeRPCByte);
+                        throw new Exception("Illegal leading byte in message");
+                    }
+                    cursor++;
+
+                    var isReturnValue = (PageBytes[cursor++] == (byte)1);
+
+                    if (isReturnValue) // receiving a return value
+                    {
+                        var sequenceNumber = PageBytes.ReadBufferedLong(cursor);
+                        cursor += StreamCommunicator.LongSize(sequenceNumber);
+                    }
+                    else // receiving an RPC
+                    {
+                        var methodId = PageBytes.ReadBufferedInt(cursor);
+                        cursor += StreamCommunicator.IntSize(methodId);
+                        var fireAndForget = (PageBytes[cursor] == (byte)1) || (PageBytes[cursor] == (byte)2);
+                        cursor++;
                         string senderOfRPC = null;
                         long sequenceNumber = 0;
 
@@ -470,6 +535,17 @@ namespace Ambrosia
                             outputStream.WriteInt(bytesInBatchData + 1 + StreamCommunicator.IntSize(numRPCs));
                             outputStream.WriteByte(AmbrosiaRuntime.RPCBatchByte);
                             outputStream.WriteInt(numRPCs);
+#if DEBUG
+                            try
+                            {
+                                curBuffer.CheckSendBytes(posToStart, numRPCs, pageLength - posToStart);
+                            } catch (Exception e)
+                            {
+                                Console.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
+                                curBuffer.CheckPageIntegrity();
+                                throw e;
+                            }
+#endif
                             await outputStream.WriteAsync(curBuffer.PageBytes, posToStart, bytesInBatchData);
                             await outputStream.FlushAsync();
                         }
@@ -480,6 +556,17 @@ namespace Ambrosia
                             outputStream.WriteByte(AmbrosiaRuntime.CountReplayableRPCBatchByte);
                             outputStream.WriteInt(numRPCs);
                             outputStream.WriteInt(numReplayableMessagesToSend);
+#if DEBUG
+                            try
+                            {
+                                curBuffer.CheckSendBytes(posToStart, numRPCs, pageLength - posToStart);
+                            } catch (Exception e)
+                            {
+                                Console.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
+                                curBuffer.CheckPageIntegrity();
+                                throw e;
+                            }
+#endif
                             await outputStream.WriteAsync(curBuffer.PageBytes, posToStart, bytesInBatchData);
                             await outputStream.FlushAsync();
                         }
