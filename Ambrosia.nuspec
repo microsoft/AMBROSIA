@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0"?>
 <package >
   <metadata>
     <id>AmbrosiaLibCS</id>
@@ -7,7 +7,7 @@
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <projectUrl>https://github.com/Microsoft/AMBROSIA</projectUrl>
-	<licenseUrl>https://github.com/Microsoft/AMBROSIA/blob/master/LICENSE</licenseUrl>
+	  <licenseUrl>https://github.com/Microsoft/AMBROSIA/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The AmbrosiaLibCS Binary Distribution</description>
     <releaseNotes>None yet</releaseNotes>
@@ -20,6 +20,11 @@
       <dependency id="Microsoft.VisualStudio.Threading" version="15.8.168" /> 
       <dependency id="Microsoft.VisualStudio.Validation" version="15.3.58" />     
     </dependencies>
+    <!--
+    <contentFiles>
+      <files include="cs/net46/adv-file-ops.dll" buildAction="None" copyToOutput="true" />
+    </contentFiles>
+     -->
   </metadata>
   <files>
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\AmbrosiaLibCS.dll" target="lib\net46" />
@@ -30,5 +35,9 @@
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\AmbrosiaLibCS.pdb" target="lib\netcoreapp2.0" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\Ambrosia.dll" target="lib\netcoreapp2.0" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.0\Ambrosia.pdb" target="lib\netcoreapp2.0" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\adv-file-ops.dll" target="lib\native" />
+    <!--
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\adv-file-ops.dll" target="contentFiles\cs\net46" />
+     -->
   </files>
 </package>
