@@ -2354,6 +2354,7 @@ namespace Ambrosia
             // Move to the next log file. By doing this before checkpointing, we may end up skipping a checkpoint file (failure during recovery). 
             // This is ok since we recover from the first committed checkpoint and will just skip empty log files during replay
             await _committer.SleepAsync();
+/*
             var nextLogHandle = CreateNextLogFile();
             _lastLogFile++;
             if (_sharded)
@@ -2365,7 +2366,8 @@ namespace Ambrosia
                 InsertOrReplaceServiceInfoRecord("LastLogFile", _lastLogFile.ToString());
             }
             _committer.SwitchLogStreams(nextLogHandle);
-            if (firstStart || !_activeActive)
+*/
+            if (firstStart || !_activeActive || _upgrading)
             {
                 // take the checkpoint associated with the beginning of the new log and let go of the log file lock
                 _committer.QuiesceServiceWithSendCheckpointRequest(_upgrading, becomingPrimary);
@@ -2379,6 +2381,17 @@ namespace Ambrosia
                 _checkpointWriter.Dispose();
                 _checkpointWriter = null;
             }
+            var nextLogHandle = CreateNextLogFile();
+            _lastLogFile++;
+            if (_sharded)
+            {
+                InsertOrReplaceServiceInfoRecord("LastLogFile" + _shardID.ToString(), _lastLogFile.ToString());
+            }
+            else
+            {
+                InsertOrReplaceServiceInfoRecord("LastLogFile", _lastLogFile.ToString());
+            }
+            _committer.SwitchLogStreams(nextLogHandle);
             await _committer.WakeupAsync();
             // This is a safe place to try to commit, because if this is called during recovery,
             // it's after replace and moving to the next log file. Note that this will also have the effect
@@ -2390,6 +2403,11 @@ namespace Ambrosia
         // Insance compete over write permission for LOG file & CheckPoint file
         private void DetermineRole()
         {
+            if (_upgrading)
+            {
+                _myRole = AARole.Secondary;
+                return;
+            }
             try
             {
                 // Compete for Checkpoint Write Permission
@@ -2428,6 +2446,14 @@ namespace Ambrosia
                         throw new Exception();
                     }
                     // We got the lock! Set things up so we let go of the lock at the right moment
+                    // But first check if we got the lock because the version changed, in which case, we should commit suicide
+                    var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    if (_currentVersion != readVersion)
+                    {
+
+                        OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
+                    }
+
                     await _committer.SleepAsync();
                     _committer.SwitchLogStreams(lastLogFileStream);
                     await _committer.WakeupAsync();
@@ -2437,6 +2463,13 @@ namespace Ambrosia
                 }
                 catch
                 {
+                    // Check if the version changed, in which case, we should commit suicide
+                    var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    if (_currentVersion != readVersion)
+                    {
+
+                        OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
+                    }
                     await Task.Delay(1000);
                 }
             }
