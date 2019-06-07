@@ -2454,6 +2454,16 @@ namespace Ambrosia
             return retVal;
         }
 
+        private string InfoTitle(string prefix)
+        {
+            var file = prefix;
+            if (_sharded)
+            {
+                file += _shardID.ToString();
+            }
+            return file;
+        }
+
         // Closes out the old log file and starts a new one. Takes checkpoints if this instance should
         private async Task<LogWriter> MoveServiceToNextLogFileAsync(bool firstStart = false, bool becomingPrimary = false)
         {
@@ -2468,14 +2478,7 @@ namespace Ambrosia
                 oldVerLogHandle = CreateNextOldVerLogFile();
             }
             _lastLogFile++;
-            if (_sharded)
-            {
-                InsertOrReplaceServiceInfoRecord("LastLogFile" + _shardID.ToString(), _lastLogFile.ToString());
-            }
-            else
-            {
-                InsertOrReplaceServiceInfoRecord("LastLogFile", _lastLogFile.ToString());
-            }
+            InsertOrReplaceServiceInfoRecord(InfoTitle("LastLogFile"), _lastLogFile.ToString());
             _committer.SwitchLogStreams(nextLogHandle);
             if (!firstStart && _activeActive && !_upgrading && becomingPrimary)
             {
@@ -2719,7 +2722,7 @@ namespace Ambrosia
                     }
                     else
                     {
-                        newLastLogFile = long.Parse(RetrieveServiceInfo("LastLogFile"));
+                        newLastLogFile = long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile")));
                     }
                     if (newLastLogFile > _lastLogFile) // a new log file has been written
                     {
@@ -3634,14 +3637,7 @@ namespace Ambrosia
             _checkpointWriter.Write(_localServiceReceiveFromStream, _lastReceivedCheckpointSize);
             _checkpointWriter.Flush();
             _lastCommittedCheckpoint++;
-            if (_sharded)
-            {
-                InsertOrReplaceServiceInfoRecord("LastCommittedCheckpoint" + _shardID.ToString(), _lastCommittedCheckpoint.ToString());
-            }
-            else
-            {
-                InsertOrReplaceServiceInfoRecord("LastCommittedCheckpoint", _lastCommittedCheckpoint.ToString());
-            }
+            InsertOrReplaceServiceInfoRecord(InfoTitle("LastCommittedCheckpoint"), _lastCommittedCheckpoint.ToString());
 
             // Trim output buffers of inputs, since the inputs are now part of the checkpoint and can't be lost. Must do this after the checkpoint has been
             // successfully written
