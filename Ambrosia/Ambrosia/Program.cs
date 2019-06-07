@@ -2283,23 +2283,28 @@ namespace Ambrosia
             }
             else
             {
-                // We are starting for the first time. This is the primary
-                _restartWithRecovery = false;
-                _lastCommittedCheckpoint = 0;
-                _lastLogFile = 0;
-                _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
-                _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
-                _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
-
-                _myRole = AARole.Primary;
-
-                _checkpointWriter = null;
-                _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
-                Connect(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
-                await MoveServiceToNextLogFileAsync(true, true);
-                InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
+                await StartAsync();
             }
+        }
+
+        private async Task StartAsync()
+        {
+            // We are starting for the first time. This is the primary
+            _restartWithRecovery = false;
+            _lastCommittedCheckpoint = 0;
+            _lastLogFile = 0;
+            _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
+            _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
+            _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
+
+            _myRole = AARole.Primary;
+
+            _checkpointWriter = null;
+            _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
+            Connect(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
+            Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+            await MoveServiceToNextLogFileAsync(true, true);
+            InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
         }
 
         private void UnbufferNonreplayableCalls()
