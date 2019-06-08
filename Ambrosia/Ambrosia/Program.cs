@@ -3584,7 +3584,7 @@ namespace Ambrosia
             }
         }
 
-        public void Initialize(int serviceReceiveFromPort,
+        public void Setup(int serviceReceiveFromPort,
                        int serviceSendToPort,
                        string serviceName,
                        string serviceLogPath,
@@ -3595,10 +3595,12 @@ namespace Ambrosia
                        long logTriggerSizeMB,
                        string storageConnectionString,
                        long currentVersion,
-                       long upgradeToVersion
-                       )
+                       long upgradeToVersion,
+                       bool runningRepo,
+                       bool sharded
+            )
         {
-            _runningRepro = false;
+            _runningRepro = runningRepo;
             _currentVersion = currentVersion;
             _upgradeToVersion = upgradeToVersion;
             _upgrading = (_currentVersion < _upgradeToVersion);
@@ -3620,10 +3622,46 @@ namespace Ambrosia
             _localServiceSendToPort = serviceSendToPort;
             _serviceName = serviceName;
             _storageConnectionString = storageConnectionString;
-            _sharded = false;
+            _sharded = sharded;
+
             _coral = ClientLibrary;
 
             Console.WriteLine("Logs directory: {0}", _serviceLogPath);
+
+        }
+
+        public void Initialize(int serviceReceiveFromPort,
+                       int serviceSendToPort,
+                       string serviceName,
+                       string serviceLogPath,
+                       bool? createService,
+                       bool pauseAtStart,
+                       bool persistLogs,
+                       bool activeActive,
+                       long logTriggerSizeMB,
+                       string storageConnectionString,
+                       long currentVersion,
+                       long upgradeToVersion
+                       )
+        {
+            bool runningRepro = false;
+            bool sharded = false;
+            Setup(
+                serviceReceiveFromPort,
+                serviceSendToPort,
+                serviceName,
+                serviceLogPath,
+                createService,
+                pauseAtStart,
+                persistLogs,
+                activeActive,
+                logTriggerSizeMB,
+                storageConnectionString,
+                currentVersion,
+                upgradeToVersion,
+                runningRepro,
+                sharded
+            );
 
             if (createService == null)
             {
