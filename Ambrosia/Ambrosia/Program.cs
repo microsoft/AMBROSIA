@@ -3695,6 +3695,9 @@ namespace Ambrosia
                 p = (AmbrosiaRuntimeParams)xmlSerializer.Deserialize(textReader);
             }
 
+            bool runningRepro = false;
+            bool sharded = false;
+
             Initialize(
                 p.serviceReceiveFromPort,
                 p.serviceSendToPort,
@@ -3707,7 +3710,9 @@ namespace Ambrosia
                 p.logTriggerSizeMB,
                 p.storageConnectionString,
                 p.currentVersion,
-                p.upgradeToVersion
+                p.upgradeToVersion,
+                runningRepro,
+                sharded
             );
             return;
         }
@@ -3766,10 +3771,12 @@ namespace Ambrosia
                        long logTriggerSizeMB,
                        string storageConnectionString,
                        long currentVersion,
-                       long upgradeToVersion
+                       long upgradeToVersion,
+                       bool runningRepro,
+                       bool sharded
                        )
         {
-            _runningRepro = false;
+            _runningRepro = runningRepro;
             _currentVersion = currentVersion;
             _upgradeToVersion = upgradeToVersion;
             _upgrading = (_currentVersion < _upgradeToVersion);
@@ -3782,7 +3789,6 @@ namespace Ambrosia
             {
                 Console.WriteLine("Ready ...");
             }
-
             _persistLogs = persistLogs;
             _activeActive = activeActive;
             _newLogTriggerSize = logTriggerSizeMB * 1000000;
@@ -3791,7 +3797,7 @@ namespace Ambrosia
             _localServiceSendToPort = serviceSendToPort;
             _serviceName = serviceName;
             _storageConnectionString = storageConnectionString;
-            _sharded = false;
+            _sharded = sharded;
             _coral = ClientLibrary;
 
             Console.WriteLine("Logs directory: {0}", _serviceLogPath);
