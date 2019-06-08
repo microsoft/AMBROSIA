@@ -2272,7 +2272,7 @@ namespace Ambrosia
                 }
                 await ReplayAsync(replayStream);
             }
-            var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+            var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
             if (_currentVersion != readVersion)
             {
 
@@ -2288,7 +2288,7 @@ namespace Ambrosia
             if (wasUpgrading)
             {
                 // Successfully wrote out our new first checkpoint in the upgraded version, can now officially take the version upgrade
-                InsertOrReplaceServiceInfoRecord("CurrentVersion", _upgradeToVersion.ToString());
+                InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _upgradeToVersion.ToString());
             }
         }
 
