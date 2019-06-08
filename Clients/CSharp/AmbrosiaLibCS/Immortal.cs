@@ -375,6 +375,18 @@ namespace Ambrosia
                                 break;
                             }
 
+                        case AmbrosiaRuntime.becomingPrimaryByte:
+                            {
+#if DEBUG
+                                Console.WriteLine("*X* Received a becoming primary message");
+                                _cursor++;
+                                this.IsPrimary = true;
+                                this.BecomingPrimary();
+                                break;
+#endif
+                            }
+
+
                         case AmbrosiaRuntime.takeBecomingPrimaryCheckpointByte:
                             {
 #if DEBUG
