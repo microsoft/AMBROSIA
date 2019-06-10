@@ -379,11 +379,11 @@ namespace Ambrosia
                             {
 #if DEBUG
                                 Console.WriteLine("*X* Received a becoming primary message");
+#endif
                                 _cursor++;
                                 this.IsPrimary = true;
                                 this.BecomingPrimary();
                                 break;
-#endif
                             }
 
 
