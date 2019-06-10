@@ -2223,6 +2223,7 @@ namespace Ambrosia
             {
                 Recovering = true;
                 await RecoverAsync(checkpointToLoad, testUpgrade);
+                await PrepareToBecomePrimaryAsync();
                 Recovering = false;
             }
             else
@@ -2291,6 +2292,10 @@ namespace Ambrosia
                 }
                 await ReplayAsync(replayStream);
             }
+        }
+
+        private async Task PrepareToBecomePrimaryAsync()
+        {
             var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
             if (_currentVersion != readVersion)
             {
