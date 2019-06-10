@@ -1996,6 +1996,7 @@ namespace Ambrosia
         bool _sharded;
         internal bool _createService;
         long _shardID;
+        internal long _recoverShardID = -1;
         bool _runningRepro;
         long _currentVersion;
         long _upgradeToVersion;
@@ -2212,6 +2213,17 @@ namespace Ambrosia
             }
         }
 
+        private string CheckpointFileName(long lastCommittedCheckpoint)
+        {
+            if (_sharded)
+            {
+                return _serviceLogPath + _serviceName + "-" + _recoverShardID.ToString() + "\\" + "serverchkpt" + lastCommittedCheckpoint.ToString();
+            } else
+            {
+                return _logFileNameBase + "chkpt" + lastCommittedCheckpoint.ToString();
+            }
+        }
+
         private async Task RecoverAsync(long checkpointToLoad = -1, bool testUpgrade = false)
         {
             _restartWithRecovery = true;
@@ -2241,7 +2253,8 @@ namespace Ambrosia
                 }
             }
 
-            using (LogReader checkpointStream = new LogReader(_logFileNameBase + "chkpt" + _lastCommittedCheckpoint.ToString()))
+
+            using (LogReader checkpointStream = new LogReader(CheckpointFileName(_lastCommittedCheckpoint)))
             {
                 // recover the checkpoint - Note that everything except the replay data must have been written successfully or we
                 // won't think we have a valid checkpoint here. Since we can only be the secondary or checkpointer, the committer doesn't write to the replay log
@@ -2406,7 +2419,7 @@ namespace Ambrosia
             try
             {
                 // Compete for Checkpoint Write Permission
-                _checkpointWriter = new LogWriter(_logFileNameBase + "chkpt" + (_lastCommittedCheckpoint).ToString(), 1024 * 1024, 6, true);
+                _checkpointWriter = new LogWriter(CheckpointFileName(_lastCommittedCheckpoint), 1024 * 1024, 6, true);
                 _myRole = AARole.Checkpointer; // I'm a checkpointing secondary
                 var oldCheckpoint = _lastCommittedCheckpoint;
                 _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
@@ -3419,14 +3432,14 @@ namespace Ambrosia
 
         private LogWriter OpenNextCheckpointFile()
         {
-            if (LogWriter.FileExists(_logFileNameBase + "chkpt" + (_lastCommittedCheckpoint + 1).ToString()))
+            if (LogWriter.FileExists(CheckpointFileName(_lastCommittedCheckpoint + 1)))
             {
-                File.Delete(_logFileNameBase + (_lastCommittedCheckpoint + 1).ToString());
+                File.Delete(CheckpointFileName(_lastCommittedCheckpoint + 1));
             }
             LogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(_logFileNameBase + "chkpt" + (_lastCommittedCheckpoint + 1).ToString(), 1024 * 1024, 6);
+                retVal = new LogWriter(CheckpointFileName(_lastCommittedCheckpoint + 1), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
@@ -3437,7 +3450,7 @@ namespace Ambrosia
 
         private void CleanupOldCheckpoint()
         {
-            var fileNameToDelete = _logFileNameBase + (_lastCommittedCheckpoint - 1).ToString();
+            var fileNameToDelete = CheckpointFileName(_lastCommittedCheckpoint - 1);
             if (LogWriter.FileExists(fileNameToDelete))
             {
                 File.Delete(fileNameToDelete);
@@ -3570,9 +3583,9 @@ namespace Ambrosia
                 {
                     OnError(MissingCheckpoint, "No checkpoint/logs directory");
                 }
+
                 var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
-                if (!LogWriter.FileExists(Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion,
-                                                       "server" + "chkpt" + lastCommittedCheckpoint)))
+                if (!LogWriter.FileExists(CheckpointFileName(lastCommittedCheckpoint)))
                 {
                     OnError(MissingCheckpoint, "Missing checkpoint " + lastCommittedCheckpoint.ToString());
                 }
