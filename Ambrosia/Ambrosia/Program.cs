@@ -2315,6 +2315,34 @@ namespace Ambrosia
             }
         }
 
+        private async Task RecoverShardAsync(long[] recoverFromShards, long checkpointToLoad = -1, bool testUpgrade = false)
+        {
+            Recovering = true;
+            var unshardServiceName = _serviceName;
+            _serviceName += "-" + _shardID.ToString();
+
+            var committers = new Committer[recoverFromShards.Length];
+            var inputSets = new ConcurrentDictionary<string, InputConnectionRecord>[recoverFromShards.Length];
+            var outputSets = new ConcurrentDictionary<string, OutputConnectionRecord>[recoverFromShards.Length];
+
+            for (int i = 0; i < recoverFromShards.Length; i++)
+            {
+                _recoverShardID = recoverFromShards[i];
+                await RecoverAsync(checkpointToLoad, testUpgrade);
+                committers[i] = _committer;
+                _committer = null;
+                inputSets[i] = _inputs;
+                _inputs = null;
+                outputSets[i] = _outputs;
+                _outputs = null;
+            }
+            _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
+            _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
+            _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
+            await PrepareToBecomePrimaryAsync();
+            Recovering = false;
+        }
+
         private async Task StartAsync()
         {
             // We are starting for the first time. This is the primary
@@ -2334,6 +2362,13 @@ namespace Ambrosia
             await MoveServiceToNextLogFileAsync(true, true);
             InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
         }
+
+        private async Task StartShardAsync()
+        {
+            _serviceName += "-" + _shardID.ToString();
+            await StartAsync();
+        }
+
 
         private void UnbufferNonreplayableCalls()
         {
@@ -3614,6 +3649,46 @@ namespace Ambrosia
                 p.currentVersion,
                 p.upgradeToVersion
             );
+        }
+
+        public void Initialize(object param, long[] recoverFromShards, long shardID, Func<long, long> shardMap)
+        {
+            var p = (AmbrosiaRuntimeParams)param;
+            bool runningRepro = true;
+            bool sharded = true;
+            _shardID = shardID;
+
+            Setup(
+                p.serviceReceiveFromPort,
+                p.serviceSendToPort,
+                p.serviceName,
+                p.serviceLogPath,
+                p.createService,
+                p.pauseAtStart,
+                p.persistLogs,
+                p.activeActive,
+                p.logTriggerSizeMB,
+                p.storageConnectionString,
+                p.currentVersion,
+                p.upgradeToVersion,
+                runningRepro,
+                sharded
+            );
+
+            AddAsyncInputEndpoint(AmbrosiaDataInputsName, new AmbrosiaInput(this, "data"));
+            AddAsyncInputEndpoint(AmbrosiaControlInputsName, new AmbrosiaInput(this, "control"));
+            AddAsyncOutputEndpoint(AmbrosiaDataOutputsName, new AmbrosiaOutput(this, "data"));
+            AddAsyncOutputEndpoint(AmbrosiaControlOutputsName, new AmbrosiaOutput(this, "control"));
+
+            PrepareToRecoverOrStart();
+
+            if (_createService)
+            {
+                StartShardAsync().GetAwaiter();
+            } else
+            {
+                RecoverShardAsync(recoverFromShards).GetAwaiter();
+            }
         }
 
         internal void RuntimeChecksOnProcessStart()
