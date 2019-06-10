@@ -2224,6 +2224,18 @@ namespace Ambrosia
             }
         }
 
+        private string LogFileName(long lastLogFile)
+        {
+            if (_sharded)
+            {
+                return _logFileNameBase + "log" + _recoverShardID.ToString() + lastLogFile.ToString();
+            }
+            else
+            {
+                return _logFileNameBase + "log" + _lastLogFile.ToString();
+            }
+        }
+
         private async Task RecoverAsync(long checkpointToLoad = -1, bool testUpgrade = false)
         {
             _restartWithRecovery = true;
@@ -2271,7 +2283,7 @@ namespace Ambrosia
                 _committer.SendCheckpointToRecoverFrom(serviceCheckpoint.Buffer, serviceCheckpoint.Length, checkpointStream);
             }
 
-            using (LogReader replayStream = new LogReader(_logFileNameBase + "log" + _lastLogFile.ToString()))
+            using (LogReader replayStream = new LogReader(LogFileName(_lastLogFile)))
             {
                 if (_myRole == AARole.Secondary && !_runningRepro)
                 {
@@ -2355,14 +2367,14 @@ namespace Ambrosia
 
         private LogWriter CreateNextLogFile()
         {
-            if (LogWriter.FileExists(_logFileNameBase + "log" + (_lastLogFile + 1).ToString()))
+            if (LogWriter.FileExists(LogFileName(_lastLogFile + 1)))
             {
-                File.Delete(_logFileNameBase + "log" + (_lastLogFile + 1).ToString());
+                File.Delete(LogFileName(_lastLogFile + 1));
             }
             LogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(_logFileNameBase + "log" + (_lastLogFile + 1).ToString(), 1024 * 1024, 6);
+                retVal = new LogWriter(LogFileName(_lastLogFile + 1), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
@@ -2446,7 +2458,7 @@ namespace Ambrosia
                 {
                     var oldLastLogFile = _lastLogFile;
                     // Compete for log write permission - non destructive open for write - open for append
-                    var lastLogFileStream = new LogWriter(_logFileNameBase + "log" + (oldLastLogFile).ToString(), 1024 * 1024, 6, true);
+                    var lastLogFileStream = new LogWriter(LogFileName(oldLastLogFile), 1024 * 1024, 6, true);
                     if (long.Parse(RetrieveServiceInfo("LastLogFile")) != oldLastLogFile)
                     {
                         // We got an old log. Try again
@@ -2562,11 +2574,11 @@ namespace Ambrosia
                         // Move to the next log file for reading only. We may need to take a checkpoint
                         _lastLogFile++;
                         replayStream.Dispose();
-                        if (!LogWriter.FileExists(_logFileNameBase + "log" + _lastLogFile.ToString()))
+                        if (!LogWriter.FileExists(LogFileName(_lastLogFile)))
                         {
                             OnError(MissingLog, "Missing log in replay " + _lastLogFile.ToString());
                         }
-                        replayStream = new LogReader(_logFileNameBase + "log" + _lastLogFile.ToString());
+                        replayStream = new LogReader(LogFileName(_lastLogFile));
                         if (_myRole == AARole.Checkpointer)
                         {
                             // take the checkpoint associated with the beginning of the new log
@@ -2583,7 +2595,7 @@ namespace Ambrosia
                     var newLastLogFile = _lastLogFile;
                     if (_runningRepro)
                     {
-                        if (LogWriter.FileExists(_logFileNameBase + "log" + (_lastLogFile + 1).ToString()))
+                        if (LogWriter.FileExists(LogFileName(_lastLogFile + 1)))
                         {
                             // If there is a next file, then move to it
                             newLastLogFile = _lastLogFile + 1;
@@ -3589,8 +3601,7 @@ namespace Ambrosia
                 {
                     OnError(MissingCheckpoint, "Missing checkpoint " + lastCommittedCheckpoint.ToString());
                 }
-                if (!LogWriter.FileExists(Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion,
-                                          "server" + "log" + lastCommittedCheckpoint)))
+                if (!LogWriter.FileExists(LogFileName(lastCommittedCheckpoint)))
                 {
                     OnError(MissingLog, "Missing log " + lastCommittedCheckpoint.ToString());
                 }
