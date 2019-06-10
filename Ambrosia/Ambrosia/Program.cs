@@ -1058,6 +1058,8 @@ namespace Ambrosia
         public long currentVersion;
         public long upgradeToVersion;
         public long shardID;
+        public long[] oldShards;
+        public long[] newShards;
     }
 
     public class AmbrosiaRuntime : VertexBase
@@ -2030,6 +2032,8 @@ namespace Ambrosia
         bool _sharded;
         internal bool _createService;
         long _shardID;
+        long[] _oldShards;
+        long[] _newShards;
         bool _runningRepro;
         long _currentVersion;
         long _upgradeToVersion;
@@ -2079,7 +2083,7 @@ namespace Ambrosia
         // true when this service is in an active/active configuration. False if set to single node
         bool _activeActive;
 
-        enum AARole { Primary, Secondary, Checkpointer };
+        enum AARole { Primary, Secondary, Checkpointer, Reshard };
         AARole _myRole;
         // Log size at which we start a new log file. This triggers a checkpoint, <= 0 if manual only checkpointing is done
         long _newLogTriggerSize;
@@ -2090,8 +2094,9 @@ namespace Ambrosia
         // A handle to a file used for an upgrading secondary to bring down the primary and prevent primary promotion amongst secondaries.
         // As long as the write lock is held, no promotion can happen
         FileStream _killFileHandle = null;
-
-
+        // A handle to a file used to signal to other shards that this shard has finished upgrading.
+        // When all of these files exists, then all shards know re-sharding is complete.
+        FileStream _reshardFileHandle = null;
 
         const int UnexpectedError = 0;
         const int VersionMismatch = 1;
@@ -2261,7 +2266,7 @@ namespace Ambrosia
             CheckpointingService = false;
             Recovering = false;
             PrepareToRecoverOrStart();
-            if (!_runningRepro && (_createService || !_sharded))
+            if (!_runningRepro && (_createService || _oldShards.Length == 0))
             {
                 RuntimeChecksOnProcessStart();
             }
@@ -2271,14 +2276,20 @@ namespace Ambrosia
             {
                 Recovering = true;
                 _restartWithRecovery = true;
-                MachineState state = new MachineState();
-                state.ShardID = _shardID;
-                await RecoverAsync(state, checkpointToLoad, testUpgrade);
-                _lastCommittedCheckpoint = state.LastCommittedCheckpoint;
-                _lastLogFile = state.LastLogFile;
-                _inputs = state.Inputs;
-                _outputs = state.Outputs;
-                _committer = state.Committer;
+                if (_oldShards.Length > 0)
+                {
+                    RecoverFromShards(checkpointToLoad, testUpgrade);
+                } else
+                {
+                    MachineState state = new MachineState();
+                    state.ShardID = _shardID;
+                    await RecoverAsync(state, checkpointToLoad, testUpgrade);
+                    _lastCommittedCheckpoint = state.LastCommittedCheckpoint;
+                    _lastLogFile = state.LastLogFile;
+                    _inputs = state.Inputs;
+                    _outputs = state.Outputs;
+                    _committer = state.Committer;
+                }
                 await PrepareToBecomePrimaryAsync();
                 Recovering = false;
             }
@@ -2375,10 +2386,120 @@ namespace Ambrosia
                 await MoveServiceToNextLogFileAsync();
             }
 
-            if (_activeActive)
+            if (_activeActive || _shardID > 0)
             {
                 // Start task to periodically check if someone's trying to upgrade
                 (new Task(() => CheckForUpgradeAsync())).Start();
+            }
+        }
+
+        private void RecoverFromShard(MachineState state, long shardID, long checkpointToLoad = -1, bool testUpgrade = false)
+        {
+            RecoverAsync(state, checkpointToLoad, testUpgrade).GetAwaiter();
+        }
+
+        private void MergeShardState(MachineState[] states)
+        {
+            for (int i = 0; i < states.Length; i++)
+            {
+                foreach (var kv in states[i].Inputs)
+                {
+                    string source = kv.Key;
+                    InputConnectionRecord shardInputRecord = kv.Value;
+                    if (_inputs.ContainsKey(source))
+                    {
+                        InputConnectionRecord localInputRecord = _inputs[source];
+                        localInputRecord.LastProcessedID = Math.Max(localInputRecord.LastProcessedID, shardInputRecord.LastProcessedID);
+                        localInputRecord.LastProcessedReplayableID = Math.Max(localInputRecord.LastProcessedReplayableID, shardInputRecord.LastProcessedReplayableID);
+                    } else
+                    {
+                        _inputs[source] = shardInputRecord;
+                    }
+                }
+
+                foreach (var kv in states[i].Outputs)
+                {
+                    string destination = kv.Key;
+                    OutputConnectionRecord shardOutputRecord = kv.Value;
+                    if (_outputs.ContainsKey(destination))
+                    {
+                        OutputConnectionRecord localOutputRecord = _outputs[destination];
+                        localOutputRecord.LastSeqSentToReceiver = Math.Max(localOutputRecord.LastSeqSentToReceiver, shardOutputRecord.LastSeqSentToReceiver);
+                        localOutputRecord.LastSeqNoFromLocalService = Math.Max(localOutputRecord.LastSeqNoFromLocalService, shardOutputRecord.LastSeqNoFromLocalService);
+                    } else
+                    {
+                        _outputs[destination] = shardOutputRecord;
+                    }
+                }
+            }
+        }
+
+        private void RecoverFromShards(long checkpointToLoad = -1, bool testUpgrade = false)
+        {
+            _myRole = AARole.Reshard;
+            var threads = new Thread[_oldShards.Length];
+            var states = new MachineState[_oldShards.Length];
+            InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
+
+            for (int i = 0; i < _oldShards.Length; i++)
+            {
+                long shardID = _oldShards[i];
+                MachineState state = new MachineState();
+                states[i] = state;
+                states[i].ShardID = shardID;
+                threads[i] = new Thread(() => RecoverFromShard(state, shardID, checkpointToLoad, testUpgrade)) { IsBackground = true };
+                threads[i].Start();
+            }
+
+            _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
+            _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
+            _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
+
+            // Wait for replay for all shards to occur
+            for (int i = 0; i < threads.Length; i++)
+            {
+                threads[i].Join();
+            }
+
+            MergeShardState(states);
+            WaitForOtherShards();
+            LockReshardFile();
+            if (_newShards.Last() == _shardID)
+            {
+                KillParentShards(_oldShards);
+            }
+
+            _myRole = AARole.Primary;
+        }
+
+        private void WaitForOtherShards()
+        {
+            int index = -1;
+            for (int i = 0; i < _newShards.Length; i++)
+            {
+                if (_newShards[i] == _shardID)
+                {
+                    index = i;
+                }
+            }
+            if (index == -1)
+            {
+                throw new Exception("Shard ID not in list");
+            }
+            if (index > 0)
+            {
+                while (!File.Exists(ReshardFileName(_newShards[index - 1])))
+                {
+                    Thread.Yield();
+                }
+            }
+        }
+
+        private void KillParentShards(long[] shardIds)
+        {
+            for (int i = 0; i < shardIds.Length; i++)
+            {
+                LockKillFile(shardIds[i]);
             }
         }
 
@@ -2400,7 +2521,7 @@ namespace Ambrosia
             Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
             await MoveServiceToNextLogFileAsync(true, true);
             InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
-            if (_activeActive)
+            if (_activeActive || _shardID > 0)
             {
                 // Start task to periodically check if someone's trying to upgrade
                 (new Task(() => CheckForUpgradeAsync())).Start();
@@ -2500,6 +2621,11 @@ namespace Ambrosia
             return LogFileNameBase(-1, shardID) + "killFile";
         }
 
+        private string ReshardFileName(long shardID = -1)
+        {
+            return LogFileNameBase(-1, shardID) + "reshardFile";
+        }
+
         private LogWriter CreateNextOldVerLogFile()
         {
             if (LogWriter.FileExists(LogFileName(_lastLogFile + 1, _currentVersion)))
@@ -2523,6 +2649,11 @@ namespace Ambrosia
         private void LockKillFile(long shardID = -1)
         {
             _killFileHandle = LockFile(KillFileName(shardID));
+        }
+
+        private void LockReshardFile()
+        {
+            _reshardFileHandle = LockFile(ReshardFileName());
         }
 
         private FileStream LockFile(string file)
@@ -3802,6 +3933,33 @@ namespace Ambrosia
             bool runningRepro = false;
             bool sharded = p.shardID > 0;
             _shardID = p.shardID;
+            _oldShards = p.oldShards;
+            _newShards = p.newShards;
+
+            Initialize(
+                p.serviceReceiveFromPort,
+                p.serviceSendToPort,
+                p.serviceName,
+                p.serviceLogPath,
+                p.createService,
+                p.pauseAtStart,
+                p.persistLogs,
+                p.activeActive,
+                p.logTriggerSizeMB,
+                p.storageConnectionString,
+                p.currentVersion,
+                p.upgradeToVersion,
+                runningRepro,
+                sharded
+            );
+        }
+        public void Initialize(object param, long[] oldShards, long shardID, Func<long, long> shardMap)
+        {
+            var p = (AmbrosiaRuntimeParams)param;
+            bool runningRepro = true;
+            bool sharded = true;
+            _shardID = shardID;
+            _oldShards = oldShards;
 
             Initialize(
                 p.serviceReceiveFromPort,
@@ -3968,6 +4126,8 @@ namespace Ambrosia
         private static int _currentVersion = 0;
         private static long _upgradeVersion = -1;
         private static long _shardID = -1;
+        private static string _oldShards = "";
+        private static string _newShards = "";
 
         static void Main(string[] args)
         {
@@ -3981,6 +4141,7 @@ namespace Ambrosia
                         _isTestingUpgrade, _serviceReceiveFromPort, _serviceSendToPort);
                     return;
                 case LocalAmbrosiaRuntimeModes.AddReplica:
+                case LocalAmbrosiaRuntimeModes.AddShard:
                 case LocalAmbrosiaRuntimeModes.RegisterInstance:
                     if (_runtimeMode == LocalAmbrosiaRuntimeModes.AddReplica)
                     {
@@ -3990,6 +4151,10 @@ namespace Ambrosia
                     client.DisableArtifactUploading();
 
                     var replicaName = $"{_instanceName}{_replicaNumber}";
+                    if (_shardID > 0)
+                    {
+                        replicaName += "-" + _shardID.ToString();
+                    }
                     AmbrosiaRuntimeParams param = new AmbrosiaRuntimeParams();
                     param.createService = _recoveryMode == AmbrosiaRecoveryModes.A
                         ? (bool?)null
@@ -4007,6 +4172,8 @@ namespace Ambrosia
                     param.AmbrosiaBinariesLocation = _binariesLocation;
                     param.storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
                     param.shardID = _shardID;
+                    param.oldShards = ParseLongs(_oldShards);
+                    param.newShards = ParseLongs(_newShards);
 
                     try
                     {
@@ -4042,6 +4209,23 @@ namespace Ambrosia
                 default:
                     throw new NotSupportedException($"Runtime mode: {_runtimeMode} not supported.");
             }
+        }
+
+        private static long[] ParseLongs(string s)
+        {
+            if (s.Trim() == "")
+            {
+                return new long[] { };
+            }
+            string[] shards = s.Split(',');
+            long[] ids = new long[shards.Length];
+
+            for (int i = 0; i < shards.Length; i++)
+            {
+                ids[i] = long.Parse(shards[i]);
+            }
+            return ids;
+
         }
 
         private static void ParseAndValidateOptions(string[] args)
@@ -4087,6 +4271,12 @@ namespace Ambrosia
                 { "r|replicaNum=", "The replica # [REQUIRED].", r => _replicaNumber = int.Parse(r) },
             }.AddMany(registerInstanceOptionSet);
 
+            var addShardOptionSet = new OptionSet
+            {
+                {"os|oldShards=", "Comma separated list of shards to recover from [REQUIRED].", os => _oldShards = os },
+                {"ns|newShards=", "Comma separated list of new shards being created [REQUIRED].", ns => _newShards = ns }
+            }.AddMany(registerInstanceOptionSet);
+
             var debugInstanceOptionSet = basicOptions.AddMany(new OptionSet {
 
                 { "c|checkpoint=", "The checkpoint # to load.", c => _checkpointToLoad = long.Parse(c) },
@@ -4096,6 +4286,7 @@ namespace Ambrosia
 
             registerInstanceOptionSet = registerInstanceOptionSet.AddMany(helpOption);
             addReplicaOptionSet = addReplicaOptionSet.AddMany(helpOption);
+            addShardOptionSet = addShardOptionSet.AddMany(helpOption);
             debugInstanceOptionSet = debugInstanceOptionSet.AddMany(helpOption);
 
 
@@ -4103,6 +4294,7 @@ namespace Ambrosia
             {
                 { LocalAmbrosiaRuntimeModes.RegisterInstance, registerInstanceOptionSet},
                 { LocalAmbrosiaRuntimeModes.AddReplica, addReplicaOptionSet},
+                { LocalAmbrosiaRuntimeModes.AddShard, addShardOptionSet },
                 { LocalAmbrosiaRuntimeModes.DebugInstance, debugInstanceOptionSet},
             };
 
@@ -4134,6 +4326,7 @@ namespace Ambrosia
         public enum LocalAmbrosiaRuntimeModes
         {
             AddReplica,
+            AddShard,
             RegisterInstance,
             DebugInstance,
         }
@@ -4167,6 +4360,13 @@ namespace Ambrosia
                 if (_replicaNumber == 0)
                 {
                     errorMessage += "Replica number is required.\n";
+                }
+            }
+            if (_runtimeMode == LocalAmbrosiaRuntimeModes.AddShard)
+            {
+                if (_shardID == -1)
+                {
+                    errorMessage += "Shard ID is required.\n";
                 }
             }
 

@@ -20,12 +20,17 @@ namespace CRA.Worker
         private static string _secureNetworkClassName;
         private static bool _isActiveActive = false;
         private static int _replicaNumber = 0;
+        private static long _shardID = -1;
 
         static void Main(string[] args)
         {
             ParseAndValidateOptions(args);
 
             var replicaName = $"{_instanceName}{_replicaNumber}";
+            if (_shardID > 0)
+            {
+                replicaName += "-" + _shardID.ToString();
+            }
 
             if (_ipAddress == null)
             {
@@ -127,6 +132,7 @@ namespace CRA.Worker
                 { "p|port=", "An port number [REQUIRED].", p => _port = Int32.Parse(p) },
                 {"aa|activeActive", "Is active-active enabled.", aa => _isActiveActive = true},
                 { "r|replicaNum=", "The replica #", r => { _replicaNumber = int.Parse(r); _isActiveActive=true; } },
+                { "si|shardId=", "The shardID", si => _shardID = long.Parse(si) },
                 { "an|assemblyName=", "The secure network assembly name.", an => _secureNetworkAssemblyName = an },
                 { "ac|assemblyClass=", "The secure network assembly class.", ac => _secureNetworkClassName = ac },
                 { "ip|IPAddr=", "Override automatic self IP detection", i => _ipAddress = i },
