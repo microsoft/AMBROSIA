@@ -2242,7 +2242,7 @@ namespace Ambrosia
             if (!_runningRepro)
             {
                 // We are recovering - find the last committed checkpoint
-                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
+                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
             }
             else
             {
@@ -2334,7 +2334,7 @@ namespace Ambrosia
             Connect(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
             Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
             await MoveServiceToNextLogFileAsync(true, true);
-            InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
+            InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
         }
 
         private void UnbufferNonreplayableCalls()
@@ -2434,7 +2434,7 @@ namespace Ambrosia
                 _checkpointWriter = new LogWriter(CheckpointFileName(_lastCommittedCheckpoint), 1024 * 1024, 6, true);
                 _myRole = AARole.Checkpointer; // I'm a checkpointing secondary
                 var oldCheckpoint = _lastCommittedCheckpoint;
-                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
+                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
                 if (oldCheckpoint != _lastCommittedCheckpoint)
                 {
                     _checkpointWriter.Dispose();
@@ -2459,7 +2459,7 @@ namespace Ambrosia
                     var oldLastLogFile = _lastLogFile;
                     // Compete for log write permission - non destructive open for write - open for append
                     var lastLogFileStream = new LogWriter(LogFileName(oldLastLogFile), 1024 * 1024, 6, true);
-                    if (long.Parse(RetrieveServiceInfo("LastLogFile")) != oldLastLogFile)
+                    if (long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile"))) != oldLastLogFile)
                     {
                         // We got an old log. Try again
                         lastLogFileStream.Dispose();
@@ -3573,11 +3573,11 @@ namespace Ambrosia
                 long readVersion = -1;
                 try
                 {
-                    readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
                 }
                 catch
                 {
-                    OnError(VersionMismatch, "Version mismatch on process start: Expected " + _currentVersion + " was: " + RetrieveServiceInfo("CurrentVersion"));
+                    OnError(VersionMismatch, "Version mismatch on process start: Expected " + _currentVersion + " was: " + RetrieveServiceInfo(InfoTitle("CurrentVersion")));
                 }
                 if (_currentVersion != readVersion)
                 {
@@ -3585,7 +3585,7 @@ namespace Ambrosia
                 }
                 if (!_runningRepro)
                 {
-                    if (long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint")) < 1)
+                    if (long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint"))) < 1)
                     {
                         OnError(MissingCheckpoint, "No checkpoint in metadata");
 
@@ -3595,8 +3595,7 @@ namespace Ambrosia
                 {
                     OnError(MissingCheckpoint, "No checkpoint/logs directory");
                 }
-
-                var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
+                var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
                 if (!LogWriter.FileExists(CheckpointFileName(lastCommittedCheckpoint)))
                 {
                     OnError(MissingCheckpoint, "Missing checkpoint " + lastCommittedCheckpoint.ToString());
