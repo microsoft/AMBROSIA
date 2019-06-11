@@ -1885,6 +1885,24 @@ namespace Ambrosia
                 _workStream.Flush();
             }
 
+            internal void SendBecomePrimaryRequest()
+            {
+                _workStream.WriteIntFixed(_committerID);
+                var numMessageBytes = StreamCommunicator.IntSize(1) + 1;
+                var messageBuf = new byte[numMessageBytes];
+                var memStream = new MemoryStream(messageBuf);
+                memStream.WriteInt(1);
+                    memStream.WriteByte(becomingPrimaryByte);
+                memStream.Dispose();
+                _workStream.WriteIntFixed((int)(HeaderSize + numMessageBytes));
+                long checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
+                _workStream.WriteLongFixed(checkBytes);
+                _workStream.WriteLongFixed(-1);
+                _workStream.Write(messageBuf, 0, numMessageBytes);
+                _workStream.Flush();
+            }
+
+
             internal void SendCheckpointToRecoverFrom(byte[] buf, int length, LogReader checkpointStream)
             {
                 _workStream.WriteIntFixed(_committerID);
@@ -2019,6 +2037,7 @@ namespace Ambrosia
         public const byte upgradeServiceByte = 12;
         public const byte CountReplayableRPCBatchByte = 13;
         public const byte trimToByte = 14;
+        public const byte becomingPrimaryByte = 15;
 
         CRAClientLibrary _coral;
 
@@ -2273,11 +2292,15 @@ namespace Ambrosia
                 }
                 // Now becoming the primary. Moving to next log file since the current one may have junk at the end.
                 bool wasUpgrading = _upgrading;
-                await MoveServiceToNextLogFileAsync(false, true);
+                var oldFileHandle = await MoveServiceToNextLogFileAsync(false, true);
                 if (wasUpgrading)
                 {
                     // Successfully wrote out our new first checkpoint in the upgraded version, can now officially take the version upgrade
                     InsertOrReplaceServiceInfoRecord("CurrentVersion", _upgradeToVersion.ToString());
+                    // We have now completed the upgrade and may release the old file lock.
+                    oldFileHandle.Dispose();
+                    // Moving to the next file means the first log file is empty, but it immediately causes failures of all old secondaries.
+                    await MoveServiceToNextLogFileAsync();
                 }
                 Recovering = false;
             }
@@ -2330,6 +2353,26 @@ namespace Ambrosia
             return _coral.Connect(fromProcessName, fromEndpoint, toProcessName, toEndpoint);
         }
 
+        private LogWriter CreateNextOldVerLogFile()
+        {
+            string newLogFileNameBaseForOldVersion = Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion, "server");
+            if (LogWriter.FileExists(newLogFileNameBaseForOldVersion + "log" + (_lastLogFile + 1).ToString()))
+            {
+                File.Delete(newLogFileNameBaseForOldVersion + "log" + (_lastLogFile + 1).ToString());
+            }
+            LogWriter retVal = null;
+            try
+            {
+                retVal = new LogWriter(newLogFileNameBaseForOldVersion + "log" + (_lastLogFile + 1).ToString(), 1024 * 1024, 6);
+            }
+            catch (Exception e)
+            {
+                OnError(0, "Error opening next log file:" + e.ToString());
+            }
+            return retVal;
+        }
+
+
         private LogWriter CreateNextLogFile()
         {
             if (LogWriter.FileExists(_logFileNameBase + "log" + (_lastLogFile + 1).ToString()))
@@ -2349,12 +2392,18 @@ namespace Ambrosia
         }
 
         // Closes out the old log file and starts a new one. Takes checkpoints if this instance should
-        private async Task MoveServiceToNextLogFileAsync(bool firstStart = false, bool becomingPrimary = false)
+        private async Task<LogWriter> MoveServiceToNextLogFileAsync(bool firstStart = false, bool becomingPrimary = false)
         {
             // Move to the next log file. By doing this before checkpointing, we may end up skipping a checkpoint file (failure during recovery). 
-            // This is ok since we recover from the first committed checkpoint and will just skip empty log files during replay
+            // This is ok since we recover from the first committed checkpoint and will just skip empty log files during replay. 
+            // This also protects us from a failed upgrade, which is why the file is created in both directories on upgrade, and why the lock on upgrade is held until successful upgrade or failure.
             await _committer.SleepAsync();
             var nextLogHandle = CreateNextLogFile();
+            LogWriter oldVerLogHandle = null;
+            if (_upgrading)
+            {
+                oldVerLogHandle = CreateNextOldVerLogFile();
+            }
             _lastLogFile++;
             if (_sharded)
             {
@@ -2365,7 +2414,12 @@ namespace Ambrosia
                 InsertOrReplaceServiceInfoRecord("LastLogFile", _lastLogFile.ToString());
             }
             _committer.SwitchLogStreams(nextLogHandle);
-            if (firstStart || !_activeActive)
+            if (!firstStart && _activeActive && !_upgrading && becomingPrimary)
+            {
+                // In this case, we want the local service to become primary without taking a checkpoint
+                _committer.SendBecomePrimaryRequest();
+            }
+            else if (firstStart || !_activeActive || _upgrading)
             {
                 // take the checkpoint associated with the beginning of the new log and let go of the log file lock
                 _committer.QuiesceServiceWithSendCheckpointRequest(_upgrading, becomingPrimary);
@@ -2384,12 +2438,18 @@ namespace Ambrosia
             // it's after replace and moving to the next log file. Note that this will also have the effect
             // of shaking loose the initialization message, ensuring liveliness.
             await _committer.TryCommitAsync(_outputs);
+            return oldVerLogHandle;
         }
 
         //==============================================================================================================
         // Insance compete over write permission for LOG file & CheckPoint file
         private void DetermineRole()
         {
+            if (_upgrading)
+            {
+                _myRole = AARole.Secondary;
+                return;
+            }
             try
             {
                 // Compete for Checkpoint Write Permission
@@ -2428,6 +2488,14 @@ namespace Ambrosia
                         throw new Exception();
                     }
                     // We got the lock! Set things up so we let go of the lock at the right moment
+                    // But first check if we got the lock because the version changed, in which case, we should commit suicide
+                    var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    if (_currentVersion != readVersion)
+                    {
+
+                        OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
+                    }
+
                     await _committer.SleepAsync();
                     _committer.SwitchLogStreams(lastLogFileStream);
                     await _committer.WakeupAsync();
@@ -2437,6 +2505,13 @@ namespace Ambrosia
                 }
                 catch
                 {
+                    // Check if the version changed, in which case, we should commit suicide
+                    var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    if (_currentVersion != readVersion)
+                    {
+
+                        OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
+                    }
                     await Task.Delay(1000);
                 }
             }
