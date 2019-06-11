@@ -1135,9 +1135,12 @@ namespace AmbrosiaTest
 
             // Not easy to do unless modify verify log file call due to break down of log files with multiclient names
             // Verify integrity of Ambrosia logs by replaying every client ... 
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "1");
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "2");
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "3");
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+
+            //** not best way to verify using each client, just do it normally
+            //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "1");
+            //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "2");
+            //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "3");
         }
 
         //** Basically same as the basic test but using large check points - change is in the call to server
