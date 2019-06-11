@@ -2274,7 +2274,7 @@ namespace Ambrosia
             if (!_runningRepro)
             {
                 // We are recovering - find the last committed checkpoint
-                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
+                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
             }
             else
             {
@@ -2328,7 +2328,7 @@ namespace Ambrosia
                 }
                 await ReplayAsync(replayStream);
             }
-            var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+            var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
             if (_currentVersion != readVersion)
             {
 
@@ -2344,7 +2344,7 @@ namespace Ambrosia
             if (wasUpgrading)
             {
                 // Successfully wrote out our new first checkpoint in the upgraded version, can now officially take the version upgrade
-                InsertOrReplaceServiceInfoRecord("CurrentVersion", _upgradeToVersion.ToString());
+                InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _upgradeToVersion.ToString());
                 // We have now completed the upgrade and may release the old file lock.
                 oldFileHandle.Dispose();
                 // Moving to the next file means the first log file is empty, but it immediately causes failures of all old secondaries.
@@ -2375,7 +2375,7 @@ namespace Ambrosia
             Connect(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
             Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
             await MoveServiceToNextLogFileAsync(true, true);
-            InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
+            InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
             if (_activeActive)
             {
                 // Start task to periodically check if someone's trying to upgrade
@@ -2537,7 +2537,7 @@ namespace Ambrosia
                 _checkpointWriter = new LogWriter(_logFileNameBase + "chkpt" + (_lastCommittedCheckpoint).ToString(), 1024 * 1024, 6, true);
                 _myRole = AARole.Checkpointer; // I'm a checkpointing secondary
                 var oldCheckpoint = _lastCommittedCheckpoint;
-                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
+                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
                 if (oldCheckpoint != _lastCommittedCheckpoint)
                 {
                     _checkpointWriter.Dispose();
@@ -2562,7 +2562,7 @@ namespace Ambrosia
                     var oldLastLogFile = _lastLogFile;
                     // Compete for log write permission - non destructive open for write - open for append
                     var lastLogFileStream = new LogWriter(_logFileNameBase + "log" + (oldLastLogFile).ToString(), 1024 * 1024, 6, true);
-                    if (long.Parse(RetrieveServiceInfo("LastLogFile")) != oldLastLogFile)
+                    if (long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile"))) != oldLastLogFile)
                     {
                         // We got an old log. Try again
                         lastLogFileStream.Dispose();
@@ -2570,7 +2570,7 @@ namespace Ambrosia
                     }
                     // We got the lock! Set things up so we let go of the lock at the right moment
                     // But first check if we got the lock because the version changed, in which case, we should commit suicide
-                    var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
                     if (_currentVersion != readVersion)
                     {
 
@@ -2603,7 +2603,7 @@ namespace Ambrosia
                 catch
                 {
                     // Check if the version changed, in which case, we should commit suicide
-                    var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
                     if (_currentVersion != readVersion)
                     {
 
@@ -3756,11 +3756,11 @@ namespace Ambrosia
                 long readVersion = -1;
                 try
                 {
-                    readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
                 }
                 catch
                 {
-                    OnError(VersionMismatch, "Version mismatch on process start: Expected " + _currentVersion + " was: " + RetrieveServiceInfo("CurrentVersion"));
+                    OnError(VersionMismatch, "Version mismatch on process start: Expected " + _currentVersion + " was: " + RetrieveServiceInfo(InfoTitle("CurrentVersion")));
                 }
                 if (_currentVersion != readVersion)
                 {
@@ -3768,7 +3768,7 @@ namespace Ambrosia
                 }
                 if (!_runningRepro)
                 {
-                    if (long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint")) < 1)
+                    if (long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint"))) < 1)
                     {
                         OnError(MissingCheckpoint, "No checkpoint in metadata");
 
@@ -3778,7 +3778,7 @@ namespace Ambrosia
                 {
                     OnError(MissingCheckpoint, "No checkpoint/logs directory");
                 }
-                var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
+                var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
                 if (!LogWriter.FileExists(Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion,
                                                        "server" + "chkpt" + lastCommittedCheckpoint)))
                 {
