@@ -2268,7 +2268,7 @@ namespace Ambrosia
             if (!_runningRepro)
             {
                 // We are recovering - find the last committed checkpoint
-                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
+                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
             }
             else
             {
@@ -2322,7 +2322,7 @@ namespace Ambrosia
                 }
                 await ReplayAsync(replayStream);
             }
-            var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+            var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
             if (_currentVersion != readVersion)
             {
 
@@ -2338,7 +2338,7 @@ namespace Ambrosia
             if (wasUpgrading)
             {
                 // Successfully wrote out our new first checkpoint in the upgraded version, can now officially take the version upgrade
-                InsertOrReplaceServiceInfoRecord("CurrentVersion", _upgradeToVersion.ToString());
+                InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _upgradeToVersion.ToString());
                 // We have now completed the upgrade and may release the old file lock.
                 oldFileHandle.Dispose();
                 // Moving to the next file means the first log file is empty, but it immediately causes failures of all old secondaries.
@@ -2369,7 +2369,7 @@ namespace Ambrosia
             Connect(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
             Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
             await MoveServiceToNextLogFileAsync(true, true);
-            InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
+            InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
             if (_activeActive)
             {
                 // Start task to periodically check if someone's trying to upgrade
