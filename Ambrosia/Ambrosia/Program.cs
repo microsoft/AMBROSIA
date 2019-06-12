@@ -2247,8 +2247,8 @@ namespace Ambrosia
         private void PrepareToRecoverOrStart()
         {
             IPAddress localIPAddress = Dns.GetHostEntry("localhost").AddressList[0];
-            LogWriter.CreateDirectoryIfNotExists(_serviceLogPath + _serviceName + "_" + _currentVersion);
-            _logFileNameBase = Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion, "server");
+            LogWriter.CreateDirectoryIfNotExists(LogDirectory(_currentVersion));
+            _logFileNameBase = LogFileNameBase(_currentVersion);
             SetupLocalServiceStreams();
             if (!_runningRepro)
             {
@@ -2341,7 +2341,7 @@ namespace Ambrosia
                 }
             }
 
-            using (LogReader checkpointStream = new LogReader(_logFileNameBase + "chkpt" + state.LastCommittedCheckpoint.ToString()))
+            using (LogReader checkpointStream = new LogReader(CheckpointName(state.LastCommittedCheckpoint, state.ShardID)))
             {
                 // recover the checkpoint - Note that everything except the replay data must have been written successfully or we
                 // won't think we have a valid checkpoint here. Since we can only be the secondary or checkpointer, the committer doesn't write to the replay log
@@ -2358,7 +2358,7 @@ namespace Ambrosia
                 state.Committer.SendCheckpointToRecoverFrom(serviceCheckpoint.Buffer, serviceCheckpoint.Length, checkpointStream);
             }
 
-            using (LogReader replayStream = new LogReader(_logFileNameBase + "log" + state.LastLogFile.ToString()))
+            using (LogReader replayStream = new LogReader(LogFileName(state.LastLogFile, state.ShardID)))
             {
                 if (state.MyRole == AARole.Secondary && !_runningRepro)
                 {
@@ -2422,8 +2422,8 @@ namespace Ambrosia
 
             _checkpointWriter = null;
             _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
-            Connect(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-            Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+            Connect(ServiceName(), AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
+            Connect(ServiceName(), AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
             await MoveServiceToNextLogFileAsync(true, true);
             InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
             if (_activeActive)
@@ -2432,6 +2432,7 @@ namespace Ambrosia
                 (new Task(() => CheckForUpgradeAsync())).Start();
             }
         }
+
         private void UnbufferNonreplayableCalls(ConcurrentDictionary<string, OutputConnectionRecord> outputs)
         {
             foreach (var outputRecord in outputs)
@@ -2446,8 +2447,8 @@ namespace Ambrosia
 
         internal void MoveServiceToUpgradeDirectory()
         {
-            LogWriter.CreateDirectoryIfNotExists(_serviceLogPath + _serviceName + "_" + _upgradeToVersion);
-            _logFileNameBase = Path.Combine(_serviceLogPath + _serviceName + "_" + _upgradeToVersion, "server");
+            LogWriter.CreateDirectoryIfNotExists(RootDirectory(_upgradeToVersion));
+            _logFileNameBase = LogFileNameBase(_upgradeToVersion);
         }
 
         public CRAErrorCode Connect(string fromProcessName, string fromEndpoint, string toProcessName, string toEndpoint)
@@ -2460,17 +2461,73 @@ namespace Ambrosia
             return _coral.Connect(fromProcessName, fromEndpoint, toProcessName, toEndpoint);
         }
 
+        private string ServiceName(long shardID = -1)
+        {
+            if (_sharded)
+            {
+                if (shardID == -1)
+                {
+                    shardID = _shardID;
+                }
+                return _serviceName + "-" + shardID.ToString();
+            }
+            return _serviceName;
+        }
+
+        private string RootDirectory(long version = -1)
+        {
+            if (version == -1)
+            {
+                version = _currentVersion;
+            }
+
+            return _serviceLogPath + _serviceName + "_" + version;
+        }
+
+        private string LogDirectory(long version = -1, long shardID = -1)
+        {
+            string shard = "";
+            if (_sharded)
+            {
+                if (shardID == -1)
+                {
+                    shardID = _shardID;
+                }
+                shard = shardID.ToString();
+            }
+
+            return Path.Combine(RootDirectory(version), shard);
+        }
+
+        private string LogFileNameBase(long version = -1, long shardID = -1)
+        {
+            if (version == -1)
+            {
+                return _logFileNameBase;
+            }
+            return Path.Combine(LogDirectory(version, shardID), "server");
+        }
+
+        private string CheckpointName(long checkpoint, long shardID = -1, long version = -1)
+        {
+            return LogFileNameBase(version, shardID) + "chkpt" + checkpoint.ToString();
+        }
+
+        private string LogFileName(long logFile, long shardID = -1, long version = -1)
+        {
+            return LogFileNameBase(version, shardID) + "log" + logFile.ToString();
+        }
+
         private LogWriter CreateNextOldVerLogFile()
         {
-            string newLogFileNameBaseForOldVersion = Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion, "server");
-            if (LogWriter.FileExists(newLogFileNameBaseForOldVersion + "log" + (_lastLogFile + 1).ToString()))
+            if (LogWriter.FileExists(LogFileName(_lastLogFile + 1, _shardID, _currentVersion)))
             {
-                File.Delete(newLogFileNameBaseForOldVersion + "log" + (_lastLogFile + 1).ToString());
+                File.Delete(LogFileName(_lastLogFile + 1, _shardID, _currentVersion));
             }
             LogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(newLogFileNameBaseForOldVersion + "log" + (_lastLogFile + 1).ToString(), 1024 * 1024, 6);
+                retVal = new LogWriter(LogFileName(_lastLogFile + 1, _shardID, _currentVersion), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
@@ -2502,14 +2559,14 @@ namespace Ambrosia
 
         private LogWriter CreateNextLogFile()
         {
-            if (LogWriter.FileExists(_logFileNameBase + "log" + (_lastLogFile + 1).ToString()))
+            if (LogWriter.FileExists(LogFileName(_lastLogFile + 1)))
             {
-                File.Delete(_logFileNameBase + "log" + (_lastLogFile + 1).ToString());
+                File.Delete(LogFileName(_lastLogFile + 1));
             }
             LogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(_logFileNameBase + "log" + (_lastLogFile + 1).ToString(), 1024 * 1024, 6);
+                retVal = new LogWriter(LogFileName(_lastLogFile + 1), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
@@ -2587,7 +2644,7 @@ namespace Ambrosia
             try
             {
                 // Compete for Checkpoint Write Permission
-                state.CheckpointWriter = new LogWriter(_logFileNameBase + "chkpt" + (state.LastCommittedCheckpoint).ToString(), 1024 * 1024, 6, true);
+                state.CheckpointWriter = new LogWriter(CheckpointName(state.LastCommittedCheckpoint), 1024 * 1024, 6, true);
                 state.MyRole = AARole.Checkpointer; // I'm a checkpointing secondary
                 var oldCheckpoint = state.LastCommittedCheckpoint;
                 state.LastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", state.ShardID)));
@@ -2621,7 +2678,7 @@ namespace Ambrosia
                     var oldLastLogFile = state.LastLogFile;
                     Debug.Assert(lastLogFileStream == null);
                     // Compete for log write permission - non destructive open for write - open for append
-                    lastLogFileStream = new LogWriter(_logFileNameBase + "log" + (oldLastLogFile).ToString(), 1024 * 1024, 6, true);
+                    lastLogFileStream = new LogWriter(LogFileName(oldLastLogFile, state.ShardID), 1024 * 1024, 6, true);
                     if (long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID))) != oldLastLogFile)
                     {
                         // We got an old log. Try again
@@ -2774,11 +2831,11 @@ namespace Ambrosia
                         // Move to the next log file for reading only. We may need to take a checkpoint
                         state.LastLogFile++;
                         replayStream.Dispose();
-                        if (!LogWriter.FileExists(_logFileNameBase + "log" + state.LastLogFile.ToString()))
+                        if (!LogWriter.FileExists(LogFileName(state.LastLogFile, state.ShardID)))
                         {
                             OnError(MissingLog, "Missing log in replay " + state.LastLogFile.ToString());
                         }
-                        replayStream = new LogReader(_logFileNameBase + "log" + state.LastLogFile.ToString());
+                        replayStream = new LogReader(LogFileName(state.LastLogFile, state.ShardID));
                         if (state.MyRole == AARole.Checkpointer)
                         {
                             // take the checkpoint associated with the beginning of the new log
@@ -2801,7 +2858,7 @@ namespace Ambrosia
                     var newLastLogFile = state.LastLogFile;
                     if (_runningRepro)
                     {
-                        if (LogWriter.FileExists(_logFileNameBase + "log" + (state.LastLogFile + 1).ToString()))
+                        if (LogWriter.FileExists(LogFileName(state.LastLogFile + 1, state.ShardID)))
                         {
                             // If there is a next file, then move to it
                             newLastLogFile = state.LastLogFile + 1;
@@ -3004,10 +3061,10 @@ namespace Ambrosia
             while (true)
             {
                 Console.WriteLine("Attempting to attach", destination);
-                var connectionResult1 = Connect(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
-                var connectionResult2 = Connect(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
-                var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+                var connectionResult1 = Connect(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
+                var connectionResult2 = Connect(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
+                var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
+                var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
                 if ((connectionResult1 == CRAErrorCode.Success) && (connectionResult2 == CRAErrorCode.Success) &&
                     (connectionResult3 == CRAErrorCode.Success) && (connectionResult4 == CRAErrorCode.Success))
                 {
@@ -3055,15 +3112,15 @@ namespace Ambrosia
                         else
                         {
                             Console.WriteLine("Attaching to {0}", destination);
-                            var connectionResult1 = Connect(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
-                            var connectionResult2 = Connect(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
-                            var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                            var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+                            var connectionResult1 = Connect(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
+                            var connectionResult2 = Connect(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
+                            var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
+                            var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
                             if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
                                 (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
                             {
 
-                                Console.WriteLine("Error attaching " + _serviceName + " to " + destination);
+                                Console.WriteLine("Error attaching " + ServiceName() + " to " + destination);
 // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
                             }
                         }
@@ -3227,7 +3284,7 @@ namespace Ambrosia
 
         {
             OutputConnectionRecord outputConnectionRecord;
-            if (destString.Equals(_serviceName))
+            if (destString.Equals(ServiceName()))
             {
                 destString = "";
             }
@@ -3351,7 +3408,7 @@ namespace Ambrosia
 
         {
             OutputConnectionRecord outputConnectionRecord;
-            if (destString.Equals(_serviceName))
+            if (destString.Equals(ServiceName()))
             {
                 destString = "";
             }
@@ -3470,7 +3527,7 @@ namespace Ambrosia
                                                CancellationToken ct)
         {
             InputConnectionRecord inputConnectionRecord;
-            if (sourceString.Equals(_serviceName))
+            if (sourceString.Equals(ServiceName()))
             {
                 sourceString = "";
             }
@@ -3498,7 +3555,7 @@ namespace Ambrosia
                                                   CancellationToken ct)
         {
             InputConnectionRecord inputConnectionRecord;
-            if (sourceString.Equals(_serviceName))
+            if (sourceString.Equals(ServiceName()))
             {
                 sourceString = "";
             }
@@ -3696,14 +3753,14 @@ namespace Ambrosia
 
         private LogWriter OpenNextCheckpointFile()
         {
-            if (LogWriter.FileExists(_logFileNameBase + "chkpt" + (_lastCommittedCheckpoint + 1).ToString()))
+            if (LogWriter.FileExists(CheckpointName(_lastCommittedCheckpoint + 1)))
             {
-                File.Delete(_logFileNameBase + (_lastCommittedCheckpoint + 1).ToString());
+                File.Delete(CheckpointName(_lastCommittedCheckpoint + 1));
             }
             LogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(_logFileNameBase + "chkpt" + (_lastCommittedCheckpoint + 1).ToString(), 1024 * 1024, 6);
+                retVal = new LogWriter(CheckpointName(_lastCommittedCheckpoint + 1), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
@@ -3714,7 +3771,7 @@ namespace Ambrosia
 
         private void CleanupOldCheckpoint()
         {
-            var fileNameToDelete = _logFileNameBase + (_lastCommittedCheckpoint - 1).ToString();
+            var fileNameToDelete = CheckpointName(_lastCommittedCheckpoint - 1);
             if (LogWriter.FileExists(fileNameToDelete))
             {
                 File.Delete(fileNameToDelete);
@@ -3846,18 +3903,16 @@ namespace Ambrosia
 
                     }
                 }
-                if (!LogWriter.DirectoryExists(_serviceLogPath + _serviceName + "_" + _currentVersion))
+                if (!LogWriter.DirectoryExists(LogDirectory(_currentVersion)))
                 {
                     OnError(MissingCheckpoint, "No checkpoint/logs directory");
                 }
                 var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
-                if (!LogWriter.FileExists(Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion,
-                                                       "server" + "chkpt" + lastCommittedCheckpoint)))
+                if (!LogWriter.FileExists(CheckpointName(lastCommittedCheckpoint)))
                 {
                     OnError(MissingCheckpoint, "Missing checkpoint " + lastCommittedCheckpoint.ToString());
                 }
-                if (!LogWriter.FileExists(Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion,
-                                          "server" + "log" + lastCommittedCheckpoint)))
+                if (!LogWriter.FileExists(LogFileName(lastCommittedCheckpoint)))
                 {
                     OnError(MissingLog, "Missing log " + lastCommittedCheckpoint.ToString());
                 }
@@ -3907,7 +3962,7 @@ namespace Ambrosia
 
             if (createService == null)
             {
-                if (LogWriter.DirectoryExists(_serviceLogPath + _serviceName + "_" + _currentVersion))
+                if (LogWriter.DirectoryExists(RootDirectory()))
                 {
                     createService = false;
                 }
