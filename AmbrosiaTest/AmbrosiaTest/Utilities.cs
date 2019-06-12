@@ -460,8 +460,19 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalMultiClientStartingPoint = "", bool asyncTest = false)
+        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false)
         {
+
+            // Basically doing this for multi client stuff
+            string optionalMultiClientStartingPoint = "";
+            if (optionalNumberOfClient == "")
+            {
+                optionalNumberOfClient = "1";
+            }
+            else
+            {
+                optionalMultiClientStartingPoint = "0";
+            }
 
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
             string serverName = testName + "server";
@@ -605,7 +616,8 @@ namespace AmbrosiaTest
 
                 //Server Call
                 logOutputFileName_Server_Verify = testName + "_Server_Verify.log";
-                int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Verify, 1, false);
+                int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Verify, Convert.ToInt32(optionalNumberOfClient), false);
+
             }
 
             // wait until done running

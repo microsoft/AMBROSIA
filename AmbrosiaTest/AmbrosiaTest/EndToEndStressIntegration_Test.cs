@@ -804,7 +804,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server,1, false);
 
             // Wait for client job to finish
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 30, false, testName, true); // number of bytes processed
 
             // kill Server 
             MyUtils.KillProcess(serverProcessID);
@@ -836,8 +836,8 @@ namespace AmbrosiaTest
             string logOutputFileName_Server_upgraded = testName + "_Server_upgraded.log";
             int serverProcessID_upgraded = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_upgraded, 1, true);
 
-            //Delay until client is done - also check Server just to make sure
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, byteSize, 15, false, testName, true);
+            //Delay until server upgrade is done
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, byteSize, 30, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID);
@@ -957,7 +957,7 @@ namespace AmbrosiaTest
             int serverProcessID_upgraded = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_upgraded, 1, true);
 
             //Delay until client is done - also check Server just to make sure
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 25, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, byteSize, 15, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
@@ -1123,7 +1123,6 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID2);
             MyUtils.KillProcess(ImmCoordProcessID3);
 
-
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob0);
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob1);
@@ -1133,14 +1132,9 @@ namespace AmbrosiaTest
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
 
-            // Not easy to do unless modify verify log file call due to break down of log files with multiclient names
-            // Verify integrity of Ambrosia logs by replaying every client ... 
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+            // Verify log files
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version, "4");
 
-            //** not best way to verify using each client, just do it normally
-            //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "1");
-            //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "2");
-            //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0", "3");
         }
 
         //** Basically same as the basic test but using large check points - change is in the call to server
