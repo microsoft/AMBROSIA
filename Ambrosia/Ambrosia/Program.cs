@@ -1164,7 +1164,7 @@ namespace Ambrosia
         // Used to hold the bytes which will go in the log. Note that two streams are passed in. The
         // log stream must write to durable storage and be flushable, while the second stream initiates
         // actual action taken after the message has been made durable.
-        private class Committer
+        internal class Committer
         {
             byte[] _buf;
             volatile byte[] _bufbak;
@@ -1929,6 +1929,21 @@ namespace Ambrosia
             }
         }
 
+
+        /**
+         * This contains information associated with a given machine
+         **/
+        internal class MachineState
+        {
+            internal long ShardID { get; set; }
+            internal long LastCommittedCheckpoint { get; set; }
+            internal long LastLogFile { get; set; }
+            internal Committer Committer { get; set; }
+            internal ConcurrentDictionary<string, InputConnectionRecord> Inputs { get; set; }
+            internal ConcurrentDictionary<string, OutputConnectionRecord> Outputs { get; set; }
+        }
+
+
         public class AmbrosiaOutput : IAsyncVertexOutputEndpoint
         {
             AmbrosiaRuntime myRuntime;
@@ -2222,7 +2237,15 @@ namespace Ambrosia
             if (!_createService)
             {
                 Recovering = true;
-                await RecoverAsync(checkpointToLoad, testUpgrade);
+                _restartWithRecovery = true;
+                MachineState state = new MachineState();
+                state.ShardID = _shardID;
+                await RecoverAsync(state, checkpointToLoad, testUpgrade);
+                _lastCommittedCheckpoint = state.LastCommittedCheckpoint;
+                _lastLogFile = state.LastLogFile;
+                _inputs = state.Inputs;
+                _outputs = state.Outputs;
+                _committer = state.Committer;
                 await PrepareToBecomePrimaryAsync();
                 Recovering = false;
             }
@@ -2232,21 +2255,20 @@ namespace Ambrosia
             }
         }
 
-        private async Task RecoverAsync(long checkpointToLoad = -1, bool testUpgrade = false)
+        private async Task RecoverAsync(MachineState state, long checkpointToLoad = -1, bool testUpgrade = false)
         {
-            _restartWithRecovery = true;
             if (!_runningRepro)
             {
                 // We are recovering - find the last committed checkpoint
-                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
+                state.LastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", state.ShardID)));
             }
             else
             {
                 // We are running a repro
-                _lastCommittedCheckpoint = checkpointToLoad;
+                state.LastCommittedCheckpoint = checkpointToLoad;
             }
             // Start from the log file associated with the last committed checkpoint
-            _lastLogFile = _lastCommittedCheckpoint;
+            state.LastLogFile = state.LastCommittedCheckpoint;
             if (_activeActive)
             {
                 if (!_runningRepro)
@@ -2261,36 +2283,38 @@ namespace Ambrosia
                 }
             }
 
-            using (LogReader checkpointStream = new LogReader(_logFileNameBase + "chkpt" + _lastCommittedCheckpoint.ToString()))
+            using (LogReader checkpointStream = new LogReader(_logFileNameBase + "chkpt" + state.LastCommittedCheckpoint.ToString()))
             {
                 // recover the checkpoint - Note that everything except the replay data must have been written successfully or we
                 // won't think we have a valid checkpoint here. Since we can only be the secondary or checkpointer, the committer doesn't write to the replay log
                 // Recover committer
-                _committer = new Committer(_localServiceSendToStream, _persistLogs, this, -1, checkpointStream);
+                state.Committer = new Committer(_localServiceSendToStream, _persistLogs, this, -1, checkpointStream);
                 // Recover input connections
-                _inputs = _inputs.AmbrosiaDeserialize(checkpointStream);
+                state.Inputs = state.Inputs.AmbrosiaDeserialize(checkpointStream);
                 // Recover output connections
-                _outputs = _outputs.AmbrosiaDeserialize(checkpointStream, this);
-                UnbufferNonreplayableCalls();
+                state.Outputs = state.Outputs.AmbrosiaDeserialize(checkpointStream, this);
+                UnbufferNonreplayableCalls(state.Outputs);
                 // Restore new service from checkpoint
                 var serviceCheckpoint = new FlexReadBuffer();
                 FlexReadBuffer.Deserialize(checkpointStream, serviceCheckpoint);
-                _committer.SendCheckpointToRecoverFrom(serviceCheckpoint.Buffer, serviceCheckpoint.Length, checkpointStream);
+                state.Committer.SendCheckpointToRecoverFrom(serviceCheckpoint.Buffer, serviceCheckpoint.Length, checkpointStream);
             }
 
-            using (LogReader replayStream = new LogReader(_logFileNameBase + "log" + _lastLogFile.ToString()))
+            using (LogReader replayStream = new LogReader(_logFileNameBase + "log" + state.LastLogFile.ToString()))
             {
                 if (_myRole == AARole.Secondary && !_runningRepro)
                 {
                     // If this is a secondary, set up the detector to detect when this instance becomes the primary
+                    _committer = state.Committer;
+                    _lastLogFile = state.LastLogFile;
                     var t = DetectBecomingPrimaryAsync();
                 }
                 if (testUpgrade)
                 {
                     // We are actually testing an upgrade. Must upgrade the service before replay
-                    _committer.SendUpgradeRequest();
+                    state.Committer.SendUpgradeRequest();
                 }
-                await ReplayAsync(replayStream);
+                await ReplayAsync(replayStream, state);
             }
         }
 
@@ -2320,27 +2344,33 @@ namespace Ambrosia
             }
         }
 
-        private async Task RecoverShardAsync(long[] recoverFromShards, long checkpointToLoad = -1, bool testUpgrade = false)
+        private void RecoverShard(long shardID, long checkpointToLoad, bool testUpgrade)
+        {
+            var state = new MachineState();
+            state.ShardID = shardID;
+            RecoverAsync(state, checkpointToLoad, testUpgrade).GetAwaiter();
+        }
+
+        private async Task RecoverShardsAsync(long[] recoverFromShards, long checkpointToLoad = -1, bool testUpgrade = false)
         {
             Recovering = true;
             var unshardServiceName = _serviceName;
             _serviceName += "-" + _shardID.ToString();
+            _restartWithRecovery = true;
 
-            var committers = new Committer[recoverFromShards.Length];
-            var inputSets = new ConcurrentDictionary<string, InputConnectionRecord>[recoverFromShards.Length];
-            var outputSets = new ConcurrentDictionary<string, OutputConnectionRecord>[recoverFromShards.Length];
+            var threads = new Thread[recoverFromShards.Length];
 
             for (int i = 0; i < recoverFromShards.Length; i++)
             {
-                _recoverShardID = recoverFromShards[i];
-                await RecoverAsync(checkpointToLoad, testUpgrade);
-                committers[i] = _committer;
-                _committer = null;
-                inputSets[i] = _inputs;
-                _inputs = null;
-                outputSets[i] = _outputs;
-                _outputs = null;
+                threads[i] = new Thread(() => RecoverShard(recoverFromShards[i], checkpointToLoad, testUpgrade)) { IsBackground = true };
             }
+
+            // Wait for replay for all shards to occur
+            for (int i = 0; i < threads.Length; i++)
+            {
+                threads[i].Join();
+            }
+
             _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
             _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
             _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
@@ -2375,9 +2405,9 @@ namespace Ambrosia
         }
 
 
-        private void UnbufferNonreplayableCalls()
+        private void UnbufferNonreplayableCalls(ConcurrentDictionary<string, OutputConnectionRecord> outputs)
         {
-            foreach (var outputRecord in _outputs)
+            foreach (var outputRecord in outputs)
             {
                 var newLastSeqNo = outputRecord.Value.BufferedOutput.TrimAndUnbufferNonreplayableCalls(outputRecord.Value.TrimTo, outputRecord.Value.ReplayableTrimTo);
                 if (newLastSeqNo != -1)
@@ -2441,12 +2471,16 @@ namespace Ambrosia
             return retVal;
         }
 
-        private string InfoTitle(string prefix)
+        private string InfoTitle(string prefix, long shardID = -1)
         {
             var file = prefix;
             if (_sharded)
             {
-                file += _shardID.ToString();
+                if (shardID == -1)
+                {
+                    shardID = _shardID;
+                }
+                file += shardID.ToString();
             }
             return file;
         }
@@ -2570,7 +2604,7 @@ namespace Ambrosia
             }
         }
 
-        private async Task ReplayAsync(LogReader replayStream)
+        private async Task ReplayAsync(LogReader replayStream, MachineState state)
         {
             var tempBuf = new byte[100];
             var tempBuf2 = new byte[100];
@@ -2592,7 +2626,7 @@ namespace Ambrosia
                     replayStream.ReadAllRequiredBytes(headerBuf, 0, Committer.HeaderSize);
                     headerBufStream.Position = 0;
                     var commitID = headerBufStream.ReadIntFixed();
-                    if (commitID != _committer.CommitID)
+                    if (commitID != state.Committer.CommitID)
                     {
                         throw new Exception("Committer didn't match. Must be incomplete record");
                     }
@@ -2600,7 +2634,7 @@ namespace Ambrosia
                     commitSize = headerBufStream.ReadIntFixed();
                     var checkBytes = headerBufStream.ReadLongFixed();
                     var writeSeqID = headerBufStream.ReadLongFixed();
-                    if (writeSeqID != _committer._nextWriteID)
+                    if (writeSeqID != state.Committer._nextWriteID)
                     {
                         throw new Exception("Out of order page. Must be incomplete record");
                     }
@@ -2612,7 +2646,7 @@ namespace Ambrosia
                     }
                     replayStream.Read(tempBuf, 0, commitSize);
                     // Perform integrity check
-                    long checkBytesCalc = _committer.CheckBytes(tempBuf, 0, commitSize);
+                    long checkBytesCalc = state.Committer.CheckBytes(tempBuf, 0, commitSize);
                     if (checkBytesCalc != checkBytes)
                     {
                         throw new Exception("Integrity check failed for page. Must be incomplete record");
@@ -2662,40 +2696,40 @@ namespace Ambrosia
                     if (detectedEOF)
                     {
                         // Move to the next log file for reading only. We may need to take a checkpoint
-                        _lastLogFile++;
+                        state.LastLogFile++;
                         replayStream.Dispose();
-                        if (!LogWriter.FileExists(_logFileNameBase + "log" + _lastLogFile.ToString()))
+                        if (!LogWriter.FileExists(_logFileNameBase + "log" + state.LastLogFile.ToString()))
                         {
-                            OnError(MissingLog, "Missing log in replay " + _lastLogFile.ToString());
+                            OnError(MissingLog, "Missing log in replay " + state.LastLogFile.ToString());
                         }
-                        replayStream = new LogReader(_logFileNameBase + "log" + _lastLogFile.ToString());
+                        replayStream = new LogReader(_logFileNameBase + "log" + state.LastLogFile.ToString());
                         if (_myRole == AARole.Checkpointer)
                         {
                             // take the checkpoint associated with the beginning of the new log
-                            await _committer.SleepAsync();
+                            await state.Committer.SleepAsync();
                             _committer.QuiesceServiceWithSendCheckpointRequest();
                             await CheckpointAsync();
-                            await _committer.WakeupAsync();
+                            await state.Committer.WakeupAsync();
                         }
                         detectedEOF = false;
                         continue;
                     }
                     var myRoleBeforeEOLChecking = _myRole;
                     replayStream.Position = logRecordPos;
-                    var newLastLogFile = _lastLogFile;
+                    var newLastLogFile = state.LastLogFile;
                     if (_runningRepro)
                     {
-                        if (LogWriter.FileExists(_logFileNameBase + "log" + (_lastLogFile + 1).ToString()))
+                        if (LogWriter.FileExists(_logFileNameBase + "log" + (state.LastLogFile + 1).ToString()))
                         {
                             // If there is a next file, then move to it
-                            newLastLogFile = _lastLogFile + 1;
+                            newLastLogFile = state.LastLogFile + 1;
                         }
                     }
                     else
                     {
-                        newLastLogFile = long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile")));
+                        newLastLogFile = long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID)));
                     }
-                    if (newLastLogFile > _lastLogFile) // a new log file has been written
+                    if (newLastLogFile > state.LastLogFile) // a new log file has been written
                     {
                         // Someone started a new log. Try to read the last record again and then move to next file
                         detectedEOF = true;
@@ -2715,22 +2749,22 @@ namespace Ambrosia
                 foreach (var kv in committedInputDict)
                 {
                     InputConnectionRecord inputConnectionRecord;
-                    if (!_inputs.TryGetValue(kv.Key, out inputConnectionRecord))
+                    if (!state.Inputs.TryGetValue(kv.Key, out inputConnectionRecord))
                     {
                         // Create input record and add it to the dictionary
                         inputConnectionRecord = new InputConnectionRecord();
-                        _inputs[kv.Key] = inputConnectionRecord;
+                        state.Inputs[kv.Key] = inputConnectionRecord;
                     }
                     inputConnectionRecord.LastProcessedID = kv.Value.First;
                     inputConnectionRecord.LastProcessedReplayableID = kv.Value.Second;
                     OutputConnectionRecord outputConnectionRecord;
                     // this lock prevents conflict with output arriving from the local service during replay
-                    lock (_outputs)
+                    lock (state.Outputs)
                     {
                         if (!_outputs.TryGetValue(kv.Key, out outputConnectionRecord))
                         {
                             outputConnectionRecord = new OutputConnectionRecord(this);
-                            _outputs[kv.Key] = outputConnectionRecord;
+                            state.Outputs[kv.Key] = outputConnectionRecord;
                         }
                     }
                     // this lock prevents conflict with output arriving from the local service during replay and ensures maximal cleaning
@@ -2752,12 +2786,12 @@ namespace Ambrosia
                 {
                     OutputConnectionRecord outputConnectionRecord;
                     // this lock prevents conflict with output arriving from the local service during replay
-                    lock (_outputs)
+                    lock (state.Outputs)
                     {
-                        if (!_outputs.TryGetValue(kv.Key, out outputConnectionRecord))
+                        if (!state.Outputs.TryGetValue(kv.Key, out outputConnectionRecord))
                         {
                             outputConnectionRecord = new OutputConnectionRecord(this);
-                            _outputs[kv.Key] = outputConnectionRecord;
+                            state.Outputs[kv.Key] = outputConnectionRecord;
                         }
                     }
                     // this lock prevents conflict with output arriving from the local service during replay and ensures maximal cleaning
@@ -2771,11 +2805,11 @@ namespace Ambrosia
                 // If this is the first replay segment, it invalidates the contents of the committer, which must be cleared.
                 if (!clearedCommitterWrite)
                 {
-                    _committer.ClearNextWrite();
+                    state.Committer.ClearNextWrite();
                     clearedCommitterWrite = true;
                 }
                 // bump up the write ID in the committer in preparation for reading or writing the next page
-                _committer._nextWriteID++;
+                state.Committer._nextWriteID++;
             }
         }
 
@@ -3717,7 +3751,7 @@ namespace Ambrosia
                 StartShardAsync().GetAwaiter();
             } else
             {
-                RecoverShardAsync(recoverFromShards).GetAwaiter();
+                RecoverShardsAsync(recoverFromShards).GetAwaiter();
             }
         }
 
