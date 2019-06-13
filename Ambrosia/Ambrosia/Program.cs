@@ -1057,6 +1057,7 @@ namespace Ambrosia
         public string storageConnectionString;
         public long currentVersion;
         public long upgradeToVersion;
+        public long shardID;
     }
 
     public class AmbrosiaRuntime : VertexBase
@@ -3788,7 +3789,8 @@ namespace Ambrosia
             }
 
             bool runningRepro = false;
-            bool sharded = false;
+            bool sharded = p.shardID > 0;
+            _shardID = p.shardID;
 
             Initialize(
                 p.serviceReceiveFromPort,
@@ -3888,6 +3890,10 @@ namespace Ambrosia
             _serviceName = serviceName;
             _storageConnectionString = storageConnectionString;
             _sharded = sharded;
+            if (_sharded)
+            {
+                Console.WriteLine("Running instance with shard ID " + _shardID.ToString());
+            }
             _coral = ClientLibrary;
 
             Console.WriteLine("Logs directory: {0}", _serviceLogPath);
@@ -3951,6 +3957,7 @@ namespace Ambrosia
         private static long _logTriggerSizeMB = 1000;
         private static int _currentVersion = 0;
         private static long _upgradeVersion = -1;
+        private static long _shardID = -1;
 
         static void Main(string[] args)
         {
@@ -3991,6 +3998,7 @@ namespace Ambrosia
                     param.serviceLogPath = _serviceLogPath;
                     param.AmbrosiaBinariesLocation = _binariesLocation;
                     param.storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
+                    param.shardID = _shardID;
 
                     try
                     {
@@ -4064,6 +4072,7 @@ namespace Ambrosia
                 {"aa|activeActive", "Is active-active enabled.", aa => _isActiveActive = true},
                 {"cv|currentVersion=", "The current version #.", cv => _currentVersion = int.Parse(cv)},
                 {"uv|upgradeVersion=", "The upgrade version #.", uv => _upgradeVersion = int.Parse(uv)},
+                {"si|shardID=", "The shard ID of the instance", si => _shardID = long.Parse(si) }
             });
 
             var addReplicaOptionSet = new OptionSet {
