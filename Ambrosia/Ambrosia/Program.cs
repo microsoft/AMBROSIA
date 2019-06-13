@@ -1057,6 +1057,7 @@ namespace Ambrosia
         public string storageConnectionString;
         public long currentVersion;
         public long upgradeToVersion;
+        public long shardID;
     }
 
     public static class AmbrosiaRuntimeParms
@@ -3855,7 +3856,8 @@ namespace Ambrosia
             }
 
             bool runningRepro = false;
-            bool sharded = false;
+            bool sharded = p.shardID > 0;
+            _shardID = p.shardID;
 
             Initialize(
                 p.serviceReceiveFromPort,
@@ -3954,6 +3956,10 @@ namespace Ambrosia
             _serviceName = serviceName;
             _storageConnectionString = storageConnectionString;
             _sharded = sharded;
+            if (_sharded)
+            {
+                Console.WriteLine("Running instance with shard ID " + _shardID.ToString());
+            }
             _coral = ClientLibrary;
 
             Console.WriteLine("Logs directory: {0}", _serviceLogPath);
@@ -4017,6 +4023,7 @@ namespace Ambrosia
         private static long _logTriggerSizeMB = 1000;
         private static int _currentVersion = 0;
         private static long _upgradeVersion = -1;
+        private static long _shardID = -1;
 
         static void Main(string[] args)
         {
@@ -4055,6 +4062,7 @@ namespace Ambrosia
                     param.serviceLogPath = _serviceLogPath;
                     param.AmbrosiaBinariesLocation = _binariesLocation;
                     param.storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
+                    param.shardID = _shardID;
 
                     try
                     {
@@ -4108,6 +4116,7 @@ namespace Ambrosia
                 { "rp|receivePort=", "The service receive from port [REQUIRED].", rp => _serviceReceiveFromPort = int.Parse(rp) },
                 { "sp|sendPort=", "The service send to port. [REQUIRED]", sp => _serviceSendToPort = int.Parse(sp) },
                 { "l|log=", "The service log path.", l => _serviceLogPath = l },
+                {"si|shardID=", "The shard ID of the instance", si => _shardID = long.Parse(si) },
             };
 
             var helpOption = new OptionSet
