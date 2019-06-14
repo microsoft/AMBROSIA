@@ -166,7 +166,7 @@ namespace AmbrosiaTest
             int serverProcessID_Restarted1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1_Restarted, 1, false);
 
             //Delay until finished ... looking at the most recent primary (server3) but also verify others hit done too
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server3, byteSize, 45, false, testName, true);  // Total Bytes received needs to be accurate
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server3, byteSize, 90, false, testName, true);  // Total Bytes received needs to be accurate
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server2, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_Restarted, byteSize, 15, false, testName, true);
@@ -380,7 +380,7 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string byteSize = "13958643712";
+            string byteSize = "6442450944";
 
             Utilities MyUtils = new Utilities();
 
@@ -472,7 +472,7 @@ namespace AmbrosiaTest
 
             //start Client Job first ... to mix it up a bit (other tests has client start after server)
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartPerfClientJob("4001", "4000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+            int clientJobProcessID = MyUtils.StartPerfClientJob("4001", "4000", clientJobName, serverName, "65536", "6", logOutputFileName_ClientJob);
 
             //Server Call - primary
             string logOutputFileName_Server1 = testName + "_Server1.log";

@@ -715,7 +715,7 @@ namespace AmbrosiaTest
             int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
 
             //Delay until client is done - also check Server just to make sure
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 45, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
@@ -748,7 +748,7 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string byteSize = "13958643712";
+            string byteSize = "4294967296";
             string newUpgradedPrimary = "becoming upgraded primary";
 
             Utilities MyUtils = new Utilities();
@@ -797,7 +797,7 @@ namespace AmbrosiaTest
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "4", logOutputFileName_ClientJob);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
