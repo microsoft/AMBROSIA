@@ -2071,6 +2071,10 @@ namespace Ambrosia
         long _lastLogFile;
         // A locking variable (with compare and swap) used to eliminate redundant log moves
         int _movingToNextLog = 0;
+        // A handle to a file used for an upgrading secondary to bring down the primary and prevent primary promotion amongst secondaries.
+        // As long as the write lock is held, no promotion can happen
+        FileStream _killFileHandle = null;
+
 
 
         const int UnexpectedError = 0;
@@ -2208,6 +2212,33 @@ namespace Ambrosia
             localListenerThread.Start();
         }
 
+        private async Task CheckForUpgradeAsync()
+        {
+            while (true)
+            {
+                await Task.Delay(1000);
+                for (int i = 0; i < 3; i++)
+                {
+                    try
+                    {
+                        LockKillFile();
+                        // If we reach here, we have the lock and definitely don't need to commit suicide
+                        ReleaseAndTryCleanupKillFile();
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        // Maybe we are tying to upgrade, but maybe someone else is checking. Try 3 times before committing suicide
+                        if (i==2)
+                        {
+                            // Failed 3 times. Commit suicide
+                            OnError(0, "Upgrading. Must commit suicide since I'm the primary");
+                        }
+                    }
+                }
+            }
+        }
+
         private async Task RecoverOrStartAsync(long checkpointToLoad = -1,
                                                bool testUpgrade = false)
         {
@@ -2302,6 +2333,13 @@ namespace Ambrosia
                     // Moving to the next file means the first log file is empty, but it immediately causes failures of all old secondaries.
                     await MoveServiceToNextLogFileAsync();
                 }
+
+                if (_activeActive)
+                {
+                    // Start task to periodically check if someone's trying to upgrade
+                    (new Task(() => CheckForUpgradeAsync())).Start();
+                }
+
                 Recovering = false;
             }
             else
@@ -2322,6 +2360,11 @@ namespace Ambrosia
                 Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
                 await MoveServiceToNextLogFileAsync(true, true);
                 InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
+                if (_activeActive)
+                {
+                    // Start task to periodically check if someone's trying to upgrade
+                    (new Task(() => CheckForUpgradeAsync())).Start();
+                }
             }
         }
 
@@ -2372,6 +2415,26 @@ namespace Ambrosia
             return retVal;
         }
 
+        // Used to create a kill file meant to being down primaries and prevent promotion. Promotion prevention
+        // lasts until the returned file handle is released.
+        private void LockKillFile()
+        {
+            _killFileHandle = new FileStream(_logFileNameBase + "killFile", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read & ~FileShare.Inheritable);
+        }
+
+        private void ReleaseAndTryCleanupKillFile()
+        {
+            _killFileHandle.Dispose();
+            _killFileHandle = null;
+            try
+            {
+                // Try to delete the file. Someone may beat us to it.
+                File.Delete(_logFileNameBase + "killFile");
+            }
+            catch (Exception e)
+            {
+            }
+        }
 
         private LogWriter CreateNextLogFile()
         {
@@ -2496,11 +2559,27 @@ namespace Ambrosia
                         OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
                     }
 
+                    // Before allowing the node to become primary in active/active, if we are not an upgrader, see if we are prevented by a kill file.
+                    if (_activeActive && !_upgrading)
+                    {
+                        LockKillFile();
+                        // If we reach here, we have the lock and can promote, otherwise an exception was thrown and we can't promote
+                        ReleaseAndTryCleanupKillFile();
+                    }
+
+                    // Now we can really promote!
                     await _committer.SleepAsync();
                     _committer.SwitchLogStreams(lastLogFileStream);
                     await _committer.WakeupAsync();
                     _myRole = AARole.Primary;  // this will stop  and break the loop in the function  replayInput_Sec() 
                     Console.WriteLine("\n\nNOW I'm Primary\n\n");
+                    // if we are an upgrader : Time to release the kill file lock and cleanup. Note that since we have the log lock
+                    // everyone is prevented from promotion until we succeed or fail.
+                    if (_upgrading && _activeActive)
+                    {
+                        Debug.Assert(_killFileHandle != null);
+                        ReleaseAndTryCleanupKillFile();
+                    }
                     return;
                 }
                 catch
@@ -2654,7 +2733,24 @@ namespace Ambrosia
                         detectedEOL = true;
                         continue;
                     }
-                    // The remaining case is that we hit the end of log, but someone is still writing to this file. Wait and try to read again
+                    // The remaining case is that we hit the end of log, but someone is still writing to this file. Wait and try to read again, or kill the primary if we are trying to upgrade in an active/active scenario
+                    if (_upgrading && _activeActive && _killFileHandle == null)
+                    {
+                        // We need to write and hold the lock on the kill file. Recovery will continue until the primary dies and we have
+                        // fully processed the log.
+                        while (true)
+                        {
+                            try
+                            {
+                                LockKillFile();
+                                break;
+                            }
+                            catch (Exception e)
+                            {
+                                // Someone may be checking promotability. Keep trying until successful
+                            }
+                        }
+                    }
                     await Task.Delay(1000);
                     continue;
                 }
