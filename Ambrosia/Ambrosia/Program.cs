@@ -2294,10 +2294,12 @@ namespace Ambrosia
             CheckpointingService = false;
             Recovering = false;
             PrepareToRecoverOrStart();
+
             if (!_runningRepro)
             {
                 RuntimeChecksOnProcessStart();
             }
+
             // Determine if we are recovering
             if (!_createService)
             {
@@ -3877,18 +3879,21 @@ namespace Ambrosia
             );
         }
 
-        internal void RuntimeChecksOnProcessStart()
+        internal void RuntimeChecksOnProcessStart(long shardID = -1)
         {
-            if (!_createService)
+            // When we split / merge shards, these checks will not be valid as the logs for the
+            // new shards will not exist yet. Instead for the sharded case, we do these checks
+            // when we recover from the set of old shards.
+            if (!_createService && !_sharded)
             {
                 long readVersion = -1;
                 try
                 {
-                    readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
+                    readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion", shardID)));
                 }
                 catch
                 {
-                    OnError(VersionMismatch, "Version mismatch on process start: Expected " + _currentVersion + " was: " + RetrieveServiceInfo(InfoTitle("CurrentVersion")));
+                    OnError(VersionMismatch, "Version mismatch on process start: Expected " + _currentVersion + " was: " + RetrieveServiceInfo(InfoTitle("CurrentVersion", shardID)));
                 }
                 if (_currentVersion != readVersion)
                 {
@@ -3896,7 +3901,7 @@ namespace Ambrosia
                 }
                 if (!_runningRepro)
                 {
-                    if (long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint"))) < 1)
+                    if (long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", shardID))) < 1)
                     {
                         OnError(MissingCheckpoint, "No checkpoint in metadata");
 
@@ -3906,12 +3911,12 @@ namespace Ambrosia
                 {
                     OnError(MissingCheckpoint, "No checkpoint/logs directory");
                 }
-                var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
-                if (!LogWriter.FileExists(CheckpointName(lastCommittedCheckpoint)))
+                var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", shardID)));
+                if (!LogWriter.FileExists(CheckpointName(lastCommittedCheckpoint, -1, shardID)))
                 {
                     OnError(MissingCheckpoint, "Missing checkpoint " + lastCommittedCheckpoint.ToString());
                 }
-                if (!LogWriter.FileExists(LogFileName(lastCommittedCheckpoint)))
+                if (!LogWriter.FileExists(LogFileName(lastCommittedCheckpoint, -1, shardID)))
                 {
                     OnError(MissingLog, "Missing log " + lastCommittedCheckpoint.ToString());
                 }
