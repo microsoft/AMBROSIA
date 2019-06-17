@@ -14,7 +14,7 @@ As part of a full build, Ambrosia generates code for the interface proxies. To m
 
 To run HelloWorld you'll also need the Ambrosia tools that are distributed in compressed folder. To get these,
 
-- Download the compressed folder `Ambrosia-win.zip`
+- Download the compressed folder `Ambrosia-win.zip` from [Releases](https://github.com/microsoft/AMBROSIA/releases)
 - Unpack it somewhere on your disk; for example, `C:\Ambrosia-win\`
 - Set the `%AMBROSIATOOLS%` environment variable to point to that directory
 
