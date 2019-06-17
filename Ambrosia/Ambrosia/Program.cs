@@ -2528,6 +2528,11 @@ namespace Ambrosia
             return LogFileNameBase(version, shardID) + "log" + logFile.ToString();
         }
 
+        private string KillFileName(long shardID = -1)
+        {
+            return LogFileNameBase(-1, shardID) + "killFile";
+        }
+
         private LogWriter CreateNextOldVerLogFile()
         {
             if (LogWriter.FileExists(LogFileName(_lastLogFile + 1, _currentVersion)))
@@ -2548,9 +2553,14 @@ namespace Ambrosia
 
         // Used to create a kill file meant to being down primaries and prevent promotion. Promotion prevention
         // lasts until the returned file handle is released.
-        private void LockKillFile()
+        private void LockKillFile(long shardID = -1)
         {
-            _killFileHandle = new FileStream(_logFileNameBase + "killFile", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read & ~FileShare.Inheritable);
+            _killFileHandle = LockFile(KillFileName(shardID));
+        }
+
+        private FileStream LockFile(string file)
+        {
+            return new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read & ~FileShare.Inheritable);
         }
 
         private void ReleaseAndTryCleanupKillFile()
@@ -2560,7 +2570,7 @@ namespace Ambrosia
             try
             {
                 // Try to delete the file. Someone may beat us to it.
-                File.Delete(_logFileNameBase + "killFile");
+                File.Delete(KillFileName());
             }
             catch (Exception e)
             {
