@@ -2356,8 +2356,8 @@ namespace Ambrosia
 
                 _checkpointWriter = null;
                 _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
-                Connect(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+                await ConnectAsync(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
+                await ConnectAsync(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
                 await MoveServiceToNextLogFileAsync(true, true);
                 InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
                 if (_activeActive)
@@ -2386,14 +2386,14 @@ namespace Ambrosia
             _logFileNameBase = Path.Combine(_serviceLogPath + _serviceName + "_" + _upgradeToVersion, "server");
         }
 
-        public CRAErrorCode Connect(string fromProcessName, string fromEndpoint, string toProcessName, string toEndpoint)
+        public async Task<CRAErrorCode> ConnectAsync(string fromProcessName, string fromEndpoint, string toProcessName, string toEndpoint)
         {
-            foreach (var conn in _coral.GetConnectionsFromVertex(fromProcessName))
+            foreach (var conn in await _coral.GetConnectionsFromVertexAsync(fromProcessName))
             {
                 if (conn.FromEndpoint.Equals(fromEndpoint) && conn.ToVertex.Equals(toProcessName) && conn.ToEndpoint.Equals(toEndpoint))
                     return CRAErrorCode.Success;
             }
-            return _coral.Connect(fromProcessName, fromEndpoint, toProcessName, toEndpoint);
+            return await _coral.ConnectAsync(fromProcessName, fromEndpoint, toProcessName, toEndpoint);
         }
 
         private LogWriter CreateNextOldVerLogFile()
@@ -2939,10 +2939,10 @@ namespace Ambrosia
                     if (!_runningRepro)
                     {
                         Console.WriteLine("Attaching to {0}", destination);
-                        var connectionResult1 = Connect(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
-                        var connectionResult2 = Connect(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
-                        var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                        var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+                        var connectionResult1 = ConnectAsync(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
+                        var connectionResult2 = ConnectAsync(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
+                        var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName).GetAwaiter().GetResult();
+                        var connectionResult4 = ConnectAsync(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName).GetAwaiter().GetResult();
                         if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
                             (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
                         {
@@ -3680,7 +3680,7 @@ namespace Ambrosia
         {
         }
 
-        public override void Initialize(object param)
+        public override async Task InitializeAsync(object param)
         {
             // Workaround because of parameter type limitation in CRA
             AmbrosiaRuntimeParams p = new AmbrosiaRuntimeParams();
@@ -3704,6 +3704,7 @@ namespace Ambrosia
                 p.currentVersion,
                 p.upgradeToVersion
             );
+            return;
         }
 
         internal void RuntimeChecksOnProcessStart()
@@ -3867,7 +3868,9 @@ namespace Ambrosia
                     {
                         _isActiveActive = true;
                     }
-                    var client = new CRAClientLibrary(Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING"));
+
+                    var dataProvider = new CRA.DataProvider.Azure.AzureDataProvider(Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING"));
+                    var client = new CRAClientLibrary(dataProvider);
                     client.DisableArtifactUploading();
 
                     var replicaName = $"{_instanceName}{_replicaNumber}";
@@ -3890,7 +3893,7 @@ namespace Ambrosia
 
                     try
                     {
-                        if (client.DefineVertex(param.AmbrosiaBinariesLocation, () => new AmbrosiaRuntime()) != CRAErrorCode.Success)
+                        if (client.DefineVertexAsync(param.AmbrosiaBinariesLocation, () => new AmbrosiaRuntime()).GetAwaiter().GetResult() != CRAErrorCode.Success)
                         {
                             throw new Exception();
                         }
@@ -3904,7 +3907,7 @@ namespace Ambrosia
                             serializedParams = textWriter.ToString();
                         }
 
-                        if (client.InstantiateVertex(replicaName, param.serviceName, param.AmbrosiaBinariesLocation, serializedParams) != CRAErrorCode.Success)
+                        if (client.InstantiateVertexAsync(replicaName, param.serviceName, param.AmbrosiaBinariesLocation, serializedParams).GetAwaiter().GetResult() != CRAErrorCode.Success)
                         {
                             throw new Exception();
                         }

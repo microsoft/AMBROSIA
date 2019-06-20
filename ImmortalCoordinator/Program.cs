@@ -90,9 +90,10 @@ namespace CRA.Worker
                 descriptor = (ISecureStreamConnectionDescriptor)Activator.CreateInstance(type);
             }
 
+            var dataProvider = new CRA.DataProvider.Azure.AzureDataProvider(storageConnectionString);
             var worker = new CRAWorker
                 (replicaName, _ipAddress, _port,
-                storageConnectionString, descriptor, connectionsPoolPerWorker);
+                dataProvider, descriptor, connectionsPoolPerWorker);
 
             worker.DisableDynamicLoading();
             worker.SideloadVertex(new AmbrosiaRuntime(), "ambrosia");
