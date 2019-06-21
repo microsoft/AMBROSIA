@@ -27,6 +27,7 @@
     <PackageReference Include="Remote.Linq">
       <Version>5.8.2</Version>
     </PackageReference>
+    <PackageReference Include="Remote.Linq.Newtonsoft.Json" Version="5.8.2" />
     <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives">
       <Version>4.3.0</Version>

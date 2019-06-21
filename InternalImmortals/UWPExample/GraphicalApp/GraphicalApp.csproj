@@ -56,6 +56,9 @@
     <Reference Include="Aqua, Version=4.0.0.0, Culture=neutral, PublicKeyToken=82d6c51b67e8b655, processorArchitecture=MSIL">
       <HintPath>..\packages\aqua-core.4.5.1\lib\net451\Aqua.dll</HintPath>
     </Reference>
+    <Reference Include="Aqua.Newtonsoft.Json, Version=4.0.0.0, Culture=neutral, PublicKeyToken=82d6c51b67e8b655, processorArchitecture=MSIL">
+      <HintPath>..\packages\aqua-core-newtonsoft-json.4.5.1\lib\net451\Aqua.Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="CRA.ClientLibrary, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc877ef3899064b2, processorArchitecture=MSIL">
       <HintPath>..\packages\CRA.2018.11.5.1\lib\net46\CRA.ClientLibrary.dll</HintPath>
     </Reference>
@@ -68,11 +71,14 @@
     <Reference Include="Microsoft.WindowsAzure.Storage, Version=9.3.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WindowsAzure.Storage.9.3.2\lib\net45\Microsoft.WindowsAzure.Storage.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Remote.Linq, Version=5.0.0.0, Culture=neutral, PublicKeyToken=82d6c51b67e8b655, processorArchitecture=MSIL">
-      <HintPath>..\packages\Remote.Linq.5.8.1\lib\net451\Remote.Linq.dll</HintPath>
+      <HintPath>..\packages\Remote.Linq.5.8.2\lib\net451\Remote.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="Remote.Linq.Newtonsoft.Json, Version=5.0.0.0, Culture=neutral, PublicKeyToken=82d6c51b67e8b655, processorArchitecture=MSIL">
+      <HintPath>..\packages\Remote.Linq.Newtonsoft.Json.5.8.2\lib\net451\Remote.Linq.Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
