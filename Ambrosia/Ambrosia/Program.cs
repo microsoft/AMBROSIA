@@ -3238,6 +3238,7 @@ namespace Ambrosia
                     break;
 
                 case InitalMessageByte:
+                    Console.WriteLine("Init message for service " + _serviceName);
                     // Process the Async RPC request
                     if (ServiceInitializationMessage != null)
                     {
