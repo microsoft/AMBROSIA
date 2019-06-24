@@ -1134,7 +1134,7 @@ namespace AmbrosiaTest
             //** Because checkpointer and secondary were not upgraded so they were stopped which means nothing to take the checkpoint or be secondary
 
             //Delay until finished ... looking at the most recent primary (server3) but also verify others hit done too
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 5, false, testName, true);  // Total Bytes received needs to be accurate
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 10, false, testName, true);  // Total Bytes received needs to be accurate
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_upgraded, byteSize, 5, false, testName, true);
 
             // Also verify ImmCoord has the string to show it is it killed itself and others killed off too
@@ -1158,9 +1158,8 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID2); // This should be dead anyways
             MyUtils.KillProcess(ImmCoordProcessID3); // This should be dead anyways
 
-            // Verify cmp files for client and 3 servers
+            // Verify cmp files for client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server1_upgraded);
 
         }
 
