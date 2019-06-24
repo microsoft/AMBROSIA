@@ -2034,6 +2034,7 @@ namespace Ambrosia
         long _shardID;
         long[] _oldShards;
         long[] _newShards;
+        Func<long, long> _shardLocator;
         bool _runningRepro;
         long _currentVersion;
         long _upgradeToVersion;
@@ -2556,17 +2557,30 @@ namespace Ambrosia
             return _coral.Connect(fromProcessName, fromEndpoint, toProcessName, toEndpoint);
         }
 
-        private string ServiceName(long shardID = -1)
+        private string ServiceName(string name = "", long shardID = -1)
         {
+            if (name == "")
+            {
+                name = _serviceName;
+            }
+
             if (_sharded)
             {
                 if (shardID == -1)
                 {
                     shardID = _shardID;
                 }
-                return _serviceName + "-" + shardID.ToString();
             }
-            return _serviceName;
+            return GetShardName(name, shardID);
+        }
+
+        public static string GetShardName(string name, long shardID)
+        {
+            if (shardID != -1)
+            {
+                name += "-" + shardID.ToString();
+            }
+            return name;
         }
 
         private string RootDirectory(long version = -1)
@@ -3156,6 +3170,16 @@ namespace Ambrosia
             MoveServiceToNextLogFileAsync().Wait();
         }
 
+        private string DestinationShard(string destination, long shardID = -1)
+        {
+            if (shardID == -1)
+            {
+                shardID = _shardLocator(BitConverter.ToInt32(Encoding.UTF8.GetBytes(destination), 0));
+            }
+
+            return ServiceName(destination, shardID);
+        }
+
         private void ProcessSyncLocalMessage(ref FlexReadBuffer localServiceBuffer, FlexReadBuffer batchServiceBuffer)
         {
             var sizeBytes = localServiceBuffer.LengthLength;
@@ -3181,6 +3205,7 @@ namespace Ambrosia
                 case attachToByte:
                     // Get dest string
                     var destination = Encoding.UTF8.GetString(localServiceBuffer.Buffer, sizeBytes + 1, localServiceBuffer.Length - sizeBytes - 1);
+                    destination = DestinationShard(destination);
                     localServiceBuffer.ResetBuffer();
 
                     if (!_runningRepro)
@@ -3289,6 +3314,7 @@ namespace Ambrosia
                 Buffer.BlockCopy(RpcBuffer.Buffer, destOffset, _lastShuffleDest, 0, destBytesSize);
                 _lastShuffleDestSize = destBytesSize;
                 destination = Encoding.UTF8.GetString(RpcBuffer.Buffer, destOffset, destBytesSize);
+                destination = DestinationShard(destination);
                 // locking to avoid conflict with stream reconnection immediately after replay and trim during replay
                 lock (_outputs)
                 {
@@ -3920,6 +3946,16 @@ namespace Ambrosia
         {
         }
 
+        public long KeyHashToShard(long hash)
+        {
+            if (!_sharded)
+            {
+                return -1;
+            }
+            // TODO: For now assuming there are fixed shards per side.
+            return (hash % 1) + 1;
+        }
+
         public override void Initialize(object param)
         {
             // Workaround because of parameter type limitation in CRA
@@ -3935,6 +3971,7 @@ namespace Ambrosia
             _shardID = p.shardID;
             _oldShards = p.oldShards;
             _newShards = p.newShards;
+            _shardLocator = KeyHashToShard;
 
             Initialize(
                 p.serviceReceiveFromPort,
@@ -4150,11 +4187,8 @@ namespace Ambrosia
                     var client = new CRAClientLibrary(Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING"));
                     client.DisableArtifactUploading();
 
-                    var replicaName = $"{_instanceName}{_replicaNumber}";
-                    if (_shardID > 0)
-                    {
-                        replicaName += "-" + _shardID.ToString();
-                    }
+                    string shardName = AmbrosiaRuntime.GetShardName(_instanceName, _shardID);
+                    var replicaName = $"{shardName}-{_replicaNumber}";
                     AmbrosiaRuntimeParams param = new AmbrosiaRuntimeParams();
                     param.createService = _recoveryMode == AmbrosiaRecoveryModes.A
                         ? (bool?)null
@@ -4181,7 +4215,6 @@ namespace Ambrosia
                         {
                             throw new Exception();
                         }
-
                         // Workaround because of limitation in parameter serialization in CRA
                         XmlSerializer xmlSerializer = new XmlSerializer(param.GetType());
                         string serializedParams;
@@ -4190,15 +4223,15 @@ namespace Ambrosia
                             xmlSerializer.Serialize(textWriter, param);
                             serializedParams = textWriter.ToString();
                         }
-
-                        if (client.InstantiateVertex(replicaName, param.serviceName, param.AmbrosiaBinariesLocation, serializedParams) != CRAErrorCode.Success)
+                        if (client.InstantiateVertex(replicaName, shardName, param.AmbrosiaBinariesLocation, serializedParams) != CRAErrorCode.Success)
                         {
                             throw new Exception();
                         }
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true);
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true);
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaControlInputsName, true, true);
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaControlOutputsName, false, true);
+
+                        client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true);
+                        client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true);
+                        client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaControlInputsName, true, true);
+                        client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaControlOutputsName, false, true);
                     }
                     catch (Exception e)
                     {

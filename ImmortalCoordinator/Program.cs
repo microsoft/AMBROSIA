@@ -26,11 +26,8 @@ namespace CRA.Worker
         {
             ParseAndValidateOptions(args);
 
-            var replicaName = $"{_instanceName}{_replicaNumber}";
-            if (_shardID > 0)
-            {
-                replicaName += "-" + _shardID.ToString();
-            }
+            string shardName = AmbrosiaRuntime.GetShardName(_instanceName, _shardID);
+            var replicaName = $"{shardName}-{_replicaNumber}";
 
             if (_ipAddress == null)
             {
