@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ambrosia", "Ambrosia\Ambros
 		{5852AC33-6B01-44F5-BAF3-2AAF796E8449} = {5852AC33-6B01-44F5-BAF3-2AAF796E8449}
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmbrosiaTests", "AmbrosiaTests\AmbrosiaTests.csproj", "{4339AF42-4A49-42E9-8571-0DC4CEB0D1CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -38,6 +40,10 @@ Global
 		{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}.Debug|x64.Build.0 = Debug|x64
 		{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}.Release|x64.ActiveCfg = Release|x64
 		{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}.Release|x64.Build.0 = Release|x64
+		{4339AF42-4A49-42E9-8571-0DC4CEB0D1CB}.Debug|x64.ActiveCfg = Debug|x64
+		{4339AF42-4A49-42E9-8571-0DC4CEB0D1CB}.Debug|x64.Build.0 = Debug|x64
+		{4339AF42-4A49-42E9-8571-0DC4CEB0D1CB}.Release|x64.ActiveCfg = Release|x64
+		{4339AF42-4A49-42E9-8571-0DC4CEB0D1CB}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
