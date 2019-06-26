@@ -1059,6 +1059,11 @@ namespace Ambrosia
         public long upgradeToVersion;
     }
 
+    public static class AmbrosiaRuntimeParms
+    {
+        public static bool _looseAttach = false;
+    }
+
     public class AmbrosiaRuntime : VertexBase
     {
 #if _WINDOWS
@@ -2161,6 +2166,7 @@ namespace Ambrosia
 #endif
             while (true)
             {
+                Console.WriteLine("Trying to connect IC and Language Binding");
                 try
                 {
 #if _WINDOWS
@@ -2909,6 +2915,25 @@ namespace Ambrosia
             MoveServiceToNextLogFileAsync().Wait();
         }
 
+        void AttachTo(string destination)
+        {
+            while (true)
+            {
+                Console.WriteLine("Attempting to attach", destination);
+                var connectionResult1 = Connect(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
+                var connectionResult2 = Connect(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
+                var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
+                var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+                if ((connectionResult1 == CRAErrorCode.Success) && (connectionResult2 == CRAErrorCode.Success) &&
+                    (connectionResult3 == CRAErrorCode.Success) && (connectionResult4 == CRAErrorCode.Success))
+                {
+                    Console.WriteLine("Attached to {0}", destination);
+                    return;
+                }
+                Thread.Sleep(1000);
+            }
+        }
+
         private void ProcessSyncLocalMessage(ref FlexReadBuffer localServiceBuffer, FlexReadBuffer batchServiceBuffer)
         {
             var sizeBytes = localServiceBuffer.LengthLength;
@@ -2938,15 +2963,23 @@ namespace Ambrosia
 
                     if (!_runningRepro)
                     {
-                        Console.WriteLine("Attaching to {0}", destination);
-                        var connectionResult1 = Connect(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
-                        var connectionResult2 = Connect(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
-                        var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                        var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
-                        if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
-                            (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
+                        if (AmbrosiaRuntimeParms._looseAttach)
                         {
-                            Console.WriteLine("Error attaching {0} to {1}", _serviceName, destination);
+                            Thread attachThread = new Thread(() => AttachTo(destination)) { IsBackground = true };
+                            attachThread.Start();
+                        }
+                        else
+                        {
+                            Console.WriteLine("Attaching to {0}", destination);
+                            var connectionResult1 = Connect(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
+                            var connectionResult2 = Connect(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
+                            var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
+                            var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+                            if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
+                                (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
+                            {
+                                OnError(0, "Error attaching " + _serviceName + " to " + destination);
+                            }
                         }
                     }
                     break;
