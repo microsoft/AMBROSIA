@@ -138,6 +138,20 @@ namespace Ambrosia
                 writeToStream.Write(keyEncoding, 0, keyEncoding.Length);
                 writeToStream.WriteLongFixed(entry.Value.LastProcessedID);
                 writeToStream.WriteLongFixed(entry.Value.LastProcessedReplayableID);
+                writeToStream.WriteLongFixed(entry.Value.ShardID);
+                var ancestors = entry.Value.AncestorsToIDs;
+                writeToStream.WriteIntFixed(ancestors.Count);
+                foreach (var peerID in ancestors.Keys)
+                {
+                    writeToStream.WriteLongFixed(peerID);
+                    writeToStream.WriteIntFixed(ancestors[peerID].Count);
+                    foreach (var shardID in ancestors[peerID].Keys)
+                    {
+                        writeToStream.WriteLongFixed(shardID);
+                        writeToStream.WriteLongFixed(ancestors[peerID][shardID].Item1);
+                        writeToStream.WriteLongFixed(ancestors[peerID][shardID].Item2);
+                    }
+                }
             }
         }
 
@@ -153,6 +167,22 @@ namespace Ambrosia
                 newRecord.LastProcessedID = seqNo;
                 seqNo = readFromStream.ReadLongFixed();
                 newRecord.LastProcessedReplayableID = seqNo;
+                newRecord.ShardID = readFromStream.ReadLongFixed();
+                Console.WriteLine("Deserialize {0} -> Shard ID {1}", myString, newRecord.ShardID);
+                var ancestorCount = readFromStream.ReadIntFixed();
+                for (int j = 0; j < ancestorCount; j++)
+                {
+                    var peerID = readFromStream.ReadLongFixed();
+                    var peerCount = readFromStream.ReadLongFixed();
+                    newRecord.AncestorsToIDs[peerID] = new ConcurrentDictionary<long, Tuple<long, long>>();
+                    for (int k = 0; k < peerCount; k++)
+                    {
+                        var shardID = readFromStream.ReadLongFixed();
+                        var lastProcessedID = readFromStream.ReadLongFixed();
+                        var lastProcessedReplayableID = readFromStream.ReadLongFixed();
+                        newRecord.AncestorsToIDs[peerID][shardID] = new Tuple<long, long>(lastProcessedID, lastProcessedReplayableID);
+                    }
+                }
                 _retVal.TryAdd(myString, newRecord);
             }
             return _retVal;
@@ -974,17 +1004,20 @@ namespace Ambrosia
     [DataContract]
     internal class InputConnectionRecord
     {
+        public ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>> AncestorsToIDs { get; set; }
         public NetworkStream DataConnectionStream { get; set; }
         public NetworkStream ControlConnectionStream { get; set; }
         [DataMember]
         public long LastProcessedID { get; set; }
         [DataMember]
         public long LastProcessedReplayableID { get; set; }
+        public long ShardID { get; set; }
         public InputConnectionRecord()
         {
             DataConnectionStream = null;
             LastProcessedID = 0;
             LastProcessedReplayableID = 0;
+            AncestorsToIDs = new ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>>();
         }
     }
 
@@ -2486,6 +2519,21 @@ namespace Ambrosia
             return GetShardName(name, shardID);
         }
 
+        private Tuple<string, long> ParseServiceName(string service)
+        {
+            if (service == "")
+            {
+                return new Tuple<string, long>(_serviceName, _shardID);
+            }
+
+            var parts = service.Split('-');
+            if (parts.Length == 1)
+            {
+                return new Tuple<string, long>(parts[0], -1);
+            }
+            return new Tuple<string, long>(parts[0], long.Parse(parts[1]));
+        }
+
         public static string GetShardName(string name, long shardID)
         {
             if (shardID != -1)
@@ -2931,6 +2979,7 @@ namespace Ambrosia
                     {
                         // Create input record and add it to the dictionary
                         inputConnectionRecord = new InputConnectionRecord();
+                        inputConnectionRecord.ShardID = ParseServiceName(kv.Key).Item2;
                         state.Inputs[kv.Key] = inputConnectionRecord;
                     }
                     inputConnectionRecord.LastProcessedID = kv.Value.First;
@@ -3316,23 +3365,23 @@ namespace Ambrosia
             }
         }
 
-        private async Task ToDataStreamAsync(Stream writeToStream,
-                                             string destString,
-                                             CancellationToken ct)
-
+        private async Task<OutputConnectionRecord> SyncOutputConnectionAsync(ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                                                             string destString,
+                                                                             long commitSeqNo,
+                                                                             long commitSeqNoReplayable)
         {
             OutputConnectionRecord outputConnectionRecord;
             if (destString.Equals(ServiceName()))
             {
                 destString = "";
             }
-            lock (_outputs)
+            lock (outputs)
             {
-                if (!_outputs.TryGetValue(destString, out outputConnectionRecord))
+                if (!outputs.TryGetValue(destString, out outputConnectionRecord))
                 {
                     // Set up the output record for the first time and add it to the dictionary
                     outputConnectionRecord = new OutputConnectionRecord(this);
-                    _outputs[destString] = outputConnectionRecord;
+                    outputs[destString] = outputConnectionRecord;
                     Console.WriteLine("Adding output:{0}", destString);
                 }
                 else
@@ -3340,20 +3389,14 @@ namespace Ambrosia
                     Console.WriteLine("restoring output:{0}", destString);
                 }
             }
+
             try
             {
                 // Reset the output cursor if it exists
                 outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                 outputConnectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
                 outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
-                // Process replay message
-                var inputFlexBuffer = new FlexReadBuffer();
-                await FlexReadBuffer.DeserializeAsync(writeToStream, inputFlexBuffer, ct);
-                var sizeBytes = inputFlexBuffer.LengthLength;
-                // Get the seqNo of the replay/filter point
-                var commitSeqNo = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1);
-                var commitSeqNoReplayable = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1 + StreamCommunicator.LongSize(commitSeqNo));
-                inputFlexBuffer.ResetBuffer();
+
                 if (outputConnectionRecord.ConnectingAfterRestart)
                 {
                     // We've been through recovery (at least partially), and have scrubbed all ephemeral calls. Must now rebase
@@ -3386,7 +3429,40 @@ namespace Ambrosia
                     }
                 }
                 outputConnectionRecord.LastSeqSentToReceiver = commitSeqNo - 1;
+            }
+            catch (Exception e)
+            {
+                // Cleanup held locks if necessary
+                await Task.Yield();
+                var lockVal = outputConnectionRecord.BufferedOutput.ReadTrimLock();
+                if (lockVal == 1 || lockVal == 2)
+                {
+                    outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
+                }
+                var bufferLockVal = outputConnectionRecord.BufferedOutput.ReadAppendLock();
+                if (bufferLockVal == 2)
+                {
+                    outputConnectionRecord.BufferedOutput.ReleaseAppendLock();
+                }
+                throw e;
+            }
+            return outputConnectionRecord;
+        }
 
+        private async Task ToDataStreamAsync(Stream writeToStream,
+                                             string destString,
+                                             CancellationToken ct)
+        {
+            // Process replay message
+            var result = await Serializer.DeserializeReplayMessageAsync(writeToStream, ct);
+            // Get the seqNo of the replay/filter point
+            var commitSeqNo = result.Item1;
+            var commitSeqNoReplayable = result.Item2;
+
+            OutputConnectionRecord outputConnectionRecord = await SyncOutputConnectionAsync(_outputs, destString, commitSeqNo, commitSeqNoReplayable);
+
+            try
+            {
                 // Enqueue a replay send
                 if (outputConnectionRecord._sendsEnqueued == 0)
                 {
@@ -3530,18 +3606,17 @@ namespace Ambrosia
         }
 
         private async Task SendReplayMessageAsync(Stream sendToStream,
-                                                  long lastProcessedID,
-                                                  long lastProcessedReplayableID,
+                                                  InputConnectionRecord input,
                                                   CancellationToken ct)
         {
             // Send FilterTo message to the destination command stream
-            // Write message size
-            sendToStream.WriteInt(1 + StreamCommunicator.LongSize(lastProcessedID) + StreamCommunicator.LongSize(lastProcessedReplayableID));
-            // Write message type
-            sendToStream.WriteByte(replayFromByte);
-            // Write the output filter seqNo for the other side
-            sendToStream.WriteLong(lastProcessedID);
-            sendToStream.WriteLong(lastProcessedReplayableID);
+            Serializer.SerializeReplayMessage(
+                sendToStream,
+                replayFromByte,
+                input.LastProcessedID + 1,
+                input.LastProcessedReplayableID + 1,
+                input.AncestorsToIDs
+            );
             await sendToStream.FlushAsync(ct);
         }
 
@@ -3573,6 +3648,7 @@ namespace Ambrosia
             {
                 // Create input record and add it to the dictionary
                 inputConnectionRecord = new InputConnectionRecord();
+                inputConnectionRecord.ShardID = ParseServiceName(sourceString).Item2;
                 _inputs[sourceString] = inputConnectionRecord;
                 Console.WriteLine("Adding input:{0}", sourceString);
             }
@@ -3581,7 +3657,7 @@ namespace Ambrosia
                 Console.WriteLine("restoring input:{0}", sourceString);
             }
             inputConnectionRecord.DataConnectionStream = (NetworkStream)readFromStream;
-            await SendReplayMessageAsync(readFromStream, inputConnectionRecord.LastProcessedID + 1, inputConnectionRecord.LastProcessedReplayableID + 1, ct);
+            await SendReplayMessageAsync(readFromStream, inputConnectionRecord, ct);
             // Create new input task for monitoring new input
             Task inputTask;
             inputTask = InputDataListenerAsync(inputConnectionRecord, sourceString, ct);
@@ -3601,6 +3677,7 @@ namespace Ambrosia
             {
                 // Create input record and add it to the dictionary
                 inputConnectionRecord = new InputConnectionRecord();
+                inputConnectionRecord.ShardID = ParseServiceName(sourceString).Item2;
                 _inputs[sourceString] = inputConnectionRecord;
                 Console.WriteLine("Adding input:{0}", sourceString);
             }
