@@ -148,7 +148,9 @@ namespace Ambrosia
 #endif
             while (true)
             {
-                Console.WriteLine("Trying to connect IC and Language Binding");
+#if DEBUG
+                Console.WriteLine("*X* Trying to connect IC and Language Binding");
+#endif
                 try
                 {
 #if _WINDOWS
