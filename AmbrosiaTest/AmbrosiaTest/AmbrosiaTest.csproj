@@ -84,9 +84,6 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="CheckAmbrosiaStatus.ps1">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="CleanUpAzure.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -103,6 +100,7 @@
     <None Include="LaunchUnitTests.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="UpdateAmbrosiaForNugetRelease.ps1" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeCoverage">
