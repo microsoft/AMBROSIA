@@ -1061,7 +1061,7 @@ namespace Ambrosia
 
     public static class AmbrosiaRuntimeParms
     {
-        public static bool _looseAttach = false;
+        public static bool _looseAttach = true;
     }
 
     public class AmbrosiaRuntime : VertexBase
