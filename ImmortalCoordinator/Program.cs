@@ -23,7 +23,6 @@ namespace CRA.Worker
 
         static void Main(string[] args)
         {
-//            AmbrosiaRuntimeParms._looseAttach = true;
             ParseAndValidateOptions(args);
 
             var replicaName = $"{_instanceName}{_replicaNumber}";
