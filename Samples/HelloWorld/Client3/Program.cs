@@ -7,6 +7,20 @@ using System.Threading.Tasks;
 
 namespace Client3
 {
+    class ConsoleColorScope : IDisposable
+    {
+        public static ConsoleColorScope SetForeground(ConsoleColor color)
+        {
+            Console.ForegroundColor = color;
+            return new ConsoleColorScope();
+        }
+
+        public void Dispose()
+        {
+            Console.ResetColor();
+        }
+    }
+
     // Because this Immortal makes async instance calls, it, and the associated generated proxies and base classes, must be
     // compiled DEBUG. For an explanation, see HelloWorldExplained.
     [DataContract]
@@ -26,22 +40,24 @@ namespace Client3
         protected override async Task<bool> OnFirstStart()
         {
             _server = GetProxy<IServerProxy>(_serverName);
-            Console.ForegroundColor = ConsoleColor.Yellow;
 
-            var t1 = _server.ReceiveMessageAsync("\n!! Client: Hello World 3 Message #1!");
-            Console.WriteLine("\n!! Client: Sent message #1.");
+            using (ConsoleColorScope.SetForeground(ConsoleColor.Yellow))
+            {
+                var t1 = _server.ReceiveMessageAsync("\n!! Client: Hello World 3 Message #1!");
+                Console.WriteLine("\n!! Client: Sent message #1.");
 
-            var res1 = await t1;
-            Console.WriteLine($"\n!! Client: Message #1 completed. Server acknowledges processing {res1} messages.");
+                var res1 = await t1;
+                Console.WriteLine($"\n!! Client: Message #1 completed. Server acknowledges processing {res1} messages.");
 
-            var t2 = _server.ReceiveMessageAsync("\n!! Client: Hello World 3 Message #2!");
-            Console.WriteLine("\n!! Client: Sent message #2.");
+                var t2 = _server.ReceiveMessageAsync("\n!! Client: Hello World 3 Message #2!");
+                Console.WriteLine("\n!! Client: Sent message #2.");
 
-            var res2 = await t2;
-            Console.WriteLine($"\n!! Client: Message #2 completed. Server acknowledges processing {res2} messages.");
+                var res2 = await t2;
+                Console.WriteLine($"\n!! Client: Message #2 completed. Server acknowledges processing {res2} messages.");
 
-            Console.WriteLine("\n!! Client: Shutting down");
-            Program.finishedTokenQ.Enqueue(0);
+                Console.WriteLine("\n!! Client: Shutting down");
+                Program.finishedTokenQ.Enqueue(0);
+            }
             return true;
         }
     }
