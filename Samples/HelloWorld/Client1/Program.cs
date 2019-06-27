@@ -8,6 +8,20 @@ using System.Threading.Tasks;
 
 namespace Client1
 {
+    class ConsoleColorScope : IDisposable
+    {
+        public static ConsoleColorScope SetForeground(ConsoleColor color)
+        {
+            Console.ForegroundColor = color;
+            return new ConsoleColorScope();
+        }
+
+        public void Dispose()
+        {
+            Console.ResetColor();
+        }
+    }
+
     [DataContract]
     class Client1 : Immortal<IClient1Proxy>, IClient1
     {
@@ -29,17 +43,20 @@ namespace Client1
 
             _server.ReceiveMessageFork("\n!! Client: Hello World 1!");
 
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\n!! Client: Sent message 1.");
-            Console.WriteLine("\n!! Client: Press enter to continue (will send 2&3)");
-            Console.ResetColor();
+            using (ConsoleColorScope.SetForeground(ConsoleColor.Yellow))
+            {
+                Console.WriteLine("\n!! Client: Sent message 1.");
+                Console.WriteLine("\n!! Client: Press enter to continue (will send 2&3)");
+            }
 
             Console.ReadLine();
             _server.ReceiveMessageFork("\n!! Client: Hello World 2!");
             _server.ReceiveMessageFork("\n!! Client: Hello World 3!");
 
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\n!! Client: Press enter to shutdown.");
+            using (ConsoleColorScope.SetForeground(ConsoleColor.Yellow))
+            {
+                Console.WriteLine("\n!! Client: Press enter to shutdown.");
+            }
 
             Console.ReadLine();
             Program.finishedTokenQ.Enqueue(0);
