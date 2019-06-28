@@ -7,6 +7,20 @@ using System.Threading.Tasks;
 
 namespace Server
 {
+    class ConsoleColorScope : IDisposable
+    {
+        public static ConsoleColorScope SetForeground(ConsoleColor color)
+        {
+            Console.ForegroundColor = color;
+            return new ConsoleColorScope();
+        }
+
+        public void Dispose()
+        {
+            Console.ResetColor();
+        }
+    }
+
     class Program
     {
         [DataContract]
@@ -21,9 +35,10 @@ namespace Server
 
             public async Task<int> ReceiveMessageAsync(string message)
             {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("\n!! SERVER Received message from a client: " + message);
-                Console.ResetColor();
+                using (ConsoleColorScope.SetForeground(ConsoleColor.Green))
+                {
+                    Console.WriteLine("\n!! SERVER Received message from a client: " + message);
+                }
 
                 _messagesReceived++;
                 return _messagesReceived;
