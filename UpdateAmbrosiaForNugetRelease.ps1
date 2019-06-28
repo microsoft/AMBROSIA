@@ -21,47 +21,98 @@ $NewVersion=$args[1]
 
 # Verify parameters are passed
 if ([string]::IsNullOrEmpty($CurrentVersion)) {            
-#####    Write-output "ERROR! Missing the first parameter (CurrentVersion). "
-#####	 exit
+	Write-output "ERROR! Missing the first parameter (CurrentVersion). "
+	exit
  }
 
 if ([string]::IsNullOrEmpty($NewVersion)) {            
-#####    Write-output "ERROR! Missing the second parameter (NewVersion). "
-#####    exit
+	Write-output "ERROR! Missing the second parameter (NewVersion). "
+	exit
  }
 
 ##########################################################################
 #   Wrapper around swapping out Nuget Versions in CSProj files.
 #
+#	Need to set proper encoding as files use different ones. Want to save in same encoding that created in
+# 		Generated code = UTF8NoBOM (aka "(Western European (windows)") - default for Set-Content.
+#		Source code = UTF8
+#
 #   Sample strings that will need to be replaced
 #    <PackageReference Include="AmbrosiaLibCS" Version="1.0.11" Condition="'$(Configuration)' == 'Release' " />
 #    <PackageReference Include="AmbrosiaLibCSDebug" Version="1.0.11" Condition="'$(Configuration)' == 'Debug'" />
 ##########################################################################
-
 function SwapNugetStringInFile { 
-	Param ($OldVer,$NewVer,$FileName)
+	Param ($OldVer,$NewVer,$FileName, $NoBOMEncoding)
 
-	Write-Output "Looking in file:"$FileName
-	Write-Output "Finding:"$OldVer
-	Write-Output "Replacing with:"$NewVer
+	$message = "File: $FileName    Nuget Ver: $OldVer -> $NewVer";
+	Write-Output $message;
 
-	# Replace for AmbrosiaLibCS
-	$FullOldVerString = '"AmbrosiaLibCS" Version="'+$OldVer+'"'
-	$FullNewVerString = '"AmbrosiaLibCS" Version="'+$NewVer+'"'
-	(Get-Content $FileName).replace($FullOldVerString, $FullNewVerString) | Set-Content $FileName
+	# Replace for AmbrosiaLibCS and AmbrosiaLibCSDebug
+	$FullOldVerString = '"AmbrosiaLibCS" Version="'+$OldVer+'"';
+	$FullNewVerString = '"AmbrosiaLibCS" Version="'+$NewVer+'"';
+	$FullOldVerDebugString = '"AmbrosiaLibCSDebug" Version="'+$OldVer+'"';
+	$FullNewVerDebugString = '"AmbrosiaLibCSDebug" Version="'+$NewVer+'"';
 
-	# Replace for AmbrosiaLibCSDebug
-	$FullOldVerDebugString = '"AmbrosiaLibCSDebug" Version="'+$OldVer+'"'
-	$FullNewVerDebugString = '"AmbrosiaLibCSDebug" Version="'+$NewVer+'"'
-	(Get-Content $FileName).replace($FullOldVerDebugString, $FullNewVerDebugString) | Set-Content $FileName
+	# Make the call based on what encoding to use
+	If ($NoBOMEncoding -eq 'T') #UTF8NoBom used for Generated Code
+	{
+		(Get-Content $FileName).replace($FullOldVerString, $FullNewVerString) | Set-Content $FileName;
+		(Get-Content $FileName).replace($FullOldVerDebugString, $FullNewVerDebugString) | Set-Content $FileName;
+	}
+	else  # Standard UTF8 used in Source code
+	{
+		(Get-Content $FileName).replace($FullOldVerString, $FullNewVerString) | Set-Content -Encoding UTF8 $FileName;
+		(Get-Content $FileName).replace($FullOldVerDebugString, $FullNewVerDebugString) | Set-Content -Encoding UTF8 $FileName;
+	}
 }
 
 
+##########################################################################
+#
+#  Make the calls here to update csproj files
+#
+##########################################################################
+
 Write-output "------------- Update .csproj files -------------"
-Write-output ""
-SwapNugetStringInFile -OldVer "1.0.12" -NewVer "1.0.13" -FileName "c:\junk\testthis.txt"
+$CurrentDir = $(get-location);
+
+# AmbrosiaCS
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Clients\CSharp\AmbrosiaCS\AmbrosiaCS.csproj' -NoBOMEncoding 'F';
+# PerformanceTest
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\InternalImmortals\PerformanceTest\GeneratedSourceFiles\PTAmbrosiaGeneratedAPI\latest\PTAmbrosiaGeneratedAPI.csproj' -NoBOMEncoding 'T';
+# PerformanceTestInterruptible
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\InternalImmortals\PerformanceTestInterruptible\API\ServerAPI.csproj' -NoBOMEncoding 'F';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\InternalImmortals\PerformanceTestInterruptible\GeneratedSourceFiles\PTIAmbrosiaGeneratedAPI\latest\PTIAmbrosiaGeneratedAPI.csproj' -NoBOMEncoding 'T';
+# HelloWorld
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\GeneratedSourceFiles\Client1Interfaces\latest\Client1Interfaces.csproj' -NoBOMEncoding 'T';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\GeneratedSourceFiles\Client2Interfaces\latest\Client2Interfaces.csproj' -NoBOMEncoding 'T';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\GeneratedSourceFiles\Client3Interfaces\latest\Client3Interfaces.csproj' -NoBOMEncoding 'T';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\GeneratedSourceFiles\ServerInterfaces\latest\ServerInterfaces.csproj' -NoBOMEncoding 'T';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\IClient1\IClient1.csproj' -NoBOMEncoding 'F';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\IClient2\IClient2.csproj' -NoBOMEncoding 'F';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\IClient3\IClient3.csproj' -NoBOMEncoding 'F';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\ServerAPI\IServer.csproj' -NoBOMEncoding 'F';
+# StreamingDemo
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\AnalyticsAPI\AnalyticsAPI.csproj' -NoBOMEncoding 'F';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\GeneratedSourceFiles\AnalyticsAPIGenerated\latest\AnalyticsAPIGenerated.csproj' -NoBOMEncoding 'T';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\DashboardAPI\DashboardAPI.csproj' -NoBOMEncoding 'F';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\GeneratedSourceFiles\DashboardAPIGenerated\latest\DashboardAPIGenerated.csproj' -NoBOMEncoding 'T';
 
 
+##########################################################################
+#
+#  Build projects which also includes generating files
+#
+##########################################################################
+Write-output "------------- Build AmbrosiaCS -------------"
+
+Write-output "------------- Build PerformanceTest -------------"
+
+Write-output "------------- Build PerformanceTestInterruptible -------------"
+
+Write-output "------------- Build HelloWorld -------------"
+
+Write-output "------------- Build StreamingDemo -------------"
 
 
 
