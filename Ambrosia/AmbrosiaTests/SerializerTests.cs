@@ -11,6 +11,24 @@ namespace AmbrosiaTests
     public class SerializerTests
     {
         [TestMethod]
+        public void TestAncestorMessage()
+        {
+            long[] expectedAncestors = new long[3] { 3, 17, 39 };
+            using (var stream = new MemoryStream())
+            {
+                Serializer.SerializeAncestorMessage(
+                    stream,
+                    AmbrosiaRuntime.ancestorByte,
+                    expectedAncestors
+                );
+                stream.Flush();
+                stream.Position = 0;
+                var actualAncestors = Serializer.DeserializeAncestorMessageAsync(stream, new CancellationToken()).GetAwaiter().GetResult();
+                CollectionAssert.AreEqual(expectedAncestors, actualAncestors);
+            }
+        }
+
+        [TestMethod]
         public void TestNonShardReplayMessage()
         {
             long expectedLastProcessedID = 14;

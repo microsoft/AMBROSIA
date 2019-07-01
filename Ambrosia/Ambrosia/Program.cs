@@ -2129,6 +2129,7 @@ namespace Ambrosia
         public const byte CountReplayableRPCBatchByte = 13;
         public const byte trimToByte = 14;
         public const byte becomingPrimaryByte = 15;
+        public const byte ancestorByte = 16;
 
         CRAClientLibrary _coral;
 
@@ -3695,6 +3696,10 @@ namespace Ambrosia
                                              string destString,
                                              CancellationToken ct)
         {
+            if (_sharded)
+            {
+                Serializer.SerializeAncestorMessage(writeToStream, ancestorByte, _ancestors[ServiceName()]);
+            }
             // Process replay message
             var result = await Serializer.DeserializeReplayMessageAsync(writeToStream, ct);
             // Get the seqNo of the replay/filter point
@@ -3906,6 +3911,14 @@ namespace Ambrosia
                 Console.WriteLine("restoring input:{0}", sourceString);
             }
             inputConnectionRecord.DataConnectionStream = (NetworkStream)readFromStream;
+            if (_sharded)
+            {
+                // Process ancestor list
+                _ancestors[sourceString] = await Serializer.DeserializeAncestorMessageAsync(readFromStream, ct);
+                // The last destination may be an ancestor shard, in which case we need to reshuffle.
+                _lastShuffleDestSize = 0;
+                Console.WriteLine("Ancestors of shard " + sourceString + " are " + string.Join(",", _ancestors[sourceString]));
+            }
             await SendReplayMessageAsync(readFromStream, inputConnectionRecord, ct);
             // Create new input task for monitoring new input
             Task inputTask;
