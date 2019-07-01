@@ -2087,7 +2087,6 @@ namespace Ambrosia
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
         ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
         // Input / output state of parent shards. This is needed for recovery.
-
         ConcurrentDictionary<long, MachineState> _parentStates = new ConcurrentDictionary<long, MachineState>();
         ConcurrentDictionary<string, long[]> _ancestors;
         internal int _localServiceReceiveFromPort;           // specifiable on the command line
@@ -2345,6 +2344,12 @@ namespace Ambrosia
                 RuntimeChecksOnProcessStart();
             }
 
+            if (_sharded)
+            {
+                _ancestors = new ConcurrentDictionary<string, long[]>();
+                _ancestors[ServiceName()] = _oldShards;
+            }
+
             // Determine if we are recovering
             if (!_createService)
             {
@@ -2376,6 +2381,12 @@ namespace Ambrosia
             {
                 // We are recovering - find the last committed checkpoint
                 state.LastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", state.ShardID)));
+                if (_sharded && state.MyRole != AARole.ReshardSecondary)
+                {
+                    // Load our ancestor information
+                    string ancestors = RetrieveServiceInfo(InfoTitle("Ancestors", state.ShardID));
+                    _ancestors[ServiceName()] = ancestors.Split(',').Select(n => long.Parse(n)).ToArray();
+                }
             }
             else
             {
@@ -2590,6 +2601,7 @@ namespace Ambrosia
             _myRole = AARole.ReshardSecondary;
             var threads = new Thread[_oldShards.Length];
             InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
+            InsertOrReplaceServiceInfoRecord(InfoTitle("Ancestors"), string.Join(",", _ancestors[ServiceName()]));
 
             _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
             _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
@@ -2670,6 +2682,10 @@ namespace Ambrosia
             Connect(ServiceName(), AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
             await MoveServiceToNextLogFileAsync(true, true);
             InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
+            if (_sharded)
+            {
+                InsertOrReplaceServiceInfoRecord(InfoTitle("Ancestors"), string.Join(",", _ancestors[ServiceName()]));
+            }
             if (_activeActive || _shardID > 0)
             {
                 // Start task to periodically check if someone's trying to upgrade
