@@ -10,6 +10,46 @@ namespace Ambrosia
     {
         private const int messageTypeSize = 1;
 
+        public static void SerializeAncestorMessage(Stream stream, byte messageType, long[] ancestors)
+        {
+            var numAncestors = ancestors.Length;
+            var messageSize = messageTypeSize + StreamCommunicator.LongSize(numAncestors);
+            foreach (var ancestor in ancestors)
+            {
+                messageSize += StreamCommunicator.LongSize(ancestor);
+            }
+
+            // Write message size
+            stream.WriteInt(messageSize);
+            // Write message type
+            stream.WriteByte(messageType);
+            // Write number of ancestors
+            stream.WriteInt(numAncestors);
+            // Write ancestors
+            foreach(var ancestor in ancestors)
+            {
+                stream.WriteLong(ancestor);
+            }
+        }
+
+        public static async Task<long[]> DeserializeAncestorMessageAsync(Stream stream, CancellationToken ct)
+        {
+            var inputFlexBuffer = new FlexReadBuffer();
+            await FlexReadBuffer.DeserializeAsync(stream, inputFlexBuffer, ct);
+            var sizeBytes = inputFlexBuffer.LengthLength;
+            // Get the seqNo of the replay/filter point
+            var offset = messageTypeSize + sizeBytes;
+            var numAncestors = StreamCommunicator.ReadBufferedInt(inputFlexBuffer.Buffer, offset);
+            offset += StreamCommunicator.IntSize(numAncestors);
+            var ancestors = new long[numAncestors];
+            for (int i = 0; i < numAncestors; i++)
+            {
+                ancestors[i] = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, offset);
+                offset += StreamCommunicator.LongSize(ancestors[i]);
+            }
+            return ancestors;
+        }
+
         public static void SerializeReplayMessage(Stream stream,
                                                   byte messageType,
                                                   long lastProcessedID,
