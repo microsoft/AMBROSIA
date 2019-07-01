@@ -10,7 +10,7 @@
 #   NewVersion - Version upgrading to.  If NewVersion is same as CurrentVersion, it will just rebuild everything 
 #
 #  Note: Run this script AFTER the .nuspec files have been updated (and checked in) 
-#        and the Ambrosia nuget packages (AmbrosiaLibCS and AmbrosiaLibCSDebug) have been released
+#        and the Ambrosia nuget packages (AmbrosiaLibCS and AmbrosiaLibCSDebug) have been released to Nuget.org
 #		 FYI - To release those Nuget packages, run the Ambrosia-Nuget-Release and Ambrosia-Nuget-Debug pipelines in Azure Dev Ops for Ambrosia
 #
 ###########################################
@@ -97,22 +97,6 @@ SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $Cur
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\GeneratedSourceFiles\AnalyticsAPIGenerated\latest\AnalyticsAPIGenerated.csproj' -NoBOMEncoding 'T';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\DashboardAPI\DashboardAPI.csproj' -NoBOMEncoding 'F';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\GeneratedSourceFiles\DashboardAPIGenerated\latest\DashboardAPIGenerated.csproj' -NoBOMEncoding 'T';
-
-
-##########################################################################
-#
-#  Build projects which also includes generating files
-#
-##########################################################################
-Write-output "------------- Build AmbrosiaCS -------------"
-
-Write-output "------------- Build PerformanceTest -------------"
-
-Write-output "------------- Build PerformanceTestInterruptible -------------"
-
-Write-output "------------- Build HelloWorld -------------"
-
-Write-output "------------- Build StreamingDemo -------------"
 
 
 
