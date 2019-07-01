@@ -1,7 +1,7 @@
 Your first Ambrosia Application - Hello World
 =======================================================================
 
-Ambrosia applications consist of a collection of deployed, virtualized, "fat" objects, called instances, where the logic for these instances is defined by programmer authored Immortals. Specifically, each deployed Ambrosia Immortal is an instance with a public interface, whose methods may be invoked by other instances. Instances are fat in the sense that thay are expected to consume at least one core, which means that they may own many finer grained objects. As we'll see, Ambrosia instances are automatically recoverable, relocatable, time travel debuggable, upgadable, and can be made highly available at deployment time with no code changes. 
+Ambrosia applications consist of a collection of deployed, virtualized, "fat" objects, called instances, where the logic for these instances is defined by programmer authored Immortals. Specifically, each deployed Ambrosia Immortal is an instance with a public interface, whose methods may be invoked by other instances. Instances are fat in the sense that thay are expected to consume at least one core, which means that they may own many finer grained objects. As we'll see, Ambrosia instances are automatically recoverable, relocatable, time travel debuggable, upgadable, and can be made highly available at deployment time with no code changes.
 
 Server
 -----------
@@ -43,9 +43,9 @@ Next, let's look at the code for the Server Immortal implementation, found in th
             }
         }
 ```
-First, note the use of IServer, which is in the project generated from the IServer interface project, which specifies the public interfaces that must be implemented by the Immortal. Note that the generated version of IServer uses async methods, which requires an implementation that is async. While this is not important for Server, we will see how this is exploited in Client3. 
+First, note the use of IServer, which is in the project generated from the IServer interface project, which specifies the public interfaces that must be implemented by the Immortal. Note that the generated version of IServer uses async methods, which requires an implementation that is async. While this is not important for Server, we will see how this is exploited in Client3.
 
-Also, observe that Server inherits Immortal<IServerProxy>. This base class and template parameter indicate that we are implementing an Immortal, whose self reference proxy is of type IServerProxy. IServerProxy is also in the generated project. While the self reference proxy isn't important for Server, we will see how this can be important for other Immortals (e.g. Client2). 
+Also, observe that Server inherits Immortal<IServerProxy>. This base class and template parameter indicate that we are implementing an Immortal, whose self reference proxy is of type IServerProxy. IServerProxy is also in the generated project. While the self reference proxy isn't important for Server, we will see how this can be important for other Immortals (e.g. Client2).
 
 Note the lack of any logging code, reconnection or retry code, or explicit instructions to push or pull state to storage. Nevertheless, instances of Server will never lose data or messages, can be migrated transparently from one machine/vm/pod to another, can be deployed in a highly available fashion through active/active replication, and can be debugged by going back in time and rolling forward, called time travel debugging. There are only two requirements Ambrosia makes of C# programmers:
 
@@ -131,6 +131,7 @@ Nevertheless, codegen is needed, because each Immortal runs a codegen step which
 
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("\n!! Client: Press enter to shutdown.");
+            Console.ResetColor();
 
             Console.ReadLine();
             Program.finishedTokenQ.Enqueue(0);
@@ -180,7 +181,7 @@ Also, note that the server instance name, which is "server" by default, is passe
 
 Understanding Recovery for Client1
 -----------
-Let's assume that Client1 and its associated ImmortalCoordinator were exited (e.g. Ctrl-C) and restarted when user input was requested. Let's go through the recovery actions taken by Ambrosia: 
+Let's assume that Client1 and its associated ImmortalCoordinator were exited (e.g. Ctrl-C) and restarted when user input was requested. Let's go through the recovery actions taken by Ambrosia:
 
 * First, it is important to understand that when an instance is started for the first time, an initial checkpoint is taken which represents the state of the Immortal just prior to the execution of OnFirstStart. Since no additional checkpoint was taken, recovery begins by deserializing the initial state of the Immortal.
 * Next, recovery replays all method calls which occurred since the recovered checkpoint was taken. In this case, we execute OnFirstStart from the initial state. During this execution, we again generate the first message to server, and ask for user input. Note that once all methods have been replayed (i.e. the application method invocation has happened), the recovering Immortal reconnects to previously connected Immortals. Part of that reconnection involves determining which method calls have already been received by the various parties, and ensures exactly once method delivery/execution everywhere. In this case, if server received the method call before client was killed, it will not be resent. If, however, the message was never actually received by server, the reconstructed method call is sent.
@@ -253,7 +254,7 @@ Next, let's look at the actual Immortal Client2:
         }
     }
 ```
-First, note that our impulse method, ReceiveKeyboardInputAsync, looks like any other public method, and simply calls server's ReceiveMessage. The difference is in how ReceiveKeyboardInputAsync is called. Rather than being called from a replayable method like OnFirstStart, it's called from a background thread that is started from BecomingPrimary. 
+First, note that our impulse method, ReceiveKeyboardInputAsync, looks like any other public method, and simply calls server's ReceiveMessage. The difference is in how ReceiveKeyboardInputAsync is called. Rather than being called from a replayable method like OnFirstStart, it's called from a background thread that is started from BecomingPrimary.
 
 BecomingPrimary is an overloadable method for performing actions after recovery is complete, but before servicing the first method calls after recovery. By putting our user input requesting loop in the thread created during BecomingPrimary, we ensure that ReceiveKeyboardInputAsync will not be called during recovery.
 
@@ -318,6 +319,7 @@ Client3 makes 2 ReceiveMessageAsync calls, awaiting each one before continuing:
             Console.WriteLine($"\n!! Client: Message #2 completed. Server acknowledges processing {res2} messages.");
 
             Console.WriteLine("\n!! Client: Shutting down");
+            Console.ResetColor();
             Program.finishedTokenQ.Enqueue(0);
             return true;
         }
@@ -353,5 +355,5 @@ Note that issues 2 and 3 are quite fundamental to languages using C#s style of a
 In summary, the above limitations and caveats lead us to the following best practice for using async calls:
 
  * Async calls are reasonable to make within jobs, but not services, unless service updates/upgrades are always started from an initial state, rather than a recovered state.
- 
+
 This best practice comes from the assumption that you will not try to suspend, repair, and continue a job, but rather, will restart it. On the other hand, services must be able to evolve over time. Of course, if service modifications are not rolled out using Ambrosia recovery, but rather, are always started from an initial state, and take over after the old code is retired, async calls are fine.
