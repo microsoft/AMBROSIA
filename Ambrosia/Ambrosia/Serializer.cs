@@ -68,8 +68,8 @@ namespace Ambrosia
                 foreach (var shardID in ancestorsToIDs[peerID].Keys)
                 {
                     messageSize += StreamCommunicator.LongSize(shardID);
-                    messageSize += StreamCommunicator.LongSize(ancestorsToIDs[peerID][shardID].Item1);
-                    messageSize += StreamCommunicator.LongSize(ancestorsToIDs[peerID][shardID].Item2);
+                    messageSize += StreamCommunicator.LongSize(ancestorsToIDs[peerID][shardID].Item1 + 1);
+                    messageSize += StreamCommunicator.LongSize(ancestorsToIDs[peerID][shardID].Item2 + 1);
                 }
             }
 
@@ -130,6 +130,23 @@ namespace Ambrosia
             }
             inputFlexBuffer.ResetBuffer();
             return Tuple.Create(lastProcessedID, lastProcessedReplayableID, ancestorsToIDs);
+        }
+
+        public static void SerializeShardTrimMessage(Stream stream, byte messageType)
+        {
+            var messageSize = messageTypeSize;
+
+            // Write message size
+            stream.WriteInt(messageSize);
+
+            // Write message type
+            stream.WriteByte(messageType);
+        }
+
+        public static async Task DeserializeShardTrimMessageAsync(Stream stream, CancellationToken ct)
+        {
+            var inputFlexBuffer = new FlexReadBuffer();
+            await FlexReadBuffer.DeserializeAsync(stream, inputFlexBuffer, ct);
         }
     }
 }

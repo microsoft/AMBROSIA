@@ -2130,6 +2130,7 @@ namespace Ambrosia
         public const byte trimToByte = 14;
         public const byte becomingPrimaryByte = 15;
         public const byte ancestorByte = 16;
+        public const byte shardTrimByte = 17;
 
         CRAClientLibrary _coral;
 
@@ -3687,6 +3688,19 @@ namespace Ambrosia
             return outputConnectionRecord;
         }
 
+        private void SyncOutputs(string destString, ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>> ancestorsToIDs)
+        {
+            var destService = ParseServiceName(destString).Item1;
+            foreach (var srcID in ancestorsToIDs.Keys)
+            {
+                foreach (var destID in ancestorsToIDs[srcID].Keys)
+                {
+                    var destName = ServiceName(destService, destID);
+                    TrimOutput(destName, ancestorsToIDs[srcID][destID].Item1, ancestorsToIDs[srcID][destID].Item1);
+                }
+            }
+        }
+
         private async Task ToDataStreamAsync(Stream writeToStream,
                                              string destString,
                                              CancellationToken ct)
@@ -3700,15 +3714,18 @@ namespace Ambrosia
             // Get the seqNo of the replay/filter point
             var commitSeqNo = result.Item1;
             var commitSeqNoReplayable = result.Item2;
-            var shardToLastID = result.Item3;
-            var service = destString.Split('_')[0];
 
-            foreach (var kv in shardToLastID)
+            if (_sharded)
             {
-                await SyncOutputConnectionAsync(_outputs, ServiceName(service, kv.Key), commitSeqNo, commitSeqNoReplayable);
+                var ancestorsToIDs = result.Item3;
+                SyncOutputs(destString, ancestorsToIDs);
             }
 
             OutputConnectionRecord outputConnectionRecord = await SyncOutputConnectionAsync(_outputs, destString, commitSeqNo, commitSeqNoReplayable);
+            if (_sharded)
+            {
+                Serializer.SerializeShardTrimMessage(writeToStream, shardTrimByte);
+            }
 
             try
             {
@@ -3910,11 +3927,18 @@ namespace Ambrosia
             {
                 // Process ancestor list
                 _ancestors[sourceString] = await Serializer.DeserializeAncestorMessageAsync(readFromStream, ct);
+                AddAncestorInput(sourceString);
                 // The last destination may be an ancestor shard, in which case we need to reshuffle.
                 _lastShuffleDestSize = 0;
                 Console.WriteLine("Ancestors of shard " + sourceString + " are " + string.Join(",", _ancestors[sourceString]));
             }
             await SendReplayMessageAsync(readFromStream, inputConnectionRecord, ct);
+            if (_sharded)
+            {
+                await Serializer.DeserializeShardTrimMessageAsync(readFromStream, ct);
+                // Clear ancestor history
+                _inputs[sourceString].AncestorsToIDs.Clear();
+            }
             // Create new input task for monitoring new input
             Task inputTask;
             inputTask = InputDataListenerAsync(inputConnectionRecord, sourceString, ct);
@@ -4150,6 +4174,27 @@ namespace Ambrosia
             }
         }
 
+        public void TrimOutput(string key, long lastProcessedID, long lastProcessedReplayableID)
+        {
+            Console.WriteLine("Trimming {0} up to ({1}, {2})", key, lastProcessedID, lastProcessedReplayableID);
+            OutputConnectionRecord outputConnectionRecord;
+            if (!_outputs.TryGetValue(key, out outputConnectionRecord))
+            {
+                outputConnectionRecord = new OutputConnectionRecord(this);
+                _outputs[key] = outputConnectionRecord;
+            }
+            // Must lock to atomically update due to race with ToControlStreamAsync
+            lock (outputConnectionRecord._remoteTrimLock)
+            {
+                outputConnectionRecord.RemoteTrim = Math.Max(lastProcessedID, outputConnectionRecord.RemoteTrim);
+                outputConnectionRecord.RemoteTrimReplayable = Math.Max(lastProcessedReplayableID, outputConnectionRecord.RemoteTrimReplayable);
+            }
+            if (outputConnectionRecord.ControlWorkQ.IsEmpty)
+            {
+                outputConnectionRecord.ControlWorkQ.Enqueue(-2);
+            }
+        }
+
         // This method takes a checkpoint and bumps the counter. It DOES NOT quiesce anything
         public async Task CheckpointAsync()
         {
@@ -4188,22 +4233,7 @@ namespace Ambrosia
             // successfully written
             foreach (var kv in _inputs)
             {
-                OutputConnectionRecord outputConnectionRecord;
-                if (!_outputs.TryGetValue(kv.Key, out outputConnectionRecord))
-                {
-                    outputConnectionRecord = new OutputConnectionRecord(this);
-                    _outputs[kv.Key] = outputConnectionRecord;
-                }
-                // Must lock to atomically update due to race with ToControlStreamAsync
-                lock (outputConnectionRecord._remoteTrimLock)
-                {
-                    outputConnectionRecord.RemoteTrim = Math.Max(kv.Value.LastProcessedID, outputConnectionRecord.RemoteTrim);
-                    outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.LastProcessedReplayableID, outputConnectionRecord.RemoteTrimReplayable);
-                }
-                if (outputConnectionRecord.ControlWorkQ.IsEmpty)
-                {
-                    outputConnectionRecord.ControlWorkQ.Enqueue(-2);
-                }
+                TrimOutput(kv.Key, kv.Value.LastProcessedID, kv.Value.LastProcessedReplayableID);
             }
 
             if (oldCheckpointWriter != null)
