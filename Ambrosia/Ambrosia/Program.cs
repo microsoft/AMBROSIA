@@ -208,6 +208,7 @@ namespace Ambrosia
                 writeToStream.WriteLongFixed(trimTo);
                 writeToStream.WriteLongFixed(replayableTrimTo);
                 entry.Value.BufferedOutput.Serialize(writeToStream);
+                entry.Value.OutputTracker.AmbrosiaSerialize(writeToStream);
             }
         }
 
@@ -223,7 +224,32 @@ namespace Ambrosia
                 newRecord.TrimTo = readFromStream.ReadLongFixed();
                 newRecord.ReplayableTrimTo = readFromStream.ReadLongFixed();
                 newRecord.BufferedOutput = EventBuffer.Deserialize(readFromStream, thisAmbrosia, newRecord);
+                newRecord.OutputTracker.AmbrosiaDeserialize(readFromStream);
                 _retVal.TryAdd(myString, newRecord);
+            }
+            return _retVal;
+        }
+
+        internal static void AmbrosiaSerialize(this ConcurrentQueue<OutputRecordTracker> queue, LogWriter writeToStream)
+        {
+            writeToStream.WriteIntFixed(queue.Count);
+            foreach (var tracker in queue)
+            {
+                writeToStream.WriteLongFixed(tracker.GlobalSeqID);
+                writeToStream.WriteLongFixed(tracker.OutputSeqID);
+            }
+        }
+
+        internal static ConcurrentQueue<OutputRecordTracker> AmbrosiaDeserialize(this ConcurrentQueue<OutputRecordTracker> queue, LogReader readFromStream)
+        {
+            var _retVal = new ConcurrentQueue<OutputRecordTracker>();
+            var queueCount = readFromStream.ReadIntFixed();
+            for (int i = 0; i < queueCount; i++)
+            {
+                var globalSeqID = readFromStream.ReadLongFixed();
+                var outputSeqID = readFromStream.ReadLongFixed();
+                var tracker = new OutputRecordTracker(globalSeqID, outputSeqID);
+                _retVal.Enqueue(tracker);
             }
             return _retVal;
         }
@@ -661,6 +687,11 @@ namespace Ambrosia
             return placeToStart;
         }
 
+        internal IEnumerator<BufferPage> GetEnumerator()
+        {
+            return _bufferQ.GetEnumerator();
+        }
+
         internal async Task<BuffersCursor> ReplayFromAsync(Stream outputStream,
                                                            long firstSeqNo,
                                                            bool reconnecting)
@@ -1021,6 +1052,19 @@ namespace Ambrosia
         }
     }
 
+    internal class OutputRecordTracker
+    {
+        public long GlobalSeqID { get; set; }
+        public long OutputSeqID { get; set; }
+        public bool Received { get; set; }
+        public OutputRecordTracker(long globalSeqID, long outputSeqID)
+        {
+            GlobalSeqID = globalSeqID;
+            OutputSeqID = outputSeqID;
+            Received = false;
+        }
+    }
+
     internal class OutputConnectionRecord
     {
         // Set on reconnection. Established where to replay from or filter to
@@ -1053,12 +1097,14 @@ namespace Ambrosia
         internal volatile bool ResettingConnection;
         internal object _trimLock = new object();
         internal object _remoteTrimLock = new object();
+        public ConcurrentQueue<OutputRecordTracker> OutputTracker { get; set; }
 
         public OutputConnectionRecord(AmbrosiaRuntime inAmbrosia)
         {
             ReplayFrom = 0;
             DataWorkQ = new AsyncQueue<long>();
             ControlWorkQ = new AsyncQueue<long>();
+            OutputTracker = new ConcurrentQueue<OutputRecordTracker>();
             _sendsEnqueued = 0;
             TrimTo = -1;
             ReplayableTrimTo = -1;
@@ -1072,6 +1118,34 @@ namespace Ambrosia
             LastSeqSentToReceiver = 0;
             WillResetConnection = inAmbrosia._createService;
             ConnectingAfterRestart = inAmbrosia._restartWithRecovery;
+        }
+
+        public void Trim(long lastProcessedID, long lastProcessedReplayableID)
+        {
+            // Must lock to atomically update due to race between ToControlStreamAsync, CheckpointAsync, and other functions
+            lock (_remoteTrimLock)
+            {
+                RemoteTrim = Math.Max(lastProcessedID, RemoteTrim);
+                RemoteTrimReplayable = Math.Max(lastProcessedReplayableID, RemoteTrimReplayable);
+                try
+                {
+                    var tracker = OutputTracker.First();
+                    while (tracker.OutputSeqID < RemoteTrim)
+                    {
+                        tracker.Received = true;
+                        OutputTracker.TryDequeue(out tracker);
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // Queue is empty
+                }
+            }
+
+            if (ControlWorkQ.IsEmpty)
+            {
+                ControlWorkQ.Enqueue(-2);
+            }
         }
     }
 
@@ -1309,16 +1383,7 @@ namespace Ambrosia
                             outputs[kv.Key] = outputConnectionRecord;
                             Console.WriteLine("Adding output:{0}", kv.Key);
                         }
-                        // Must lock to atomically update due to race with ToControlStreamAsync
-                        lock (outputConnectionRecord._remoteTrimLock)
-                        {
-                            outputConnectionRecord.RemoteTrim = Math.Max(kv.Value.First, outputConnectionRecord.RemoteTrim);
-                            outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.Second, outputConnectionRecord.RemoteTrimReplayable);
-                        }
-                        if (outputConnectionRecord.ControlWorkQ.IsEmpty)
-                        {
-                            outputConnectionRecord.ControlWorkQ.Enqueue(-2);
-                        }
+                        outputConnectionRecord.Trim(kv.Value.First, kv.Value.Second);
                     }
                 }
             }
@@ -2084,6 +2149,8 @@ namespace Ambrosia
             }
         }
 
+        internal readonly object _globalOutputTrackerLock = new object();
+        ConcurrentQueue<OutputRecordTracker> _globalOutputTracker = new ConcurrentQueue<OutputRecordTracker>();
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
         ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
         // Input / output state of parent shards. This is needed for recovery.
@@ -2549,11 +2616,57 @@ namespace Ambrosia
             }
         }
 
+        private void AddParentOutputState(MachineState state)
+        {
+            long nextGlobalSeqID = 0;
+            foreach (var kv in state.Outputs)
+            {
+                var parentOutput = kv.Value;
+                var key = kv.Key;
+
+                OutputConnectionRecord output;
+                if (!_outputs.TryGetValue(key, out output))
+                {
+                    output = new OutputConnectionRecord(parentOutput.MyAmbrosia);
+                    _outputs[key] = output;
+                }
+
+                // Copy parent outputs
+                var bufferEnumerator = parentOutput.BufferedOutput.GetEnumerator();
+                while (bufferEnumerator.MoveNext()) {
+                    var buffer = bufferEnumerator.Current;
+                    var diff = buffer.HighestSeqNo - buffer.LowestSeqNo;
+                    var lowestSeqNo = _outputs[key].LastSeqNoFromLocalService + 1;
+                    // Adjust sequence numbers
+                    var writablePage = _outputs[key].BufferedOutput.GetWritablePage(buffer.PageBytes.Length, lowestSeqNo);
+                    var highestSeqNo = writablePage.LowestSeqNo + diff;
+                    writablePage.HighestSeqNo = highestSeqNo;
+                    _outputs[key].LastSeqNoFromLocalService += (diff + 1);
+                    writablePage.UnsentReplayableMessages += buffer.UnsentReplayableMessages;
+                    writablePage.TotalReplayableMessages += buffer.TotalReplayableMessages;
+                    // Copy buffered output to local output buffer
+                    Buffer.BlockCopy(buffer.PageBytes, 0, writablePage.PageBytes, 0, buffer.PageBytes.Length);
+                    for (long i = lowestSeqNo; i <= highestSeqNo; i++)
+                    {
+                        // We want to ensure a total ordering for all messages
+                        // This way in case of failure during a reshard, we will send
+                        // off all messages in the same order.
+                        var tracker = new OutputRecordTracker(nextGlobalSeqID, i);
+                        _globalOutputTracker.Enqueue(tracker);
+                        output.OutputTracker.Enqueue(tracker);
+                        nextGlobalSeqID++;
+                    }
+                }
+            }
+        }
+
+
         private void AddParentStates(MachineState[] states)
         {
             foreach (var state in states)
             {
                 AddParentInputState(state);
+                AddParentOutputState(state);
             }
         }
 
@@ -2947,6 +3060,7 @@ namespace Ambrosia
             // it's after replace and moving to the next log file. Note that this will also have the effect
             // of shaking loose the initialization message, ensuring liveliness.
             await _committer.TryCommitAsync(_outputs);
+            TrimGlobalOutputTracker();
             return oldVerLogHandle;
         }
 
@@ -4179,6 +4293,28 @@ namespace Ambrosia
             }
         }
 
+        private void TrimGlobalOutputTracker()
+        {
+            lock (_globalOutputTrackerLock)
+            {
+                try
+                {
+                    var tracker = _globalOutputTracker.First();
+                    while (tracker.Received)
+                    {
+                        _globalOutputTracker.TryDequeue(out tracker);
+                        tracker = _globalOutputTracker.First();
+
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // Queue is empty
+                }
+
+            }
+        }
+
         public void TrimOutput(string key, long lastProcessedID, long lastProcessedReplayableID)
         {
             Console.WriteLine("Trimming {0} up to ({1}, {2})", key, lastProcessedID, lastProcessedReplayableID);
@@ -4188,16 +4324,8 @@ namespace Ambrosia
                 outputConnectionRecord = new OutputConnectionRecord(this);
                 _outputs[key] = outputConnectionRecord;
             }
-            // Must lock to atomically update due to race with ToControlStreamAsync
-            lock (outputConnectionRecord._remoteTrimLock)
-            {
-                outputConnectionRecord.RemoteTrim = Math.Max(lastProcessedID, outputConnectionRecord.RemoteTrim);
-                outputConnectionRecord.RemoteTrimReplayable = Math.Max(lastProcessedReplayableID, outputConnectionRecord.RemoteTrimReplayable);
-            }
-            if (outputConnectionRecord.ControlWorkQ.IsEmpty)
-            {
-                outputConnectionRecord.ControlWorkQ.Enqueue(-2);
-            }
+            outputConnectionRecord.Trim(lastProcessedID, lastProcessedReplayableID);
+            TrimGlobalOutputTracker();
         }
 
         // This method takes a checkpoint and bumps the counter. It DOES NOT quiesce anything
