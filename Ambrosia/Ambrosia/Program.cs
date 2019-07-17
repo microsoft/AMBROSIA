@@ -692,6 +692,28 @@ namespace Ambrosia
             return _bufferQ.GetEnumerator();
         }
 
+        internal void Append(EventBuffer other)
+        {
+            AcquireTrimLock(2);
+            var bufferEnumerator = other.GetEnumerator();
+            while (bufferEnumerator.MoveNext())
+            {
+                var buffer = bufferEnumerator.Current;
+                var diff = buffer.HighestSeqNo - buffer.LowestSeqNo;
+                // Adjust sequence numbers
+                var writablePage = GetWritablePage(buffer.PageBytes.Length, buffer.LowestSeqNo);
+                writablePage.LowestSeqNo = buffer.LowestSeqNo;
+                writablePage.HighestSeqNo = buffer.HighestSeqNo;
+                writablePage.UnsentReplayableMessages += buffer.UnsentReplayableMessages;
+                writablePage.TotalReplayableMessages += buffer.TotalReplayableMessages;
+                // Copy the bytes into the page
+                writablePage.curLength += buffer.PageBytes.Length;
+                Buffer.BlockCopy(buffer.PageBytes, 0, writablePage.PageBytes, 0, buffer.PageBytes.Length);
+                ReleaseAppendLock();
+            }
+            ReleaseTrimLock();
+        }
+
         internal async Task<BuffersCursor> ReplayFromAsync(Stream outputStream,
                                                            long firstSeqNo,
                                                            bool reconnecting)
