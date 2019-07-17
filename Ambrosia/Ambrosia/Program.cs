@@ -692,6 +692,32 @@ namespace Ambrosia
             return _bufferQ.GetEnumerator();
         }
 
+        internal Tuple<long, long> Copy(EventBuffer other, long startSeqNo)
+        {
+            AcquireTrimLock(2);
+            var bufferEnumerator = other.GetEnumerator();
+            var lowestSeqNo = startSeqNo;
+            var highestSeqNo = lowestSeqNo;
+            while (bufferEnumerator.MoveNext())
+            {
+                var buffer = bufferEnumerator.Current;
+                var diff = buffer.HighestSeqNo - buffer.LowestSeqNo;
+                // Adjust sequence numbers
+                var writablePage = GetWritablePage(buffer.PageBytes.Length, lowestSeqNo);
+                highestSeqNo = lowestSeqNo + diff;
+                writablePage.HighestSeqNo = highestSeqNo;
+                writablePage.UnsentReplayableMessages += buffer.UnsentReplayableMessages;
+                writablePage.TotalReplayableMessages += buffer.TotalReplayableMessages;
+                // Copy the bytes into the page
+                writablePage.curLength += buffer.PageBytes.Length;
+                Buffer.BlockCopy(buffer.PageBytes, 0, writablePage.PageBytes, 0, buffer.PageBytes.Length);
+                lowestSeqNo = highestSeqNo + 1;
+            }
+            ReleaseTrimLock();
+            ReleaseAppendLock();
+            return new Tuple<long, long>(startSeqNo, highestSeqNo);
+        }
+
         internal async Task<BuffersCursor> ReplayFromAsync(Stream outputStream,
                                                            long firstSeqNo,
                                                            bool reconnecting)
