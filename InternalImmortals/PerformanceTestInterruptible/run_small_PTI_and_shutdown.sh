@@ -38,6 +38,11 @@ fi
 CLIENTNAME=${INSTANCE_PREFIX}dockC
 SERVERNAME=${INSTANCE_PREFIX}dockS
 
+#-- Use Client name and server as part of Azure object so need to lower case
+CLIENTNAME="${CLIENTNAME,,}"
+SERVERNAME="${SERVERNAME,,}"
+
+
 if ! which Ambrosia; then
     pushd ../../bin
     PATH=$PATH:`pwd`

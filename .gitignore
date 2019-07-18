@@ -265,3 +265,4 @@ ModelManifest.xml
 CodeGenDependencies
 
 **/publish/*
+/BuildAmbrosiaAfterNugetChange.ps1

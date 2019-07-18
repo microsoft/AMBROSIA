@@ -20,6 +20,10 @@ fi
 CLIENTNAME=${INSTANCE_PREFIX}ptitmuxC
 SERVERNAME=${INSTANCE_PREFIX}ptitmuxS
 
+#-- Use Client name and server as part of Azure object so need to lower case
+CLIENTNAME="${CLIENTNAME,,}"
+SERVERNAME="${SERVERNAME,,}"
+
 export PATH="$PATH:/ambrosia/bin"
 
 Ambrosia RegisterInstance -i $CLIENTNAME --rp $PORT1 --sp $PORT2 -l "/ambrosia_logs/" 
