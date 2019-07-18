@@ -712,9 +712,9 @@ namespace Ambrosia
                 writablePage.curLength += buffer.PageBytes.Length;
                 Buffer.BlockCopy(buffer.PageBytes, 0, writablePage.PageBytes, 0, buffer.PageBytes.Length);
                 lowestSeqNo = highestSeqNo + 1;
+                ReleaseAppendLock();
             }
             ReleaseTrimLock();
-            ReleaseAppendLock();
             return new Tuple<long, long>(startSeqNo, highestSeqNo);
         }
 
@@ -2180,7 +2180,7 @@ namespace Ambrosia
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
         ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
         // Input / output state of parent shards. This is needed for recovery.
-        ConcurrentDictionary<long, MachineState> _parentStates;
+        ConcurrentDictionary<long, MachineState> _parentStates = new ConcurrentDictionary<long, MachineState>();
         ConcurrentDictionary<string, long[]> _ancestors;
         internal int _localServiceReceiveFromPort;           // specifiable on the command line
         internal int _localServiceSendToPort;                // specifiable on the command line 
@@ -2692,7 +2692,7 @@ namespace Ambrosia
             foreach (var state in states)
             {
                 AddParentInputState(state);
-                AddParentOutputState(state);
+                //AddOutputState(state.Outputs);
             }
         }
 
@@ -3833,17 +3833,74 @@ namespace Ambrosia
             return outputConnectionRecord;
         }
 
-        private void SyncOutputs(string destString, ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>> ancestorsToIDs)
-        {
-            var destService = ParseServiceName(destString).Item1;
-            foreach (var srcID in ancestorsToIDs.Keys)
+        private OutputConnectionRecord SetupOutputConnectionRecord(string destString, ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>> ancestorsToIDs) {
+            OutputConnectionRecord record;
+            Console.WriteLine("SetupOutputConnectionRecord");
+            string destServiceBase = _serviceName;
+            if (destString.Equals(ServiceName()))
             {
-                foreach (var destID in ancestorsToIDs[srcID].Keys)
-                {
-                    var destName = ServiceName(destService, destID);
-                    TrimOutput(destName, ancestorsToIDs[srcID][destID].Item1, ancestorsToIDs[srcID][destID].Item1);
-                }
+                destString = "";
+            } else
+            {
+                destServiceBase = destString.Split('-')[0];
             }
+            lock (_outputs)
+            {
+                if (!_outputs.TryGetValue(destString, out record))
+                {
+                    // Set up the output record for the first time and add it to the dictionary
+                    record = new OutputConnectionRecord(this);
+                    _outputs[destString] = record;
+                    Console.WriteLine("Adding output:{0}", destString);
+                }
+                else
+                {
+                    Console.WriteLine("restoring output:{0}", destString);
+                }
+                record.ConnectingAfterRestart = true;
+                foreach (var srcID in ancestorsToIDs.Keys)
+                {
+                    ConcurrentDictionary<string, OutputConnectionRecord> parentOutput;
+                    if (_parentStates.ContainsKey(srcID))
+                    {
+                        parentOutput = _parentStates[srcID].Outputs;
+                    } else
+                    {
+                        parentOutput = new ConcurrentDictionary<string, OutputConnectionRecord>();
+                    }
+                    foreach (var destID in ancestorsToIDs[srcID].Keys)
+                    {
+                        var lastProcessedID = ancestorsToIDs[srcID][destID].Item1;
+                        var lastProcessedReplayableID = ancestorsToIDs[srcID][destID].Item2;
+                        string destService = DestinationShard(destServiceBase, destID);
+
+                        if (parentOutput.ContainsKey(destService))
+                        {
+                            parentOutput[destService].Trim(lastProcessedID, lastProcessedReplayableID);
+                            // Copy parent output over
+                            record.LastSeqNoFromLocalService = parentOutput[destService].BufferedOutput.AdjustFirstSeqNoTo(record.LastSeqNoFromLocalService + 1);
+                            record.BufferedOutput.Copy(parentOutput[destService].BufferedOutput, record.LastSeqNoFromLocalService + 1);
+                            Console.WriteLine("PARENT LAST SEQ {0}", record.LastSeqNoFromLocalService);
+                        }
+                        if (_outputs.ContainsKey(destService))
+                        {
+                            Console.WriteLine("Old record LastSeqNoFromLocalService {0}", _outputs[destService].LastSeqNoFromLocalService);
+                            _outputs[destService].Trim(lastProcessedID, lastProcessedReplayableID);
+                            record.LastSeqNoFromLocalService = _outputs[destService].BufferedOutput.AdjustFirstSeqNoTo(record.LastSeqNoFromLocalService + 1);
+                            // Copy old output to new output record
+                            if (destService != destString)
+                            {
+                                var seq = record.BufferedOutput.Copy(_outputs[destService].BufferedOutput, record.LastSeqNoFromLocalService + 1);
+                            }
+                          //  record.LastSeqNoFromLocalService += (lastProcessedID - lastProcessedReplayableID);
+                        }
+                        Console.WriteLine("SetupOutput LastSeqNoFromLocalService {0}", record.LastSeqNoFromLocalService);
+                    }
+                }
+                record.ConnectingAfterRestart = false;
+            }
+
+            return record;
         }
 
         private async Task ToDataStreamAsync(Stream writeToStream,
@@ -3859,13 +3916,14 @@ namespace Ambrosia
             // Get the seqNo of the replay/filter point
             var commitSeqNo = result.Item1;
             var commitSeqNoReplayable = result.Item2;
+            var ancestorsToIDs = new ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>>();
 
             if (_sharded)
             {
-                var ancestorsToIDs = result.Item3;
-                SyncOutputs(destString, ancestorsToIDs);
+                ancestorsToIDs = result.Item3;
             }
 
+            SetupOutputConnectionRecord(destString, ancestorsToIDs);
             OutputConnectionRecord outputConnectionRecord = await SyncOutputConnectionAsync(_outputs, destString, commitSeqNo, commitSeqNoReplayable);
             if (_sharded)
             {
