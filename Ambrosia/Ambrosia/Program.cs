@@ -138,6 +138,20 @@ namespace Ambrosia
                 writeToStream.Write(keyEncoding, 0, keyEncoding.Length);
                 writeToStream.WriteLongFixed(entry.Value.LastProcessedID);
                 writeToStream.WriteLongFixed(entry.Value.LastProcessedReplayableID);
+                writeToStream.WriteLongFixed(entry.Value.ShardID);
+                var ancestors = entry.Value.AncestorsToIDs;
+                writeToStream.WriteIntFixed(ancestors.Count);
+                foreach (var peerID in ancestors.Keys)
+                {
+                    writeToStream.WriteLongFixed(peerID);
+                    writeToStream.WriteIntFixed(ancestors[peerID].Count);
+                    foreach (var shardID in ancestors[peerID].Keys)
+                    {
+                        writeToStream.WriteLongFixed(shardID);
+                        writeToStream.WriteLongFixed(ancestors[peerID][shardID].Item1);
+                        writeToStream.WriteLongFixed(ancestors[peerID][shardID].Item2);
+                    }
+                }
             }
         }
 
@@ -153,6 +167,22 @@ namespace Ambrosia
                 newRecord.LastProcessedID = seqNo;
                 seqNo = readFromStream.ReadLongFixed();
                 newRecord.LastProcessedReplayableID = seqNo;
+                newRecord.ShardID = readFromStream.ReadLongFixed();
+                Console.WriteLine("Deserialize {0} -> Shard ID {1}", myString, newRecord.ShardID);
+                var ancestorCount = readFromStream.ReadIntFixed();
+                for (int j = 0; j < ancestorCount; j++)
+                {
+                    var peerID = readFromStream.ReadLongFixed();
+                    var peerCount = readFromStream.ReadLongFixed();
+                    newRecord.AncestorsToIDs[peerID] = new ConcurrentDictionary<long, Tuple<long, long>>();
+                    for (int k = 0; k < peerCount; k++)
+                    {
+                        var shardID = readFromStream.ReadLongFixed();
+                        var lastProcessedID = readFromStream.ReadLongFixed();
+                        var lastProcessedReplayableID = readFromStream.ReadLongFixed();
+                        newRecord.AncestorsToIDs[peerID][shardID] = new Tuple<long, long>(lastProcessedID, lastProcessedReplayableID);
+                    }
+                }
                 _retVal.TryAdd(myString, newRecord);
             }
             return _retVal;
@@ -178,6 +208,7 @@ namespace Ambrosia
                 writeToStream.WriteLongFixed(trimTo);
                 writeToStream.WriteLongFixed(replayableTrimTo);
                 entry.Value.BufferedOutput.Serialize(writeToStream);
+                entry.Value.OutputTracker.AmbrosiaSerialize(writeToStream);
             }
         }
 
@@ -193,7 +224,32 @@ namespace Ambrosia
                 newRecord.TrimTo = readFromStream.ReadLongFixed();
                 newRecord.ReplayableTrimTo = readFromStream.ReadLongFixed();
                 newRecord.BufferedOutput = EventBuffer.Deserialize(readFromStream, thisAmbrosia, newRecord);
+                newRecord.OutputTracker.AmbrosiaDeserialize(readFromStream);
                 _retVal.TryAdd(myString, newRecord);
+            }
+            return _retVal;
+        }
+
+        internal static void AmbrosiaSerialize(this ConcurrentQueue<OutputRecordTracker> queue, LogWriter writeToStream)
+        {
+            writeToStream.WriteIntFixed(queue.Count);
+            foreach (var tracker in queue)
+            {
+                writeToStream.WriteLongFixed(tracker.GlobalSeqID);
+                writeToStream.WriteLongFixed(tracker.OutputSeqID);
+            }
+        }
+
+        internal static ConcurrentQueue<OutputRecordTracker> AmbrosiaDeserialize(this ConcurrentQueue<OutputRecordTracker> queue, LogReader readFromStream)
+        {
+            var _retVal = new ConcurrentQueue<OutputRecordTracker>();
+            var queueCount = readFromStream.ReadIntFixed();
+            for (int i = 0; i < queueCount; i++)
+            {
+                var globalSeqID = readFromStream.ReadLongFixed();
+                var outputSeqID = readFromStream.ReadLongFixed();
+                var tracker = new OutputRecordTracker(globalSeqID, outputSeqID);
+                _retVal.Enqueue(tracker);
             }
             return _retVal;
         }
@@ -631,6 +687,37 @@ namespace Ambrosia
             return placeToStart;
         }
 
+        internal IEnumerator<BufferPage> GetEnumerator()
+        {
+            return _bufferQ.GetEnumerator();
+        }
+
+        internal Tuple<long, long> Copy(EventBuffer other, long startSeqNo)
+        {
+            AcquireTrimLock(2);
+            var bufferEnumerator = other.GetEnumerator();
+            var lowestSeqNo = startSeqNo;
+            var highestSeqNo = lowestSeqNo;
+            while (bufferEnumerator.MoveNext())
+            {
+                var buffer = bufferEnumerator.Current;
+                var diff = buffer.HighestSeqNo - buffer.LowestSeqNo;
+                // Adjust sequence numbers
+                var writablePage = GetWritablePage(buffer.PageBytes.Length, lowestSeqNo);
+                highestSeqNo = lowestSeqNo + diff;
+                writablePage.HighestSeqNo = highestSeqNo;
+                writablePage.UnsentReplayableMessages += buffer.UnsentReplayableMessages;
+                writablePage.TotalReplayableMessages += buffer.TotalReplayableMessages;
+                // Copy the bytes into the page
+                writablePage.curLength += buffer.PageBytes.Length;
+                Buffer.BlockCopy(buffer.PageBytes, 0, writablePage.PageBytes, 0, buffer.PageBytes.Length);
+                lowestSeqNo = highestSeqNo + 1;
+                ReleaseAppendLock();
+            }
+            ReleaseTrimLock();
+            return new Tuple<long, long>(startSeqNo, highestSeqNo);
+        }
+
         internal async Task<BuffersCursor> ReplayFromAsync(Stream outputStream,
                                                            long firstSeqNo,
                                                            bool reconnecting)
@@ -974,17 +1061,33 @@ namespace Ambrosia
     [DataContract]
     internal class InputConnectionRecord
     {
+        public ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>> AncestorsToIDs { get; set; }
         public NetworkStream DataConnectionStream { get; set; }
         public NetworkStream ControlConnectionStream { get; set; }
         [DataMember]
         public long LastProcessedID { get; set; }
         [DataMember]
         public long LastProcessedReplayableID { get; set; }
+        public long ShardID { get; set; }
         public InputConnectionRecord()
         {
             DataConnectionStream = null;
             LastProcessedID = 0;
             LastProcessedReplayableID = 0;
+            AncestorsToIDs = new ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>>();
+        }
+    }
+
+    internal class OutputRecordTracker
+    {
+        public long GlobalSeqID { get; set; }
+        public long OutputSeqID { get; set; }
+        public bool Received { get; set; }
+        public OutputRecordTracker(long globalSeqID, long outputSeqID)
+        {
+            GlobalSeqID = globalSeqID;
+            OutputSeqID = outputSeqID;
+            Received = false;
         }
     }
 
@@ -1020,12 +1123,14 @@ namespace Ambrosia
         internal volatile bool ResettingConnection;
         internal object _trimLock = new object();
         internal object _remoteTrimLock = new object();
+        public ConcurrentQueue<OutputRecordTracker> OutputTracker { get; set; }
 
         public OutputConnectionRecord(AmbrosiaRuntime inAmbrosia)
         {
             ReplayFrom = 0;
             DataWorkQ = new AsyncQueue<long>();
             ControlWorkQ = new AsyncQueue<long>();
+            OutputTracker = new ConcurrentQueue<OutputRecordTracker>();
             _sendsEnqueued = 0;
             TrimTo = -1;
             ReplayableTrimTo = -1;
@@ -1039,6 +1144,34 @@ namespace Ambrosia
             LastSeqSentToReceiver = 0;
             WillResetConnection = inAmbrosia._createService;
             ConnectingAfterRestart = inAmbrosia._restartWithRecovery;
+        }
+
+        public void Trim(long lastProcessedID, long lastProcessedReplayableID)
+        {
+            // Must lock to atomically update due to race between ToControlStreamAsync, CheckpointAsync, and other functions
+            lock (_remoteTrimLock)
+            {
+                RemoteTrim = Math.Max(lastProcessedID, RemoteTrim);
+                RemoteTrimReplayable = Math.Max(lastProcessedReplayableID, RemoteTrimReplayable);
+                try
+                {
+                    var tracker = OutputTracker.First();
+                    while (tracker.OutputSeqID < RemoteTrim)
+                    {
+                        tracker.Received = true;
+                        OutputTracker.TryDequeue(out tracker);
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // Queue is empty
+                }
+            }
+
+            if (ControlWorkQ.IsEmpty)
+            {
+                ControlWorkQ.Enqueue(-2);
+            }
         }
     }
 
@@ -1057,6 +1190,9 @@ namespace Ambrosia
         public string storageConnectionString;
         public long currentVersion;
         public long upgradeToVersion;
+        public long shardID;
+        public long[] oldShards;
+        public long[] newShards;
     }
 
     public static class AmbrosiaRuntimeParms
@@ -1169,7 +1305,7 @@ namespace Ambrosia
         // Used to hold the bytes which will go in the log. Note that two streams are passed in. The
         // log stream must write to durable storage and be flushable, while the second stream initiates
         // actual action taken after the message has been made durable.
-        private class Committer
+        internal class Committer
         {
             byte[] _buf;
             volatile byte[] _bufbak;
@@ -1273,16 +1409,7 @@ namespace Ambrosia
                             outputs[kv.Key] = outputConnectionRecord;
                             Console.WriteLine("Adding output:{0}", kv.Key);
                         }
-                        // Must lock to atomically update due to race with ToControlStreamAsync
-                        lock (outputConnectionRecord._remoteTrimLock)
-                        {
-                            outputConnectionRecord.RemoteTrim = Math.Max(kv.Value.First, outputConnectionRecord.RemoteTrim);
-                            outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.Second, outputConnectionRecord.RemoteTrimReplayable);
-                        }
-                        if (outputConnectionRecord.ControlWorkQ.IsEmpty)
-                        {
-                            outputConnectionRecord.ControlWorkQ.Enqueue(-2);
-                        }
+                        outputConnectionRecord.Trim(kv.Value.First, kv.Value.Second);
                     }
                 }
             }
@@ -1934,6 +2061,50 @@ namespace Ambrosia
             }
         }
 
+
+        /**
+         * This contains information associated with a given machine
+         **/
+        internal class MachineState
+        {
+            public MachineState(long shardID)
+            {
+                Recovered = false;
+                ShardID = shardID;
+            }
+            public LogWriter CheckpointWriter { get; set; }
+            public Committer Committer { get; set; }
+            public ConcurrentDictionary<string, InputConnectionRecord> Inputs { get; set; }
+            public long LastCommittedCheckpoint { get; set; }
+            public long LastLogFile { get; set; }
+            public AARole MyRole { get; set; }
+            public ConcurrentDictionary<string, OutputConnectionRecord> Outputs { get; set; }
+            public bool Recovered { get; set; }
+            public long ShardID { get; set; }
+        }
+
+        internal void LoadAmbrosiaState(MachineState state)
+        {
+            state.CheckpointWriter = _checkpointWriter;
+            state.Committer = _committer;
+            state.Inputs = _inputs;
+            state.LastCommittedCheckpoint = _lastCommittedCheckpoint;
+            state.LastLogFile = _lastLogFile;
+            state.MyRole = _myRole;
+            state.Outputs = _outputs;
+        }
+
+        internal void UpdateAmbrosiaState(MachineState state)
+        {
+            _checkpointWriter = state.CheckpointWriter;
+            _committer = state.Committer;
+            _inputs = state.Inputs;
+            _lastCommittedCheckpoint = state.LastCommittedCheckpoint;
+            _lastLogFile = state.LastLogFile;
+            _myRole = state.MyRole;
+            _outputs = state.Outputs;
+        }
+
         public class AmbrosiaOutput : IAsyncVertexOutputEndpoint
         {
             AmbrosiaRuntime myRuntime;
@@ -2004,8 +2175,13 @@ namespace Ambrosia
             }
         }
 
+        internal readonly object _globalOutputTrackerLock = new object();
+        ConcurrentQueue<OutputRecordTracker> _globalOutputTracker = new ConcurrentQueue<OutputRecordTracker>();
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
         ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
+        // Input / output state of parent shards. This is needed for recovery.
+        ConcurrentDictionary<long, MachineState> _parentStates = new ConcurrentDictionary<long, MachineState>();
+        ConcurrentDictionary<string, long[]> _ancestors;
         internal int _localServiceReceiveFromPort;           // specifiable on the command line
         internal int _localServiceSendToPort;                // specifiable on the command line 
         internal string _serviceName;  // specifiable on the command line
@@ -2019,6 +2195,9 @@ namespace Ambrosia
         bool _sharded;
         internal bool _createService;
         long _shardID;
+        Func<long, long> _shardLocator;
+        long[] _oldShards;
+        long[] _newShards;
         bool _runningRepro;
         long _currentVersion;
         long _upgradeToVersion;
@@ -2043,6 +2222,8 @@ namespace Ambrosia
         public const byte CountReplayableRPCBatchByte = 13;
         public const byte trimToByte = 14;
         public const byte becomingPrimaryByte = 15;
+        public const byte ancestorByte = 16;
+        public const byte shardTrimByte = 17;
 
         CRAClientLibrary _coral;
 
@@ -2068,7 +2249,7 @@ namespace Ambrosia
         // true when this service is in an active/active configuration. False if set to single node
         bool _activeActive;
 
-        enum AARole { Primary, Secondary, Checkpointer };
+        internal enum AARole { Primary, Secondary, Checkpointer, ReshardSecondary };
         AARole _myRole;
         // Log size at which we start a new log file. This triggers a checkpoint, <= 0 if manual only checkpointing is done
         long _newLogTriggerSize;
@@ -2079,8 +2260,9 @@ namespace Ambrosia
         // A handle to a file used for an upgrading secondary to bring down the primary and prevent primary promotion amongst secondaries.
         // As long as the write lock is held, no promotion can happen
         FileStream _killFileHandle = null;
-
-
+        // A handle to a file used to signal to other shards that this shard has finished upgrading.
+        // When all of these files exists, then all shards know re-sharding is complete.
+        FileStream _reshardFileHandle = null;
 
         const int UnexpectedError = 0;
         const int VersionMismatch = 1;
@@ -2206,8 +2388,8 @@ namespace Ambrosia
         private void PrepareToRecoverOrStart()
         {
             IPAddress localIPAddress = Dns.GetHostEntry("localhost").AddressList[0];
-            LogWriter.CreateDirectoryIfNotExists(_serviceLogPath + _serviceName + "_" + _currentVersion);
-            _logFileNameBase = Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion, "server");
+            LogWriter.CreateDirectoryIfNotExists(LogDirectory(_currentVersion));
+            _logFileNameBase = LogFileNameBase(_currentVersion);
             SetupLocalServiceStreams();
             if (!_runningRepro)
             {
@@ -2251,132 +2433,415 @@ namespace Ambrosia
             CheckpointingService = false;
             Recovering = false;
             PrepareToRecoverOrStart();
+
             if (!_runningRepro)
             {
                 RuntimeChecksOnProcessStart();
             }
+
+            if (_sharded)
+            {
+                _ancestors = new ConcurrentDictionary<string, long[]>();
+                _ancestors[ServiceName()] = _oldShards;
+            }
+
             // Determine if we are recovering
             if (!_createService)
             {
                 Recovering = true;
                 _restartWithRecovery = true;
-                if (!_runningRepro)
+                if (_oldShards.Length > 0)
                 {
-                    // We are recovering - find the last committed checkpoint
-                    _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
-                }
-                else
+                    RecoverFromShards(checkpointToLoad, testUpgrade);
+                } else
                 {
-                    // We are running a repro
-                    _lastCommittedCheckpoint = checkpointToLoad;
+                    MachineState state = new MachineState(_shardID);
+                    state.MyRole = AARole.Secondary;
+                    // TODO: Need to figure out where _outputs should have been set if we replay re-sharding.
+                    await RecoverAsync(state, checkpointToLoad, testUpgrade);
+                    UpdateAmbrosiaState(state);
                 }
-                // Start from the log file associated with the last committed checkpoint
-                _lastLogFile = _lastCommittedCheckpoint;
-                if (_activeActive)
-                {
-                    if (!_runningRepro)
-                    {
-                        // Determines the role as either secondary or checkpointer. If its a checkpointer, _commitBlobWriter holds the write lock on the last checkpoint
-                        DetermineRole();
-                    }
-                    else
-                    {
-                        // We are running a repro. Act as a secondary
-                        _myRole = AARole.Secondary;
-                    }
-                }
-
-                using (LogReader checkpointStream = new LogReader(_logFileNameBase + "chkpt" + _lastCommittedCheckpoint.ToString()))
-                {
-                    // recover the checkpoint - Note that everything except the replay data must have been written successfully or we
-                    // won't think we have a valid checkpoint here. Since we can only be the secondary or checkpointer, the committer doesn't write to the replay log
-                    // Recover committer
-                    _committer = new Committer(_localServiceSendToStream, _persistLogs, this, -1, checkpointStream);
-                    // Recover input connections
-                    _inputs = _inputs.AmbrosiaDeserialize(checkpointStream);
-                    // Recover output connections
-                    _outputs = _outputs.AmbrosiaDeserialize(checkpointStream, this);
-                    UnbufferNonreplayableCalls();
-                    // Restore new service from checkpoint
-                    var serviceCheckpoint = new FlexReadBuffer();
-                    FlexReadBuffer.Deserialize(checkpointStream, serviceCheckpoint);
-                    _committer.SendCheckpointToRecoverFrom(serviceCheckpoint.Buffer, serviceCheckpoint.Length, checkpointStream);
-                }
-
-                using (LogReader replayStream = new LogReader(_logFileNameBase + "log" + _lastLogFile.ToString()))
-                {
-                    if (_myRole == AARole.Secondary && !_runningRepro)
-                    {
-                        // If this is a secondary, set up the detector to detect when this instance becomes the primary
-                        var t = DetectBecomingPrimaryAsync();
-                    }
-                    if (testUpgrade)
-                    {
-                        // We are actually testing an upgrade. Must upgrade the service before replay
-                        _committer.SendUpgradeRequest();
-                    }
-                    await ReplayAsync(replayStream);
-                }
-                var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
-                if (_currentVersion != readVersion)
-                {
-
-                    OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
-                }
-                if (_upgrading)
-                {
-                    MoveServiceToUpgradeDirectory();
-                }
-                // Now becoming the primary. Moving to next log file since the current one may have junk at the end.
-                bool wasUpgrading = _upgrading;
-                var oldFileHandle = await MoveServiceToNextLogFileAsync(false, true);
-                if (wasUpgrading)
-                {
-                    // Successfully wrote out our new first checkpoint in the upgraded version, can now officially take the version upgrade
-                    InsertOrReplaceServiceInfoRecord("CurrentVersion", _upgradeToVersion.ToString());
-                    // We have now completed the upgrade and may release the old file lock.
-                    oldFileHandle.Dispose();
-                    // Moving to the next file means the first log file is empty, but it immediately causes failures of all old secondaries.
-                    await MoveServiceToNextLogFileAsync();
-                }
-
-                if (_activeActive)
-                {
-                    // Start task to periodically check if someone's trying to upgrade
-                    (new Task(() => CheckForUpgradeAsync())).Start();
-                }
-
+                await PrepareToBecomePrimaryAsync();
                 Recovering = false;
             }
             else
             {
-                // We are starting for the first time. This is the primary
-                _restartWithRecovery = false;
-                _lastCommittedCheckpoint = 0;
-                _lastLogFile = 0;
-                _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
-                _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
-                _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
+                await StartAsync();
+            }
+        }
 
-                _myRole = AARole.Primary;
-
-                _checkpointWriter = null;
-                _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
-                Connect(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
-                await MoveServiceToNextLogFileAsync(true, true);
-                InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
-                if (_activeActive)
+        private async Task RecoverAsync(MachineState state, long checkpointToLoad = -1, bool testUpgrade = false)
+        {
+            if (!_runningRepro)
+            {
+                // We are recovering - find the last committed checkpoint
+                state.LastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", state.ShardID)));
+                if (_sharded && state.MyRole != AARole.ReshardSecondary)
                 {
-                    // Start task to periodically check if someone's trying to upgrade
-                    (new Task(() => CheckForUpgradeAsync())).Start();
+                    // Load our ancestor information
+                    string ancestors = RetrieveServiceInfo(InfoTitle("Ancestors", state.ShardID));
+                    _ancestors[ServiceName()] = ancestors.Split(',').Select(n => long.Parse(n)).ToArray();
+                }
+            }
+            else
+            {
+                // We are running a repro
+                state.LastCommittedCheckpoint = checkpointToLoad;
+            }
+            // Start from the log file associated with the last committed checkpoint
+            state.LastLogFile = state.LastCommittedCheckpoint;
+            if (_activeActive)
+            {
+                if (!_runningRepro)
+                {
+                    // Determines the role as either secondary or checkpointer. If its a checkpointer, _commitBlobWriter holds the write lock on the last checkpoint
+                    DetermineRole(state);
+                }
+                else
+                {
+                    // We are running a repro. Act as a secondary
+                    state.MyRole = AARole.Secondary;
+                }
+            }
+
+            using (LogReader checkpointStream = new LogReader(CheckpointName(state.LastCommittedCheckpoint, -1, state.ShardID)))
+            {
+                // recover the checkpoint - Note that everything except the replay data must have been written successfully or we
+                // won't think we have a valid checkpoint here. Since we can only be the secondary or checkpointer, the committer doesn't write to the replay log
+                // Recover committer
+                state.Committer = new Committer(_localServiceSendToStream, _persistLogs, this, -1, checkpointStream);
+                // Recover input connections
+                state.Inputs = state.Inputs.AmbrosiaDeserialize(checkpointStream);
+                // Recover output connections
+                state.Outputs = state.Outputs.AmbrosiaDeserialize(checkpointStream, this);
+                UnbufferNonreplayableCalls(state.Outputs);
+                // Restore new service from checkpoint
+                var serviceCheckpoint = new FlexReadBuffer();
+                FlexReadBuffer.Deserialize(checkpointStream, serviceCheckpoint);
+                state.Committer.SendCheckpointToRecoverFrom(serviceCheckpoint.Buffer, serviceCheckpoint.Length, checkpointStream);
+                if (_runningRepro)
+                {
+                    // For replay, we need _outputs to be set for the local listener to work.
+                    UpdateAmbrosiaState(state);
+                }
+            }
+
+            using (LogReader replayStream = new LogReader(LogFileName(state.LastLogFile, -1, state.ShardID)))
+            {
+                if (state.MyRole == AARole.Secondary && !_runningRepro)
+                {
+                    // If this is a secondary, set up the detector to detect when this instance becomes the primary
+                    var t = DetectBecomingPrimaryAsync(state);
+                }
+                if (testUpgrade)
+                {
+                    // We are actually testing an upgrade. Must upgrade the service before replay
+                    state.Committer.SendUpgradeRequest();
+                }
+                await ReplayAsync(replayStream, state);
+            }
+        }
+
+        private async Task PrepareToBecomePrimaryAsync()
+        {
+            var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
+            if (_currentVersion != readVersion)
+            {
+
+                OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
+            }
+            if (_upgrading)
+            {
+                MoveServiceToUpgradeDirectory();
+            }
+            // Now becoming the primary. Moving to next log file since the current one may have junk at the end.
+            bool wasUpgrading = _upgrading;
+            var oldFileHandle = await MoveServiceToNextLogFileAsync(false, true);
+            if (wasUpgrading)
+            {
+                // Successfully wrote out our new first checkpoint in the upgraded version, can now officially take the version upgrade
+                InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _upgradeToVersion.ToString());
+                // We have now completed the upgrade and may release the old file lock.
+                oldFileHandle.Dispose();
+                // Moving to the next file means the first log file is empty, but it immediately causes failures of all old secondaries.
+                await MoveServiceToNextLogFileAsync();
+            }
+
+            if (_activeActive || _shardID > 0)
+            {
+                // Start task to periodically check if someone's trying to upgrade
+                (new Task(() => CheckForUpgradeAsync())).Start();
+            }
+        }
+
+        private void RecoverFromShard(MachineState state, long shardID, long checkpointToLoad = -1, bool testUpgrade = false)
+        {
+            RecoverAsync(state, checkpointToLoad, testUpgrade).GetAwaiter();
+        }
+
+        private void AddAncestorInput(string key, long inputShardID, long peerID, long shardID, Tuple<long, long> seq)
+        {
+            Console.WriteLine("AddAncestorInput {0} -> {1} -> {2}", key, peerID, shardID);
+            InputConnectionRecord inputConnectionRecord;
+            if (!_inputs.TryGetValue(key, out inputConnectionRecord))
+            {
+                inputConnectionRecord = new InputConnectionRecord();
+                inputConnectionRecord.ShardID = inputShardID;
+                _inputs[key] = inputConnectionRecord;
+            }
+            if (!inputConnectionRecord.AncestorsToIDs.ContainsKey(peerID)) {
+                inputConnectionRecord.AncestorsToIDs[peerID] = new ConcurrentDictionary<long, Tuple<long, long>>();
+            }
+            inputConnectionRecord.AncestorsToIDs[peerID][shardID] = seq;
+        }
+
+        private void AddAncestorInput(string sourceString)
+        {
+            var srcAncestors = _ancestors[sourceString];
+            var dstAncestors = _ancestors[ServiceName()];
+            var parts = ParseServiceName(sourceString);
+            var service = parts.Item1;
+            foreach (var srcID in srcAncestors)
+            {
+                var srcName = ServiceName(service, srcID);
+                if (_inputs.ContainsKey(srcName))
+                {
+                    InputConnectionRecord record;
+                    _inputs.TryRemove(srcName, out record);
+                    // Add our records for the source ancestor inputs to the source Input.
+                    AddAncestorInput(sourceString, parts.Item2, srcID, _shardID, new Tuple<long, long>(record.LastProcessedID, record.LastProcessedReplayableID));
+                    // Merge the ancestors AncestorsToIDs records with the sourceString's records.
+                    foreach (var srcID1 in record.AncestorsToIDs.Keys)
+                    {
+                        foreach (var destID1 in record.AncestorsToIDs[srcID1].Keys)
+                        {
+                            AddAncestorInput(sourceString, parts.Item2, srcID1, destID1, record.AncestorsToIDs[srcID1][destID1]);
+                        }
+                    }
                 }
             }
         }
 
-        private void UnbufferNonreplayableCalls()
+        private void AddParentInputState(MachineState state)
         {
-            foreach (var outputRecord in _outputs)
+            foreach (var input in state.Inputs)
+            {
+                var record = input.Value;
+                // Add the parent's ancestor history
+                foreach (var peerID in record.AncestorsToIDs.Keys)
+                {
+                    foreach (var shardID in record.AncestorsToIDs[peerID].Keys)
+                    {
+                        Console.WriteLine("AddParentStates ancestor {0} -> {1} -> {2}", input.Key, peerID, shardID);
+                        AddAncestorInput(input.Key, record.ShardID, peerID, shardID, record.AncestorsToIDs[peerID][shardID]);
+                    }
+                }
+                // Add the parents history
+                Console.WriteLine("AddParentStates parent {0} -> {1} -> {2}", input.Key, record.ShardID, state.ShardID);
+                AddAncestorInput(input.Key, record.ShardID, record.ShardID, state.ShardID, new Tuple<long, long>(record.LastProcessedID, record.LastProcessedReplayableID));
+            }
+        }
+
+        private void AddParentOutputState(MachineState state)
+        {
+            long nextGlobalSeqID = 0;
+            foreach (var kv in state.Outputs)
+            {
+                var parentOutput = kv.Value;
+                var key = kv.Key;
+
+                OutputConnectionRecord output;
+                if (!_outputs.TryGetValue(key, out output))
+                {
+                    output = new OutputConnectionRecord(parentOutput.MyAmbrosia);
+                    _outputs[key] = output;
+                }
+
+                // Copy parent outputs
+                var bufferEnumerator = parentOutput.BufferedOutput.GetEnumerator();
+                while (bufferEnumerator.MoveNext()) {
+                    var buffer = bufferEnumerator.Current;
+                    var diff = buffer.HighestSeqNo - buffer.LowestSeqNo;
+                    var lowestSeqNo = _outputs[key].LastSeqNoFromLocalService + 1;
+                    // Adjust sequence numbers
+                    var writablePage = _outputs[key].BufferedOutput.GetWritablePage(buffer.PageBytes.Length, lowestSeqNo);
+                    var highestSeqNo = writablePage.LowestSeqNo + diff;
+                    writablePage.HighestSeqNo = highestSeqNo;
+                    _outputs[key].LastSeqNoFromLocalService += (diff + 1);
+                    writablePage.UnsentReplayableMessages += buffer.UnsentReplayableMessages;
+                    writablePage.TotalReplayableMessages += buffer.TotalReplayableMessages;
+                    // Copy buffered output to local output buffer
+                    Buffer.BlockCopy(buffer.PageBytes, 0, writablePage.PageBytes, 0, buffer.PageBytes.Length);
+                    for (long i = lowestSeqNo; i <= highestSeqNo; i++)
+                    {
+                        // We want to ensure a total ordering for all messages
+                        // This way in case of failure during a reshard, we will send
+                        // off all messages in the same order.
+                        var tracker = new OutputRecordTracker(nextGlobalSeqID, i);
+                        _globalOutputTracker.Enqueue(tracker);
+                        output.OutputTracker.Enqueue(tracker);
+                        nextGlobalSeqID++;
+                    }
+                }
+            }
+        }
+
+
+        private void AddParentStates(MachineState[] states)
+        {
+            foreach (var state in states)
+            {
+                AddParentInputState(state);
+                //AddOutputState(state.Outputs);
+            }
+        }
+
+        private void FinishResharding()
+        {
+            WaitForOtherShards();
+            LockReshardFile();
+            if (_newShards.Last() == _shardID)
+            {
+                KillParentShards(_oldShards);
+            }
+        }
+
+        private void EstablishInputConnections(ConcurrentDictionary<long, MachineState> states)
+        {
+            foreach (var state in states.Values)
+            {
+                foreach (var kv in state.Inputs)
+                {
+                    var destination = kv.Key;
+                    if (destination == "")
+                    {
+                        destination = ServiceName();
+                    }
+
+                    List<CRAErrorCode> results = new List<CRAErrorCode>();
+                    results.Add(Connect(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName));
+                    results.Add(Connect(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName));
+                    if (destination != ServiceName())
+                    {
+                        results.Add(Connect(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName));
+                        results.Add(Connect(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName));
+                    }
+
+                    foreach (var result in results)
+                    {
+                        if (result != CRAErrorCode.Success)
+                        {
+                            Console.WriteLine("EstablishInputConnections: Error connecting to " + destination);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void RecoverFromShards(long checkpointToLoad = -1, bool testUpgrade = false)
+        {
+            _myRole = AARole.ReshardSecondary;
+            var threads = new Thread[_oldShards.Length];
+            var parentStates = new ConcurrentDictionary<long, MachineState>();
+            InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
+            InsertOrReplaceServiceInfoRecord(InfoTitle("Ancestors"), string.Join(",", _ancestors[ServiceName()]));
+
+            _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
+            _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
+            _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
+
+            for (int i = 0; i < _oldShards.Length; i++)
+            {
+                long shardID = _oldShards[i];
+                MachineState state = new MachineState(shardID);
+                state.MyRole = AARole.ReshardSecondary;
+                parentStates[shardID] = state;
+                if (i == 0)
+                {
+                    var t = DetectBecomingPrimaryAsync(state);
+                }
+                threads[i] = new Thread(() => RecoverFromShard(state, shardID, checkpointToLoad, testUpgrade)) { IsBackground = true };
+                threads[i].Start();
+            }
+
+            while (!parentStates.Values.All(s => s.Recovered))
+            {
+                Thread.Sleep(1000);
+            }
+
+            // Wait for replay for all shards to occur
+            for (int i = 0; i < threads.Length; i++)
+            {
+                threads[i].Join();
+            }
+
+            AddParentStates(parentStates.Values.ToArray());
+            _parentStates = parentStates;
+
+            EstablishInputConnections(parentStates);
+        }
+
+        private void WaitForOtherShards()
+        {
+            int index = -1;
+            for (int i = 0; i < _newShards.Length; i++)
+            {
+                if (_newShards[i] == _shardID)
+                {
+                    index = i;
+                }
+            }
+            Debug.Assert(index != -1);
+            if (index > 0)
+            {
+                if (!File.Exists(ReshardFileName(_newShards[index - 1])))
+                {
+                    throw new Exception("Peer shard not done syncing.");
+                }
+            }
+        }
+
+        private void KillParentShards(long[] shardIds)
+        {
+            for (int i = 0; i < shardIds.Length; i++)
+            {
+                LockKillFile(shardIds[i]);
+            }
+        }
+
+        private async Task StartAsync()
+        {
+            // We are starting for the first time. This is the primary
+            _restartWithRecovery = false;
+            _lastCommittedCheckpoint = 0;
+            _lastLogFile = 0;
+            _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
+            _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
+            _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
+
+            _myRole = AARole.Primary;
+
+            _checkpointWriter = null;
+            _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
+            Connect(ServiceName(), AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
+            Connect(ServiceName(), AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
+            await MoveServiceToNextLogFileAsync(true, true);
+            InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
+            if (_sharded)
+            {
+                InsertOrReplaceServiceInfoRecord(InfoTitle("Ancestors"), string.Join(",", _ancestors[ServiceName()]));
+            }
+            if (_activeActive || _shardID > 0)
+            {
+                // Start task to periodically check if someone's trying to upgrade
+                (new Task(() => CheckForUpgradeAsync())).Start();
+            }
+        }
+
+        private void UnbufferNonreplayableCalls(ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+        {
+            foreach (var outputRecord in outputs)
             {
                 var newLastSeqNo = outputRecord.Value.BufferedOutput.TrimAndUnbufferNonreplayableCalls(outputRecord.Value.TrimTo, outputRecord.Value.ReplayableTrimTo);
                 if (newLastSeqNo != -1)
@@ -2388,8 +2853,8 @@ namespace Ambrosia
 
         internal void MoveServiceToUpgradeDirectory()
         {
-            LogWriter.CreateDirectoryIfNotExists(_serviceLogPath + _serviceName + "_" + _upgradeToVersion);
-            _logFileNameBase = Path.Combine(_serviceLogPath + _serviceName + "_" + _upgradeToVersion, "server");
+            LogWriter.CreateDirectoryIfNotExists(RootDirectory(_upgradeToVersion));
+            _logFileNameBase = LogFileNameBase(_upgradeToVersion);
         }
 
         public CRAErrorCode Connect(string fromProcessName, string fromEndpoint, string toProcessName, string toEndpoint)
@@ -2402,17 +2867,114 @@ namespace Ambrosia
             return _coral.Connect(fromProcessName, fromEndpoint, toProcessName, toEndpoint);
         }
 
+        private string ServiceName(string name = "", long shardID = -1)
+        {
+            if (name == "")
+            {
+                name = _serviceName;
+            }
+
+            if (_sharded)
+            {
+                if (shardID == -1)
+                {
+                    shardID = _shardID;
+                }
+            }
+            return GetShardName(name, shardID);
+        }
+
+        private Tuple<string, long> ParseServiceName(string service)
+        {
+            if (service == "")
+            {
+                return new Tuple<string, long>(_serviceName, _shardID);
+            }
+
+            var parts = service.Split('-');
+            if (parts.Length == 1)
+            {
+                return new Tuple<string, long>(parts[0], -1);
+            }
+            return new Tuple<string, long>(parts[0], long.Parse(parts[1]));
+        }
+
+        public static string GetShardName(string name, long shardID)
+        {
+            if (shardID != -1)
+            {
+                name += "-" + shardID.ToString();
+            }
+            return name;
+        }
+
+        private string RootDirectory(long version = -1)
+        {
+            if (version == -1)
+            {
+                if (_upgrading)
+                {
+                    version = _upgradeToVersion;
+                }
+                else
+                {
+                    version = _currentVersion;
+                }
+            }
+
+            return _serviceLogPath + _serviceName + "_" + version;
+        }
+
+        private string LogDirectory(long version = -1, long shardID = -1)
+        {
+            string shard = "";
+            if (_sharded)
+            {
+                if (shardID == -1)
+                {
+                    shardID = _shardID;
+                }
+                shard = shardID.ToString();
+            }
+
+            return Path.Combine(RootDirectory(version), shard);
+        }
+
+        private string LogFileNameBase(long version = -1, long shardID = -1)
+        {
+            return Path.Combine(LogDirectory(version, shardID), "server");
+        }
+
+        private string CheckpointName(long checkpoint, long version = -1, long shardID = -1)
+        {
+            return LogFileNameBase(version, shardID) + "chkpt" + checkpoint.ToString();
+        }
+
+        private string LogFileName(long logFile, long version = -1, long shardID = -1)
+        {
+            return LogFileNameBase(version, shardID) + "log" + logFile.ToString();
+        }
+
+        private string KillFileName(long shardID = -1)
+        {
+            return LogFileNameBase(-1, shardID) + "killFile";
+        }
+
+        private string ReshardFileName(long shardID = -1)
+        {
+            return LogFileNameBase(-1, shardID) + "reshardFile";
+        }
+
         private LogWriter CreateNextOldVerLogFile()
         {
-            string newLogFileNameBaseForOldVersion = Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion, "server");
-            if (LogWriter.FileExists(newLogFileNameBaseForOldVersion + "log" + (_lastLogFile + 1).ToString()))
+            if (LogWriter.FileExists(LogFileName(_lastLogFile + 1, _currentVersion)))
             {
-                File.Delete(newLogFileNameBaseForOldVersion + "log" + (_lastLogFile + 1).ToString());
+                File.Delete(LogFileName(_lastLogFile + 1, _currentVersion));
             }
             LogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(newLogFileNameBaseForOldVersion + "log" + (_lastLogFile + 1).ToString(), 1024 * 1024, 6);
+                retVal = new LogWriter(LogFileName(_lastLogFile + 1, _currentVersion), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
@@ -2423,9 +2985,19 @@ namespace Ambrosia
 
         // Used to create a kill file meant to being down primaries and prevent promotion. Promotion prevention
         // lasts until the returned file handle is released.
-        private void LockKillFile()
+        private void LockKillFile(long shardID = -1)
         {
-            _killFileHandle = new FileStream(_logFileNameBase + "killFile", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read & ~FileShare.Inheritable);
+            _killFileHandle = LockFile(KillFileName(shardID));
+        }
+
+        private void LockReshardFile()
+        {
+            _reshardFileHandle = LockFile(ReshardFileName());
+        }
+
+        private FileStream LockFile(string file)
+        {
+            return new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read & ~FileShare.Inheritable);
         }
 
         private void ReleaseAndTryCleanupKillFile()
@@ -2435,7 +3007,7 @@ namespace Ambrosia
             try
             {
                 // Try to delete the file. Someone may beat us to it.
-                File.Delete(_logFileNameBase + "killFile");
+                File.Delete(KillFileName());
             }
             catch (Exception e)
             {
@@ -2444,20 +3016,34 @@ namespace Ambrosia
 
         private LogWriter CreateNextLogFile()
         {
-            if (LogWriter.FileExists(_logFileNameBase + "log" + (_lastLogFile + 1).ToString()))
+            if (LogWriter.FileExists(LogFileName(_lastLogFile + 1)))
             {
-                File.Delete(_logFileNameBase + "log" + (_lastLogFile + 1).ToString());
+                File.Delete(LogFileName(_lastLogFile + 1));
             }
             LogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(_logFileNameBase + "log" + (_lastLogFile + 1).ToString(), 1024 * 1024, 6);
+                retVal = new LogWriter(LogFileName(_lastLogFile + 1), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
                 OnError(0, "Error opening next log file:" + e.ToString());
             }
             return retVal;
+        }
+
+        private string InfoTitle(string prefix, long shardID = -1)
+        {
+            var file = prefix;
+            if (_sharded)
+            {
+                if (shardID == -1)
+                {
+                    shardID = _shardID;
+                }
+                file += shardID.ToString();
+            }
+            return file;
         }
 
         // Closes out the old log file and starts a new one. Takes checkpoints if this instance should
@@ -2474,14 +3060,7 @@ namespace Ambrosia
                 oldVerLogHandle = CreateNextOldVerLogFile();
             }
             _lastLogFile++;
-            if (_sharded)
-            {
-                InsertOrReplaceServiceInfoRecord("LastLogFile" + _shardID.ToString(), _lastLogFile.ToString());
-            }
-            else
-            {
-                InsertOrReplaceServiceInfoRecord("LastLogFile", _lastLogFile.ToString());
-            }
+            InsertOrReplaceServiceInfoRecord(InfoTitle("LastLogFile"), _lastLogFile.ToString());
             _committer.SwitchLogStreams(nextLogHandle);
             if (!firstStart && _activeActive && !_upgrading && becomingPrimary)
             {
@@ -2507,39 +3086,40 @@ namespace Ambrosia
             // it's after replace and moving to the next log file. Note that this will also have the effect
             // of shaking loose the initialization message, ensuring liveliness.
             await _committer.TryCommitAsync(_outputs);
+            TrimGlobalOutputTracker();
             return oldVerLogHandle;
         }
 
         //==============================================================================================================
         // Insance compete over write permission for LOG file & CheckPoint file
-        private void DetermineRole()
+        private void DetermineRole(MachineState state)
         {
             if (_upgrading)
             {
-                _myRole = AARole.Secondary;
+                state.MyRole = AARole.Secondary;
                 return;
             }
             try
             {
                 // Compete for Checkpoint Write Permission
-                _checkpointWriter = new LogWriter(_logFileNameBase + "chkpt" + (_lastCommittedCheckpoint).ToString(), 1024 * 1024, 6, true);
-                _myRole = AARole.Checkpointer; // I'm a checkpointing secondary
-                var oldCheckpoint = _lastCommittedCheckpoint;
-                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
-                if (oldCheckpoint != _lastCommittedCheckpoint)
+                state.CheckpointWriter = new LogWriter(CheckpointName(state.LastCommittedCheckpoint), 1024 * 1024, 6, true);
+                state.MyRole = AARole.Checkpointer; // I'm a checkpointing secondary
+                var oldCheckpoint = state.LastCommittedCheckpoint;
+                state.LastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", state.ShardID)));
+                if (oldCheckpoint != state.LastCommittedCheckpoint)
                 {
-                    _checkpointWriter.Dispose();
+                    state.CheckpointWriter.Dispose();
                     throw new Exception("We got a handle on an old checkpoint. The checkpointer was alive when this instance started");
                 }
             }
             catch
             {
-                _checkpointWriter = null;
-                _myRole = AARole.Secondary; // I'm a secondary
+                state.CheckpointWriter = null;
+                state.MyRole = AARole.Secondary; // I'm a secondary
             }
         }
 
-        public async Task DetectBecomingPrimaryAsync()
+        internal async Task DetectBecomingPrimaryAsync(MachineState state)
         {
             // keep trying to take the write permission on LOG file 
             // LOG write permission acquired only in case primary failed (is down)
@@ -2547,10 +3127,10 @@ namespace Ambrosia
             {
                 try
                 {
-                    var oldLastLogFile = _lastLogFile;
+                    var oldLastLogFile = state.LastLogFile;
                     // Compete for log write permission - non destructive open for write - open for append
-                    var lastLogFileStream = new LogWriter(_logFileNameBase + "log" + (oldLastLogFile).ToString(), 1024 * 1024, 6, true);
-                    if (long.Parse(RetrieveServiceInfo("LastLogFile")) != oldLastLogFile)
+                    var lastLogFileStream = new LogWriter(LogFileName(oldLastLogFile, -1, state.ShardID), 1024 * 1024, 6, true);
+                    if (long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID))) != oldLastLogFile)
                     {
                         // We got an old log. Try again
                         lastLogFileStream.Dispose();
@@ -2558,7 +3138,7 @@ namespace Ambrosia
                     }
                     // We got the lock! Set things up so we let go of the lock at the right moment
                     // But first check if we got the lock because the version changed, in which case, we should commit suicide
-                    var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion", state.ShardID)));
                     if (_currentVersion != readVersion)
                     {
 
@@ -2574,10 +3154,11 @@ namespace Ambrosia
                     }
 
                     // Now we can really promote!
-                    await _committer.SleepAsync();
-                    _committer.SwitchLogStreams(lastLogFileStream);
-                    await _committer.WakeupAsync();
-                    _myRole = AARole.Primary;  // this will stop  and break the loop in the function  replayInput_Sec() 
+                    await state.Committer.SleepAsync();
+                    state.Committer.SwitchLogStreams(lastLogFileStream);
+                    await state.Committer.WakeupAsync();
+
+                    state.MyRole = AARole.Primary;  // this will stop  and break the loop in the function  replayInput_Sec()
                     Console.WriteLine("\n\nNOW I'm Primary\n\n");
                     // if we are an upgrader : Time to release the kill file lock and cleanup. Note that since we have the log lock
                     // everyone is prevented from promotion until we succeed or fail.
@@ -2591,7 +3172,7 @@ namespace Ambrosia
                 catch
                 {
                     // Check if the version changed, in which case, we should commit suicide
-                    var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
                     if (_currentVersion != readVersion)
                     {
 
@@ -2602,7 +3183,7 @@ namespace Ambrosia
             }
         }
 
-        private async Task ReplayAsync(LogReader replayStream)
+        private async Task ReplayAsync(LogReader replayStream, MachineState state)
         {
             var tempBuf = new byte[100];
             var tempBuf2 = new byte[100];
@@ -2624,7 +3205,7 @@ namespace Ambrosia
                     replayStream.ReadAllRequiredBytes(headerBuf, 0, Committer.HeaderSize);
                     headerBufStream.Position = 0;
                     var commitID = headerBufStream.ReadIntFixed();
-                    if (commitID != _committer.CommitID)
+                    if (commitID != state.Committer.CommitID)
                     {
                         throw new Exception("Committer didn't match. Must be incomplete record");
                     }
@@ -2632,7 +3213,7 @@ namespace Ambrosia
                     commitSize = headerBufStream.ReadIntFixed();
                     var checkBytes = headerBufStream.ReadLongFixed();
                     var writeSeqID = headerBufStream.ReadLongFixed();
-                    if (writeSeqID != _committer._nextWriteID)
+                    if (writeSeqID != state.Committer._nextWriteID)
                     {
                         throw new Exception("Out of order page. Must be incomplete record");
                     }
@@ -2644,7 +3225,7 @@ namespace Ambrosia
                     }
                     replayStream.Read(tempBuf, 0, commitSize);
                     // Perform integrity check
-                    long checkBytesCalc = _committer.CheckBytes(tempBuf, 0, commitSize);
+                    long checkBytesCalc = state.Committer.CheckBytes(tempBuf, 0, commitSize);
                     if (checkBytesCalc != checkBytes)
                     {
                         throw new Exception("Integrity check failed for page. Must be incomplete record");
@@ -2686,7 +3267,7 @@ namespace Ambrosia
                 catch
                 {
                     // Couldn't recover replay segment. Could be for a number of reasons.
-                    if (!_activeActive || detectedEOL)
+                    if (state.MyRole != AARole.ReshardSecondary && (!_activeActive || detectedEOL))
                     {
                         // Leave replay and continue recovery.
                         break;
@@ -2694,40 +3275,46 @@ namespace Ambrosia
                     if (detectedEOF)
                     {
                         // Move to the next log file for reading only. We may need to take a checkpoint
-                        _lastLogFile++;
+                        state.LastLogFile++;
                         replayStream.Dispose();
-                        if (!LogWriter.FileExists(_logFileNameBase + "log" + _lastLogFile.ToString()))
+                        if (!LogWriter.FileExists(LogFileName(state.LastLogFile, -1, state.ShardID)))
                         {
-                            OnError(MissingLog, "Missing log in replay " + _lastLogFile.ToString());
+                            OnError(MissingLog, "Missing log in replay " + state.LastLogFile.ToString());
                         }
-                        replayStream = new LogReader(_logFileNameBase + "log" + _lastLogFile.ToString());
-                        if (_myRole == AARole.Checkpointer)
+                        replayStream = new LogReader(LogFileName(state.LastLogFile, -1, state.ShardID));
+                        if (state.MyRole == AARole.Checkpointer)
                         {
                             // take the checkpoint associated with the beginning of the new log
-                            await _committer.SleepAsync();
+                            // It's currently too disruptive to the code to pass in MachineState to
+                            // CheckpointAsync, so we update the corresponding variables instead.
+                            // This should be fine since the checkpointer should not replay from
+                            // multiple logs in parallel.
+                            UpdateAmbrosiaState(state);
+                            _committer.SleepAsync();
                             _committer.QuiesceServiceWithSendCheckpointRequest();
                             await CheckpointAsync();
                             await _committer.WakeupAsync();
+                            LoadAmbrosiaState(state);
                         }
                         detectedEOF = false;
                         continue;
                     }
-                    var myRoleBeforeEOLChecking = _myRole;
+                    var myRoleBeforeEOLChecking = state.MyRole;
                     replayStream.Position = logRecordPos;
-                    var newLastLogFile = _lastLogFile;
+                    var newLastLogFile = state.LastLogFile;
                     if (_runningRepro)
                     {
-                        if (LogWriter.FileExists(_logFileNameBase + "log" + (_lastLogFile + 1).ToString()))
+                        if (LogWriter.FileExists(LogFileName(state.LastLogFile + 1, -1, state.ShardID)))
                         {
                             // If there is a next file, then move to it
-                            newLastLogFile = _lastLogFile + 1;
+                            newLastLogFile = state.LastLogFile + 1;
                         }
                     }
                     else
                     {
-                        newLastLogFile = long.Parse(RetrieveServiceInfo("LastLogFile"));
+                        newLastLogFile = long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID)));
                     }
-                    if (newLastLogFile > _lastLogFile) // a new log file has been written
+                    if (newLastLogFile > state.LastLogFile) // a new log file has been written
                     {
                         // Someone started a new log. Try to read the last record again and then move to next file
                         detectedEOF = true;
@@ -2740,7 +3327,7 @@ namespace Ambrosia
                         continue;
                     }
                     // The remaining case is that we hit the end of log, but someone is still writing to this file. Wait and try to read again, or kill the primary if we are trying to upgrade in an active/active scenario
-                    if (_upgrading && _activeActive && _killFileHandle == null)
+                    if ((state.MyRole == AARole.ReshardSecondary || (_upgrading && _activeActive)) && _killFileHandle == null)
                     {
                         // We need to write and hold the lock on the kill file. Recovery will continue until the primary dies and we have
                         // fully processed the log.
@@ -2748,7 +3335,15 @@ namespace Ambrosia
                         {
                             try
                             {
-                                LockKillFile();
+                                if (state.MyRole == AARole.ReshardSecondary)
+                                {
+                                    FinishResharding();
+                                }
+                                else
+                                {
+                                    LockKillFile();
+                                }
+                                state.Recovered = true;
                                 break;
                             }
                             catch (Exception e)
@@ -2764,22 +3359,23 @@ namespace Ambrosia
                 foreach (var kv in committedInputDict)
                 {
                     InputConnectionRecord inputConnectionRecord;
-                    if (!_inputs.TryGetValue(kv.Key, out inputConnectionRecord))
+                    if (!state.Inputs.TryGetValue(kv.Key, out inputConnectionRecord))
                     {
                         // Create input record and add it to the dictionary
                         inputConnectionRecord = new InputConnectionRecord();
-                        _inputs[kv.Key] = inputConnectionRecord;
+                        inputConnectionRecord.ShardID = ParseServiceName(kv.Key).Item2;
+                        state.Inputs[kv.Key] = inputConnectionRecord;
                     }
                     inputConnectionRecord.LastProcessedID = kv.Value.First;
                     inputConnectionRecord.LastProcessedReplayableID = kv.Value.Second;
                     OutputConnectionRecord outputConnectionRecord;
                     // this lock prevents conflict with output arriving from the local service during replay
-                    lock (_outputs)
+                    lock (state.Outputs)
                     {
-                        if (!_outputs.TryGetValue(kv.Key, out outputConnectionRecord))
+                        if (!state.Outputs.TryGetValue(kv.Key, out outputConnectionRecord))
                         {
                             outputConnectionRecord = new OutputConnectionRecord(this);
-                            _outputs[kv.Key] = outputConnectionRecord;
+                            state.Outputs[kv.Key] = outputConnectionRecord;
                         }
                     }
                     // this lock prevents conflict with output arriving from the local service during replay and ensures maximal cleaning
@@ -2801,12 +3397,12 @@ namespace Ambrosia
                 {
                     OutputConnectionRecord outputConnectionRecord;
                     // this lock prevents conflict with output arriving from the local service during replay
-                    lock (_outputs)
+                    lock (state.Outputs)
                     {
-                        if (!_outputs.TryGetValue(kv.Key, out outputConnectionRecord))
+                        if (!state.Outputs.TryGetValue(kv.Key, out outputConnectionRecord))
                         {
                             outputConnectionRecord = new OutputConnectionRecord(this);
-                            _outputs[kv.Key] = outputConnectionRecord;
+                            state.Outputs[kv.Key] = outputConnectionRecord;
                         }
                     }
                     // this lock prevents conflict with output arriving from the local service during replay and ensures maximal cleaning
@@ -2820,11 +3416,11 @@ namespace Ambrosia
                 // If this is the first replay segment, it invalidates the contents of the committer, which must be cleared.
                 if (!clearedCommitterWrite)
                 {
-                    _committer.ClearNextWrite();
+                    state.Committer.ClearNextWrite();
                     clearedCommitterWrite = true;
                 }
                 // bump up the write ID in the committer in preparation for reading or writing the next page
-                _committer._nextWriteID++;
+                state.Committer._nextWriteID++;
             }
         }
 
@@ -2920,10 +3516,10 @@ namespace Ambrosia
             while (true)
             {
                 Console.WriteLine("Attempting to attach", destination);
-                var connectionResult1 = Connect(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
-                var connectionResult2 = Connect(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
-                var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+                var connectionResult1 = Connect(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
+                var connectionResult2 = Connect(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
+                var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
+                var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
                 if ((connectionResult1 == CRAErrorCode.Success) && (connectionResult2 == CRAErrorCode.Success) &&
                     (connectionResult3 == CRAErrorCode.Success) && (connectionResult4 == CRAErrorCode.Success))
                 {
@@ -2932,6 +3528,20 @@ namespace Ambrosia
                 }
                 Thread.Sleep(1000);
             }
+        }
+
+        private string DestinationShard(string destination, long shardID = -1)
+        {
+            if (destination == "")
+            {
+                return destination;
+            }
+            if (shardID == -1 && _sharded)
+            {
+                shardID = _shardLocator(BitConverter.ToInt32(Encoding.UTF8.GetBytes(destination), 0));
+            }
+
+            return ServiceName(destination, shardID);
         }
 
         private void ProcessSyncLocalMessage(ref FlexReadBuffer localServiceBuffer, FlexReadBuffer batchServiceBuffer)
@@ -2959,6 +3569,7 @@ namespace Ambrosia
                 case attachToByte:
                     // Get dest string
                     var destination = Encoding.UTF8.GetString(localServiceBuffer.Buffer, sizeBytes + 1, localServiceBuffer.Length - sizeBytes - 1);
+                    destination = DestinationShard(destination);
                     localServiceBuffer.ResetBuffer();
 
                     if (!_runningRepro)
@@ -2971,15 +3582,15 @@ namespace Ambrosia
                         else
                         {
                             Console.WriteLine("Attaching to {0}", destination);
-                            var connectionResult1 = Connect(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
-                            var connectionResult2 = Connect(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
-                            var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                            var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+                            var connectionResult1 = Connect(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
+                            var connectionResult2 = Connect(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
+                            var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
+                            var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
                             if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
                                 (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
                             {
 
-                                Console.WriteLine("Error attaching " + _serviceName + " to " + destination);
+                                Console.WriteLine("Error attaching " + ServiceName() + " to " + destination);
 // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
                             }
                         }
@@ -3077,6 +3688,7 @@ namespace Ambrosia
                 Buffer.BlockCopy(RpcBuffer.Buffer, destOffset, _lastShuffleDest, 0, destBytesSize);
                 _lastShuffleDestSize = destBytesSize;
                 destination = Encoding.UTF8.GetString(RpcBuffer.Buffer, destOffset, destBytesSize);
+                destination = DestinationShard(destination);
                 // locking to avoid conflict with stream reconnection immediately after replay and trim during replay
                 lock (_outputs)
                 {
@@ -3137,23 +3749,23 @@ namespace Ambrosia
             }
         }
 
-        private async Task ToDataStreamAsync(Stream writeToStream,
-                                             string destString,
-                                             CancellationToken ct)
-
+        private async Task<OutputConnectionRecord> SyncOutputConnectionAsync(ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                                                             string destString,
+                                                                             long commitSeqNo,
+                                                                             long commitSeqNoReplayable)
         {
             OutputConnectionRecord outputConnectionRecord;
-            if (destString.Equals(_serviceName))
+            if (destString.Equals(ServiceName()))
             {
                 destString = "";
             }
-            lock (_outputs)
+            lock (outputs)
             {
-                if (!_outputs.TryGetValue(destString, out outputConnectionRecord))
+                if (!outputs.TryGetValue(destString, out outputConnectionRecord))
                 {
                     // Set up the output record for the first time and add it to the dictionary
                     outputConnectionRecord = new OutputConnectionRecord(this);
-                    _outputs[destString] = outputConnectionRecord;
+                    outputs[destString] = outputConnectionRecord;
                     Console.WriteLine("Adding output:{0}", destString);
                 }
                 else
@@ -3161,20 +3773,14 @@ namespace Ambrosia
                     Console.WriteLine("restoring output:{0}", destString);
                 }
             }
+
             try
             {
                 // Reset the output cursor if it exists
                 outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                 outputConnectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
                 outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
-                // Process replay message
-                var inputFlexBuffer = new FlexReadBuffer();
-                await FlexReadBuffer.DeserializeAsync(writeToStream, inputFlexBuffer, ct);
-                var sizeBytes = inputFlexBuffer.LengthLength;
-                // Get the seqNo of the replay/filter point
-                var commitSeqNo = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1);
-                var commitSeqNoReplayable = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1 + StreamCommunicator.LongSize(commitSeqNo));
-                inputFlexBuffer.ResetBuffer();
+
                 if (outputConnectionRecord.ConnectingAfterRestart)
                 {
                     // We've been through recovery (at least partially), and have scrubbed all ephemeral calls. Must now rebase
@@ -3207,7 +3813,125 @@ namespace Ambrosia
                     }
                 }
                 outputConnectionRecord.LastSeqSentToReceiver = commitSeqNo - 1;
+            }
+            catch (Exception e)
+            {
+                // Cleanup held locks if necessary
+                await Task.Yield();
+                var lockVal = outputConnectionRecord.BufferedOutput.ReadTrimLock();
+                if (lockVal == 1 || lockVal == 2)
+                {
+                    outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
+                }
+                var bufferLockVal = outputConnectionRecord.BufferedOutput.ReadAppendLock();
+                if (bufferLockVal == 2)
+                {
+                    outputConnectionRecord.BufferedOutput.ReleaseAppendLock();
+                }
+                throw e;
+            }
+            return outputConnectionRecord;
+        }
 
+        private OutputConnectionRecord SetupOutputConnectionRecord(string destString, ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>> ancestorsToIDs) {
+            OutputConnectionRecord record;
+            Console.WriteLine("SetupOutputConnectionRecord");
+            string destServiceBase = _serviceName;
+            if (destString.Equals(ServiceName()))
+            {
+                destString = "";
+            } else
+            {
+                destServiceBase = destString.Split('-')[0];
+            }
+            lock (_outputs)
+            {
+                if (!_outputs.TryGetValue(destString, out record))
+                {
+                    // Set up the output record for the first time and add it to the dictionary
+                    record = new OutputConnectionRecord(this);
+                    _outputs[destString] = record;
+                    Console.WriteLine("Adding output:{0}", destString);
+                }
+                else
+                {
+                    Console.WriteLine("restoring output:{0}", destString);
+                }
+                record.ConnectingAfterRestart = true;
+                foreach (var srcID in ancestorsToIDs.Keys)
+                {
+                    ConcurrentDictionary<string, OutputConnectionRecord> parentOutput;
+                    if (_parentStates.ContainsKey(srcID))
+                    {
+                        parentOutput = _parentStates[srcID].Outputs;
+                    } else
+                    {
+                        parentOutput = new ConcurrentDictionary<string, OutputConnectionRecord>();
+                    }
+                    foreach (var destID in ancestorsToIDs[srcID].Keys)
+                    {
+                        var lastProcessedID = ancestorsToIDs[srcID][destID].Item1;
+                        var lastProcessedReplayableID = ancestorsToIDs[srcID][destID].Item2;
+                        string destService = DestinationShard(destServiceBase, destID);
+
+                        if (parentOutput.ContainsKey(destService))
+                        {
+                            parentOutput[destService].Trim(lastProcessedID, lastProcessedReplayableID);
+                            // Copy parent output over
+                            record.LastSeqNoFromLocalService = parentOutput[destService].BufferedOutput.AdjustFirstSeqNoTo(record.LastSeqNoFromLocalService + 1);
+                            record.BufferedOutput.Copy(parentOutput[destService].BufferedOutput, record.LastSeqNoFromLocalService + 1);
+                            Console.WriteLine("PARENT LAST SEQ {0}", record.LastSeqNoFromLocalService);
+                        }
+                        if (_outputs.ContainsKey(destService))
+                        {
+                            Console.WriteLine("Old record LastSeqNoFromLocalService {0}", _outputs[destService].LastSeqNoFromLocalService);
+                            _outputs[destService].Trim(lastProcessedID, lastProcessedReplayableID);
+                            record.LastSeqNoFromLocalService = _outputs[destService].BufferedOutput.AdjustFirstSeqNoTo(record.LastSeqNoFromLocalService + 1);
+                            // Copy old output to new output record
+                            if (destService != destString)
+                            {
+                                var seq = record.BufferedOutput.Copy(_outputs[destService].BufferedOutput, record.LastSeqNoFromLocalService + 1);
+                            }
+                          //  record.LastSeqNoFromLocalService += (lastProcessedID - lastProcessedReplayableID);
+                        }
+                        Console.WriteLine("SetupOutput LastSeqNoFromLocalService {0}", record.LastSeqNoFromLocalService);
+                    }
+                }
+                record.ConnectingAfterRestart = false;
+            }
+
+            return record;
+        }
+
+        private async Task ToDataStreamAsync(Stream writeToStream,
+                                             string destString,
+                                             CancellationToken ct)
+        {
+            if (_sharded)
+            {
+                Serializer.SerializeAncestorMessage(writeToStream, ancestorByte, _ancestors[ServiceName()]);
+            }
+            // Process replay message
+            var result = await Serializer.DeserializeReplayMessageAsync(writeToStream, ct);
+            // Get the seqNo of the replay/filter point
+            var commitSeqNo = result.Item1;
+            var commitSeqNoReplayable = result.Item2;
+            var ancestorsToIDs = new ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>>();
+
+            if (_sharded)
+            {
+                ancestorsToIDs = result.Item3;
+            }
+
+            SetupOutputConnectionRecord(destString, ancestorsToIDs);
+            OutputConnectionRecord outputConnectionRecord = await SyncOutputConnectionAsync(_outputs, destString, commitSeqNo, commitSeqNoReplayable);
+            if (_sharded)
+            {
+                Serializer.SerializeShardTrimMessage(writeToStream, shardTrimByte);
+            }
+
+            try
+            {
                 // Enqueue a replay send
                 if (outputConnectionRecord._sendsEnqueued == 0)
                 {
@@ -3267,7 +3991,7 @@ namespace Ambrosia
 
         {
             OutputConnectionRecord outputConnectionRecord;
-            if (destString.Equals(_serviceName))
+            if (destString.Equals(ServiceName()))
             {
                 destString = "";
             }
@@ -3351,18 +4075,17 @@ namespace Ambrosia
         }
 
         private async Task SendReplayMessageAsync(Stream sendToStream,
-                                                  long lastProcessedID,
-                                                  long lastProcessedReplayableID,
+                                                  InputConnectionRecord input,
                                                   CancellationToken ct)
         {
             // Send FilterTo message to the destination command stream
-            // Write message size
-            sendToStream.WriteInt(1 + StreamCommunicator.LongSize(lastProcessedID) + StreamCommunicator.LongSize(lastProcessedReplayableID));
-            // Write message type
-            sendToStream.WriteByte(replayFromByte);
-            // Write the output filter seqNo for the other side
-            sendToStream.WriteLong(lastProcessedID);
-            sendToStream.WriteLong(lastProcessedReplayableID);
+            Serializer.SerializeReplayMessage(
+                sendToStream,
+                replayFromByte,
+                input.LastProcessedID + 1,
+                input.LastProcessedReplayableID + 1,
+                input.AncestorsToIDs
+            );
             await sendToStream.FlushAsync(ct);
         }
 
@@ -3386,7 +4109,7 @@ namespace Ambrosia
                                                CancellationToken ct)
         {
             InputConnectionRecord inputConnectionRecord;
-            if (sourceString.Equals(_serviceName))
+            if (sourceString.Equals(ServiceName()))
             {
                 sourceString = "";
             }
@@ -3394,6 +4117,7 @@ namespace Ambrosia
             {
                 // Create input record and add it to the dictionary
                 inputConnectionRecord = new InputConnectionRecord();
+                inputConnectionRecord.ShardID = ParseServiceName(sourceString).Item2;
                 _inputs[sourceString] = inputConnectionRecord;
                 Console.WriteLine("Adding input:{0}", sourceString);
             }
@@ -3402,7 +4126,22 @@ namespace Ambrosia
                 Console.WriteLine("restoring input:{0}", sourceString);
             }
             inputConnectionRecord.DataConnectionStream = (NetworkStream)readFromStream;
-            await SendReplayMessageAsync(readFromStream, inputConnectionRecord.LastProcessedID + 1, inputConnectionRecord.LastProcessedReplayableID + 1, ct);
+            if (_sharded)
+            {
+                // Process ancestor list
+                _ancestors[sourceString] = await Serializer.DeserializeAncestorMessageAsync(readFromStream, ct);
+                AddAncestorInput(sourceString);
+                // The last destination may be an ancestor shard, in which case we need to reshuffle.
+                _lastShuffleDestSize = 0;
+                Console.WriteLine("Ancestors of shard " + sourceString + " are " + string.Join(",", _ancestors[sourceString]));
+            }
+            await SendReplayMessageAsync(readFromStream, inputConnectionRecord, ct);
+            if (_sharded)
+            {
+                await Serializer.DeserializeShardTrimMessageAsync(readFromStream, ct);
+                // Clear ancestor history
+                _inputs[sourceString].AncestorsToIDs.Clear();
+            }
             // Create new input task for monitoring new input
             Task inputTask;
             inputTask = InputDataListenerAsync(inputConnectionRecord, sourceString, ct);
@@ -3414,7 +4153,7 @@ namespace Ambrosia
                                                   CancellationToken ct)
         {
             InputConnectionRecord inputConnectionRecord;
-            if (sourceString.Equals(_serviceName))
+            if (sourceString.Equals(ServiceName()))
             {
                 sourceString = "";
             }
@@ -3422,6 +4161,7 @@ namespace Ambrosia
             {
                 // Create input record and add it to the dictionary
                 inputConnectionRecord = new InputConnectionRecord();
+                inputConnectionRecord.ShardID = ParseServiceName(sourceString).Item2;
                 _inputs[sourceString] = inputConnectionRecord;
                 Console.WriteLine("Adding input:{0}", sourceString);
             }
@@ -3612,14 +4352,14 @@ namespace Ambrosia
 
         private LogWriter OpenNextCheckpointFile()
         {
-            if (LogWriter.FileExists(_logFileNameBase + "chkpt" + (_lastCommittedCheckpoint + 1).ToString()))
+            if (LogWriter.FileExists(CheckpointName(_lastCommittedCheckpoint + 1)))
             {
-                File.Delete(_logFileNameBase + (_lastCommittedCheckpoint + 1).ToString());
+                File.Delete(CheckpointName(_lastCommittedCheckpoint + 1));
             }
             LogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(_logFileNameBase + "chkpt" + (_lastCommittedCheckpoint + 1).ToString(), 1024 * 1024, 6);
+                retVal = new LogWriter(CheckpointName(_lastCommittedCheckpoint + 1), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
@@ -3630,11 +4370,46 @@ namespace Ambrosia
 
         private void CleanupOldCheckpoint()
         {
-            var fileNameToDelete = _logFileNameBase + (_lastCommittedCheckpoint - 1).ToString();
+            var fileNameToDelete = CheckpointName(_lastCommittedCheckpoint - 1);
             if (LogWriter.FileExists(fileNameToDelete))
             {
                 File.Delete(fileNameToDelete);
             }
+        }
+
+        private void TrimGlobalOutputTracker()
+        {
+            lock (_globalOutputTrackerLock)
+            {
+                try
+                {
+                    var tracker = _globalOutputTracker.First();
+                    while (tracker.Received)
+                    {
+                        _globalOutputTracker.TryDequeue(out tracker);
+                        tracker = _globalOutputTracker.First();
+
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // Queue is empty
+                }
+
+            }
+        }
+
+        public void TrimOutput(string key, long lastProcessedID, long lastProcessedReplayableID)
+        {
+            Console.WriteLine("Trimming {0} up to ({1}, {2})", key, lastProcessedID, lastProcessedReplayableID);
+            OutputConnectionRecord outputConnectionRecord;
+            if (!_outputs.TryGetValue(key, out outputConnectionRecord))
+            {
+                outputConnectionRecord = new OutputConnectionRecord(this);
+                _outputs[key] = outputConnectionRecord;
+            }
+            outputConnectionRecord.Trim(lastProcessedID, lastProcessedReplayableID);
+            TrimGlobalOutputTracker();
         }
 
         // This method takes a checkpoint and bumps the counter. It DOES NOT quiesce anything
@@ -3669,35 +4444,13 @@ namespace Ambrosia
             _checkpointWriter.Write(_localServiceReceiveFromStream, _lastReceivedCheckpointSize);
             _checkpointWriter.Flush();
             _lastCommittedCheckpoint++;
-            if (_sharded)
-            {
-                InsertOrReplaceServiceInfoRecord("LastCommittedCheckpoint" + _shardID.ToString(), _lastCommittedCheckpoint.ToString());
-            }
-            else
-            {
-                InsertOrReplaceServiceInfoRecord("LastCommittedCheckpoint", _lastCommittedCheckpoint.ToString());
-            }
+            InsertOrReplaceServiceInfoRecord(InfoTitle("LastCommittedCheckpoint"), _lastCommittedCheckpoint.ToString());
 
             // Trim output buffers of inputs, since the inputs are now part of the checkpoint and can't be lost. Must do this after the checkpoint has been
             // successfully written
             foreach (var kv in _inputs)
             {
-                OutputConnectionRecord outputConnectionRecord;
-                if (!_outputs.TryGetValue(kv.Key, out outputConnectionRecord))
-                {
-                    outputConnectionRecord = new OutputConnectionRecord(this);
-                    _outputs[kv.Key] = outputConnectionRecord;
-                }
-                // Must lock to atomically update due to race with ToControlStreamAsync
-                lock (outputConnectionRecord._remoteTrimLock)
-                {
-                    outputConnectionRecord.RemoteTrim = Math.Max(kv.Value.LastProcessedID, outputConnectionRecord.RemoteTrim);
-                    outputConnectionRecord.RemoteTrimReplayable = Math.Max(kv.Value.LastProcessedReplayableID, outputConnectionRecord.RemoteTrimReplayable);
-                }
-                if (outputConnectionRecord.ControlWorkQ.IsEmpty)
-                {
-                    outputConnectionRecord.ControlWorkQ.Enqueue(-2);
-                }
+                TrimOutput(kv.Key, kv.Value.LastProcessedID, kv.Value.LastProcessedReplayableID);
             }
 
             if (oldCheckpointWriter != null)
@@ -3715,6 +4468,27 @@ namespace Ambrosia
         {
         }
 
+        public long KeyHashToShard(long hash)
+        {
+            if (!_sharded)
+            {
+                return -1;
+            }
+
+            if (_serviceName.Contains("client"))
+            {
+                foreach (var input in _inputs.Keys)
+                {
+                    if (input.Contains("server-2"))
+                    {
+                        return 2;
+                    }
+                }
+            }
+
+            return 1;
+        }
+
         public override void Initialize(object param)
         {
             // Workaround because of parameter type limitation in CRA
@@ -3724,6 +4498,13 @@ namespace Ambrosia
             {
                 p = (AmbrosiaRuntimeParams)xmlSerializer.Deserialize(textReader);
             }
+
+            bool runningRepro = false;
+            bool sharded = p.shardID > 0;
+            _shardID = p.shardID;
+            _shardLocator = KeyHashToShard;
+            _oldShards = p.oldShards;
+            _newShards = p.newShards;
 
             Initialize(
                 p.serviceReceiveFromPort,
@@ -3737,22 +4518,54 @@ namespace Ambrosia
                 p.logTriggerSizeMB,
                 p.storageConnectionString,
                 p.currentVersion,
-                p.upgradeToVersion
+                p.upgradeToVersion,
+                runningRepro,
+                sharded
             );
         }
 
-        internal void RuntimeChecksOnProcessStart()
+        public void Initialize(object param, long[] oldShards, long shardID, Func<long, long> shardMap)
         {
-            if (!_createService)
+            var p = (AmbrosiaRuntimeParams)param;
+            bool runningRepro = true;
+            bool sharded = true;
+            _shardID = shardID;
+            _shardLocator = shardMap;
+            _oldShards = oldShards;
+
+            Initialize(
+                p.serviceReceiveFromPort,
+                p.serviceSendToPort,
+                p.serviceName,
+                p.serviceLogPath,
+                p.createService,
+                p.pauseAtStart,
+                p.persistLogs,
+                p.activeActive,
+                p.logTriggerSizeMB,
+                p.storageConnectionString,
+                p.currentVersion,
+                p.upgradeToVersion,
+                runningRepro,
+                sharded
+            );
+        }
+
+        internal void RuntimeChecksOnProcessStart(long shardID = -1)
+        {
+            // When we split / merge shards, these checks will not be valid as the logs for the
+            // new shards will not exist yet. Instead for the sharded case, we do these checks
+            // when we recover from the set of old shards.
+            if (!_createService && _oldShards.Length == 0)
             {
                 long readVersion = -1;
                 try
                 {
-                    readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+                    readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion", shardID)));
                 }
                 catch
                 {
-                    OnError(VersionMismatch, "Version mismatch on process start: Expected " + _currentVersion + " was: " + RetrieveServiceInfo("CurrentVersion"));
+                    OnError(VersionMismatch, "Version mismatch on process start: Expected " + _currentVersion + " was: " + RetrieveServiceInfo(InfoTitle("CurrentVersion", shardID)));
                 }
                 if (_currentVersion != readVersion)
                 {
@@ -3760,24 +4573,22 @@ namespace Ambrosia
                 }
                 if (!_runningRepro)
                 {
-                    if (long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint")) < 1)
+                    if (long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", shardID))) < 1)
                     {
                         OnError(MissingCheckpoint, "No checkpoint in metadata");
 
                     }
                 }
-                if (!LogWriter.DirectoryExists(_serviceLogPath + _serviceName + "_" + _currentVersion))
+                if (!LogWriter.DirectoryExists(LogDirectory(_currentVersion)))
                 {
                     OnError(MissingCheckpoint, "No checkpoint/logs directory");
                 }
-                var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
-                if (!LogWriter.FileExists(Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion,
-                                                       "server" + "chkpt" + lastCommittedCheckpoint)))
+                var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", shardID)));
+                if (!LogWriter.FileExists(CheckpointName(lastCommittedCheckpoint, -1, shardID)))
                 {
                     OnError(MissingCheckpoint, "Missing checkpoint " + lastCommittedCheckpoint.ToString());
                 }
-                if (!LogWriter.FileExists(Path.Combine(_serviceLogPath + _serviceName + "_" + _currentVersion,
-                                          "server" + "log" + lastCommittedCheckpoint)))
+                if (!LogWriter.FileExists(LogFileName(lastCommittedCheckpoint, -1, shardID)))
                 {
                     OnError(MissingLog, "Missing log " + lastCommittedCheckpoint.ToString());
                 }
@@ -3795,10 +4606,12 @@ namespace Ambrosia
                        long logTriggerSizeMB,
                        string storageConnectionString,
                        long currentVersion,
-                       long upgradeToVersion
+                       long upgradeToVersion,
+                       bool runningRepro,
+                       bool sharded
                        )
         {
-            _runningRepro = false;
+            _runningRepro = runningRepro;
             _currentVersion = currentVersion;
             _upgradeToVersion = upgradeToVersion;
             _upgrading = (_currentVersion < _upgradeToVersion);
@@ -3811,7 +4624,6 @@ namespace Ambrosia
             {
                 Console.WriteLine("Ready ...");
             }
-
             _persistLogs = persistLogs;
             _activeActive = activeActive;
             _newLogTriggerSize = logTriggerSizeMB * 1000000;
@@ -3820,14 +4632,18 @@ namespace Ambrosia
             _localServiceSendToPort = serviceSendToPort;
             _serviceName = serviceName;
             _storageConnectionString = storageConnectionString;
-            _sharded = false;
+            _sharded = sharded;
+            if (_sharded)
+            {
+                Console.WriteLine("Running instance with shard ID " + _shardID.ToString());
+            }
             _coral = ClientLibrary;
 
             Console.WriteLine("Logs directory: {0}", _serviceLogPath);
 
             if (createService == null)
             {
-                if (LogWriter.DirectoryExists(_serviceLogPath + _serviceName + "_" + _currentVersion))
+                if (LogWriter.DirectoryExists(RootDirectory()))
                 {
                     createService = false;
                 }
@@ -3850,7 +4666,8 @@ namespace Ambrosia
                                       int version,
                                       bool testUpgrade,
                                       int serviceReceiveFromPort,
-                                      int serviceSendToPort)
+                                      int serviceSendToPort,
+                                      long shardID)
         {
             _localServiceReceiveFromPort = serviceReceiveFromPort;
             _localServiceSendToPort = serviceSendToPort;
@@ -3860,8 +4677,11 @@ namespace Ambrosia
             _activeActive = true;
             _serviceLogPath = serviceLogPath;
             _serviceName = serviceName;
-            _sharded = false;
+            _shardID = shardID;
+            _sharded = shardID != -1;
             _createService = false;
+            _oldShards = new long[0]; // TODO: May need to change this.
+            _shardLocator = KeyHashToShard;
             RecoverOrStartAsync(checkpointToLoad, testUpgrade).Wait();
         }
     }
@@ -3884,6 +4704,9 @@ namespace Ambrosia
         private static long _logTriggerSizeMB = 1000;
         private static int _currentVersion = 0;
         private static long _upgradeVersion = -1;
+        private static long _shardID = -1;
+        private static string _oldShards = "";
+        private static string _newShards = "";
 
         static void Main(string[] args)
         {
@@ -3894,9 +4717,10 @@ namespace Ambrosia
                 case LocalAmbrosiaRuntimeModes.DebugInstance:
                     var myRuntime = new AmbrosiaRuntime();
                     myRuntime.InitializeRepro(_instanceName, _serviceLogPath, _checkpointToLoad, _currentVersion,
-                        _isTestingUpgrade, _serviceReceiveFromPort, _serviceSendToPort);
+                        _isTestingUpgrade, _serviceReceiveFromPort, _serviceSendToPort, _shardID);
                     return;
                 case LocalAmbrosiaRuntimeModes.AddReplica:
+                case LocalAmbrosiaRuntimeModes.AddShard:
                 case LocalAmbrosiaRuntimeModes.RegisterInstance:
                     if (_runtimeMode == LocalAmbrosiaRuntimeModes.AddReplica)
                     {
@@ -3905,7 +4729,8 @@ namespace Ambrosia
                     var client = new CRAClientLibrary(Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING"));
                     client.DisableArtifactUploading();
 
-                    var replicaName = $"{_instanceName}{_replicaNumber}";
+                    string shardName = AmbrosiaRuntime.GetShardName(_instanceName, _shardID);
+                    var replicaName = $"{shardName}_{_replicaNumber}";
                     AmbrosiaRuntimeParams param = new AmbrosiaRuntimeParams();
                     param.createService = _recoveryMode == AmbrosiaRecoveryModes.A
                         ? (bool?)null
@@ -3922,6 +4747,9 @@ namespace Ambrosia
                     param.serviceLogPath = _serviceLogPath;
                     param.AmbrosiaBinariesLocation = _binariesLocation;
                     param.storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
+                    param.shardID = _shardID;
+                    param.oldShards = ParseLongs(_oldShards);
+                    param.newShards = ParseLongs(_newShards);
 
                     try
                     {
@@ -3929,7 +4757,6 @@ namespace Ambrosia
                         {
                             throw new Exception();
                         }
-
                         // Workaround because of limitation in parameter serialization in CRA
                         XmlSerializer xmlSerializer = new XmlSerializer(param.GetType());
                         string serializedParams;
@@ -3939,14 +4766,15 @@ namespace Ambrosia
                             serializedParams = textWriter.ToString();
                         }
 
-                        if (client.InstantiateVertex(replicaName, param.serviceName, param.AmbrosiaBinariesLocation, serializedParams) != CRAErrorCode.Success)
+                        if (client.InstantiateVertex(replicaName, shardName, param.AmbrosiaBinariesLocation, serializedParams) != CRAErrorCode.Success)
                         {
                             throw new Exception();
                         }
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true);
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true);
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaControlInputsName, true, true);
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaControlOutputsName, false, true);
+
+                        client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true);
+                        client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true);
+                        client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaControlInputsName, true, true);
+                        client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaControlOutputsName, false, true);
                     }
                     catch (Exception e)
                     {
@@ -3957,6 +4785,23 @@ namespace Ambrosia
                 default:
                     throw new NotSupportedException($"Runtime mode: {_runtimeMode} not supported.");
             }
+        }
+
+        private static long[] ParseLongs(string s)
+        {
+            if (s.Trim() == "")
+            {
+                return new long[] { };
+            }
+            string[] shards = s.Split(',');
+            long[] ids = new long[shards.Length];
+
+            for (int i = 0; i < shards.Length; i++)
+            {
+                ids[i] = long.Parse(shards[i]);
+            }
+            return ids;
+
         }
 
         private static void ParseAndValidateOptions(string[] args)
@@ -3975,6 +4820,7 @@ namespace Ambrosia
                 { "rp|receivePort=", "The service receive from port [REQUIRED].", rp => _serviceReceiveFromPort = int.Parse(rp) },
                 { "sp|sendPort=", "The service send to port. [REQUIRED]", sp => _serviceSendToPort = int.Parse(sp) },
                 { "l|log=", "The service log path.", l => _serviceLogPath = l },
+                {"si|shardID=", "The shard ID of the instance", si => _shardID = long.Parse(si) },
             };
 
             var helpOption = new OptionSet
@@ -4001,6 +4847,12 @@ namespace Ambrosia
                 { "r|replicaNum=", "The replica # [REQUIRED].", r => _replicaNumber = int.Parse(r) },
             }.AddMany(registerInstanceOptionSet);
 
+            var addShardOptionSet = new OptionSet
+            {
+                {"os|oldShards=", "Comma separated list of shards to recover from [REQUIRED].", os => _oldShards = os },
+                {"ns|newShards=", "Comma separated list of new shards being created [REQUIRED].", ns => _newShards = ns }
+            }.AddMany(registerInstanceOptionSet);
+
             var debugInstanceOptionSet = basicOptions.AddMany(new OptionSet {
 
                 { "c|checkpoint=", "The checkpoint # to load.", c => _checkpointToLoad = long.Parse(c) },
@@ -4010,6 +4862,7 @@ namespace Ambrosia
 
             registerInstanceOptionSet = registerInstanceOptionSet.AddMany(helpOption);
             addReplicaOptionSet = addReplicaOptionSet.AddMany(helpOption);
+            addShardOptionSet = addShardOptionSet.AddMany(helpOption);
             debugInstanceOptionSet = debugInstanceOptionSet.AddMany(helpOption);
 
 
@@ -4017,6 +4870,7 @@ namespace Ambrosia
             {
                 { LocalAmbrosiaRuntimeModes.RegisterInstance, registerInstanceOptionSet},
                 { LocalAmbrosiaRuntimeModes.AddReplica, addReplicaOptionSet},
+                { LocalAmbrosiaRuntimeModes.AddShard, addShardOptionSet },
                 { LocalAmbrosiaRuntimeModes.DebugInstance, debugInstanceOptionSet},
             };
 
@@ -4048,6 +4902,7 @@ namespace Ambrosia
         public enum LocalAmbrosiaRuntimeModes
         {
             AddReplica,
+            AddShard,
             RegisterInstance,
             DebugInstance,
         }
@@ -4081,6 +4936,13 @@ namespace Ambrosia
                 if (_replicaNumber == 0)
                 {
                     errorMessage += "Replica number is required.\n";
+                }
+            }
+            if (_runtimeMode == LocalAmbrosiaRuntimeModes.AddShard)
+            {
+                if (_shardID == -1)
+                {
+                    errorMessage += "Shard ID is required.\n";
                 }
             }
 

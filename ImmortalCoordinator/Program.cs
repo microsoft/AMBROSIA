@@ -20,12 +20,14 @@ namespace CRA.Worker
         private static string _secureNetworkClassName;
         private static bool _isActiveActive = false;
         private static int _replicaNumber = 0;
+        private static long _shardID = -1;
 
         static void Main(string[] args)
         {
             ParseAndValidateOptions(args);
 
-            var replicaName = $"{_instanceName}{_replicaNumber}";
+            string shardName = AmbrosiaRuntime.GetShardName(_instanceName, _shardID);
+            var replicaName = $"{shardName}_{_replicaNumber}";
 
             if (_ipAddress == null)
             {
@@ -131,6 +133,7 @@ namespace CRA.Worker
                 { "ac|assemblyClass=", "The secure network assembly class.", ac => _secureNetworkClassName = ac },
                 { "ip|IPAddr=", "Override automatic self IP detection", i => _ipAddress = i },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
+                { "si|shardID=", "The shard ID", si => _shardID = long.Parse(si) },
             };
 
             try

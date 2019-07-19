@@ -65,6 +65,10 @@ namespace Ambrosia
         [CopyFromDeserializedImmortal]
         public SerializableCallCache CallCache = new SerializableCallCache();
 
+        [DataMember]
+        [CopyFromDeserializedImmortal]
+        public int CommitID;
+
         public SerializableCache<int, long> TaskIdToSequenceNumber = new SerializableCache<int, long>();
 
         private ImmortalSerializerBase _immortalSerializer;
@@ -395,7 +399,7 @@ namespace Ambrosia
 #endif
                                 _cursor++;
 
-                                await this.TakeCheckpointAsync();
+                                await this.TakeCheckpointAsync(true);
                                 this.IsPrimary = true;
                                 this.BecomingPrimary();
 
@@ -752,10 +756,15 @@ namespace Ambrosia
             return true;
         }
 
-        private async Task TakeCheckpointAsync()
+        private async Task TakeCheckpointAsync(bool flushOutput = false)
         {
             // wait for quiesence
             _outputLock.Acquire(2);
+            if (flushOutput)
+            {
+                _ambrosiaSendToConnectionRecord.placeInOutput =
+                    await _ambrosiaSendToConnectionRecord.BufferedOutput.SendAsync(_ambrosiaSendToStream, _ambrosiaSendToConnectionRecord.placeInOutput);
+            }
             _ambrosiaSendToConnectionRecord.BufferedOutput.LockOutputBuffer();
 
             // Save current task state unless just resumed from a serialized task
@@ -1387,6 +1396,8 @@ namespace Ambrosia
                 else if (firstByte == AmbrosiaRuntime.takeCheckpointByte || firstByte == AmbrosiaRuntime.takeBecomingPrimaryCheckpointByte)
                 {
                     // Then this container is starting for the first time
+                    // Set the commitID prior to taking the first checkpoint
+                    MyImmortal.CommitID = commitID;
                     if (firstByte == AmbrosiaRuntime.takeCheckpointByte)
                     {
 #if DEBUG
