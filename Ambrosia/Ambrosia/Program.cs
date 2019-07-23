@@ -3634,7 +3634,7 @@ namespace Ambrosia
             {
                 // Find the appropriate connection record
                 string destination;
-                if (_lastShuffleDest.Length < destBytesSize)
+                if (_lastShuffleDest == null || _lastShuffleDest.Length < destBytesSize)
                 {
                     _lastShuffleDest = new byte[destBytesSize];
                 }
