@@ -3648,8 +3648,27 @@ namespace Ambrosia
                     // During replay, the output connection won't exist if this is the first message ever and no trim record has been processed yet.
                     if (!_outputs.TryGetValue(destination, out _shuffleOutputRecord))
                     {
-                        _shuffleOutputRecord = new OutputConnectionRecord(this);
-                        _outputs[destination] = _shuffleOutputRecord;
+                        if (_oldShards.Length > 0)
+                        {
+                            // TODO: We're still replaying from potentially multiple shards.
+                            // For now, we assume there is only one parent shard, but we need to update
+                            // the client code to pass which shard sent this during recovery.
+                            Debug.Assert(_parentStates.Count == 1);
+                            MachineState parent = _parentStates.Values.First();
+
+                            if (!parent.Outputs.TryGetValue(destination, out _shuffleOutputRecord))
+                            {
+                                _shuffleOutputRecord = new OutputConnectionRecord(this);
+                                _outputs[destination] = _shuffleOutputRecord;
+                            } else
+                            {
+                                _lastShuffleDest = null;
+                            }
+                        } else
+                        {
+                            _shuffleOutputRecord = new OutputConnectionRecord(this);
+                            _outputs[destination] = _shuffleOutputRecord;
+                        }
                     }
                 }
             }
