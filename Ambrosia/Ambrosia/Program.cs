@@ -2260,117 +2260,126 @@ namespace Ambrosia
             {
                 Recovering = true;
                 _restartWithRecovery = true;
-                if (!_runningRepro)
-                {
-                    // We are recovering - find the last committed checkpoint
-                    _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
-                }
-                else
-                {
-                    // We are running a repro
-                    _lastCommittedCheckpoint = checkpointToLoad;
-                }
-                // Start from the log file associated with the last committed checkpoint
-                _lastLogFile = _lastCommittedCheckpoint;
-                if (_activeActive)
-                {
-                    if (!_runningRepro)
-                    {
-                        // Determines the role as either secondary or checkpointer. If its a checkpointer, _commitBlobWriter holds the write lock on the last checkpoint
-                        DetermineRole();
-                    }
-                    else
-                    {
-                        // We are running a repro. Act as a secondary
-                        _myRole = AARole.Secondary;
-                    }
-                }
-
-                using (LogReader checkpointStream = new LogReader(_logFileNameBase + "chkpt" + _lastCommittedCheckpoint.ToString()))
-                {
-                    // recover the checkpoint - Note that everything except the replay data must have been written successfully or we
-                    // won't think we have a valid checkpoint here. Since we can only be the secondary or checkpointer, the committer doesn't write to the replay log
-                    // Recover committer
-                    _committer = new Committer(_localServiceSendToStream, _persistLogs, this, -1, checkpointStream);
-                    // Recover input connections
-                    _inputs = _inputs.AmbrosiaDeserialize(checkpointStream);
-                    // Recover output connections
-                    _outputs = _outputs.AmbrosiaDeserialize(checkpointStream, this);
-                    UnbufferNonreplayableCalls();
-                    // Restore new service from checkpoint
-                    var serviceCheckpoint = new FlexReadBuffer();
-                    FlexReadBuffer.Deserialize(checkpointStream, serviceCheckpoint);
-                    _committer.SendCheckpointToRecoverFrom(serviceCheckpoint.Buffer, serviceCheckpoint.Length, checkpointStream);
-                }
-
-                using (LogReader replayStream = new LogReader(_logFileNameBase + "log" + _lastLogFile.ToString()))
-                {
-                    if (_myRole == AARole.Secondary && !_runningRepro)
-                    {
-                        // If this is a secondary, set up the detector to detect when this instance becomes the primary
-                        var t = DetectBecomingPrimaryAsync();
-                    }
-                    if (testUpgrade)
-                    {
-                        // We are actually testing an upgrade. Must upgrade the service before replay
-                        _committer.SendUpgradeRequest();
-                    }
-                    await ReplayAsync(replayStream);
-                }
-                var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
-                if (_currentVersion != readVersion)
-                {
-
-                    OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
-                }
-                if (_upgrading)
-                {
-                    MoveServiceToUpgradeDirectory();
-                }
-                // Now becoming the primary. Moving to next log file since the current one may have junk at the end.
-                bool wasUpgrading = _upgrading;
-                var oldFileHandle = await MoveServiceToNextLogFileAsync(false, true);
-                if (wasUpgrading)
-                {
-                    // Successfully wrote out our new first checkpoint in the upgraded version, can now officially take the version upgrade
-                    InsertOrReplaceServiceInfoRecord("CurrentVersion", _upgradeToVersion.ToString());
-                    // We have now completed the upgrade and may release the old file lock.
-                    oldFileHandle.Dispose();
-                    // Moving to the next file means the first log file is empty, but it immediately causes failures of all old secondaries.
-                    await MoveServiceToNextLogFileAsync();
-                }
-
-                if (_activeActive)
-                {
-                    // Start task to periodically check if someone's trying to upgrade
-                    (new Task(() => CheckForUpgradeAsync())).Start();
-                }
-
+                await RecoverAsync(checkpointToLoad, testUpgrade);
                 Recovering = false;
             }
             else
             {
-                // We are starting for the first time. This is the primary
-                _restartWithRecovery = false;
-                _lastCommittedCheckpoint = 0;
-                _lastLogFile = 0;
-                _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
-                _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
-                _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
+                await StartAsync();
+            }
+        }
 
-                _myRole = AARole.Primary;
-
-                _checkpointWriter = null;
-                _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
-                Connect(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
-                await MoveServiceToNextLogFileAsync(true, true);
-                InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
-                if (_activeActive)
+        private async Task RecoverAsync(long checkpointToLoad = -1, bool testUpgrade = false)
+        {
+            if (!_runningRepro)
+            {
+                // We are recovering - find the last committed checkpoint
+                _lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo("LastCommittedCheckpoint"));
+            }
+            else
+            {
+                // We are running a repro
+                _lastCommittedCheckpoint = checkpointToLoad;
+            }
+            // Start from the log file associated with the last committed checkpoint
+            _lastLogFile = _lastCommittedCheckpoint;
+            if (_activeActive)
+            {
+                if (!_runningRepro)
                 {
-                    // Start task to periodically check if someone's trying to upgrade
-                    (new Task(() => CheckForUpgradeAsync())).Start();
+                    // Determines the role as either secondary or checkpointer. If its a checkpointer, _commitBlobWriter holds the write lock on the last checkpoint
+                    DetermineRole();
                 }
+                else
+                {
+                    // We are running a repro. Act as a secondary
+                    _myRole = AARole.Secondary;
+                }
+            }
+
+            using (LogReader checkpointStream = new LogReader(_logFileNameBase + "chkpt" + _lastCommittedCheckpoint.ToString()))
+            {
+                // recover the checkpoint - Note that everything except the replay data must have been written successfully or we
+                // won't think we have a valid checkpoint here. Since we can only be the secondary or checkpointer, the committer doesn't write to the replay log
+                // Recover committer
+                _committer = new Committer(_localServiceSendToStream, _persistLogs, this, -1, checkpointStream);
+                // Recover input connections
+                _inputs = _inputs.AmbrosiaDeserialize(checkpointStream);
+                // Recover output connections
+                _outputs = _outputs.AmbrosiaDeserialize(checkpointStream, this);
+                UnbufferNonreplayableCalls();
+                // Restore new service from checkpoint
+                var serviceCheckpoint = new FlexReadBuffer();
+                FlexReadBuffer.Deserialize(checkpointStream, serviceCheckpoint);
+                _committer.SendCheckpointToRecoverFrom(serviceCheckpoint.Buffer, serviceCheckpoint.Length, checkpointStream);
+            }
+
+            using (LogReader replayStream = new LogReader(_logFileNameBase + "log" + _lastLogFile.ToString()))
+            {
+                if (_myRole == AARole.Secondary && !_runningRepro)
+                {
+                    // If this is a secondary, set up the detector to detect when this instance becomes the primary
+                    var t = DetectBecomingPrimaryAsync();
+                }
+                if (testUpgrade)
+                {
+                    // We are actually testing an upgrade. Must upgrade the service before replay
+                    _committer.SendUpgradeRequest();
+                }
+                await ReplayAsync(replayStream);
+            }
+            var readVersion = long.Parse(RetrieveServiceInfo("CurrentVersion"));
+            if (_currentVersion != readVersion)
+            {
+
+                OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
+            }
+            if (_upgrading)
+            {
+                MoveServiceToUpgradeDirectory();
+            }
+            // Now becoming the primary. Moving to next log file since the current one may have junk at the end.
+            bool wasUpgrading = _upgrading;
+            var oldFileHandle = await MoveServiceToNextLogFileAsync(false, true);
+            if (wasUpgrading)
+            {
+                // Successfully wrote out our new first checkpoint in the upgraded version, can now officially take the version upgrade
+                InsertOrReplaceServiceInfoRecord("CurrentVersion", _upgradeToVersion.ToString());
+                // We have now completed the upgrade and may release the old file lock.
+                oldFileHandle.Dispose();
+                // Moving to the next file means the first log file is empty, but it immediately causes failures of all old secondaries.
+                await MoveServiceToNextLogFileAsync();
+            }
+
+            if (_activeActive)
+            {
+                // Start task to periodically check if someone's trying to upgrade
+                (new Task(() => CheckForUpgradeAsync())).Start();
+            }
+        }
+
+        private async Task StartAsync()
+        {
+            // We are starting for the first time. This is the primary
+            _restartWithRecovery = false;
+            _lastCommittedCheckpoint = 0;
+            _lastLogFile = 0;
+            _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
+            _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
+            _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
+
+            _myRole = AARole.Primary;
+
+            _checkpointWriter = null;
+            _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
+            Connect(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
+            Connect(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+            await MoveServiceToNextLogFileAsync(true, true);
+            InsertOrReplaceServiceInfoRecord("CurrentVersion", _currentVersion.ToString());
+            if (_activeActive)
+            {
+                // Start task to periodically check if someone's trying to upgrade
+                (new Task(() => CheckForUpgradeAsync())).Start();
             }
         }
 
@@ -2460,6 +2469,16 @@ namespace Ambrosia
             return retVal;
         }
 
+        private string InfoTitle(string prefix)
+        {
+            var file = prefix;
+            if (_sharded)
+            {
+                file += _shardID.ToString();
+            }
+            return file;
+        }
+
         // Closes out the old log file and starts a new one. Takes checkpoints if this instance should
         private async Task<LogWriter> MoveServiceToNextLogFileAsync(bool firstStart = false, bool becomingPrimary = false)
         {
@@ -2474,14 +2493,7 @@ namespace Ambrosia
                 oldVerLogHandle = CreateNextOldVerLogFile();
             }
             _lastLogFile++;
-            if (_sharded)
-            {
-                InsertOrReplaceServiceInfoRecord("LastLogFile" + _shardID.ToString(), _lastLogFile.ToString());
-            }
-            else
-            {
-                InsertOrReplaceServiceInfoRecord("LastLogFile", _lastLogFile.ToString());
-            }
+            InsertOrReplaceServiceInfoRecord(InfoTitle("LastLogFile"), _lastLogFile.ToString());
             _committer.SwitchLogStreams(nextLogHandle);
             if (!firstStart && _activeActive && !_upgrading && becomingPrimary)
             {
@@ -2725,7 +2737,7 @@ namespace Ambrosia
                     }
                     else
                     {
-                        newLastLogFile = long.Parse(RetrieveServiceInfo("LastLogFile"));
+                        newLastLogFile = long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile")));
                     }
                     if (newLastLogFile > _lastLogFile) // a new log file has been written
                     {
@@ -3669,14 +3681,7 @@ namespace Ambrosia
             _checkpointWriter.Write(_localServiceReceiveFromStream, _lastReceivedCheckpointSize);
             _checkpointWriter.Flush();
             _lastCommittedCheckpoint++;
-            if (_sharded)
-            {
-                InsertOrReplaceServiceInfoRecord("LastCommittedCheckpoint" + _shardID.ToString(), _lastCommittedCheckpoint.ToString());
-            }
-            else
-            {
-                InsertOrReplaceServiceInfoRecord("LastCommittedCheckpoint", _lastCommittedCheckpoint.ToString());
-            }
+            InsertOrReplaceServiceInfoRecord(InfoTitle("LastCommittedCheckpoint"), _lastCommittedCheckpoint.ToString());
 
             // Trim output buffers of inputs, since the inputs are now part of the checkpoint and can't be lost. Must do this after the checkpoint has been
             // successfully written
