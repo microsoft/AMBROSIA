@@ -4733,6 +4733,24 @@ namespace Ambrosia
         private static string _oldShards = "";
         private static string _newShards = "";
 
+        private static void InstantiateVertex(CRAClientLibrary client, string instanceName, string vertexName, string vertexDefinition, object vertexParameter, bool sharded)
+        {
+            CRAErrorCode result;
+            if (!sharded)
+            {
+                result = client.InstantiateVertex(instanceName, vertexName, vertexDefinition, vertexParameter);
+            } else
+            {
+                ConcurrentDictionary<string, int> vertexShards = new ConcurrentDictionary<string, int>();
+                vertexShards[instanceName] = 1;
+                result = client.InstantiateShardedVertex(vertexName, vertexDefinition, vertexParameter, vertexShards);
+            }
+            if (result != CRAErrorCode.Success)
+            {
+                throw new Exception();
+            }
+        }
+
         static void Main(string[] args)
         {
             ParseAndValidateOptions(args);
@@ -4791,10 +4809,7 @@ namespace Ambrosia
                             serializedParams = textWriter.ToString();
                         }
 
-                        if (client.InstantiateVertex(replicaName, shardName, param.AmbrosiaBinariesLocation, serializedParams) != CRAErrorCode.Success)
-                        {
-                            throw new Exception();
-                        }
+                        InstantiateVertex(client, replicaName, shardName, param.AmbrosiaBinariesLocation, serializedParams, _shardID > 0);
 
                         client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true);
                         client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true);
