@@ -2,6 +2,7 @@
 using System;
 using System.Configuration;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace AmbrosiaTest
 {
@@ -109,12 +110,11 @@ namespace AmbrosiaTest
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version, shardID: 1);
         }
-/*
         [TestMethod]
-        public void Shard_UnitTest_MultiShardEndToEnd_Test()
+        public void Shard_UnitTest_SingleReshardEndtoEnd_Test()
         {
-            // Test that multi-shards per server and client behaves the same as the single shard case
-            string testName = "shardunitendtoendtest";
+            // Test that one shard per server and client works
+            string testName = "shardunitsinglereshardendtoendtest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
@@ -135,98 +135,107 @@ namespace AmbrosiaTest
                 AMB_PersistLogs = "Y",
                 AMB_NewLogTriggerSize = "1000",
                 AMB_ActiveActive = "N",
-                AMB_Version = "0"
+                AMB_Version = "0",
+                AMB_ShardID = "1",
             };
             MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
 
-            int numShards = 3;
-            string[] logOutputFileName_AMB = new string[numShards];
-            for (int i = 0; i < numShards; i++)
+            // AMB2 - Shard 1
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
             {
-                int shard_id = i + 1;
-                logOutputFileName_AMB[i] = testName + shard_id.ToString() + "_AMB.log";
-                string portPrefix = (i + 2).ToString();
-                AMB_Settings AMB_shard = new AMB_Settings
-                {
-                    AMB_ServiceName = serverName,
-                    AMB_PortAppReceives = portPrefix + "000",
-                    AMB_PortAMBSends = portPrefix + "001",
-                    AMB_ServiceLogPath = ambrosiaLogDir,
-                    AMB_CreateService = "A",
-                    AMB_PauseAtStart = "N",
-                    AMB_PersistLogs = "Y",
-                    AMB_NewLogTriggerSize = "1000",
-                    AMB_ActiveActive = "N",
-                    AMB_Version = "0",
-                    AMB_ShardID = shard_id.ToString(),
-                };
-                MyUtils.CallAMB(AMB_shard, logOutputFileName_AMB[i], AMB_ModeConsts.RegisterInstance);
-            }
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0",
+                AMB_ShardID = "1",
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
 
+            // AMB 3 - Shard 2
+            string logOutputFileName_AMB3 = testName + "_AMB3.log";
+            AMB_Settings AMB3 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "3000",
+                AMB_PortAMBSends = "3001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0",
+                AMB_ShardID = "2",
+                AMB_OldShards = "1",
+                AMB_NewShards = "2"
+            };
+            MyUtils.CallAMB(AMB3, logOutputFileName_AMB3, AMB_ModeConsts.AddShard);
+
+            // ImmCoord1
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
-            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1, shardID: 1);
 
-            int[] immCoordProcesses = new int[numShards];
-            for (int i = 0; i < numShards; i++)
-            {
-                int shard_id = i + 1;
-                int port = (i + 2) * 1000 + 500;
-                string logOutputFileName_ImmCoord = testName + shard_id.ToString() + "_ImmCoord.log";
-                immCoordProcesses[i] = MyUtils.StartImmCoord(serverName, port, logOutputFileName_ImmCoord);
-            }
+            // ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2, shardID: 1);
 
-            // Client Job Call
+            // Client
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob);
 
             // Give it a few seconds to start
             Thread.Sleep(2000);
 
-            int[] serverProcesses = new int[numShards];
-            string[] logOutputFileName_Server = new string[numShards];
-            for (int i = 0; i < numShards; i++)
-            {
-                int shard_id = i + 1;
-                string portPrefix = (i + 2).ToString();
-                logOutputFileName_Server[i] = testName + shard_id.ToString() + "_Server.log";
-                serverProcesses[i] = MyUtils.StartPerfServer(portPrefix + "001", portPrefix + "000", clientJobName, serverName, logOutputFileName_Server[i], 1, false);
-            }
+            // First Server Call
+            string logOutputFileName_Server1 = testName + "_Server1.log";
+            int serverProcessID1 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server1, 1, false);
 
-            // Delay until client is done - also check servers just to make sure
-            MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 5, false, testName, true); // number of bytes processed
-            for (int i = 0; i < numShards; i++)
-            {
-                MyUtils.WaitForProcessToFinish(logOutputFileName_Server[i], byteSize, 5, false, testName, true);
-            }
+            // Delay until client is done - also check Server just to make sure
+            //bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 5, false, testName, true); // Number of bytes processed
+            //pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1, byteSize, 5, false, testName, true);
 
-            // Stop things so file is freed up and can be opened in verify
+            // Give it 2 seconds to do something before killing it
+            //Thread.Sleep(2000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // ImmCoord3
+            string logOutputFileName_ImmCoord3 = testName + "_ImmCoord3.log";
+            int ImmCoordProcessID3 = MyUtils.StartImmCoord(serverName, 3500, logOutputFileName_ImmCoord3, shardID: 2);
+
+            // Second Server Call
+            string logOutputFileName_Server2 = testName + "_Server2.log";
+            int serverProcessID2 = MyUtils.StartPerfServer("3001", "3000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 10, false, testName, true); // Number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server2, byteSize, 10, false, testName, true);
+
+            // Stop things to file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID1);
+            MyUtils.KillProcess(serverProcessID2);
             MyUtils.KillProcess(ImmCoordProcessID1);
-            for (int i = 0; i < numShards; i++)
-            {
-                MyUtils.KillProcess(immCoordProcesses[i]);
-                MyUtils.KillProcess(serverProcesses[i]);
-            }
+            MyUtils.KillProcess(ImmCoordProcessID2);
+            MyUtils.KillProcess(ImmCoordProcessID3);
 
             // Verify AMB
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            for (int i = 0; i < numShards; i++)
-            {
-                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB[i]);
-            }
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB3);
 
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
-
-            // Verify Server
-            for (int i = 0; i < numShards; i++)
-            {
-                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server[i]);
-            }
-
+            
+            // Verify Server 1
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server2);
+            /*
             // Verify integrity of Ambrosia logs by replaying
-            // TODO: Need to add shard logic
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
-        }*/
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version, shardID: 1);*/
+        }
     }
 }

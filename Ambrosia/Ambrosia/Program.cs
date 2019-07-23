@@ -3786,23 +3786,114 @@ namespace Ambrosia
             return outputConnectionRecord;
         }
 
-        private void SyncOutputs(string destString, ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>> ancestorsToIDs)
+        private OutputConnectionRecord GetOutputConnectionRecord(string destString)
         {
-            var destService = ParseServiceName(destString).Item1;
-            foreach (var srcID in ancestorsToIDs.Keys)
+            OutputConnectionRecord record;
+            lock (_outputs)
             {
-                foreach (var destID in ancestorsToIDs[srcID].Keys)
+                if (!_outputs.TryGetValue(destString, out record))
                 {
-                    var destName = ServiceName(destService, destID);
-                    TrimOutput(destName, ancestorsToIDs[srcID][destID].Item1, ancestorsToIDs[srcID][destID].Item1);
+                    // Set up the output record for the first time and add it to the dictionary
+                    record = new OutputConnectionRecord(this);
+                    _outputs[destString] = record;
+                    Console.WriteLine("Adding output:{0}", destString);
+                }
+                else
+                {
+                    Console.WriteLine("Restoring output:{0}", destString);
                 }
             }
+            return record;
+        }
+
+        private void MergeOutputConnections(OutputConnectionRecord baseConnection,
+                                            OutputConnectionRecord mergeConnection,
+                                            long lastProcessedReplayableID)
+        {
+            lock (baseConnection)
+            {
+                long firstSeq = -1;
+                long lastSeq = -1;
+                lock (mergeConnection)
+                {
+                    mergeConnection.BufferedOutput.Trim(lastProcessedReplayableID, ref mergeConnection.placeInOutput);
+                    firstSeq = baseConnection.LastSeqNoFromLocalService + 1;
+                    lastSeq = mergeConnection.BufferedOutput.AdjustFirstSeqNoTo(firstSeq);
+                    baseConnection.LastSeqNoFromLocalService = lastSeq;
+                    baseConnection.ResettingConnection = true;
+                    baseConnection.BufferedOutput.Append(mergeConnection.BufferedOutput);
+                    baseConnection.ResettingConnection = false;
+                }
+                for (var outputSeq = firstSeq; outputSeq <= lastSeq; outputSeq++)
+                {
+                    OutputRecordTracker tracker;
+                    lock (_globalOutputTrackerLock)
+                    {
+                        _globalID += 1;
+                        tracker = new OutputRecordTracker(_globalID, outputSeq);
+                        _globalOutputTracker.Enqueue(tracker);
+                    }
+                    baseConnection.OutputTracker.Enqueue(tracker);
+                }
+            }
+        }
+
+        private OutputConnectionRecord SetupOutputConnectionRecord(string destString, ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>> ancestorsToIDs) {
+            string destServiceBase = _serviceName;
+            if (!destString.Equals(ServiceName()))
+            {
+                destServiceBase = destString.Split('-')[0];
+            }
+            OutputConnectionRecord record = GetOutputConnectionRecord(destString);
+            foreach (var srcID in ancestorsToIDs.Keys)
+            {
+                ConcurrentDictionary<string, OutputConnectionRecord> parentOutput;
+                if (_parentStates.ContainsKey(srcID))
+                {
+                    parentOutput = _parentStates[srcID].Outputs;
+                }
+                else
+                {
+                    parentOutput = new ConcurrentDictionary<string, OutputConnectionRecord>();
+                }
+                foreach (var destID in ancestorsToIDs[srcID].Keys)
+                {
+                    var lastProcessedID = ancestorsToIDs[srcID][destID].Item1;
+                    var lastProcessedReplayableID = ancestorsToIDs[srcID][destID].Item2;
+                    string destService = DestinationShard(destServiceBase, destID);
+
+                    // Copy the parent output to the new output record
+                    lock (parentOutput)
+                    {
+                        OutputConnectionRecord parentRecord;
+                        if (parentOutput.TryRemove(destService, out parentRecord))
+                        {
+                            MergeOutputConnections(record, parentRecord, lastProcessedReplayableID);
+                        }
+                    }
+
+                    // Copy old output to new output record
+                    lock (_outputs)
+                    {
+                        OutputConnectionRecord oldRecord;
+                        if (destService != destString && _outputs.TryRemove(destService, out oldRecord))
+                        {
+                            MergeOutputConnections(record, oldRecord, lastProcessedReplayableID);
+                        }
+                    }
+                }
+            }
+            return record;
         }
 
         private async Task ToDataStreamAsync(Stream writeToStream,
                                              string destString,
                                              CancellationToken ct)
         {
+            if (destString.Equals(ServiceName()))
+            {
+                destString = "";
+            }
             if (_sharded)
             {
                 Serializer.SerializeAncestorMessage(writeToStream, ancestorByte, _ancestors[ServiceName()]);
@@ -3812,14 +3903,14 @@ namespace Ambrosia
             // Get the seqNo of the replay/filter point
             var commitSeqNo = result.Item1;
             var commitSeqNoReplayable = result.Item2;
+            var ancestorsToIDs = new ConcurrentDictionary<long, ConcurrentDictionary<long, Tuple<long, long>>>();
 
             if (_sharded)
             {
-                var ancestorsToIDs = result.Item3;
-                SyncOutputs(destString, ancestorsToIDs);
+                ancestorsToIDs = result.Item3;
             }
 
-            OutputConnectionRecord outputConnectionRecord = await SyncOutputConnectionAsync(_outputs, destString, commitSeqNo, commitSeqNoReplayable);
+            var outputConnectionRecord = SetupOutputConnectionRecord(destString, ancestorsToIDs);
             if (_sharded)
             {
                 Serializer.SerializeShardTrimMessage(writeToStream, shardTrimByte);
@@ -3827,6 +3918,42 @@ namespace Ambrosia
 
             try
             {
+                // Reset the output cursor if it exists
+                outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
+                outputConnectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
+                outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
+                if (outputConnectionRecord.ConnectingAfterRestart)
+                {
+                    // We've been through recovery (at least partially), and have scrubbed all ephemeral calls. Must now rebase
+                    // seq nos using the markers which were sent by the listener. Must first take locks to ensure no interference
+                    lock (outputConnectionRecord)
+                    {
+                        // Don't think I actually need this lock, but can't hurt and shouldn't affect perf.
+                        outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
+                        outputConnectionRecord.BufferedOutput.RebaseSeqNosInBuffer(commitSeqNo, commitSeqNoReplayable);
+                        outputConnectionRecord.LastSeqNoFromLocalService += commitSeqNo - commitSeqNoReplayable;
+                        outputConnectionRecord.ConnectingAfterRestart = false;
+                        outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
+                    }
+                }
+                // If recovering, make sure event replay will be filtered out
+                outputConnectionRecord.ReplayFrom = commitSeqNo;
+
+                if (outputConnectionRecord.WillResetConnection)
+                {
+                    // Register our immediate intent to set the connection. This unblocks output writers
+                    outputConnectionRecord.ResettingConnection = true;
+                    // This lock avoids interference with buffering RPCs
+                    lock (outputConnectionRecord)
+                    {
+                        // If first reconnect/connect after reset, simply adjust the seq no for the first sent message to the received commit seq no
+                        outputConnectionRecord.ResettingConnection = false;
+                        outputConnectionRecord.LastSeqNoFromLocalService = outputConnectionRecord.BufferedOutput.AdjustFirstSeqNoTo(commitSeqNo);
+                        outputConnectionRecord.WillResetConnection = false;
+                    }
+                }
+                outputConnectionRecord.LastSeqSentToReceiver = commitSeqNo - 1;
+
                 // Enqueue a replay send
                 if (outputConnectionRecord._sendsEnqueued == 0)
                 {
@@ -3885,25 +4012,11 @@ namespace Ambrosia
                                                 CancellationToken ct)
 
         {
-            OutputConnectionRecord outputConnectionRecord;
             if (destString.Equals(ServiceName()))
             {
                 destString = "";
             }
-            lock (_outputs)
-            {
-                if (!_outputs.TryGetValue(destString, out outputConnectionRecord))
-                {
-                    // Set up the output record for the first time and add it to the dictionary
-                    outputConnectionRecord = new OutputConnectionRecord(this);
-                    _outputs[destString] = outputConnectionRecord;
-                    Console.WriteLine("Adding output:{0}", destString);
-                }
-                else
-                {
-                    Console.WriteLine("restoring output:{0}", destString);
-                }
-            }
+            OutputConnectionRecord outputConnectionRecord = GetOutputConnectionRecord(destString);
             // Process remote trim message
             var inputFlexBuffer = new FlexReadBuffer();
             await FlexReadBuffer.DeserializeAsync(writeToStream, inputFlexBuffer, ct);

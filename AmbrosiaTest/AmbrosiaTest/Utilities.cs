@@ -29,11 +29,12 @@ namespace AmbrosiaTest
         public string AMB_UpgradeToVersion { get; set; }
         public string AMB_ReplicaNumber { get; set; }
         public string AMB_ShardID { get; set; }
-
+        public string AMB_OldShards { get; set; }
+        public string AMB_NewShards { get; set; }
     }
 
     // These are the different modes of what the AMB is called 
-    public enum AMB_ModeConsts { RegisterInstance, AddReplica, DebugInstance };
+    public enum AMB_ModeConsts { RegisterInstance, AddReplica, DebugInstance, AddShard };
 
     public class Utilities
     {
@@ -812,6 +813,42 @@ namespace AmbrosiaTest
 
                     if (AMBSettings.AMB_ShardID != null)
                         argString = argString + " -si=" + AMBSettings.AMB_ShardID;
+
+                    break;
+
+                case AMB_ModeConsts.AddShard:
+                    argString = "AddShard " + "-si=" + AMBSettings.AMB_ShardID + " -i=" + AMBSettings.AMB_ServiceName
+                        + " -rp=" + AMBSettings.AMB_PortAppReceives + " -sp=" + AMBSettings.AMB_PortAMBSends
+                        + " -r=" + AMBSettings.AMB_ReplicaNumber + " -os=" + AMBSettings.AMB_OldShards
+                        + " -ns=" + AMBSettings.AMB_NewShards;
+
+                    // add Service log path
+                    if (AMBSettings.AMB_ServiceLogPath != null)
+                        argString = argString + " -l=" + AMBSettings.AMB_ServiceLogPath;
+
+                    // add pause at start
+                    if (AMBSettings.AMB_PauseAtStart != null && AMBSettings.AMB_PauseAtStart != "N")
+                        argString = argString + " -ps";
+
+                    // add no persist logs at start
+                    if (AMBSettings.AMB_PersistLogs != null && AMBSettings.AMB_PersistLogs != "Y")
+                        argString = argString + " -npl";
+
+                    // add new log trigger size if it exists
+                    if (AMBSettings.AMB_NewLogTriggerSize != null)
+                        argString = argString + " -lts=" + AMBSettings.AMB_NewLogTriggerSize;
+
+                    // add active active
+                    if (AMBSettings.AMB_ActiveActive != null && AMBSettings.AMB_ActiveActive != "N")
+                        argString = argString + " -aa";
+
+                    // add current version if it exists
+                    if (AMBSettings.AMB_Version != null)
+                        argString = argString + " -cv=" + AMBSettings.AMB_Version;
+
+                    // add upgrade version if it exists
+                    if (AMBSettings.AMB_UpgradeToVersion != null)
+                        argString = argString + " -uv=" + AMBSettings.AMB_UpgradeToVersion;
 
                     break;
             }
