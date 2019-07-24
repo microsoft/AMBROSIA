@@ -718,39 +718,39 @@ namespace Ambrosia
                                                            long firstSeqNo,
                                                            bool reconnecting)
         {
-/*            if (reconnecting)
-            {
-                var bufferE = _bufferQ.GetEnumerator();
-                while (bufferE.MoveNext())
-                {
-                    var curBuffer = bufferE.Current;
-                    Debug.Assert(curBuffer.LowestSeqNo <= firstSeqNo);
-                    int skipEvents = 0;
-                    if (curBuffer.HighestSeqNo >= firstSeqNo)
-                    {
-                        // We need to send some or all of this buffer
-                        skipEvents = (int)(Math.Max(0, firstSeqNo - curBuffer.LowestSeqNo));
-                    }
-                    else
-                    {
-                        skipEvents = 0;
-                    }
-                    int bufferPos = 0;
-                    AcquireAppendLock(2);
-                    curBuffer.UnsentReplayableMessages = curBuffer.TotalReplayableMessages;
-                    for (int i = 0; i < skipEvents; i++)
-                    {
-                        int eventSize = curBuffer.PageBytes.ReadBufferedInt(bufferPos);
-                        var methodID = curBuffer.PageBytes.ReadBufferedInt(bufferPos + StreamCommunicator.IntSize(eventSize) + 2);
-                        if (curBuffer.PageBytes[bufferPos + StreamCommunicator.IntSize(eventSize) + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
+            /*            if (reconnecting)
                         {
-                            curBuffer.UnsentReplayableMessages--;
-                        }
-                        bufferPos += eventSize + StreamCommunicator.IntSize(eventSize);
-                    }
-                    ReleaseAppendLock();
-                }
-            }*/
+                            var bufferE = _bufferQ.GetEnumerator();
+                            while (bufferE.MoveNext())
+                            {
+                                var curBuffer = bufferE.Current;
+                                Debug.Assert(curBuffer.LowestSeqNo <= firstSeqNo);
+                                int skipEvents = 0;
+                                if (curBuffer.HighestSeqNo >= firstSeqNo)
+                                {
+                                    // We need to send some or all of this buffer
+                                    skipEvents = (int)(Math.Max(0, firstSeqNo - curBuffer.LowestSeqNo));
+                                }
+                                else
+                                {
+                                    skipEvents = 0;
+                                }
+                                int bufferPos = 0;
+                                AcquireAppendLock(2);
+                                curBuffer.UnsentReplayableMessages = curBuffer.TotalReplayableMessages;
+                                for (int i = 0; i < skipEvents; i++)
+                                {
+                                    int eventSize = curBuffer.PageBytes.ReadBufferedInt(bufferPos);
+                                    var methodID = curBuffer.PageBytes.ReadBufferedInt(bufferPos + StreamCommunicator.IntSize(eventSize) + 2);
+                                    if (curBuffer.PageBytes[bufferPos + StreamCommunicator.IntSize(eventSize) + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
+                                    {
+                                        curBuffer.UnsentReplayableMessages--;
+                                    }
+                                    bufferPos += eventSize + StreamCommunicator.IntSize(eventSize);
+                                }
+                                ReleaseAppendLock();
+                            }
+                        }*/
             var bufferEnumerator = _bufferQ.GetEnumerator();
             // Scan through pages from head to tail looking for events to output
             while (bufferEnumerator.MoveNext())
@@ -764,7 +764,7 @@ namespace Ambrosia
 
                     int bufferPos = 0;
                     if (true) // BUGBUG We are temporarily disabling this optimization which avoids unnecessary locking as reconnecting is not a sufficient criteria: We found a case where input is arriving during reconnection where counting was getting disabled incorrectly. Further investigation is required.
-//                    if (reconnecting) // BUGBUG We are temporarily disabling this optimization which avoids unnecessary locking as reconnecting is not a sufficient criteria: We found a case where input is arriving during reconnection where counting was getting disabled incorrectly. Further investigation is required.
+                              //                    if (reconnecting) // BUGBUG We are temporarily disabling this optimization which avoids unnecessary locking as reconnecting is not a sufficient criteria: We found a case where input is arriving during reconnection where counting was getting disabled incorrectly. Further investigation is required.
                     {
                         // We need to reset how many replayable messages have been sent. We want to minimize the use of
                         // this codepath because of the expensive locking, which can compete with new RPCs getting appended
@@ -1202,6 +1202,7 @@ namespace Ambrosia
         public static bool _looseAttach = false;
     }
 
+   
     public class AmbrosiaRuntime : VertexBase
     {
 #if _WINDOWS
@@ -1511,6 +1512,7 @@ namespace Ambrosia
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine(e.StackTrace);
                     _myAmbrosia.OnError(5, e.Message);
                 }
                 _bufbak = buf;
@@ -2648,7 +2650,7 @@ namespace Ambrosia
             foreach (var state in states)
             {
                 AddParentInputState(state);
-                AddParentOutputState(state);
+                //AddParentOutputState(state);
             }
         }
 
@@ -4415,7 +4417,6 @@ namespace Ambrosia
                     {
                         _globalOutputTracker.TryDequeue(out tracker);
                         tracker = _globalOutputTracker.First();
-
                     }
                 }
                 catch (InvalidOperationException)
@@ -4428,7 +4429,6 @@ namespace Ambrosia
 
         public void TrimOutput(string key, long lastProcessedID, long lastProcessedReplayableID)
         {
-            Console.WriteLine("Trimming {0} up to ({1}, {2})", key, lastProcessedID, lastProcessedReplayableID);
             OutputConnectionRecord outputConnectionRecord;
             if (!_outputs.TryGetValue(key, out outputConnectionRecord))
             {
@@ -4751,6 +4751,23 @@ namespace Ambrosia
             }
         }
 
+     /*   private static void DefineVertex(CRAClientLibrary client, string vertexDefinition, bool sharded)
+        {
+            CRAErrorCode result;
+            if (!sharded)
+            {
+                result = client.DefineVertex(param.AmbrosiaBinariesLocation, () => new AmbrosiaRuntime());
+            }
+            /*  if (client.DefineVertex(param.AmbrosiaBinariesLocation, () => new AmbrosiaRuntime()) != CRAErrorCode.Success)
+              {
+                  throw new Exception();
+              }
+            if (result != CRAErrorCode.Success)
+            {
+                throw new Exception();
+            }
+        }(*/
+
         static void Main(string[] args)
         {
             ParseAndValidateOptions(args);
@@ -4796,10 +4813,6 @@ namespace Ambrosia
 
                     try
                     {
-                        if (client.DefineVertex(param.AmbrosiaBinariesLocation, () => new AmbrosiaRuntime()) != CRAErrorCode.Success)
-                        {
-                            throw new Exception();
-                        }
                         // Workaround because of limitation in parameter serialization in CRA
                         XmlSerializer xmlSerializer = new XmlSerializer(param.GetType());
                         string serializedParams;
