@@ -6,6 +6,7 @@ namespace mtcollections.persistent
     using System.Security;
     using Microsoft.Win32.SafeHandles;
     using System.Threading;
+    using System.Diagnostics;
 
     /// <summary>
     /// Interop with WINAPI for file I/O, threading, and NUMA functions.
@@ -16,10 +17,12 @@ namespace mtcollections.persistent
 
         public const uint INFINITE = unchecked((uint)-1);
 
+        public const int ERROR_SUCCESS = 0;
         public const int ERROR_IO_PENDING = 997;
         public const uint ERROR_IO_INCOMPLETE = 996;
         public const uint ERROR_NOACCESS = 998;
         public const uint ERROR_HANDLE_EOF = 38;
+        public const uint ERROR_PRIVILEGE_NOT_HELD = 1314;
 
         public const int ERROR_FILE_NOT_FOUND = 0x2;
         public const int ERROR_PATH_NOT_FOUND = 0x3;
@@ -81,7 +84,13 @@ namespace mtcollections.persistent
         public const uint FILE_FLAG_RANDOM_ACCESS = 0x10000000;
         public const uint FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000;
         public const uint FILE_FLAG_WRITE_THROUGH = 0x80000000;
+
         public const uint FILE_ATTRIBUTE_ENCRYPTED = 0x4000;
+        public const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
+
+        const Int32 SE_PRIVILEGE_ENABLED = (Int32)(0x00000002L);
+        const string SE_MANAGE_VOLUME_NAME = "SeManageVolumePrivilege";
+        const Int32 TOKEN_ADJUST_PRIVILEGES = (0x0020);
 
         /// <summary>
         /// Represents additional options for creating unbuffered overlapped file stream.
@@ -137,17 +146,240 @@ namespace mtcollections.persistent
             [Out] out UInt32 lpNumberOfBytesTransferred,
             [In] bool bWait);
 
-        [DllImport("adv-file-ops.dll", SetLastError = true)]
-        public static extern bool CreateAndSetFileSize(ref string filename, Int64 file_size);
 
-        [DllImport("adv-file-ops.dll", SetLastError = true)]
-        public static extern bool EnableProcessPrivileges();
+        [StructLayoutAttribute(LayoutKind.Sequential)]
+        public struct LUID
+        {
+            public Int32 LowPart;
+            public Int32 HighPart;
+        };
 
-        [DllImport("adv-file-ops.dll", SetLastError = true)]
-        public static extern bool EnableVolumePrivileges(ref string filename, SafeFileHandle hFile);
+        [StructLayoutAttribute(LayoutKind.Sequential)]
+        public struct LUID_AND_ATTRIBUTES
+        {
+            public LUID Luid;
+            public Int32 Attributes;
+        };
 
-        [DllImport("adv-file-ops.dll", SetLastError = true)]
-        public static extern bool SetFileSize(SafeFileHandle hFile, Int64 file_size);
+        [StructLayoutAttribute(LayoutKind.Sequential)]
+        public struct TOKEN_PRIVILEGES
+        {
+            public Int32 PrivilegeCount;
+            public LUID_AND_ATTRIBUTES Privileges;
+        };
+
+
+        public static bool EnableProcessPrivileges()
+        {
+            SafeFileHandle token;
+            TOKEN_PRIVILEGES token_privileges = new TOKEN_PRIVILEGES();
+            token_privileges.PrivilegeCount = 1;
+            token_privileges.Privileges.Attributes = SE_PRIVILEGE_ENABLED;
+            bool result = false;
+            if (!LookupPrivilegeValue(null, SE_MANAGE_VOLUME_NAME, ref token_privileges.Privileges.Luid))
+            {
+                return false;
+            }
+            if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, out token))
+            {
+                if (AdjustTokenPrivileges(token, false, ref token_privileges, 0, IntPtr.Zero, IntPtr.Zero))
+                {
+                    uint rc = GetLastError();
+                    if (rc == ERROR_SUCCESS)
+                    {
+                        result = true;
+                    }
+                }
+                CloseHandle(token);
+            }
+            return result;
+        }
+
+        const Int32 USN_SOURCE_DATA_MANAGEMENT = (0x00000001);
+        const Int32 MARK_HANDLE_PROTECT_CLUSTERS = (0x00000001);
+
+        const Int32 FILE_DEVICE_FILE_SYSTEM = 0x00000009;
+        const Int32 METHOD_BUFFERED = 0;
+        const Int32 FILE_ANY_ACCESS = 0;
+
+        static Int32 CTL_CODE(Int32 DeviceType, Int32 Function, Int32 Method, Int32 Access)
+        {
+            return ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method);
+        }
+
+
+        public static bool EnableVolumePrivileges(string filename, SafeFileHandle file_handle)
+        {
+            string volume_string = "\\\\.\\" + filename.Substring(0, 2);
+            SafeFileHandle volume_handle = CreateFileW(volume_string, 0, 0, IntPtr.Zero, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, IntPtr.Zero);
+            if (volume_handle.IsInvalid)
+            {
+                // std::cerr << "Error retrieving volume handle: " << FormatWin32AndHRESULT(::GetLastError());
+                return false;
+            }
+
+            MARK_HANDLE_INFO mhi;
+            mhi.UsnSourceInfo = USN_SOURCE_DATA_MANAGEMENT;
+            mhi.VolumeHandle = volume_handle.DangerousGetHandle();
+            mhi.HandleInfo = MARK_HANDLE_PROTECT_CLUSTERS;
+
+            Int32 size = Marshal.SizeOf(mhi);
+            IntPtr ptr = Marshal.AllocCoTaskMem(size);
+            Marshal.StructureToPtr<MARK_HANDLE_INFO>(mhi, ptr, false);
+
+            var FSCTL_MARK_HANDLE = CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 63, METHOD_BUFFERED, FILE_ANY_ACCESS);
+            Int32 bytes_returned = 0;
+            bool result = DeviceIoControl(file_handle, FSCTL_MARK_HANDLE, ptr, size, IntPtr.Zero,
+                0, out bytes_returned, IntPtr.Zero);
+
+            CloseHandle(volume_handle);
+            Marshal.FreeCoTaskMem(ptr);
+            return true;
+        }
+
+
+        public static bool SetFileSize(SafeFileHandle file_handle, Int64 file_size)
+        {
+            LARGE_INTEGER li = new LARGE_INTEGER();
+            li.QuadPart = file_size;
+
+            LARGE_INTEGER li2 = new LARGE_INTEGER();
+
+            bool result = SetFilePointerEx(file_handle, li, ref li2, FILE_BEGIN);
+            if (!result)
+            {
+                Console.Error.WriteLine(string.Format("SetFilePointer failed with error: {0}", Marshal.GetHRForLastWin32Error()));
+                return false;
+            }
+
+            // Set a fixed file length
+            result = SetEndOfFile(file_handle);
+            if (!result)
+            {
+                Console.Error.WriteLine(string.Format("SetEndOfFile failed with error: {0}", Marshal.GetHRForLastWin32Error()));
+                return false;
+            }
+
+            result = SetFileValidData(file_handle, file_size);
+            if (!result)
+            {
+                if (Marshal.GetLastWin32Error() == ERROR_PRIVILEGE_NOT_HELD)
+                {
+                    // please call EnableVolumePrivileges.
+                    Console.Error.WriteLine("Please call EnableVolumePrivileges before SetFileSize");
+                }
+                else
+                {
+                    Console.Error.WriteLine(string.Format("SetFileValidData failed with error: {0}, hresult 0x{0:x}", Marshal.GetLastWin32Error(), Marshal.GetHRForLastWin32Error()));
+                }
+                return false;
+            }
+            return true;
+        }
+
+
+
+        public static bool CreateAndSetFileSize(string filename, Int64 file_size)
+        {
+            bool result = EnableProcessPrivileges();
+            if (!result)
+            {
+                Console.Error.WriteLine("EnableProcessPrivileges failed with error: {0}, hresult {1:x}", Marshal.GetLastWin32Error(), Marshal.GetHRForLastWin32Error());
+                return false;
+            }
+
+            uint desired_access = GENERIC_READ | GENERIC_WRITE;
+            uint flags = FILE_FLAG_RANDOM_ACCESS | FILE_FLAG_NO_BUFFERING;
+            uint create_disposition = CREATE_ALWAYS;
+            uint shared_mode = FILE_SHARE_READ;
+
+            // Create our test file
+            SafeFileHandle file_handle = CreateFileW(filename, desired_access, shared_mode, IntPtr.Zero,
+                create_disposition, flags, IntPtr.Zero);
+
+            if (file_handle.IsInvalid)
+            {
+                Console.Error.WriteLine("CreateAndSetFileSize ({0}) file create failed: {1}, hresult {2:x}", filename, Marshal.GetLastWin32Error(), Marshal.GetHRForLastWin32Error());
+                return false;
+            }
+
+            result = EnableVolumePrivileges(filename, file_handle);
+            if (!result)
+            {
+                Console.Error.WriteLine("EnableVolumePrivileges ({0}) failed with error: {1}, hresult {2:x}", filename, Marshal.GetLastWin32Error(), Marshal.GetHRForLastWin32Error());
+            }
+            else
+            {
+
+                result = SetFileSize(file_handle, file_size);
+                if (!result)
+                {
+                    Console.Error.WriteLine("SetFileSize ({0}) failed with error: {1}, hresult {2:x}", filename, Marshal.GetLastWin32Error(), Marshal.GetHRForLastWin32Error());
+                }
+            }
+
+            CloseHandle(file_handle);
+            return result;
+        }
+
+
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern bool SetFilePointerEx(
+                [In] SafeFileHandle hFile,
+                [In] LARGE_INTEGER liDistanceToMove,
+                [In] ref LARGE_INTEGER lpNewFilePointer,
+                [In] uint dwMoveMethod
+                );
+
+        [StructLayoutAttribute(LayoutKind.Sequential)]
+        public struct LARGE_INTEGER
+        {
+            public Int64 QuadPart;
+        };
+
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern bool DeviceIoControl(
+            [In] SafeFileHandle hDevice,
+            [In] Int32 dwIoControlCode,
+            [In] IntPtr lpInBuffer,
+            [In] Int32 nInBufferSize,
+            [In] IntPtr lpOutBuffer,
+            [In] Int32 nOutBufferSize,
+            [Out] out Int32 lpBytesReturned,
+            [In] IntPtr lpOverlapped
+            );
+
+
+        [StructLayoutAttribute(LayoutKind.Sequential)]
+        public struct MARK_HANDLE_INFO
+        {
+            public Int32 UsnSourceInfo;
+            // Int32 CopyNumber; unioned with UsnSourceInfo
+            public IntPtr VolumeHandle;
+            public Int32 HandleInfo;
+        };
+
+
+        [DllImport("Advapi32.dll", SetLastError = true)]
+        public static extern bool AdjustTokenPrivileges(
+            [In] SafeFileHandle TokenHandle,
+            [In] bool DisableAllPrivileges,
+            [In] ref TOKEN_PRIVILEGES NewState,
+            [In] Int32 BufferLength,  // these are optional and IntPtr allows us to pass null.
+            [In] IntPtr PreviousState,
+            [In] IntPtr ReturnLength);
+
+        [DllImport("Advapi32.dll", SetLastError = true)]
+        public static extern bool LookupPrivilegeValue(
+              [In] string lpSystemName,
+              [In] string lpName,
+              [In] ref LUID lpLuid);
+
+        [DllImport("Advapi32.dll", SetLastError = true)]
+        public static extern bool OpenProcessToken(
+            [In] IntPtr processHandle,
+            [In] Int32 DesiredAccess,
+            [Out] out SafeFileHandle TokenHandle);
 
         public enum EMoveMethod : uint
         {
@@ -173,6 +405,13 @@ namespace mtcollections.persistent
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool SetEndOfFile(
             [In] SafeFileHandle hFile);
+
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool SetFileValidData(
+            [In] SafeFileHandle hFile,
+            [In] Int64 ValidDataLength);
+
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr CreateIoCompletionPort(
@@ -212,6 +451,10 @@ namespace mtcollections.persistent
         public static extern IntPtr GetCurrentThread();
         [DllImport("kernel32")]
         public static extern uint GetCurrentThreadId();
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GetCurrentProcess();
+
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern uint GetCurrentProcessorNumber();
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -227,7 +470,7 @@ namespace mtcollections.persistent
 
         public static uint ALL_PROCESSOR_GROUPS = 0xffff;
 
-        [System.Runtime.InteropServices.StructLayoutAttribute(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        [StructLayoutAttribute(LayoutKind.Sequential)]
         public struct GROUP_AFFINITY
         {
             public ulong Mask;
