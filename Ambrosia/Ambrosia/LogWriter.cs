@@ -186,7 +186,7 @@ namespace Ambrosia
 
             if (enablePrivileges)
             {
-                Native32.EnableVolumePrivileges(ref filename, logHandle);
+                Native32.EnableVolumePrivileges(filename, logHandle);
             }
 
             if (useIoCompletionPort)
