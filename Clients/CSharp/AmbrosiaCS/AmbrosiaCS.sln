@@ -5,21 +5,12 @@ VisualStudioVersion = 15.0.27703.2000
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmbrosiaCS", "AmbrosiaCS.csproj", "{EC500C57-A702-4A67-9A34-E7DF27FA4C01}"
 	ProjectSection(ProjectDependencies) = postProject
-		{5852AC33-6B01-44F5-BAF3-2AAF796E8449} = {5852AC33-6B01-44F5-BAF3-2AAF796E8449}
 		{B83690A7-C017-4FEB-B61E-17E4FC1AD5D5} = {B83690A7-C017-4FEB-B61E-17E4FC1AD5D5}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ambrosia", "..\..\..\Ambrosia\Ambrosia\Ambrosia.csproj", "{B83690A7-C017-4FEB-B61E-17E4FC1AD5D5}"
-	ProjectSection(ProjectDependencies) = postProject
-		{5852AC33-6B01-44F5-BAF3-2AAF796E8449} = {5852AC33-6B01-44F5-BAF3-2AAF796E8449}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "adv-file-ops", "..\..\..\Ambrosia\adv-file-ops\adv-file-ops.vcxproj", "{5852AC33-6B01-44F5-BAF3-2AAF796E8449}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmbrosiaLibCS", "..\AmbrosiaLibCS\AmbrosiaLibCS.csproj", "{F1931B29-C2C6-4E02-A359-939D94ADCF33}"
-	ProjectSection(ProjectDependencies) = postProject
-		{5852AC33-6B01-44F5-BAF3-2AAF796E8449} = {5852AC33-6B01-44F5-BAF3-2AAF796E8449}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +26,6 @@ Global
 		{B83690A7-C017-4FEB-B61E-17E4FC1AD5D5}.Debug|x64.Build.0 = Debug|x64
 		{B83690A7-C017-4FEB-B61E-17E4FC1AD5D5}.Release|x64.ActiveCfg = Release|x64
 		{B83690A7-C017-4FEB-B61E-17E4FC1AD5D5}.Release|x64.Build.0 = Release|x64
-		{5852AC33-6B01-44F5-BAF3-2AAF796E8449}.Debug|x64.ActiveCfg = Debug|x64
-		{5852AC33-6B01-44F5-BAF3-2AAF796E8449}.Debug|x64.Build.0 = Debug|x64
-		{5852AC33-6B01-44F5-BAF3-2AAF796E8449}.Release|x64.ActiveCfg = Release|x64
-		{5852AC33-6B01-44F5-BAF3-2AAF796E8449}.Release|x64.Build.0 = Release|x64
 		{F1931B29-C2C6-4E02-A359-939D94ADCF33}.Debug|x64.ActiveCfg = Debug|x64
 		{F1931B29-C2C6-4E02-A359-939D94ADCF33}.Debug|x64.Build.0 = Debug|x64
 		{F1931B29-C2C6-4E02-A359-939D94ADCF33}.Release|x64.ActiveCfg = Release|x64
