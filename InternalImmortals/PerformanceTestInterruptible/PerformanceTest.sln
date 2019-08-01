@@ -34,8 +34,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImmortalCoordinator", "..\.
 		{FB678B77-1593-4D3E-9E13-F22429D57584} = {FB678B77-1593-4D3E-9E13-F22429D57584}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "adv-file-ops", "..\..\Ambrosia\adv-file-ops\adv-file-ops.vcxproj", "{5852AC33-6B01-44F5-BAF3-2AAF796E8449}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ambrosia", "..\..\Ambrosia\Ambrosia\Ambrosia.csproj", "{67BCBD69-5460-4C8A-8F77-ED4679F82041}"
 	ProjectSection(ProjectDependencies) = postProject
 		{5852AC33-6B01-44F5-BAF3-2AAF796E8449} = {5852AC33-6B01-44F5-BAF3-2AAF796E8449}
