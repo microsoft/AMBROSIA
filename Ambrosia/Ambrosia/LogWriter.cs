@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.Threading;
 using Microsoft.Win32.SafeHandles;
 #if NETFRAMEWORK
-using mtcollections.persistent;
+using FASTER.core;
 #endif
 using System;
 using System.Collections.Generic;

@@ -100,6 +100,14 @@ namespace FASTER.core
               [In, Out] ref int lpDistanceToMoveHigh,
               [In] EMoveMethod dwMoveMethod);
 
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr CreateIoCompletionPort(
+            [In] SafeFileHandle fileHandle,
+            [In] IntPtr existingCompletionPort,
+            [In] UInt32 completionKey,
+            [In] UInt32 numberOfConcurrentThreads);
+
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern bool SetEndOfFile(
             [In] SafeFileHandle hFile);
@@ -203,13 +211,13 @@ namespace FASTER.core
         private static extern IntPtr GetCurrentProcess();
 
         [DllImport("advapi32", SetLastError = true)]
-        private static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
+        private static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out SafeFileHandle TokenHandle);
 
         [DllImport("advapi32.dll", SetLastError = true)]
-        private static extern bool AdjustTokenPrivileges(IntPtr tokenhandle, int disableprivs, ref TOKEN_PRIVILEGES Newstate, int BufferLengthInBytes, int PreviousState, int ReturnLengthInBytes);
+        private static extern bool AdjustTokenPrivileges(SafeFileHandle tokenhandle, int disableprivs, ref TOKEN_PRIVILEGES Newstate, int BufferLengthInBytes, int PreviousState, int ReturnLengthInBytes);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool CloseHandle(IntPtr hObject);
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern void CloseHandle([In] SafeHandle handle);
 
         [DllImport("Kernel32.dll", SetLastError = true)]
         private static extern bool DeviceIoControl(SafeFileHandle hDevice, uint IoControlCode, void* InBuffer, int nInBufferSize, IntPtr OutBuffer, int nOutBufferSize, ref uint pBytesReturned, IntPtr Overlapped);
@@ -241,7 +249,8 @@ namespace FASTER.core
             if (!LookupPrivilegeValue(null, "SeManageVolumePrivilege",
                 ref token_privileges.Privileges.Luid)) return false;
 
-            if (!OpenProcessToken(GetCurrentProcess(), 0x20, out IntPtr token))
+            SafeFileHandle token;
+            if (!OpenProcessToken(GetCurrentProcess(), 0x20, out token))
                 return false;
 
             if (!AdjustTokenPrivileges(token, 0, ref token_privileges, 0, 0, 0))
