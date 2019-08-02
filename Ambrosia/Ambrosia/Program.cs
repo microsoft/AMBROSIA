@@ -2610,53 +2610,57 @@ namespace Ambrosia
             // LOG write permission acquired only in case primary failed (is down)
             while (true)
             {
+                LogWriter lastLogFileStream = null;
                 try
                 {
                     var oldLastLogFile = state.LastLogFile;
+                    Debug.Assert(lastLogFileStream == null);
                     // Compete for log write permission - non destructive open for write - open for append
-                    using (var lastLogFileStream = new LogWriter(_logFileNameBase + "log" + (oldLastLogFile).ToString(), 1024 * 1024, 6, true))
+                    lastLogFileStream = new LogWriter(_logFileNameBase + "log" + (oldLastLogFile).ToString(), 1024 * 1024, 6, true);
+                    if (long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID))) != oldLastLogFile)
                     {
-                        if (long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID))) != oldLastLogFile)
-                        {
-                            // We got an old log. Try again
-                            lastLogFileStream.Dispose();
-                            throw new Exception();
-                        }
-                        // We got the lock! Set things up so we let go of the lock at the right moment
-                        // But first check if we got the lock because the version changed, in which case, we should commit suicide
-                        var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion", state.ShardID)));
-                        if (_currentVersion != readVersion)
-                        {
+                        // We got an old log. Try again
+                        lastLogFileStream.Dispose();
+                        throw new Exception();
+                    }
+                    // We got the lock! Set things up so we let go of the lock at the right moment
+                    // But first check if we got the lock because the version changed, in which case, we should commit suicide
+                    var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion", state.ShardID)));
+                    if (_currentVersion != readVersion)
+                    {
 
-                            OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
-                        }
+                        OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
+                    }
 
-                        // Before allowing the node to become primary in active/active, if we are not an upgrader, see if we are prevented by a kill file.
-                        if (_activeActive && !_upgrading)
-                        {
-                            LockKillFile();
-                            // If we reach here, we have the lock and can promote, otherwise an exception was thrown and we can't promote
-                            ReleaseAndTryCleanupKillFile();
-                        }
+                    // Before allowing the node to become primary in active/active, if we are not an upgrader, see if we are prevented by a kill file.
+                    if (_activeActive && !_upgrading)
+                    {
+                        LockKillFile();
+                        // If we reach here, we have the lock and can promote, otherwise an exception was thrown and we can't promote
+                        ReleaseAndTryCleanupKillFile();
+                    }
 
-                        // Now we can really promote!
-                        await state.Committer.SleepAsync();
-                        state.Committer.SwitchLogStreams(lastLogFileStream);
-                        await state.Committer.WakeupAsync();
-                        state.MyRole = AARole.Primary;  // this will stop  and break the loop in the function  replayInput_Sec()
-                        Console.WriteLine("\n\nNOW I'm Primary\n\n");
-                        // if we are an upgrader : Time to release the kill file lock and cleanup. Note that since we have the log lock
-                        // everyone is prevented from promotion until we succeed or fail.
-                        if (_upgrading && _activeActive)
-                        {
-                            Debug.Assert(_killFileHandle != null);
-                            ReleaseAndTryCleanupKillFile();
-                        }
+                    // Now we can really promote!
+                    await state.Committer.SleepAsync();
+                    state.Committer.SwitchLogStreams(lastLogFileStream);
+                    await state.Committer.WakeupAsync();
+                    state.MyRole = AARole.Primary;  // this will stop  and break the loop in the function  replayInput_Sec()
+                    Console.WriteLine("\n\nNOW I'm Primary\n\n");
+                    // if we are an upgrader : Time to release the kill file lock and cleanup. Note that since we have the log lock
+                    // everyone is prevented from promotion until we succeed or fail.
+                    if (_upgrading && _activeActive)
+                    {
+                        Debug.Assert(_killFileHandle != null);
+                        ReleaseAndTryCleanupKillFile();
                     }
                     return;
                 }
                 catch
                 {
+                    if (lastLogFileStream != null)
+                    {
+                        lastLogFileStream.Dispose();
+                    }
                     // Check if the version changed, in which case, we should commit suicide
                     var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
                     if (_currentVersion != readVersion)
