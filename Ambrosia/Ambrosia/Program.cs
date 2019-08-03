@@ -2610,15 +2610,23 @@ namespace Ambrosia
             // LOG write permission acquired only in case primary failed (is down)
             while (true)
             {
+                LogWriter lastLogFileStream = null;
                 try
                 {
+                    if (_upgrading && _activeActive && (_killFileHandle == null))
+                    {
+                        await Task.Delay(1000);
+                        continue;
+                    }
                     var oldLastLogFile = state.LastLogFile;
+                    Debug.Assert(lastLogFileStream == null);
                     // Compete for log write permission - non destructive open for write - open for append
-                    var lastLogFileStream = new LogWriter(_logFileNameBase + "log" + (oldLastLogFile).ToString(), 1024 * 1024, 6, true);
+                    lastLogFileStream = new LogWriter(_logFileNameBase + "log" + (oldLastLogFile).ToString(), 1024 * 1024, 6, true);
                     if (long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID))) != oldLastLogFile)
                     {
                         // We got an old log. Try again
                         lastLogFileStream.Dispose();
+                        lastLogFileStream = null;
                         throw new Exception();
                     }
                     // We got the lock! Set things up so we let go of the lock at the right moment
@@ -2655,6 +2663,11 @@ namespace Ambrosia
                 }
                 catch
                 {
+                    if (lastLogFileStream != null)
+                    {
+                        lastLogFileStream.Dispose();
+                        lastLogFileStream = null;
+                    }
                     // Check if the version changed, in which case, we should commit suicide
                     var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
                     if (_currentVersion != readVersion)
