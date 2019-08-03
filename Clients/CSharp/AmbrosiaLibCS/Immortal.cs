@@ -895,12 +895,19 @@ namespace Ambrosia
             // NB: Should this be the other way around? Then we would know which fields to copy over (those
             // from the base class) and then we could invoke Dispatch on the newly deserialized instance
             // and throw away the current instance.
+            // [CL] No it absolutely should be this way around so app can initialize the immportal with 
+            // transient non-serialize state (like event handlers) and not lose those in this process.
             var typeOfObject = this.GetType(); // want the dynamic (sub) type
             foreach (var memberInfo in typeOfObject.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
                 if (!(memberInfo.MemberType == MemberTypes.Field || memberInfo.MemberType == MemberTypes.Property) ||
                     (!memberInfo.DeclaringType.IsSubclassOf(typeof(Immortal)) && !memberInfo.GetCustomAttributes(typeof(CopyFromDeserializedImmortalAttribute)).Any()))
                 {
+                    continue;
+                }
+                if (memberInfo.GetCustomAttribute<DataMemberAttribute>() == null)
+                {
+                    // this is not marked as serializable, so ignore it.
                     continue;
                 }
                 if (memberInfo.MemberType == MemberTypes.Field || memberInfo.MemberType == MemberTypes.Property)
@@ -1571,6 +1578,9 @@ namespace Ambrosia
     public abstract class ImmortalSerializerBase
     {
         [DataMember] public SerializableType[] KnownTypes;
+
+        // optional resolver that can be defined to add to the list of known types.
+        public static DataContractResolver Resolver { get; set; }
 
         public abstract long SerializeSize(Immortal c);
         public abstract void Serialize(Immortal c, Stream writeToStream);
