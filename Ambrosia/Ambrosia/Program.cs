@@ -2613,6 +2613,11 @@ namespace Ambrosia
                 LogWriter lastLogFileStream = null;
                 try
                 {
+                    if (_upgrading && _activeActive && (_killFileHandle == null))
+                    {
+                        await Task.Delay(1000);
+                        continue;
+                    }
                     var oldLastLogFile = state.LastLogFile;
                     Debug.Assert(lastLogFileStream == null);
                     // Compete for log write permission - non destructive open for write - open for append
@@ -2621,6 +2626,7 @@ namespace Ambrosia
                     {
                         // We got an old log. Try again
                         lastLogFileStream.Dispose();
+                        lastLogFileStream = null;
                         throw new Exception();
                     }
                     // We got the lock! Set things up so we let go of the lock at the right moment
@@ -2660,6 +2666,7 @@ namespace Ambrosia
                     if (lastLogFileStream != null)
                     {
                         lastLogFileStream.Dispose();
+                        lastLogFileStream = null;
                     }
                     // Check if the version changed, in which case, we should commit suicide
                     var readVersion = long.Parse(RetrieveServiceInfo(InfoTitle("CurrentVersion")));
