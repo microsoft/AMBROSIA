@@ -974,6 +974,197 @@ namespace AmbrosiaTest
 
         }
 
+        //** Upgrade scenario where the server is upgraded server before client is finished but the 
+        //** Primary is not killed and it is automatically killed
+        [TestMethod]
+        public void AMB_UpgradeActiveActivePrimaryOnly_Test()
+        {
+            string testName = "upgradeactiveactiveprimaryonly";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "2147481250";
+            string newPrimary = "NOW I'm Primary";
+            string serverUpgradePrimary = "becoming upgraded primary";
+            string upgradingImmCoordPrimary = "Upgrading. Must commit suicide since I'm the primary";
+            string serverKilledMessage = "connection was forcibly closed";
+            string immCoordKilledMessage = "KILLING WORKER:";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - primary -- in actuality, this is replica #0
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "Y",
+                AMB_Version = "10"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2 - check pointer
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ReplicaNumber = "1",
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "Y",
+                AMB_Version = "10"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.AddReplica);
+
+            //AMB3 - active secondary
+            string logOutputFileName_AMB3 = testName + "_AMB3.log";
+            AMB_Settings AMB3 = new AMB_Settings
+            {
+                AMB_ReplicaNumber = "2",
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "3000",
+                AMB_PortAMBSends = "3001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "Y",
+                AMB_Version = "10"
+            };
+            MyUtils.CallAMB(AMB3, logOutputFileName_AMB3, AMB_ModeConsts.AddReplica);
+
+            //AMB4 - Job
+            string logOutputFileName_AMB4 = testName + "_AMB4.log";
+            AMB_Settings AMB4 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "4000",
+                AMB_PortAMBSends = "4001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "10"
+            };
+            MyUtils.CallAMB(AMB4, logOutputFileName_AMB4, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(serverName, 1500, logOutputFileName_ImmCoord1, true, 0);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2, true, 1);
+
+            //ImmCoord3
+            string logOutputFileName_ImmCoord3 = testName + "_ImmCoord3.log";
+            int ImmCoordProcessID3 = MyUtils.StartImmCoord(serverName, 3500, logOutputFileName_ImmCoord3, true, 2);
+
+            //ImmCoord4
+            string logOutputFileName_ImmCoord4 = testName + "_ImmCoord4.log";
+            int ImmCoordProcessID4 = MyUtils.StartImmCoord(clientJobName, 4500, logOutputFileName_ImmCoord4);
+
+            //Server Call - primary
+            string logOutputFileName_Server1 = testName + "_Server1.log";
+            int serverProcessID1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1, 1, false);
+            Thread.Sleep(1000); // give a second to make it a primary
+
+            //Server Call - checkpointer
+            string logOutputFileName_Server2 = testName + "_Server2.log";
+            int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
+            Thread.Sleep(1000); // give a second
+
+            //Server Call - active secondary
+            string logOutputFileName_Server3 = testName + "_Server3.log";
+            int serverProcessID3 = MyUtils.StartPerfServer("3001", "3000", clientJobName, serverName, logOutputFileName_Server3, 1, false);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("4001", "4000", clientJobName, serverName, "2500", "2", logOutputFileName_ClientJob);
+
+            // Give it 5 seconds to do something before killing it
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            //** Do not kill any processes - since active / active, the various nodes will be killed after successfully updated
+
+            // Run AMB again with new version # upped by 1 (11)
+            string logOutputFileName_AMB1_Upgraded = testName + "_AMB1_Upgraded.log";
+            AMB_Settings AMB1_Upgraded = new AMB_Settings
+            {
+                AMB_ReplicaNumber = "3",
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "5000",
+                AMB_PortAMBSends = "5001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "Y",
+                AMB_Version = "10",
+                AMB_UpgradeToVersion = "11"
+            };
+            MyUtils.CallAMB(AMB1_Upgraded, logOutputFileName_AMB1_Upgraded, AMB_ModeConsts.AddReplica);
+
+            // start Immortal Coord for server again
+            string logOutputFileName_ImmCoord1_Upgraded = testName + "_ImmCoord1_Upgraded.log";
+            int ImmCoordProcessID1_upgraded = MyUtils.StartImmCoord(serverName, 5500, logOutputFileName_ImmCoord1_Upgraded, true, 3);
+
+            // start server again but with Upgrade = true
+            string logOutputFileName_Server1_upgraded = testName + "_Server1_upgraded.log";
+            int serverProcessID_upgraded = MyUtils.StartPerfServer("5001", "5000", clientJobName, serverName, logOutputFileName_Server1_upgraded, 1, true);
+
+            //** Upgraded service running at this point ... doing logs but no checkpointer
+            //** Because checkpointer and secondary were not upgraded so they were stopped which means nothing to take the checkpoint or be secondary
+
+            //Delay until finished ... looking at the most recent primary (server3) but also verify others hit done too
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 10, false, testName, true);  // Total Bytes received needs to be accurate
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_upgraded, byteSize, 5, false, testName, true);
+
+            // Also verify ImmCoord has the string to show it is it killed itself and others killed off too
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord1, upgradingImmCoordPrimary, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord1_Upgraded, newPrimary, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord2, immCoordKilledMessage, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, immCoordKilledMessage, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1, serverKilledMessage, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1, serverKilledMessage, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server2, serverKilledMessage, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_upgraded, serverUpgradePrimary, 5, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(serverProcessID_upgraded);
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(ImmCoordProcessID1_upgraded);
+            MyUtils.KillProcess(ImmCoordProcessID4);
+
+            MyUtils.KillProcess(serverProcessID2);  // This should be dead anyways
+            MyUtils.KillProcess(serverProcessID3);  // This should be dead anyways
+            MyUtils.KillProcess(ImmCoordProcessID2); // This should be dead anyways
+            MyUtils.KillProcess(ImmCoordProcessID3); // This should be dead anyways
+
+            // Verify cmp files for client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+        }
+
+
+
         //** Multiple clientscenario where many clients connect to a server
         [TestMethod]
         public void AMB_MultipleClientsPerServer_Test()

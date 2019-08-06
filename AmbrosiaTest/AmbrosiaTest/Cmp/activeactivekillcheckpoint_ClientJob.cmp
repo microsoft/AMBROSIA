@@ -9,21 +9,5 @@ Service Received 3072 MB so far
 Service Received 4096 MB so far
 *X* 4096	0.0451691721682756
 Service Received 5120 MB so far
-*X* 2048	0.044631104418191
-Service Received 6144 MB so far
-*X* 1024	0.0419209925952016
-Service Received 7168 MB so far
-*X* 512	0.0446787974456828
-Service Received 8192 MB so far
-*X* 256	0.0412141830203171
-Service Received 9216 MB so far
-*X* 128	0.0411807597823824
-Service Received 10240 MB so far
-*X* 64	0.0379665717699799
-Service Received 11264 MB so far
-*X* 32	0.0352991449512828
-Service Received 12288 MB so far
-*X* 16	0.0189336790163664
-Service Received 13312 MB so far
-Bytes received: 13958643712
+Bytes received: 5368709120
 DONE

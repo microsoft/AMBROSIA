@@ -1158,9 +1158,9 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("upgradeserverbeforeserverdone");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("upgradeserverafterserverdone");
-            Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("upgradeserverbeforestarts");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("upgradeactiveactiveprimaryonly"); 
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("multipleclientsperserver");
             Thread.Sleep(2000);

@@ -54,14 +54,13 @@ namespace <#= this.interfaceType.Namespace #>
             // Make call, wait for reply
             // Compute size of serialized arguments
             var totalArgSize = 0;
-
+<# if (!voidMethod) { #>
+			var p_<#= M.Parameters.Count() #> = default(<#= M.ReturnType.Name #>);
+<# } #>
 <#
         foreach (var p in M.Parameters) {
           var parIndex = p.Position;
 #>
-<# if (!voidMethod) { #>
-			var p_<#= M.Parameters.Count() #> = default(<#= M.ReturnType.Name #>);
-<# } #>
 			int arg<#= parIndex #>Size = 0;
 			byte[] arg<#= parIndex #>Bytes = null;
 

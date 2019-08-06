@@ -94,7 +94,7 @@ Message types and associated data which may be sent to or received by services:
 
  * 9 – `InitialMessage` (Sent/Received): Data is a complete (incoming rpc) message which is given back to the service as the very first RPC message it ever receives. Used to bootstrap service start behavior.
 
- * 8 – `Checkpoint` (Sent/Received): The payload is a single 64 bit number.
+ * 8 – `Checkpoint` (Sent/Received): The payload is a single 64 bit number (ZigZagLong).
    That payload in turn is the size in bytes of a checkpoint itself, which is a
    binary blob that follows this message immediately (no additional header).
    The reason that checkpoints are not sent in the message payload directly is
@@ -109,16 +109,16 @@ Message types and associated data which may be sent to or received by services:
 
  * 0 - Incoming RPC (Received):
 
-  - Byte 0 of data is reserved (RPC or return value), and is currently always set to 0 (RPC).
-  - Next is a variable length int (ZigZagInt) which is a method ID.
-  - The next byte is a reserved byte (Fire and forget or Async/Await) and is currently always set to 1 (Fare and Forget).
-  - The remaining bytes are the serialized arguments packed tightly.
+   - Byte 0 of data is reserved (RPC or return value), and is currently always set to 0 (RPC).
+   - Next is a variable length int (ZigZagInt) which is a method ID.
+   - The next byte is a reserved byte (Fire and forget (1), Async/Await (0), or Impulse (2)) and is currently always set to 1 (Fire and Forget).
+   - The remaining bytes are the serialized arguments packed tightly.
 
  * 0 - Outgoing RPC (Sent):
 
-  - First is a variable length int (ZigZagInt) which is the length of the destination service.
-  - Next are the actual bytes for the name of the destination service.
-  - Next follow all four fields listed above under "Incoming RPC".
+   - First is a variable length int (ZigZagInt) which is the length of the destination service.  For a self call, this should be set to 0 and the following field omitted.
+   - Next are the actual bytes for the name of the destination service.
+   - Next follow all four fields listed above under "Incoming RPC".
 
 That is, an Outgoing RPC is just an incoming RPC with two extra fields on the front.
 
