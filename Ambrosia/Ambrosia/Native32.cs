@@ -216,9 +216,6 @@ namespace FASTER.core
         [DllImport("advapi32.dll", SetLastError = true)]
         private static extern bool AdjustTokenPrivileges(SafeFileHandle tokenhandle, int disableprivs, ref TOKEN_PRIVILEGES Newstate, int BufferLengthInBytes, int PreviousState, int ReturnLengthInBytes);
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern void CloseHandle([In] SafeHandle handle);
-
         [DllImport("Kernel32.dll", SetLastError = true)]
         private static extern bool DeviceIoControl(SafeFileHandle hDevice, uint IoControlCode, void* InBuffer, int nInBufferSize, IntPtr OutBuffer, int nOutBufferSize, ref uint pBytesReturned, IntPtr Overlapped);
 
@@ -255,15 +252,15 @@ namespace FASTER.core
 
             if (!AdjustTokenPrivileges(token, 0, ref token_privileges, 0, 0, 0))
             {
-                CloseHandle(token);
+                token.Close();
                 return false;
             }
             if (Marshal.GetLastWin32Error() != 0)
             {
-                CloseHandle(token);
+                token.Close();
                 return false;
             }
-            CloseHandle(token);
+            token.Close();
             return true;
         }
 
