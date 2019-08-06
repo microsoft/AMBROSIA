@@ -78,11 +78,14 @@ $CurrentDir = $(get-location);
 
 # AmbrosiaCS
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Clients\CSharp\AmbrosiaCS\AmbrosiaCS.csproj' -NoBOMEncoding 'F';
+
 # PerformanceTest
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\InternalImmortals\PerformanceTest\GeneratedSourceFiles\PTAmbrosiaGeneratedAPI\latest\PTAmbrosiaGeneratedAPI.csproj' -NoBOMEncoding 'T';
+
 # PerformanceTestInterruptible
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\InternalImmortals\PerformanceTestInterruptible\API\ServerAPI.csproj' -NoBOMEncoding 'F';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\InternalImmortals\PerformanceTestInterruptible\GeneratedSourceFiles\PTIAmbrosiaGeneratedAPI\latest\PTIAmbrosiaGeneratedAPI.csproj' -NoBOMEncoding 'T';
+
 # HelloWorld
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\GeneratedSourceFiles\Client1Interfaces\latest\Client1Interfaces.csproj' -NoBOMEncoding 'T';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\GeneratedSourceFiles\Client2Interfaces\latest\Client2Interfaces.csproj' -NoBOMEncoding 'T';
@@ -92,11 +95,17 @@ SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $Cur
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\IClient2\IClient2.csproj' -NoBOMEncoding 'F';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\IClient3\IClient3.csproj' -NoBOMEncoding 'F';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\HelloWorld\ServerAPI\IServer.csproj' -NoBOMEncoding 'F';
+
 # StreamingDemo
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\AnalyticsAPI\AnalyticsAPI.csproj' -NoBOMEncoding 'F';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\GeneratedSourceFiles\AnalyticsAPIGenerated\latest\AnalyticsAPIGenerated.csproj' -NoBOMEncoding 'T';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\DashboardAPI\DashboardAPI.csproj' -NoBOMEncoding 'F';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\GeneratedSourceFiles\DashboardAPIGenerated\latest\DashboardAPIGenerated.csproj' -NoBOMEncoding 'T';
+
+
+Write-output "--------------------------------------------"
+Write-output "-------------      DONE!!!     -------------"
+Write-output "--------------------------------------------"
 
 
 
