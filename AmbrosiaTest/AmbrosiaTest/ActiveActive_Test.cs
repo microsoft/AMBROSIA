@@ -212,7 +212,7 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string byteSize = "13958643712";
+            string byteSize = "5368709120";
 
             Utilities MyUtils = new Utilities();
 
@@ -304,7 +304,7 @@ namespace AmbrosiaTest
 
             //start Client Job first ... to mix it up a bit (other tests has client start after server)
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartPerfClientJob("4001", "4000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+            int clientJobProcessID = MyUtils.StartPerfClientJob("4001", "4000", clientJobName, serverName, "65536", "5", logOutputFileName_ClientJob);
 
             //Server Call - primary
             string logOutputFileName_Server1 = testName + "_Server1.log";

@@ -35,5 +35,5 @@ slog=`mktemp server-coord.XXXX.log`
 set -x
 AMBROSIA_INSTANCE_NAME=$SERVERNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT2 \
 COORDTAG=CoordServ AMBROSIA_IMMORTALCOORDINATOR_LOG=$slog \
-  runAmbrosiaService.sh dotnet Server/publish/Server.dll $SERVERNAME 
+  runAmbrosiaService.sh dotnet Server/publish/Server.dll $PORT4 $PORT3 $SERVERNAME 
 set +x
