@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>AmbrosiaLibCSDebug</id>
-    <version>1.0.11</version>
-    <title>AmbrosiaLibCS.Debug</title>
+    <id>Microsoft.AmbrosiaLibCSDebug</id>
+    <version>1.0.1</version>
+    <title>Microsoft.AmbrosiaLibCS.Debug</title>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <projectUrl>https://github.com/Microsoft/AMBROSIA</projectUrl>
 	<licenseUrl>https://github.com/Microsoft/AMBROSIA/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>The AmbrosiaLibCS Binary Distribution - Debug version</description>
+    <description>The Microsoft.AmbrosiaLibCS Binary Distribution - Debug version</description>
     <releaseNotes>None yet</releaseNotes>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <language>en-US</language>
