@@ -3004,10 +3004,10 @@ namespace Ambrosia
             while (true)
             {
                 Console.WriteLine("Attempting to attach", destination);
-                var connectionResult1 = Connect(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
-                var connectionResult2 = Connect(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
-                var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                var connectionResult4 = Connect(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+                var connectionResult1 = ConnectAsync(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
+                var connectionResult2 = ConnectAsync(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
+                var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName).GetAwaiter().GetResult();
+                var connectionResult4 = ConnectAsync(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName).GetAwaiter().GetResult();
                 if ((connectionResult1 == CRAErrorCode.Success) && (connectionResult2 == CRAErrorCode.Success) &&
                     (connectionResult3 == CRAErrorCode.Success) && (connectionResult4 == CRAErrorCode.Success))
                 {
