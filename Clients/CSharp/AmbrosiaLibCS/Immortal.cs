@@ -146,6 +146,8 @@ namespace Ambrosia
 #else
             mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 #endif
+            int retryDelay = 1000; // it's handy to be able to modify this while debugging.
+
             while (true)
             {
                 Console.WriteLine("*X* Trying to connect IC and Language Binding");
@@ -158,7 +160,10 @@ namespace Ambrosia
 #endif
                     break;
                 }
-                catch { }
+                catch
+                {
+                    Thread.Sleep(retryDelay);
+                }
             }
             TcpClient tcpSendToClient = new TcpClient();
             tcpSendToClient.Client = mySocket;
