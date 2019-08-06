@@ -202,7 +202,7 @@ namespace Ambrosia
 
         public void Dispose()
         {
-            Native32.CloseHandle(logHandle);
+            logHandle.Close();
         }
 
         /// <summary>
