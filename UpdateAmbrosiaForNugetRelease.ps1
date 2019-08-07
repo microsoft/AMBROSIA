@@ -10,7 +10,7 @@
 #   NewVersion - Version upgrading to.  If NewVersion is same as CurrentVersion, it will just rebuild everything 
 #
 #  Note: Run this script AFTER the .nuspec files have been updated (and checked in) 
-#        and the Ambrosia nuget packages (AmbrosiaLibCS and AmbrosiaLibCSDebug) have been released to Nuget.org
+#        and the Ambrosia nuget packages (Microsoft.Ambrosia.LibCS and Microsoft.Ambrosia.LibCSDebug) have been released to Nuget.org
 #		 FYI - To release those Nuget packages, run the Ambrosia-Nuget-Release and Ambrosia-Nuget-Debug pipelines in Azure Dev Ops for Ambrosia
 #
 ###########################################
@@ -48,10 +48,10 @@ function SwapNugetStringInFile {
 	Write-Output $message;
 
 	# Replace for AmbrosiaLibCS and AmbrosiaLibCSDebug
-	$FullOldVerString = '"AmbrosiaLibCS" Version="'+$OldVer+'"';
-	$FullNewVerString = '"AmbrosiaLibCS" Version="'+$NewVer+'"';
-	$FullOldVerDebugString = '"AmbrosiaLibCSDebug" Version="'+$OldVer+'"';
-	$FullNewVerDebugString = '"AmbrosiaLibCSDebug" Version="'+$NewVer+'"';
+	$FullOldVerString = '"Microsoft.Ambrosia.LibCS" Version="'+$OldVer+'"';
+	$FullNewVerString = '"Microsoft.Ambrosia.LibCS" Version="'+$NewVer+'"';
+	$FullOldVerDebugString = '"Microsoft.Ambrosia.LibCSDebug" Version="'+$OldVer+'"';
+	$FullNewVerDebugString = '"Microsoft.Ambrosia.LibCSDebug" Version="'+$NewVer+'"';
 
 	# Make the call based on what encoding to use
 	If ($NoBOMEncoding -eq 'T') #UTF8NoBom used for Generated Code
