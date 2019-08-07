@@ -49,30 +49,7 @@ dotnet --info
 
 # echo "Building with command: $BUILDIT"
 
-if [ $FMWK == net46 ]; then
-    echo 
-    echo "Building adv-file-ops C++ prereq"
-    echo "------------------------------------"
-    pushd Ambrosia/adv-file-ops
-    set -x
-    dotnet restore adv-file-ops.vcxproj
-    
-    msbuild='/c/Program Files (x86)/Microsoft Visual Studio/2017/Enterprise/MSBuild/15.0/Bin/MSBuild.exe'
-    if ! [ -e "$msbuild" ]; then
-	set +x
-	echo "ERROR: currently the adv-file-ops.vcxproj C++ library needs Visual studio to build."
-	echo "Could not find MSBuild.exe in the expected location:"
-	echo "  $msbuild"
-	exit 1
-    fi
-    # Only "Release" mode for adv-file-ops.
-    # Ambrosia.csproj ASSUMES that this is in the Release dir.
-    "$msbuild" "-t:Build" "-p:Configuration=Release" "-p:Platform=$PLAT" "adv-file-ops.vcxproj"
-    set +x
-    popd
-fi
-
-echo 
+echo
 echo "Building AMBROSIA libraries/binaries"
 echo "------------------------------------"
 set -x
@@ -86,24 +63,24 @@ ln -s unsafedereg/UnsafeDeregisterInstance
 popd
 set +x
 
-echo 
+echo
 echo "Building C# client tools"
 echo "----------------------------------------"
 set -x
 buildit $OUTDIR/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
 pushd $OUTDIR
-ln -s codegen/AmbrosiaCS 
+ln -s codegen/AmbrosiaCS
 popd
 set +x
 
-echo 
+echo
 echo "Copying deployment script and other included resources."
 cp -a Scripts/runAmbrosiaService.sh bin/
 # (cd bin; ln -s Ambrosia ambrosia || echo ok)
 # We currently use this as a baseline source of dependencies for generated code:
 cp -a Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj bin/AmbrosiaCS.csproj
 
-echo 
+echo
 echo "Building Native-code client library"
 echo "----------------------------------------"
 if [ "$UNAME" == Linux ]; then
@@ -118,17 +95,17 @@ else
     echo "WARNING: this script doesn't build the native client for Windows yet (FINISHME)"
 fi
 
-# echo 
+# echo
 # echo "Removing unnecessary execute permissions"
 # echo "----------------------------------------"
-# chmod -x ./bin/*.dll ./bin/*.so ./bin/*.dylib ./bin/*.a 2>/dev/null || echo 
+# chmod -x ./bin/*.dll ./bin/*.so ./bin/*.dylib ./bin/*.a 2>/dev/null || echo
 
-echo 
+echo
 echo "Deduplicating output produced by separate dotnet publish calls"
 echo "--------------------------------------------------------------"
 if [ ${OS:+defined} ] && [ "$OS" == "Windows_NT" ];
 then ./Scripts/dedup_bindist.sh squish
-elif [ "$UNAME" == Darwin ]; 
+elif [ "$UNAME" == Darwin ];
 then ./Scripts/dedup_bindist.sh symlink
 else ./Scripts/dedup_bindist.sh symlink
 fi

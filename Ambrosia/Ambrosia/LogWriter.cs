@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.Threading;
 using Microsoft.Win32.SafeHandles;
 #if NETFRAMEWORK
-using mtcollections.persistent;
+using FASTER.core;
 #endif
 using System;
 using System.Collections.Generic;
@@ -186,7 +186,7 @@ namespace Ambrosia
 
             if (enablePrivileges)
             {
-                Native32.EnableVolumePrivileges(ref filename, logHandle);
+                Native32.EnableVolumePrivileges(filename, logHandle);
             }
 
             if (useIoCompletionPort)
@@ -202,7 +202,7 @@ namespace Ambrosia
 
         public void Dispose()
         {
-            Native32.CloseHandle(logHandle);
+            logHandle.Close();
         }
 
         /// <summary>
