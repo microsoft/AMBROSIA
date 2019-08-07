@@ -158,7 +158,10 @@ namespace Ambrosia
 #endif
                     break;
                 }
-                catch { }
+                catch
+                {
+                    Thread.Sleep(1000);
+                }
             }
             TcpClient tcpSendToClient = new TcpClient();
             tcpSendToClient.Client = mySocket;
