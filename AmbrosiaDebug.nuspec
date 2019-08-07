@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>Microsoft.AmbrosiaLibCSDebug</id>
+    <id>Microsoft.Ambrosia.LibCSDebug</id>
     <version>1.0.1</version>
-    <title>Microsoft.AmbrosiaLibCS.Debug</title>
+    <title>Microsoft.Ambrosia.LibCS.Debug</title>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <projectUrl>https://github.com/Microsoft/AMBROSIA</projectUrl>
