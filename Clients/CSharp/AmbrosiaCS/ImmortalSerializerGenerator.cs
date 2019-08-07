@@ -124,7 +124,7 @@ namespace Ambrosia
                     "esolver = ImmortalSerializerBase.Resolver,\r\n                KnownTypes = this.Kn" +
                     "ownTypes.Select(kt => kt.Type).ToArray(),\r\n                PreserveObjectReferen" +
                     "ces = true\r\n            };\r\n            var serializer = new DataContractSeriali" +
-                    "zer(c.GetType(), settings);\r\n            using (var reader = XmlDictionaryReader" +
+                    "zer(runtimeType, settings);\r\n            using (var reader = XmlDictionaryReader" +
                     ".CreateBinaryReader(stream, XmlDictionaryReaderQuotas.Max))\r\n            {\r\n    " +
                     "            return (Immortal)serializer.ReadObject(reader);\r\n            }\r\n    " +
                     "    }\r\n    }\r\n\r\n\tpublic interface Empty : IEmpty \r\n\t{\r\n\r\n\t}\r\n}");

@@ -86,7 +86,7 @@ namespace Ambrosia
                 KnownTypes = this.KnownTypes.Select(kt => kt.Type).ToArray(),
                 PreserveObjectReferences = true
             };
-            var serializer = new DataContractSerializer(c.GetType(), settings);
+            var serializer = new DataContractSerializer(runtimeType, settings);
             using (var reader = XmlDictionaryReader.CreateBinaryReader(stream, XmlDictionaryReaderQuotas.Max))
             {
                 return (Immortal)serializer.ReadObject(reader);
