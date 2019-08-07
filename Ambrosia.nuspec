@@ -7,7 +7,7 @@
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <projectUrl>https://github.com/Microsoft/AMBROSIA</projectUrl>
-    <license type="expression">MIT</license>
+    <licenseUrl>https://github.com/Microsoft/AMBROSIA/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The Microsoft.AmbrosiaLibCS Binary Distribution</description>
     <releaseNotes>None yet</releaseNotes>
