@@ -18,7 +18,7 @@ namespace Ambrosia
     /// Class to produce the template output
     /// </summary>
     
-    #line 1 "C:\Git\Franklin\AmbrosiaCS\ImmortalSerializerGenerator.tt"
+    #line 1 "D:\git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ImmortalSerializerGenerator.tt"
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
     internal partial class ImmortalSerializerGenerator : ImmortalSerializerGeneratorBase
     {
@@ -42,7 +42,7 @@ using Ambrosia;
 using static Ambrosia.StreamCommunicator;
 ");
             
-            #line 18 "C:\Git\Franklin\AmbrosiaCS\ImmortalSerializerGenerator.tt"
+            #line 18 "D:\git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ImmortalSerializerGenerator.tt"
 
     foreach (var N in this.classNamespaces) {
 
@@ -51,14 +51,14 @@ using static Ambrosia.StreamCommunicator;
             #line hidden
             this.Write("using ");
             
-            #line 21 "C:\Git\Franklin\AmbrosiaCS\ImmortalSerializerGenerator.tt"
+            #line 21 "D:\git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ImmortalSerializerGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(N));
             
             #line default
             #line hidden
             this.Write(";\r\n");
             
-            #line 22 "C:\Git\Franklin\AmbrosiaCS\ImmortalSerializerGenerator.tt"
+            #line 22 "D:\git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ImmortalSerializerGenerator.tt"
  } 
             
             #line default
@@ -77,7 +77,7 @@ namespace Ambrosia
 			{
 ");
             
-            #line 35 "C:\Git\Franklin\AmbrosiaCS\ImmortalSerializerGenerator.tt"
+            #line 35 "D:\git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ImmortalSerializerGenerator.tt"
 
     foreach (var T in this.typeNames) {
 
@@ -86,38 +86,48 @@ namespace Ambrosia
             #line hidden
             this.Write("\t\t\t\tnew SerializableType(typeof(");
             
-            #line 38 "C:\Git\Franklin\AmbrosiaCS\ImmortalSerializerGenerator.tt"
+            #line 38 "D:\git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ImmortalSerializerGenerator.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(T));
             
             #line default
             #line hidden
             this.Write(")),\r\n");
             
-            #line 39 "C:\Git\Franklin\AmbrosiaCS\ImmortalSerializerGenerator.tt"
+            #line 39 "D:\git\AMBROSIA\Clients\CSharp\AmbrosiaCS\ImmortalSerializerGenerator.tt"
  } 
             
             #line default
             #line hidden
             this.Write("\t\t\t\tnew SerializableType(this.GetType())\r\n\t\t\t};\r\n\t\t}\r\n\r\n        public override l" +
-                    "ong SerializeSize(Immortal c)\r\n        {\r\n            var serializer = new DataC" +
-                    "ontractSerializer(c.GetType(), this.KnownTypes.Select(kt => kt.Type).ToArray());" +
-                    "\r\n            long retVal = -1;\r\n            using (var countStream = new CountS" +
-                    "tream())\r\n            {\r\n                using (var writer = XmlDictionaryWriter" +
-                    ".CreateBinaryWriter(countStream))\r\n                {\r\n                    serial" +
-                    "izer.WriteObject(writer, c);\r\n                }\r\n                retVal = countS" +
-                    "tream.Length;\r\n            }\r\n            return retVal;\r\n        }\r\n\r\n        p" +
-                    "ublic override void Serialize(Immortal c, Stream writeToStream)\r\n        {\r\n    " +
-                    "        // nned to create\r\n            var serializer = new DataContractSerializ" +
-                    "er(c.GetType(), this.KnownTypes.Select(kt => kt.Type).ToArray());\r\n            u" +
-                    "sing (var writer = XmlDictionaryWriter.CreateBinaryWriter(writeToStream))\r\n     " +
-                    "       {\r\n                serializer.WriteObject(writer, c);\r\n            }\r\n   " +
-                    "     }\r\n\r\n\t\tpublic override Immortal Deserialize(Type runtimeType, Stream stream" +
-                    ")\r\n        {\r\n            var serializer = new DataContractSerializer(runtimeTyp" +
-                    "e, this.KnownTypes.Select(kt => kt.Type).ToArray());\r\n            using (var rea" +
-                    "der = XmlDictionaryReader.CreateBinaryReader(stream, XmlDictionaryReaderQuotas.M" +
-                    "ax))\r\n            {\r\n                return (Immortal)serializer.ReadObject(read" +
-                    "er);\r\n            }\r\n        }\r\n    }\r\n\r\n\tpublic interface Empty : IEmpty \r\n\t{\r\n" +
-                    "\r\n\t}\r\n}");
+                    "ong SerializeSize(Immortal c)\r\n        {\r\n            DataContractSerializerSett" +
+                    "ings settings = new DataContractSerializerSettings()\r\n            {\r\n           " +
+                    "     DataContractResolver = ImmortalSerializerBase.Resolver,\r\n                Kn" +
+                    "ownTypes = this.KnownTypes.Select(kt => kt.Type).ToArray(),\r\n                Pre" +
+                    "serveObjectReferences = true\r\n            };\r\n            var serializer = new D" +
+                    "ataContractSerializer(c.GetType(), settings);\r\n            long retVal = -1;\r\n  " +
+                    "          using (var countStream = new CountStream())\r\n            {\r\n          " +
+                    "      using (var writer = XmlDictionaryWriter.CreateBinaryWriter(countStream))\r\n" +
+                    "                {\r\n                    serializer.WriteObject(writer, c);\r\n     " +
+                    "           }\r\n                retVal = countStream.Length;\r\n            }\r\n     " +
+                    "       return retVal;\r\n        }\r\n\r\n        public override void Serialize(Immor" +
+                    "tal c, Stream writeToStream)\r\n        {\r\n            // need to create\r\n        " +
+                    "    DataContractSerializerSettings settings = new DataContractSerializerSettings" +
+                    "()\r\n            {\r\n                DataContractResolver = ImmortalSerializerBase" +
+                    ".Resolver,\r\n                KnownTypes = this.KnownTypes.Select(kt => kt.Type).T" +
+                    "oArray(),\r\n                PreserveObjectReferences = true\r\n            };\r\n    " +
+                    "        var serializer = new DataContractSerializer(c.GetType(), settings);\r\n   " +
+                    "         using (var writer = XmlDictionaryWriter.CreateBinaryWriter(writeToStrea" +
+                    "m))\r\n            {\r\n                serializer.WriteObject(writer, c);\r\n        " +
+                    "    }\r\n        }\r\n\r\n\t\tpublic override Immortal Deserialize(Type runtimeType, Str" +
+                    "eam stream)\r\n        {\r\n            DataContractSerializerSettings settings = ne" +
+                    "w DataContractSerializerSettings()\r\n            {\r\n                DataContractR" +
+                    "esolver = ImmortalSerializerBase.Resolver,\r\n                KnownTypes = this.Kn" +
+                    "ownTypes.Select(kt => kt.Type).ToArray(),\r\n                PreserveObjectReferen" +
+                    "ces = true\r\n            };\r\n            var serializer = new DataContractSeriali" +
+                    "zer(c.GetType(), settings);\r\n            using (var reader = XmlDictionaryReader" +
+                    ".CreateBinaryReader(stream, XmlDictionaryReaderQuotas.Max))\r\n            {\r\n    " +
+                    "            return (Immortal)serializer.ReadObject(reader);\r\n            }\r\n    " +
+                    "    }\r\n    }\r\n\r\n\tpublic interface Empty : IEmpty \r\n\t{\r\n\r\n\t}\r\n}");
             return this.GenerationEnvironment.ToString();
         }
     }

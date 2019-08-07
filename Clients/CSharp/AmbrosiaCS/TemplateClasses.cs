@@ -97,7 +97,7 @@ namespace Ambrosia
         internal ImmortalSerializerGenerator(IEnumerable<string> classNames, IEnumerable<string> classNamespaces)
         {
             this.typeNames = classNames.ToArray();
-            this.classNamespaces = classNamespaces.ToArray();
+            this.classNamespaces = new HashSet<string>(classNamespaces).ToArray(); // uniquify the list.
         }
     }
 }

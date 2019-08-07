@@ -43,7 +43,13 @@ namespace Ambrosia
 
         public override long SerializeSize(Immortal c)
         {
-            var serializer = new DataContractSerializer(c.GetType(), this.KnownTypes.Select(kt => kt.Type).ToArray());
+            DataContractSerializerSettings settings = new DataContractSerializerSettings()
+            {
+                DataContractResolver = ImmortalSerializerBase.Resolver,
+                KnownTypes = this.KnownTypes.Select(kt => kt.Type).ToArray(),
+                PreserveObjectReferences = true
+            };
+            var serializer = new DataContractSerializer(c.GetType(), settings);
             long retVal = -1;
             using (var countStream = new CountStream())
             {
@@ -58,8 +64,14 @@ namespace Ambrosia
 
         public override void Serialize(Immortal c, Stream writeToStream)
         {
-            // nned to create
-            var serializer = new DataContractSerializer(c.GetType(), this.KnownTypes.Select(kt => kt.Type).ToArray());
+            // need to create
+            DataContractSerializerSettings settings = new DataContractSerializerSettings()
+            {
+                DataContractResolver = ImmortalSerializerBase.Resolver,
+                KnownTypes = this.KnownTypes.Select(kt => kt.Type).ToArray(),
+                PreserveObjectReferences = true
+            };
+            var serializer = new DataContractSerializer(c.GetType(), settings);
             using (var writer = XmlDictionaryWriter.CreateBinaryWriter(writeToStream))
             {
                 serializer.WriteObject(writer, c);
@@ -68,7 +80,13 @@ namespace Ambrosia
 
 		public override Immortal Deserialize(Type runtimeType, Stream stream)
         {
-            var serializer = new DataContractSerializer(runtimeType, this.KnownTypes.Select(kt => kt.Type).ToArray());
+            DataContractSerializerSettings settings = new DataContractSerializerSettings()
+            {
+                DataContractResolver = ImmortalSerializerBase.Resolver,
+                KnownTypes = this.KnownTypes.Select(kt => kt.Type).ToArray(),
+                PreserveObjectReferences = true
+            };
+            var serializer = new DataContractSerializer(c.GetType(), settings);
             using (var reader = XmlDictionaryReader.CreateBinaryReader(stream, XmlDictionaryReaderQuotas.Max))
             {
                 return (Immortal)serializer.ReadObject(reader);
