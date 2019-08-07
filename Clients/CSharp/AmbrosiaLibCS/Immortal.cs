@@ -307,10 +307,10 @@ namespace Ambrosia
 
                 if (bytesToRead <= 24)
                 {
-                    int commitID = this._ambrosiaReceiveFromStream.ReadIntFixed();
-                    bytesToRead = this._ambrosiaReceiveFromStream.ReadIntFixed();
-                    long checkBytes = this._ambrosiaReceiveFromStream.ReadLongFixed();
-                    long writeSeqID = this._ambrosiaReceiveFromStream.ReadLongFixed();
+                    int commitID = await this._ambrosiaReceiveFromStream.ReadIntFixedAsync(cancelTokenSource.Token);
+                    bytesToRead = await this._ambrosiaReceiveFromStream.ReadIntFixedAsync(cancelTokenSource.Token);
+                    long checkBytes = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
+                    long writeSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
                 }
 
                 while (bytesToRead > 24)
