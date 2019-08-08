@@ -4,8 +4,8 @@
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AmbrosiaLibCS" Version="1.0.11" Condition="'$(Configuration)' == 'Release' " />
-    <PackageReference Include="AmbrosiaLibCSDebug" Version="1.0.11" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.12" Condition="'$(Configuration)' == 'Release' " />
+    <PackageReference Include="Microsoft.Ambrosia.LibCSDebug" Version="1.0.12" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="CRA" Version="2019.6.17.4" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
