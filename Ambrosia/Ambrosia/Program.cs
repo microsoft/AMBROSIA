@@ -40,7 +40,7 @@ namespace Ambrosia
 
     internal static class DictionaryTools
     {
-        internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, long> dict, LogWriter writeToStream)
+        internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, long> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
             foreach (var entry in dict)
@@ -65,7 +65,7 @@ namespace Ambrosia
             return _retVal;
         }
 
-        internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, LongPair> dict, LogWriter writeToStream)
+        internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, LongPair> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
             foreach (var entry in dict)
@@ -126,7 +126,7 @@ namespace Ambrosia
             return _retVal;
         }
 
-        internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, InputConnectionRecord> dict, LogWriter writeToStream)
+        internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, InputConnectionRecord> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
             foreach (var entry in dict)
@@ -158,7 +158,7 @@ namespace Ambrosia
             return _retVal;
         }
 
-        internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, OutputConnectionRecord> dict, LogWriter writeToStream)
+        internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, OutputConnectionRecord> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
             foreach (var entry in dict)
@@ -378,7 +378,7 @@ namespace Ambrosia
             _trimLock = 0;
         }
 
-        internal void Serialize(LogWriter writeToStream)
+        internal void Serialize(ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(_bufferQ.Count);
             foreach (var currentBuf in _bufferQ)
@@ -1181,7 +1181,7 @@ namespace Ambrosia
             const int numWritesBits = 31;
             const long Last32Mask = 0x00000000FFFFFFFF;
             const long First32Mask = Last32Mask << 32;
-            LogWriter _logStream;
+            ILogWriter _logStream;
             Stream _workStream;
             ConcurrentDictionary<string, LongPair> _uncommittedWatermarks;
             ConcurrentDictionary<string, LongPair> _uncommittedWatermarksBak;
@@ -1241,7 +1241,7 @@ namespace Ambrosia
 
             internal int CommitID { get { return _committerID; } }
 
-            internal void Serialize(LogWriter serializeStream)
+            internal void Serialize(ILogWriter serializeStream)
             {
                 var localStatus = _status;
                 var bufLength = ((localStatus >> SealedBits) & Last32Mask);
@@ -1429,7 +1429,7 @@ namespace Ambrosia
             }
 
             // This method switches the log stream to the provided stream and removes the write lock on the old file
-            public void SwitchLogStreams(LogWriter newLogStream)
+            public void SwitchLogStreams(ILogWriter newLogStream)
             {
                 if (_status % 2 != 1 || _bufbak == null)
                 {
@@ -1943,7 +1943,7 @@ namespace Ambrosia
             {
                 ShardID = shardID;
             }
-            public LogWriter CheckpointWriter { get; set; }
+            public ILogWriter CheckpointWriter { get; set; }
             public Committer Committer { get; set; }
             public ConcurrentDictionary<string, InputConnectionRecord> Inputs { get; set; }
             public long LastCommittedCheckpoint { get; set; }
@@ -2104,7 +2104,8 @@ namespace Ambrosia
         long _lastCommittedCheckpoint;
 
         // Azure blob for writing commit log and checkpoint
-        LogWriter _checkpointWriter;
+        ILogWriter _checkpointWriter;
+        ILogWriterStatic _logWriterStatics;
 
         // true when this service is in an active/active configuration. False if set to single node
         bool _activeActive;
@@ -2247,7 +2248,7 @@ namespace Ambrosia
         private void PrepareToRecoverOrStart()
         {
             IPAddress localIPAddress = Dns.GetHostEntry("localhost").AddressList[0];
-            LogWriter.CreateDirectoryIfNotExists(LogDirectory(_currentVersion));
+            _logWriterStatics.CreateDirectoryIfNotExists(LogDirectory(_currentVersion));
             _logFileNameBase = LogFileNameBase(_currentVersion);
             SetupLocalServiceStreams();
             if (!_runningRepro)
@@ -2447,7 +2448,7 @@ namespace Ambrosia
 
         internal void MoveServiceToUpgradeDirectory()
         {
-            LogWriter.CreateDirectoryIfNotExists(RootDirectory(_upgradeToVersion));
+            _logWriterStatics.CreateDirectoryIfNotExists(RootDirectory(_upgradeToVersion));
             _logFileNameBase = LogFileNameBase(_upgradeToVersion);
         }
 
@@ -2518,16 +2519,16 @@ namespace Ambrosia
             return LogFileNameBase(version, shardID) + "log" + logFile.ToString();
         }
 
-        private LogWriter CreateNextOldVerLogFile()
+        private ILogWriter CreateNextOldVerLogFile()
         {
-            if (LogWriter.FileExists(LogFileName(_lastLogFile + 1, _shardID, _currentVersion)))
+            if (_logWriterStatics.FileExists(LogFileName(_lastLogFile + 1, _shardID, _currentVersion)))
             {
                 File.Delete(LogFileName(_lastLogFile + 1, _shardID, _currentVersion));
             }
-            LogWriter retVal = null;
+            ILogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(LogFileName(_lastLogFile + 1, _shardID, _currentVersion), 1024 * 1024, 6);
+                retVal = _logWriterStatics.Generate(LogFileName(_lastLogFile + 1, _shardID, _currentVersion), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
@@ -2557,16 +2558,16 @@ namespace Ambrosia
             }
         }
 
-        private LogWriter CreateNextLogFile()
+        private ILogWriter CreateNextLogFile()
         {
-            if (LogWriter.FileExists(LogFileName(_lastLogFile + 1)))
+            if (_logWriterStatics.FileExists(LogFileName(_lastLogFile + 1)))
             {
                 File.Delete(LogFileName(_lastLogFile + 1));
             }
-            LogWriter retVal = null;
+            ILogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(LogFileName(_lastLogFile + 1), 1024 * 1024, 6);
+                retVal = _logWriterStatics.Generate(LogFileName(_lastLogFile + 1), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
@@ -2590,14 +2591,14 @@ namespace Ambrosia
         }
 
         // Closes out the old log file and starts a new one. Takes checkpoints if this instance should
-        private async Task<LogWriter> MoveServiceToNextLogFileAsync(bool firstStart = false, bool becomingPrimary = false)
+        private async Task<ILogWriter> MoveServiceToNextLogFileAsync(bool firstStart = false, bool becomingPrimary = false)
         {
             // Move to the next log file. By doing this before checkpointing, we may end up skipping a checkpoint file (failure during recovery). 
             // This is ok since we recover from the first committed checkpoint and will just skip empty log files during replay. 
             // This also protects us from a failed upgrade, which is why the file is created in both directories on upgrade, and why the lock on upgrade is held until successful upgrade or failure.
             await _committer.SleepAsync();
             var nextLogHandle = CreateNextLogFile();
-            LogWriter oldVerLogHandle = null;
+            ILogWriter oldVerLogHandle = null;
             if (_upgrading)
             {
                 oldVerLogHandle = CreateNextOldVerLogFile();
@@ -2644,7 +2645,7 @@ namespace Ambrosia
             try
             {
                 // Compete for Checkpoint Write Permission
-                state.CheckpointWriter = new LogWriter(CheckpointName(state.LastCommittedCheckpoint), 1024 * 1024, 6, true);
+                state.CheckpointWriter = _logWriterStatics.Generate(CheckpointName(state.LastCommittedCheckpoint), 1024 * 1024, 6, true);
                 state.MyRole = AARole.Checkpointer; // I'm a checkpointing secondary
                 var oldCheckpoint = state.LastCommittedCheckpoint;
                 state.LastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", state.ShardID)));
@@ -2667,7 +2668,7 @@ namespace Ambrosia
             // LOG write permission acquired only in case primary failed (is down)
             while (true)
             {
-                LogWriter lastLogFileStream = null;
+                ILogWriter lastLogFileStream = null;
                 try
                 {
                     if (_upgrading && _activeActive && (_killFileHandle == null))
@@ -2678,7 +2679,7 @@ namespace Ambrosia
                     var oldLastLogFile = state.LastLogFile;
                     Debug.Assert(lastLogFileStream == null);
                     // Compete for log write permission - non destructive open for write - open for append
-                    lastLogFileStream = new LogWriter(LogFileName(oldLastLogFile, state.ShardID), 1024 * 1024, 6, true);
+                    lastLogFileStream = _logWriterStatics.Generate(LogFileName(oldLastLogFile, state.ShardID), 1024 * 1024, 6, true);
                     if (long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID))) != oldLastLogFile)
                     {
                         // We got an old log. Try again
@@ -2831,7 +2832,7 @@ namespace Ambrosia
                         // Move to the next log file for reading only. We may need to take a checkpoint
                         state.LastLogFile++;
                         replayStream.Dispose();
-                        if (!LogWriter.FileExists(LogFileName(state.LastLogFile, state.ShardID)))
+                        if (!_logWriterStatics.FileExists(LogFileName(state.LastLogFile, state.ShardID)))
                         {
                             OnError(MissingLog, "Missing log in replay " + state.LastLogFile.ToString());
                         }
@@ -2858,7 +2859,7 @@ namespace Ambrosia
                     var newLastLogFile = state.LastLogFile;
                     if (_runningRepro)
                     {
-                        if (LogWriter.FileExists(LogFileName(state.LastLogFile + 1, state.ShardID)))
+                        if (_logWriterStatics.FileExists(LogFileName(state.LastLogFile + 1, state.ShardID)))
                         {
                             // If there is a next file, then move to it
                             newLastLogFile = state.LastLogFile + 1;
@@ -3751,16 +3752,16 @@ namespace Ambrosia
             }
         }
 
-        private LogWriter OpenNextCheckpointFile()
+        private ILogWriter OpenNextCheckpointFile()
         {
-            if (LogWriter.FileExists(CheckpointName(_lastCommittedCheckpoint + 1)))
+            if (_logWriterStatics.FileExists(CheckpointName(_lastCommittedCheckpoint + 1)))
             {
                 File.Delete(CheckpointName(_lastCommittedCheckpoint + 1));
             }
-            LogWriter retVal = null;
+            ILogWriter retVal = null;
             try
             {
-                retVal = new LogWriter(CheckpointName(_lastCommittedCheckpoint + 1), 1024 * 1024, 6);
+                retVal = _logWriterStatics.Generate(CheckpointName(_lastCommittedCheckpoint + 1), 1024 * 1024, 6);
             }
             catch (Exception e)
             {
@@ -3772,7 +3773,7 @@ namespace Ambrosia
         private void CleanupOldCheckpoint()
         {
             var fileNameToDelete = CheckpointName(_lastCommittedCheckpoint - 1);
-            if (LogWriter.FileExists(fileNameToDelete))
+            if (_logWriterStatics.FileExists(fileNameToDelete))
             {
                 File.Delete(fileNameToDelete);
             }
@@ -3851,6 +3852,23 @@ namespace Ambrosia
 
         public override async Task InitializeAsync(object param)
         {
+#if WINDOWS_UWP
+            _logWriterStatics = new LogWriterStaticsUWP();
+#endif
+#if NETFRAMEWORK
+            _logWriterStatics = new LogWriterStaticsWindows();
+#endif
+#if NETCORE
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                _logWriterStatics = new LogWriterStaticsWindows();
+            }
+            else
+            {
+                _logWriterStatics = new LogWriterStaticsGeneric();
+            }
+#endif
+
             // Workaround because of parameter type limitation in CRA
             AmbrosiaRuntimeParams p = new AmbrosiaRuntimeParams();
             XmlSerializer xmlSerializer = new XmlSerializer(p.GetType());
@@ -3904,16 +3922,16 @@ namespace Ambrosia
 
                     }
                 }
-                if (!LogWriter.DirectoryExists(LogDirectory(_currentVersion)))
+                if (!_logWriterStatics.DirectoryExists(LogDirectory(_currentVersion)))
                 {
                     OnError(MissingCheckpoint, "No checkpoint/logs directory");
                 }
                 var lastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint")));
-                if (!LogWriter.FileExists(CheckpointName(lastCommittedCheckpoint)))
+                if (!_logWriterStatics.FileExists(CheckpointName(lastCommittedCheckpoint)))
                 {
                     OnError(MissingCheckpoint, "Missing checkpoint " + lastCommittedCheckpoint.ToString());
                 }
-                if (!LogWriter.FileExists(LogFileName(lastCommittedCheckpoint)))
+                if (!_logWriterStatics.FileExists(LogFileName(lastCommittedCheckpoint)))
                 {
                     OnError(MissingLog, "Missing log " + lastCommittedCheckpoint.ToString());
                 }
@@ -3963,7 +3981,7 @@ namespace Ambrosia
 
             if (createService == null)
             {
-                if (LogWriter.DirectoryExists(RootDirectory()))
+                if (_logWriterStatics.DirectoryExists(RootDirectory()))
                 {
                     createService = false;
                 }

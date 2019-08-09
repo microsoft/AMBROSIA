@@ -1,8 +1,6 @@
 ﻿using Microsoft.VisualStudio.Threading;
 using Microsoft.Win32.SafeHandles;
-#if NETFRAMEWORK
 using FASTER.core;
-#endif
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,9 +18,48 @@ using Windows.Storage.Streams;
 
 namespace Ambrosia
 {
+    internal interface ILogWriter : IDisposable
+    {
+        ulong FileSize { get; }
+
+        void Flush();
+
+        Task FlushAsync();
+
+        unsafe void WriteInt(int value);
+
+        void WriteIntFixed(int value);
+
+        void WriteLongFixed(long value);
+
+        void Write(byte[] buffer,
+                   int offset,
+                   int length);
+
+        Task WriteAsync(byte[] buffer,
+                        int offset,
+                        int length);
+    }
+
+    interface ILogWriterStatic
+    {
+        void CreateDirectoryIfNotExists(string path);
+
+        bool DirectoryExists(string path);
+
+        bool FileExists(string path);
+
+        void DeleteFile(string path);
+
+        ILogWriter Generate(string fileName,
+                            uint chunkSize,
+                            uint maxChunksPerWrite,
+                            bool appendOpen = false);
+    }
+
     internal static class LogWriterUtils
     {
-        internal static void Write(this LogWriter writer,
+        internal static void Write(this ILogWriter writer,
                                    NetworkStream readStream,
                                    long checkpointSize)
         {
@@ -45,18 +82,17 @@ namespace Ambrosia
         }
     }
 
-#if NETFRAMEWORK
     /// <summary>
     /// Internal class, wraps Overlapped structure, completion port callback and IAsyncResult
     /// </summary>
     sealed class AsyncJob : IAsyncResult, IDisposable
     {
-    #region privates
+        #region privates
         private readonly object _eventHandle = new object();
         private bool _completedSynchronously = false;
         private bool _completed = false;
         private uint _errorCode = 0;
-    #endregion
+        #endregion
 
         public void SetEventHandle()
         {
@@ -71,7 +107,7 @@ namespace Ambrosia
         {
         }
 
-    #region IDisposable
+        #region IDisposable
 
         bool _disposed = false;
         public void Dispose()
@@ -83,8 +119,7 @@ namespace Ambrosia
             GC.SuppressFinalize(this);
         }
 
-    #endregion
-
+        #endregion
 
         public void CompleteSynchronously()
         {
@@ -102,7 +137,7 @@ namespace Ambrosia
 
         public uint ErrorCode { get { return _errorCode; } }
 
-    #region IAsyncResult Members
+        #region IAsyncResult Members
 
         public object AsyncState
         {
@@ -123,9 +158,8 @@ namespace Ambrosia
         {
             get { return _completed; }
         }
-    #endregion
+        #endregion
     }
-
 
     internal class LocalStorageDevice : IDisposable
     {
@@ -354,7 +388,8 @@ namespace Ambrosia
             }
         }
     }
-    internal class LogWriter : IDisposable
+
+    internal class LogWriterWindows : IDisposable, ILogWriter
     {
         unsafe struct BytePtrWrapper
         {
@@ -386,10 +421,10 @@ namespace Ambrosia
         uint _allocations;
         uint _lastError;
 
-        public unsafe LogWriter(string fileName,
-                                uint chunkSize,
-                                uint maxChunksPerWrite,
-                                bool appendOpen = false)
+        public unsafe LogWriterWindows(string fileName,
+                                       uint chunkSize,
+                                       uint maxChunksPerWrite,
+                                       bool appendOpen = false)
         {
             //Console.WriteLine("64-bitness: " + Environment.Is64BitProcess);
             _lastError = 0;
@@ -580,7 +615,6 @@ namespace Ambrosia
             }
         }
 
-
         public async Task FlushAsync()
         {
             long newAllocations = ((long)_fileSize - 1) / _allocationUnit + 1;
@@ -635,7 +669,7 @@ namespace Ambrosia
             }
             if (_lastError > 0)
             {
-                throw new Exception("Error " +_lastError.ToString() + " writing data to log");
+                throw new Exception("Error " + _lastError.ToString() + " writing data to log");
             }
         }
 
@@ -676,6 +710,25 @@ namespace Ambrosia
             _bufBytesOccupied += length;
         }
 
+        public void Write(byte[] buffer,
+                          int offset,
+                          int ilength)
+        {
+            ulong length = (ulong)ilength;
+            _fileSize += length;
+            while (length + _bufBytesOccupied > _bufSize)
+            {
+                ulong bufferToWrite = _bufSize - _bufBytesOccupied;
+                CopyBufferIntoUnmanaged(buffer, (ulong)offset, _bufBytesOccupied, bufferToWrite);
+                length -= bufferToWrite;
+                offset += (int)bufferToWrite;
+                _bufBytesOccupied = _bufSize;
+                Flush();
+            }
+            CopyBufferIntoUnmanaged(buffer, (ulong)offset, _bufBytesOccupied, length);
+            _bufBytesOccupied += length;
+        }
+
         public async Task WriteAsync(byte[] buffer,
                                      ulong offset,
                                      ulong length)
@@ -712,6 +765,25 @@ namespace Ambrosia
             _bufBytesOccupied += length;
         }
 
+        public async Task WriteAsync(byte[] buffer,
+                                     int offset,
+                                     int iLength)
+        {
+            ulong length = (ulong)iLength;
+            _fileSize += length;
+            while (length + _bufBytesOccupied > _bufSize)
+            {
+                ulong bufferToWrite = _bufSize - _bufBytesOccupied;
+                CopyBufferIntoUnmanaged(buffer, (ulong)offset, _bufBytesOccupied, bufferToWrite);
+                length -= bufferToWrite;
+                offset += (int)bufferToWrite;
+                _bufBytesOccupied = _bufSize;
+                await FlushAsync();
+            }
+            CopyBufferIntoUnmanaged(buffer, (ulong)offset, _bufBytesOccupied, length);
+            _bufBytesOccupied += length;
+        }
+
         public unsafe void WriteByte(byte val)
         {
             _fileSize++;
@@ -732,6 +804,7 @@ namespace Ambrosia
             }
             WriteByte((byte)zigZagEncoded);
         }
+
         public void WriteIntFixed(int value)
         {
             WriteByte((byte)(value & 0xFF));
@@ -751,8 +824,11 @@ namespace Ambrosia
             WriteByte((byte)((value >> 0x30) & 0xFF));
             WriteByte((byte)((value >> 0x38) & 0xFF));
         }
+    }
 
-        public static void CreateDirectoryIfNotExists(string path)
+    internal class LogWriterStaticsWindows : ILogWriterStatic
+    {
+        public void CreateDirectoryIfNotExists(string path)
         {
             if (!Directory.Exists(path))
             {
@@ -760,31 +836,35 @@ namespace Ambrosia
             }
         }
 
-        public static bool DirectoryExists(string path)
+        public bool DirectoryExists(string path)
         {
             return Directory.Exists(path);
         }
 
-        public static bool FileExists(string path)
+        public bool FileExists(string path)
         {
             return File.Exists(path);
         }
 
-        public static void DeleteFile(string path)
+        public void DeleteFile(string path)
         {
             File.Delete(path);
         }
-    }
-#endif
 
-#if NETCORE
-    internal class LogWriter : IDisposable
+        public ILogWriter Generate(string fileName,
+                                   uint chunkSize,
+                                   uint maxChunksPerWrite,
+                                   bool appendOpen = false)
+        {
+            return new LogWriterWindows(fileName, chunkSize, maxChunksPerWrite, appendOpen);
+        }
+    }
+
+    internal class LogWriterGeneric : IDisposable, ILogWriter
     {
         FileStream _logStream;
-        public unsafe LogWriter(string fileName,
-                                uint chunkSize,
-                                uint maxChunksPerWrite,
-                                bool appendOpen = false)
+        public unsafe LogWriterGeneric(string fileName,
+                                       bool appendOpen = false)
         {
             _logStream = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read & ~FileShare.Inheritable);
             if (appendOpen)
@@ -834,8 +914,11 @@ namespace Ambrosia
         {
             await _logStream.WriteAsync(buffer, offset, length);
         }
+    }
 
-        public static void CreateDirectoryIfNotExists(string path)
+    internal class LogWriterStaticsGeneric : ILogWriterStatic
+    {
+        public void CreateDirectoryIfNotExists(string path)
         {
             if (!Directory.Exists(path))
             {
@@ -843,22 +926,29 @@ namespace Ambrosia
             }
         }
 
-        public static bool DirectoryExists(string path)
+        public bool DirectoryExists(string path)
         {
             return Directory.Exists(path);
         }
 
-        public static bool FileExists(string path)
+        public bool FileExists(string path)
         {
             return File.Exists(path);
         }
 
-        public static void DeleteFile(string path)
+        public void DeleteFile(string path)
         {
             File.Delete(path);
         }
+
+        public ILogWriter Generate(string fileName,
+                                   uint chunkSize,
+                                   uint maxChunksPerWrite,
+                                   bool appendOpen = false)
+        {
+            return new LogWriterGeneric(fileName, appendOpen);
+        }
     }
-#endif
 
 #if WINDOWS_UWP
     // I wrote this version of LogWriter using the documentation here:
@@ -869,7 +959,7 @@ namespace Ambrosia
     //
     // TODO: figure out proper way to handle async LogWriter methods when underlying UWP class only
     // provides a synchronous implementation
-    internal class LogWriter : IDisposable
+    internal class LogWriterUWP : IDisposable, ILogWriter
     {
         StorageFile _file;
         IRandomAccessStream _stream;
@@ -878,10 +968,10 @@ namespace Ambrosia
 
         private ulong _fileSize = 0;
 
-        public LogWriter(string fileName,
-                                uint chunkSize,
-                                uint maxChunksPerWrite,
-                                bool appendOpen = false)
+        public LogWriterUWP(string fileName,
+                                   uint chunkSize,
+                                   uint maxChunksPerWrite,
+                                   bool appendOpen = false)
         {
             InitializeAsync(fileName, appendOpen).Wait();
         }
@@ -985,8 +1075,11 @@ namespace Ambrosia
             Array.Copy(buffer, offset, subBuffer, 0, length);
             _dataWriter.WriteBytes(subBuffer);
         }
+    }
 
-        public static void CreateDirectoryIfNotExists(string path)
+    internal class LogWriterStaticsUWP : ILogWriterStatic
+    {
+        public void CreateDirectoryIfNotExists(string path)
         {
             DirectoryInfo pathInfo = new DirectoryInfo(path);
             string parentPath = pathInfo.Parent.FullName;
@@ -994,7 +1087,7 @@ namespace Ambrosia
             folder.CreateFolderAsync(pathInfo.Name, CreationCollisionOption.OpenIfExists).AsTask().Wait();
         }
 
-        public static bool DirectoryExists(string path)
+        public bool DirectoryExists(string path)
         {
             DirectoryInfo pathInfo = new DirectoryInfo(path);
             string parentPath = pathInfo.Parent.FullName;
@@ -1012,7 +1105,7 @@ namespace Ambrosia
             return result;
         }
 
-        public static bool FileExists(string path)
+        public bool FileExists(string path)
         {
             FileInfo pathInfo = new FileInfo(path);
             string parentPath = pathInfo.Directory.FullName;
@@ -1030,10 +1123,18 @@ namespace Ambrosia
             return result;
         }
 
-        public static void DeleteFile(string path)
+        public void DeleteFile(string path)
         {
             StorageFile file = StorageFile.GetFileFromPathAsync(path).AsTask().Result;
             file.DeleteAsync().AsTask().Wait();
+        }
+
+        public ILogWriter Generate(string fileName,
+                                   uint chunkSize,
+                                   uint maxChunksPerWrite,
+                                   bool appendOpen = false)
+        {
+            return new LogWriterUWP(fileName, chunkSize, maxChunksPerWrite, appendOpen);
         }
     }
 #endif
