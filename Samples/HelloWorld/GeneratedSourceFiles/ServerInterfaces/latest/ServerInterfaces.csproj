@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net46;netcoreapp2.2</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.12" Condition="'$(Configuration)' == 'Release' " />
     <PackageReference Include="Microsoft.Ambrosia.LibCSDebug" Version="1.0.12" Condition="'$(Configuration)' == 'Debug'" />
-    <PackageReference Include="CRA" Version="2019.6.17.4" />
+    <PackageReference Include="Microsoft.CRA" Version="2019.8.8.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
@@ -22,7 +22,7 @@
       <Version>2018.3.2.1</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.2'">
     <PackageReference Include="System.CodeDom">
       <Version>4.5.0</Version>
     </PackageReference>

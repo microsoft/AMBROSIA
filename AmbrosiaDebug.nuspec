@@ -26,9 +26,9 @@
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\net46\AmbrosiaLibCS.pdb" target="lib\net46" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\net46\Ambrosia.exe" target="lib\net46" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\net46\Ambrosia.pdb" target="lib\net46" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.0\AmbrosiaLibCS.dll" target="lib\netcoreapp2.0" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.0\AmbrosiaLibCS.pdb" target="lib\netcoreapp2.0" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.0\Ambrosia.dll" target="lib\netcoreapp2.0" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.0\Ambrosia.pdb" target="lib\netcoreapp2.0" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.2\AmbrosiaLibCS.dll" target="lib\netcoreapp2.2" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.2\AmbrosiaLibCS.pdb" target="lib\netcoreapp2.2" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.2\Ambrosia.dll" target="lib\netcoreapp2.2" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.2\Ambrosia.pdb" target="lib\netcoreapp2.2" />
   </files>
 </package>

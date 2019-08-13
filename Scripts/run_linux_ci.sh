@@ -26,7 +26,7 @@ function check_az_storage_and_bail() {
     fi
 }
 
-FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.0}"
+FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.2}"
 CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
 case $mode in

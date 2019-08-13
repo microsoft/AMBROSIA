@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net46;netcoreapp2.2</TargetFrameworks>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
@@ -39,7 +39,7 @@
       <Version>2018.3.2.1</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.2'">
     <PackageReference Include="System.CodeDom">
       <Version>4.5.0</Version>
     </PackageReference>
