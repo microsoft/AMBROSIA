@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Set defaults if these environment vars aren't present:
-FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.0}"
+FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.2}"
 CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
 if ! which AmbrosiaCS 2>/dev/null; then
@@ -29,7 +29,7 @@ set +x
 echo
 echo "(STEP 2) Use those DLL's to generate proxy code for RPC calls"
 
-CG="AmbrosiaCS CodeGen -f netcoreapp2.0 -f net46"
+CG="AmbrosiaCS CodeGen -f netcoreapp2.2 -f net46"
 set -x
 $CG -o ServerInterfaces  -a ServerAPI/publish/IServer.dll -p ServerAPI/IServer.csproj
 $CG -o Client1Interfaces -a ServerAPI/publish/IServer.dll  -a IClient1/publish/IClient1.dll -p ServerAPI/IServer.csproj -p IClient1/IClient1.csproj

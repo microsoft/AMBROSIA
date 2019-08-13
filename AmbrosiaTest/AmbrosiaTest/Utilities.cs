@@ -48,7 +48,7 @@ namespace AmbrosiaTest
         //*********
         // NetFrameworkTestRun
         // when = true, the test will run under the assumption that .Net Framework files in AmbrosiaTest\bin\x64\debug (or release) directory (from net46 directory)
-        // when = false, the test will run under the assumption that .Net Core files in AmbrosiaTest\bin\x64\debug (or release) directory (from netcoreapp2.0 directory)
+        // when = false, the test will run under the assumption that .Net Core files in AmbrosiaTest\bin\x64\debug (or release) directory (from netcoreapp2.2 directory)
         // .NET CORE only has DLLs, so no AMB exe so run by using "dotnet"
         //*********
         public bool NetFrameworkTestRun = true;
