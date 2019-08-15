@@ -94,7 +94,7 @@ class Ambrosia {
 
       // Send checkpoint.
       let checkpointMessage = new MsgCheckpoint()
-      checkpointMessage.checkpoint = byteArrayFromBuffer(new Buffer(this.onCheckpoint().toString(), 'utf8'))
+      checkpointMessage.checkpoint = byteArrayFromBuffer(this.onCheckpoint())
       this.send(checkpointMessage)
     }
     else if(message instanceof MsgUpgradeTakeCheckpoint) {
