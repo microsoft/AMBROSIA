@@ -90,12 +90,12 @@ class Ambrosia {
       initialMessage.rpc = rpcMessage
 
       // Send initial message.
-      this.send(initialMessage)
+      this.sendBuffer(initialMessage)
 
       // Send checkpoint.
       let checkpointMessage = new MsgCheckpoint()
       checkpointMessage.checkpoint = byteArrayFromBuffer(this.onCheckpoint())
-      this.send(checkpointMessage)
+      this.sendBuffer(checkpointMessage)
     }
     else if(message instanceof MsgUpgradeTakeCheckpoint) {
       throw new Error("Not implemented!")
@@ -114,7 +114,7 @@ class Ambrosia {
       // Send checkpoint.
       let checkpointMessage = new MsgCheckpoint()
       checkpointMessage.checkpoint = byteArrayFromBuffer(new Buffer(this.onCheckpoint()))
-      this.send(checkpointMessage)
+      this.sendBuffer(checkpointMessage)
     }
     else if(message instanceof MsgAttachTo) {
       throw new Error("Not implemented!")
@@ -133,27 +133,19 @@ class Ambrosia {
       return this.replaying
   }
 
-  appendLogEntry(isNondeterministicRequest: boolean, logEntry: AmbrosiaLogEntry, continuation: () => void) {
-    this.trace("appendLogEntry invoked for message")
-
-    let serializedLogEntry = JSON.stringify(logEntry)
-    // console.log("serialized is " )
-    // console.log(serializedLogEntry)
+  selfRPC(logEntry: AmbrosiaLogEntry) {
+    this.trace("selfRPC invoked")
     let message = new MsgRPC()
     message.methodId = 0
     message.isOutgoing = true
     message.isSelfCall = true
-    message.serializedArgs = byteArrayFromBuffer(new Buffer(serializedLogEntry, 'utf8'))
-    // console.log("!! serialized args:")
-    // console.log(message.serializedArgs.toHexString())
-    this.send(message)
-
-    // Invoke continuation after the write.
-    continuation()
+    message.serializedArgs = byteArrayFromBuffer(logEntry)
+    this.sendBuffer(message)
   }
 
-  send(message: Message) {
+  sendBuffer(message: Message) {
     let serialized = serializeMessage(message)
+
     serialized.iterate((x: Buffer) => {
       this.trace("About to send buffer:")
       console.log(x)
@@ -162,10 +154,6 @@ class Ambrosia {
         this.trace("Transmitted buffer with type: " + message.typ + " and size: " + x.byteLength)
       })
     })
-  }
-
-  sync() {
-    // No-op, implicitly sync'd.
   }
 
   trace(message: string) {
