@@ -1042,29 +1042,7 @@ namespace Ambrosia
         }
     }
 
-    public class AmbrosiaRuntimeParams
-    {
-        public int serviceReceiveFromPort;
-        public int serviceSendToPort;
-        public string serviceName;
-        public string AmbrosiaBinariesLocation;
-        public string serviceLogPath;
-        public bool? createService;
-        public bool pauseAtStart;
-        public bool persistLogs;
-        public bool activeActive;
-        public long logTriggerSizeMB;
-        public string storageConnectionString;
-        public long currentVersion;
-        public long upgradeToVersion;
-    }
-
-    public static class AmbrosiaRuntimeParms
-    {
-        public static bool _looseAttach = false;
-    }
-
-    public class AmbrosiaRuntime : VertexBase
+    public class AmbrosiaRuntime
     {
 #if _WINDOWS
         [DllImport("Kernel32.dll", CallingConvention = CallingConvention.Winapi)]
@@ -3870,38 +3848,6 @@ namespace Ambrosia
 #endif
         }
 
-        public override async Task InitializeAsync(object param)
-        {
-            InitializeLogWriterStatics();
-
-            // Workaround because of parameter type limitation in CRA
-            AmbrosiaRuntimeParams p = new AmbrosiaRuntimeParams();
-            XmlSerializer xmlSerializer = new XmlSerializer(p.GetType());
-            using (StringReader textReader = new StringReader((string)param))
-            {
-                p = (AmbrosiaRuntimeParams)xmlSerializer.Deserialize(textReader);
-            }
-
-            bool sharded = false;
-
-            Initialize(
-                p.serviceReceiveFromPort,
-                p.serviceSendToPort,
-                p.serviceName,
-                p.serviceLogPath,
-                p.createService,
-                p.pauseAtStart,
-                p.persistLogs,
-                p.activeActive,
-                p.logTriggerSizeMB,
-                p.storageConnectionString,
-                p.currentVersion,
-                p.upgradeToVersion,
-                sharded
-            );
-            return;
-        }
-
         internal void RuntimeChecksOnProcessStart()
         {
             if (!_createService)
@@ -3955,9 +3901,13 @@ namespace Ambrosia
                        string storageConnectionString,
                        long currentVersion,
                        long upgradeToVersion,
-                       bool sharded
+                       CRAClientLibrary coral,
+                       Action<string, IAsyncVertexInputEndpoint> addInput,
+                       Action<string, IAsyncVertexOutputEndpoint> addOutput
                        )
         {
+            InitializeLogWriterStatics();
+
             _runningRepro = false;
             _currentVersion = currentVersion;
             _upgradeToVersion = upgradeToVersion;
@@ -3979,11 +3929,9 @@ namespace Ambrosia
             _localServiceSendToPort = serviceSendToPort;
             _serviceName = serviceName;
             _storageConnectionString = storageConnectionString;
-            _sharded = sharded;
-            _coral = ClientLibrary;
+            _coral = coral;
 
             Console.WriteLine("Logs directory: {0}", _serviceLogPath);
-
             if (createService == null)
             {
                 if (_logWriterStatics.DirectoryExists(RootDirectory()))
@@ -3995,10 +3943,10 @@ namespace Ambrosia
                     createService = true;
                 }
             }
-            AddAsyncInputEndpoint(AmbrosiaDataInputsName, new AmbrosiaInput(this, "data"));
-            AddAsyncInputEndpoint(AmbrosiaControlInputsName, new AmbrosiaInput(this, "control"));
-            AddAsyncOutputEndpoint(AmbrosiaDataOutputsName, new AmbrosiaOutput(this, "data"));
-            AddAsyncOutputEndpoint(AmbrosiaControlOutputsName, new AmbrosiaOutput(this, "control"));
+            addInput(AmbrosiaDataInputsName, new AmbrosiaInput(this, "data"));
+            addInput(AmbrosiaControlInputsName, new AmbrosiaInput(this, "control"));
+            addOutput(AmbrosiaDataOutputsName, new AmbrosiaOutput(this, "data"));
+            addOutput(AmbrosiaControlOutputsName, new AmbrosiaOutput(this, "control"));
             _createService = createService.Value;
             RecoverOrStartAsync().Wait();
         }
@@ -4087,7 +4035,7 @@ namespace Ambrosia
 
                     try
                     {
-                        if (client.DefineVertexAsync(param.AmbrosiaBinariesLocation, () => new AmbrosiaRuntime()).GetAwaiter().GetResult() != CRAErrorCode.Success)
+                        if (client.DefineVertexAsync(param.AmbrosiaBinariesLocation, () => new AmbrosiaNonShardedRuntime()).GetAwaiter().GetResult() != CRAErrorCode.Success)
                         {
                             throw new Exception();
                         }
