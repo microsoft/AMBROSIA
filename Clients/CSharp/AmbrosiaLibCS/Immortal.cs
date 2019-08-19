@@ -885,7 +885,7 @@ namespace Ambrosia
             return stcs.GetAwaitableTaskWithAdditionalInfoAsync();
         }
 
-        [AttributeUsage(AttributeTargets.Field)]
+        [AttributeUsage(AttributeTargets.Field|AttributeTargets.Property)]
         public class CopyFromDeserializedImmortalAttribute : Attribute
         {
 
@@ -906,11 +906,17 @@ namespace Ambrosia
                 {
                     continue;
                 }
-                if (memberInfo.MemberType == MemberTypes.Field || memberInfo.MemberType == MemberTypes.Property)
+                if (memberInfo.MemberType == MemberTypes.Field)
                 {
                     var fi = (FieldInfo)memberInfo;
                     var v = fi.GetValue(otherImmortal);
                     fi.SetValue(this, v);
+                }
+                else if (memberInfo.MemberType == MemberTypes.Property)
+                {
+                    var pi = (PropertyInfo)memberInfo;
+                    var v = pi.GetValue(otherImmortal);
+                    pi.SetValue(this, v);
                 }
                 else
                 {
