@@ -95,7 +95,7 @@ namespace CRA.Worker
                 storageConnectionString, descriptor, connectionsPoolPerWorker);
 
             worker.DisableDynamicLoading();
-            worker.SideloadVertex(new AmbrosiaRuntime(), "ambrosia");
+            worker.SideloadVertex(new AmbrosiaNonShardedRuntime(), "ambrosia");
 
             worker.Start();
         }
