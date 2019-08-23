@@ -1,5 +1,5 @@
 ﻿using Ambrosia;
-using Server;
+using Client1;
 using System;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -29,6 +29,9 @@ namespace Server
             [DataMember]
             int _messagesReceived = 0;
 
+            private IClient1Proxy _client1;
+            private IClient2Proxy _client2;
+
             public Server()
             {
             }
@@ -46,6 +49,8 @@ namespace Server
 
             protected override async Task<bool> OnFirstStart()
             {
+                _client1 = GetProxy<IServerProxy>("client1");
+                _client2 = GetProxy<IServerProxy>("client2");
                 return true;
             }
         }
@@ -64,6 +69,9 @@ namespace Server
             {
                 sendPort = int.Parse(args[1]);
             }
+
+
+
             if (args.Length == 3)
             {
                 serviceName = args[2];

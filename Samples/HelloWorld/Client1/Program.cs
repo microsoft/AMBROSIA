@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.Threading;
 using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Client1
 {
@@ -40,8 +41,15 @@ namespace Client1
         {
             _server = GetProxy<IServerProxy>(_serverName);
 
+            for (int i = 0; i < 1000; i++)
+            {
+                Console.WriteLine("Client 1: Hello World {0}", 2*i);
+                _server.ReceiveMessageFork("Client 1: Hello World " + (2*i).ToString());
+                Thread.Sleep(1000);
+            }
 
-            _server.ReceiveMessageFork("\n!! Client: Hello World 1!");
+
+            /*_server.ReceiveMessageFork("\n!! Client: Hello World 1!");
 
             using (ConsoleColorScope.SetForeground(ConsoleColor.Yellow))
             {
@@ -56,7 +64,7 @@ namespace Client1
             using (ConsoleColorScope.SetForeground(ConsoleColor.Yellow))
             {
                 Console.WriteLine("\n!! Client: Press enter to shutdown.");
-            }
+            }*/
 
             Console.ReadLine();
             Program.finishedTokenQ.Enqueue(0);
@@ -73,8 +81,8 @@ namespace Client1
 
             int receivePort = 1001;
             int sendPort = 1000;
-            string clientInstanceName = "client";
-            string serverInstanceName = "server";
+            string clientInstanceName = "client1";
+            string serverInstanceName = "server-1";
 
             if (args.Length >= 1)
             {

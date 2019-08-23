@@ -191,7 +191,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob);
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            Thread.Sleep(1000);
 
             // First Server Call
             string logOutputFileName_Server1 = testName + "_Server1.log";

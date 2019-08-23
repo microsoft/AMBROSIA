@@ -155,7 +155,7 @@ namespace Ambrosia
             }
         }
 
-        internal static ConcurrentDictionary<string, InputConnectionRecord> AmbrosiaDeserialize(this ConcurrentDictionary<string, InputConnectionRecord> dict, LogReader readFromStream)
+        internal static ConcurrentDictionary<string, InputConnectionRecord> AmbrosiaDeserialize(this ConcurrentDictionary<string, InputConnectionRecord> dict, LogReader readFromStream, string serviceName)
         {
             var _retVal = new ConcurrentDictionary<string, InputConnectionRecord>();
             var dictCount = readFromStream.ReadIntFixed();
@@ -212,7 +212,7 @@ namespace Ambrosia
             }
         }
 
-        internal static ConcurrentDictionary<string, OutputConnectionRecord> AmbrosiaDeserialize(this ConcurrentDictionary<string, OutputConnectionRecord> dict, LogReader readFromStream, AmbrosiaRuntime thisAmbrosia)
+        internal static ConcurrentDictionary<string, OutputConnectionRecord> AmbrosiaDeserialize(this ConcurrentDictionary<string, OutputConnectionRecord> dict, LogReader readFromStream, AmbrosiaRuntime thisAmbrosia, string serviceName)
         {
             var _retVal = new ConcurrentDictionary<string, OutputConnectionRecord>();
             var dictCount = readFromStream.ReadIntFixed();
@@ -2184,6 +2184,7 @@ namespace Ambrosia
         internal long _globalID = 0;
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
         ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
+        ConcurrentDictionary<string, string> _serviceNames = new ConcurrentDictionary<string, string>();
         // Input / output state of parent shards. This is needed for recovery.
         ConcurrentDictionary<long, MachineState> _parentStates = new ConcurrentDictionary<long, MachineState>();
         ConcurrentDictionary<string, long[]> _ancestors;
@@ -2279,6 +2280,7 @@ namespace Ambrosia
         internal void OnError(int ErrNo, string ErrorMessage)
         {
             Console.WriteLine("FATAL ERROR " + ErrNo.ToString() + ": " + ErrorMessage);
+            Console.WriteLine("OH NO {0}", (DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds);
             Console.Out.Flush();
             Console.Out.Flush();
             _coral.KillLocalWorker("");
@@ -2439,8 +2441,14 @@ namespace Ambrosia
             Recovering = false;
             PrepareToRecoverOrStart();
 
+            if (_shardID < 3)
+            {
+                _createService = true;
+            }
+
             if (!_runningRepro)
             {
+                Console.WriteLine("CHECKPOINT " + CheckpointName(_lastCommittedCheckpoint));
                 RuntimeChecksOnProcessStart();
             }
 
@@ -2451,13 +2459,17 @@ namespace Ambrosia
             }
 
             // Determine if we are recovering
-            if (!_createService)
+            if (ServiceName() == "server-3")
             {
                 Recovering = true;
                 _restartWithRecovery = true;
                 if (_oldShards.Length > 0)
                 {
+                    Console.WriteLine("HERE");
+                    var start = DateTime.Now;
                     RecoverFromShards(checkpointToLoad, testUpgrade);
+                    var end = DateTime.Now;
+                    Console.WriteLine("RecoverFromShards {0}", end - start);
                 } else
                 {
                     MachineState state = new MachineState(_shardID);
@@ -2516,9 +2528,9 @@ namespace Ambrosia
                 // Recover committer
                 state.Committer = new Committer(_localServiceSendToStream, _persistLogs, this, -1, checkpointStream);
                 // Recover input connections
-                state.Inputs = state.Inputs.AmbrosiaDeserialize(checkpointStream);
+                state.Inputs = state.Inputs.AmbrosiaDeserialize(checkpointStream, ServiceName());
                 // Recover output connections
-                state.Outputs = state.Outputs.AmbrosiaDeserialize(checkpointStream, this);
+                state.Outputs = state.Outputs.AmbrosiaDeserialize(checkpointStream, this, ServiceName());
                 UnbufferNonreplayableCalls(state.Outputs);
                 // Restore new service from checkpoint
                 var serviceCheckpoint = new FlexReadBuffer();
@@ -2572,7 +2584,7 @@ namespace Ambrosia
                 await MoveServiceToNextLogFileAsync();
             }
 
-            if (_activeActive || _shardID > 0)
+            if (ServiceName() == "server-2" || ServiceName() == "server-1")
             {
                 // Start task to periodically check if someone's trying to upgrade
                 (new Task(() => CheckForUpgradeAsync())).Start();
@@ -2666,35 +2678,61 @@ namespace Ambrosia
 
         private void EstablishInputConnections(ConcurrentDictionary<long, MachineState> states)
         {
-            foreach (var state in states.Values)
+            Connect(ServiceName(), AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
+            Connect(ServiceName(), AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
+            Console.WriteLine("Establishing connections for " + ServiceName());
+            var connectionResult1 = Connect(ServiceName(), AmbrosiaDataOutputsName, "client2-1", AmbrosiaDataInputsName);
+            var connectionResult2 = Connect(ServiceName(), AmbrosiaControlOutputsName, "client2-1", AmbrosiaControlInputsName);
+            var connectionResult3 = Connect("client2-1", AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
+            var connectionResult4 = Connect("client2-1", AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
+            if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
+                (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
             {
-                foreach (var kv in state.Inputs)
-                {
-                    var destination = kv.Key;
-                    if (destination == "")
-                    {
-                        destination = ServiceName();
-                    }
 
-                    List<CRAErrorCode> results = new List<CRAErrorCode>();
-                    results.Add(Connect(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName));
-                    results.Add(Connect(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName));
-                    if (destination != ServiceName())
-                    {
-                        results.Add(Connect(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName));
-                        results.Add(Connect(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName));
-                    }
-
-                    foreach (var result in results)
-                    {
-                        if (result != CRAErrorCode.Success)
-                        {
-                            Console.WriteLine("EstablishInputConnections: Error connecting to " + destination);
-                            break;
-                        }
-                    }
-                }
+                Console.WriteLine("Error attaching " + ServiceName() + " to " + "client2-1");
+                // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
             }
+            connectionResult1 = Connect(ServiceName(), AmbrosiaDataOutputsName, "client1-1", AmbrosiaDataInputsName);
+            connectionResult2 = Connect(ServiceName(), AmbrosiaControlOutputsName, "client1-1", AmbrosiaControlInputsName);
+            connectionResult3 = Connect("client1-1", AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
+            connectionResult4 = Connect("client1-1", AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
+            if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
+                (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
+            {
+
+                Console.WriteLine("Error attaching " + ServiceName() + " to " + "client1-1");
+                // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
+            }
+            /*  foreach (var state in states.Values)
+              {
+                  foreach (var kv in state.Inputs)
+                  {
+                      var destination = kv.Key;
+                      if (destination == "")
+                      {
+                          destination = ServiceName();
+                      }
+
+                      List<CRAErrorCode> results = new List<CRAErrorCode>();
+                      Console.WriteLine("Establishing connection between {0} and {1}", ServiceName(), destination);
+                      results.Add(Connect(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName));
+                      results.Add(Connect(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName));
+                      if (destination != ServiceName())
+                      {
+                          results.Add(Connect(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName));
+                          results.Add(Connect(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName));
+                      }
+
+                      foreach (var result in results)
+                      {
+                          if (result != CRAErrorCode.Success)
+                          {
+                              Console.WriteLine("EstablishInputConnections: Error connecting to " + destination);
+                              break;
+                          }
+                      }
+                  }
+              }*/
         }
 
         private void RecoverFromShards(long checkpointToLoad = -1, bool testUpgrade = false)
@@ -2706,6 +2744,8 @@ namespace Ambrosia
 
             _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
             _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
+
+            EstablishInputConnections(_parentStates);
             _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
 
             for (int i = 0; i < _oldShards.Length; i++)
@@ -2728,7 +2768,6 @@ namespace Ambrosia
             }
 
             AddParentStates(_parentStates.Values.ToArray());
-            EstablishInputConnections(_parentStates);
 
             // Wait for replay for all shards to occur
             for (int i = 0; i < threads.Length; i++)
@@ -3114,6 +3153,7 @@ namespace Ambrosia
                     await state.Committer.WakeupAsync();
 
                     state.MyRole = AARole.Primary;  // this will stop  and break the loop in the function  replayInput_Sec()
+                    Console.WriteLine("Primary {0}", (DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds);
                     Console.WriteLine("\n\nNOW I'm Primary\n\n");
                     // if we are an upgrader : Time to release the kill file lock and cleanup. Note that since we have the log lock
                     // everyone is prevented from promotion until we succeed or fail.
@@ -3198,10 +3238,11 @@ namespace Ambrosia
                         }
                         replayStream.Read(tempBuf2, 0, inputNameSize);
                         var inputName = Encoding.UTF8.GetString(tempBuf2, 0, inputNameSize);
+                        
                         var newLongPair = new LongPair();
                         newLongPair.First = replayStream.ReadLongFixed();
                         newLongPair.Second = replayStream.ReadLongFixed();
-                        committedInputDict[inputName] = newLongPair;
+                        committedInputDict[inputName] = newLongPair;   
                     }
                     // Read changes in trim to perform and reflect in _outputs
                     watermarksToRead = replayStream.ReadInt();
@@ -3217,6 +3258,7 @@ namespace Ambrosia
                         var inputName = Encoding.UTF8.GetString(tempBuf2, 0, inputNameSize);
                         long seqNo = replayStream.ReadLongFixed();
                         trimDict[inputName] = seqNo;
+                        
                     }
                 }
                 catch
@@ -3355,6 +3397,7 @@ namespace Ambrosia
                     {
                         if (!state.Outputs.TryGetValue(kv.Key, out outputConnectionRecord))
                         {
+                            Console.WriteLine("OUTPUT " + ServiceName() + " " + kv.Key);
                             outputConnectionRecord = new OutputConnectionRecord(this);
                             state.Outputs[kv.Key] = outputConnectionRecord;
                         }
@@ -3491,6 +3534,13 @@ namespace Ambrosia
             {
                 return destination;
             }
+
+            Console.WriteLine("DESTINATION " + destination);
+            if (_serviceNames.ContainsKey(destination))
+            {
+                return _serviceNames[destination];
+            }
+
             if (shardID == -1 && _sharded)
             {
                 shardID = _shardLocator(BitConverter.ToInt32(Encoding.UTF8.GetBytes(destination), 0));
@@ -3507,6 +3557,7 @@ namespace Ambrosia
             switch (localServiceBuffer.Buffer[sizeBytes])
             {
                 case takeCheckpointByte:
+                   
                     // Handle take checkpoint messages - This is here for testing
                     createCheckpointTask = new Task(new Action(MoveServiceToNextLogFileSimple));
                     createCheckpointTask.Start();
@@ -3536,7 +3587,7 @@ namespace Ambrosia
                         }
                         else
                         {
-                            Console.WriteLine("Attaching to {0}", destination);
+                            Console.WriteLine("Attaching to {0} from {1}", destination, ServiceName());
                             var connectionResult1 = Connect(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName);
                             var connectionResult2 = Connect(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName);
                             var connectionResult3 = Connect(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
@@ -3553,6 +3604,7 @@ namespace Ambrosia
                     break;
 
                 case RPCBatchByte:
+                    
                     var restOfBatchOffset = sizeBytes + 1;
                     var memStream = new MemoryStream(localServiceBuffer.Buffer, restOfBatchOffset, localServiceBuffer.Length - restOfBatchOffset);
                     var numRPCs = memStream.ReadInt();
@@ -3576,6 +3628,7 @@ namespace Ambrosia
                     break;
 
                 case RPCByte:
+                   
                     ProcessRPC(localServiceBuffer);
                     // Now process any pending RPC requests from the local service before going async again
                     break;
@@ -3733,6 +3786,9 @@ namespace Ambrosia
             {
                 destString = "";
             }
+            InputConnectionRecord inputConnectionRecord;
+
+
             lock (outputs)
             {
                 if (!outputs.TryGetValue(destString, out outputConnectionRecord))
@@ -3915,6 +3971,13 @@ namespace Ambrosia
             {
                 destString = "";
             }
+            if (destString == "server-3")
+            {
+                _serviceNames["server-1"] = "server-3";
+                _serviceNames["server-2"] = "server-3";
+                _lastShuffleDest = null;
+            } else
+
             if (_sharded)
             {
                 Serializer.SerializeAncestorMessage(writeToStream, ancestorByte, _ancestors[ServiceName()]);
@@ -4037,6 +4100,12 @@ namespace Ambrosia
             {
                 destString = "";
             }
+            if (destString == "server-3")
+            {
+                _serviceNames["server-1"] = "server-3";
+                _serviceNames["server-2"] = "server-3";
+            }
+
             OutputConnectionRecord outputConnectionRecord = GetOutputConnectionRecord(destString);
             // Process remote trim message
             var inputFlexBuffer = new FlexReadBuffer();
@@ -4149,6 +4218,11 @@ namespace Ambrosia
                 inputConnectionRecord.ShardID = ParseServiceName(sourceString).Item2;
                 _inputs[sourceString] = inputConnectionRecord;
                 Console.WriteLine("Adding input:{0}", sourceString);
+                if (sourceString == "server-3")
+                {
+                    _serviceNames["server-1"] = "server-3";
+                    _serviceNames["server-2"] = "server-3";
+                }
             }
             else
             {
@@ -4227,6 +4301,7 @@ namespace Ambrosia
             while (true)
             {
                 await FlexReadBuffer.DeserializeAsync(inputRecord.DataConnectionStream, inputFlexBuffer, ct);
+                Console.WriteLine("Receive data from " + inputName);
                 await ProcessInputMessageAsync(inputRecord, inputName, inputFlexBuffer);
             }
         }
@@ -4429,6 +4504,10 @@ namespace Ambrosia
 
         public void TrimOutput(string key, long lastProcessedID, long lastProcessedReplayableID)
         {
+<<<<<<< Updated upstream
+=======
+            Console.WriteLine("*X* Trimming {0} up to ({1}, {2})", key, lastProcessedID, lastProcessedReplayableID);
+>>>>>>> Stashed changes
             OutputConnectionRecord outputConnectionRecord;
             if (!_outputs.TryGetValue(key, out outputConnectionRecord))
             {
@@ -4502,16 +4581,7 @@ namespace Ambrosia
                 return -1;
             }
 
-            if (_serviceName.Contains("client"))
-            {
-                foreach (var input in _inputs.Keys)
-                {
-                    if (input.Contains("server-2"))
-                    {
-                        return 2;
-                    }
-                }
-            }
+            new Exception("");
 
             return 1;
         }
@@ -4526,12 +4596,15 @@ namespace Ambrosia
                 p = (AmbrosiaRuntimeParams)xmlSerializer.Deserialize(textReader);
             }
 
-            bool runningRepro = false;
+            _runningRepro = false;
             bool sharded = p.shardID > 0;
             _shardID = p.shardID;
             _shardLocator = KeyHashToShard;
             _oldShards = p.oldShards;
             _newShards = p.newShards;
+
+            _serviceNames["server-1"] = "server-1";
+            _serviceNames["server-2"] = "server-2";
 
             Initialize(
                 p.serviceReceiveFromPort,
@@ -4546,7 +4619,6 @@ namespace Ambrosia
                 p.storageConnectionString,
                 p.currentVersion,
                 p.upgradeToVersion,
-                runningRepro,
                 sharded
             );
         }
@@ -4822,7 +4894,15 @@ namespace Ambrosia
                             serializedParams = textWriter.ToString();
                         }
 
+<<<<<<< Updated upstream
                         InstantiateVertex(client, replicaName, shardName, param.AmbrosiaBinariesLocation, serializedParams, _shardID > 0);
+=======
+                        if (client.InstantiateVertex(replicaName, shardName, param.AmbrosiaBinariesLocation, serializedParams) != CRAErrorCode.Success)
+                        {
+                            throw new Exception();
+                        }
+                        Console.WriteLine("Creating endpoints for {0}", shardName);
+>>>>>>> Stashed changes
 
                         client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true);
                         client.AddEndpoint(shardName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true);
