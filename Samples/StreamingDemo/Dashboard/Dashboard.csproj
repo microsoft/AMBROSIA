@@ -18,7 +18,7 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AmbrosiaLibCS" Version="1.0.9" />
+    <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.12" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GeneratedSourceFiles\DashboardAPIGenerated\latest\DashboardAPIGenerated.csproj" />
