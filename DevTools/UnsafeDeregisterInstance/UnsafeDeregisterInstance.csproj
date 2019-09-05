@@ -31,7 +31,7 @@
     <PackageReference Include="WindowsAzure.Storage">
       <Version>9.3.3</Version>
     </PackageReference>
-    <PackageReference Include="Microsoft.CRA" Version="2019.8.8.2" />
+    <PackageReference Include="Microsoft.CRA" Version="2019.8.29.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.2'">
     <PackageReference Include="System.CodeDom">

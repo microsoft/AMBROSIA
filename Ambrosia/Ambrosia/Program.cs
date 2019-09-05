@@ -4099,10 +4099,10 @@ namespace Ambrosia
                         {
                             throw new Exception();
                         }
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true);
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true);
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaControlInputsName, true, true);
-                        client.AddEndpoint(param.serviceName, AmbrosiaRuntime.AmbrosiaControlOutputsName, false, true);
+                        client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true).Wait();
+                        client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true).Wait();
+                        client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaControlInputsName, true, true).Wait();
+                        client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaControlOutputsName, false, true).Wait();
                     }
                     catch (Exception e)
                     {
