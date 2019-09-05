@@ -3852,22 +3852,7 @@ namespace Ambrosia
 
         public override async Task InitializeAsync(object param)
         {
-#if WINDOWS_UWP
-            _logWriterStatics = new LogWriterStaticsUWP();
-#endif
-#if NETFRAMEWORK
-            _logWriterStatics = new LogWriterStaticsWindows();
-#endif
-#if NETCORE
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                _logWriterStatics = new LogWriterStaticsWindows();
-            }
-            else
-            {
-                _logWriterStatics = new LogWriterStaticsGeneric();
-            }
-#endif
+            InitializeLogWriter();
 
             // Workaround because of parameter type limitation in CRA
             AmbrosiaRuntimeParams p = new AmbrosiaRuntimeParams();
@@ -3938,6 +3923,26 @@ namespace Ambrosia
             }
         }
 
+        public void InitializeLogWriter()
+        {
+#if WINDOWS_UWP
+            _logWriterStatics = new LogWriterStaticsUWP();
+#endif
+#if NETFRAMEWORK
+            _logWriterStatics = new LogWriterStaticsWindows();
+#endif
+#if NETCORE
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                _logWriterStatics = new LogWriterStaticsWindows();
+            }
+            else
+            {
+                _logWriterStatics = new LogWriterStaticsGeneric();
+            }
+#endif
+        }
+
         public void Initialize(int serviceReceiveFromPort,
                        int serviceSendToPort,
                        string serviceName,
@@ -4006,6 +4011,7 @@ namespace Ambrosia
                                       int serviceReceiveFromPort,
                                       int serviceSendToPort)
         {
+            InitializeLogWriter();
             _localServiceReceiveFromPort = serviceReceiveFromPort;
             _localServiceSendToPort = serviceSendToPort;
             _currentVersion = version;
