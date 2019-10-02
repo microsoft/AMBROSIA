@@ -3850,7 +3850,7 @@ namespace Ambrosia
         {
         }
 
-        public override async Task InitializeAsync(object param)
+        private void InitializeLogWriterStatics()
         {
 #if WINDOWS_UWP
             _logWriterStatics = new LogWriterStaticsUWP();
@@ -3868,6 +3868,11 @@ namespace Ambrosia
                 _logWriterStatics = new LogWriterStaticsGeneric();
             }
 #endif
+        }
+
+        public override async Task InitializeAsync(object param)
+        {
+            InitializeLogWriterStatics();
 
             // Workaround because of parameter type limitation in CRA
             AmbrosiaRuntimeParams p = new AmbrosiaRuntimeParams();
@@ -4016,6 +4021,7 @@ namespace Ambrosia
             _serviceName = serviceName;
             _sharded = false;
             _createService = false;
+            InitializeLogWriterStatics();
             RecoverOrStartAsync(checkpointToLoad, testUpgrade).Wait();
         }
     }
@@ -4029,7 +4035,7 @@ namespace Ambrosia
         private static int _serviceSendToPort = -1;
         private static string _serviceLogPath = Path.Combine(Path.GetPathRoot(Path.GetFullPath(".")), "AmbrosiaLogs") + Path.DirectorySeparatorChar;
         private static string _binariesLocation = "AmbrosiaBinaries";
-        private static long _checkpointToLoad = 0;
+        private static long _checkpointToLoad = 1;
         private static bool _isTestingUpgrade = false;
         private static AmbrosiaRecoveryModes _recoveryMode = AmbrosiaRecoveryModes.A;
         private static bool _isActiveActive = false;
