@@ -37,7 +37,7 @@
       <Version>9.3.3</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.CRA">
-      <Version>2019.8.29.1</Version>
+      <Version>2019.10.2.1</Version>
     </PackageReference>
   </ItemGroup>
 
