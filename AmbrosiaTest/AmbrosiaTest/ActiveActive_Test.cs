@@ -1219,13 +1219,15 @@ namespace AmbrosiaTest
         }
 
         //****************************
-        // The basic test of Active Active where kill primary server
+        // The test where add node to the active active before killing primary
         // 1 client 
-        // 3 servers - primary, checkpointing secondary and active secondary (can become primary)
+        // 3 servers - primary, checkpointing secondary and active secondary 
+        // 
+        // Then add a 4th server which is an active secondary to the active secondary
+        // Kill Primary which makes active secondary the primary and 4th the secondary
+        // Kill the new primary (which was originally the secondary)
+        // Now Server4 becomes the primary
         //
-        // killing first server (primary) will then have active secondary become primary
-        // restarting first server will make it the active secondary
-        //  
         //****************************
         [TestMethod]
         public void AMB_ActiveActive_AddNodeBeforeKillPrimary_Test()
@@ -1370,7 +1372,7 @@ namespace AmbrosiaTest
             int serverProcessID4 = MyUtils.StartPerfServer("4001", "4000", clientJobName, serverName, logOutputFileName_Server4, 1, false);
 
             // Give it 10 seconds to do something before killing it
-            Thread.Sleep(15000);
+            Thread.Sleep(10000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             //Kill Primary Server (server1) at this point as well as ImmCoord1
@@ -1378,7 +1380,7 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID1);
 
             // at this point, server3 (active secondary) becomes primary and server4 becomes active secondary
-            Thread.Sleep(15000);
+            Thread.Sleep(10000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             //Kill new Primary Server (server3) at this point as well as ImmCoord3
@@ -1390,7 +1392,7 @@ namespace AmbrosiaTest
             // but when server3 (new primary) died, server4 became new primary
             Thread.Sleep(2000);
 
-            // Do nothing with Server1 and server3 let them stay dead
+            // Do nothing with Server1 and server3 as they were killed as part of the process
 
             //Delay until finished ... looking at the most recent primary (server4) but also verify others hit done too
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server4, byteSize, 30, false, testName, true);  // Total Bytes received needs to be accurate
