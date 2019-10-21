@@ -5,7 +5,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.12" Condition="'$(Configuration)' == 'Release' " />
     <PackageReference Include="Microsoft.Ambrosia.LibCSDebug" Version="1.0.12" Condition="'$(Configuration)' == 'Debug'" />
-    <PackageReference Include="Microsoft.CRA" Version="2019.10.2.1" />
+    <PackageReference Include="Microsoft.CRA" Version="2019.10.21.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
