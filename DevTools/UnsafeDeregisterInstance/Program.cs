@@ -19,27 +19,28 @@ namespace UnsafeDeregisterService
                 Console.WriteLine("Usage: UnsafeDeregisterInstance InstanceName");
                 return;
             }
-            var client = new CRAClientLibrary(Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING"));
+            var dataProvider = new CRA.DataProvider.Azure.AzureDataProvider(Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING"));
+            var client = new CRAClientLibrary(dataProvider);
             var serviceName = args[0];
-            foreach (var endpt in client.GetInputEndpoints(serviceName))
+            foreach (var endpt in client.GetInputEndpointsAsync(serviceName).GetAwaiter().GetResult())
             {
                 client.DeleteEndpoint(serviceName, endpt);
             }
-            foreach (var endpt in client.GetOutputEndpoints(serviceName))
+            foreach (var endpt in client.GetOutputEndpointsAsync(serviceName).GetAwaiter().GetResult())
             {
                 client.DeleteEndpoint(serviceName, endpt);
             }
-            foreach (var conn in client.GetConnectionsFromVertex(serviceName))
+            foreach (var conn in client.GetConnectionsFromVertexAsync(serviceName).GetAwaiter().GetResult())
             {
-                client.DeleteConnectionInfo(conn);
+                client.DeleteConnectionInfoAsync(conn).GetAwaiter().GetResult();
             }
-            foreach (var conn in client.GetConnectionsToVertex(serviceName))
+            foreach (var conn in client.GetConnectionsToVertexAsync(serviceName).GetAwaiter().GetResult())
             {
-                client.DeleteConnectionInfo(conn);
+                client.DeleteConnectionInfoAsync(conn).GetAwaiter().GetResult();
             }
             try
             {
-                client.DeleteVertex(serviceName);
+                client.DeleteVertexAsync(serviceName).GetAwaiter().GetResult();
             }
             catch { }
         }

@@ -36,7 +36,6 @@ namespace Job
             // Compute size of serialized arguments
             var totalArgSize = 0;
 
-
             var wp = this.StartRPC<object>(methodIdentifier: 1 /* method identifier for PrintBytesReceived */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
 			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
 

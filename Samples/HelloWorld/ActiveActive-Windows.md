@@ -12,7 +12,7 @@ This walkthrough assumes that readers have already read [HOWTO-WINDOWS.md](./HOW
 We begin in a manner very similar to what is described in [HOWTO-WINDOWS.md](./HOWTO-WINDOWS.md), defining our instances. This time, though, we also logically define replicas for those instances which we will run later:
 
 ```bat
-cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.0\
+cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2\
 dotnet Ambrosia.dll RegisterInstance -i=client -rp=1000 -sp=1001 -l=C:\logs\
 dotnet Ambrosia.dll RegisterInstance -i=server -rp=2000 -sp=2001 -l=C:\logs\ -aa
 dotnet Ambrosia.dll AddReplica -i=server -rp=3000 -sp=3001 -l=C:\logs\ -r=1
@@ -25,56 +25,56 @@ After the two RegisterInstance gestures, we see two AddReplica gestures for the 
 To run all these, instead of 2 process pairs, we now need 4 (8 processes and console windows in total). To run the server ImmortalCoordinator:
 
  ```bat
- cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.0
+ cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2
  dotnet ImmortalCoordinator.dll -instanceName=server -port=2500
 ```
 
 To run the client ImmortalCoordinator:
 
 ```bat
-cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.0
+cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2
 dotnet ImmortalCoordinator.dll -instanceName=client -port=1500
 ```
 
 To run the Immortal Coordinator for the first server replica
 
  ```bat
- cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.0
+ cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2
  dotnet ImmortalCoordinator.dll -instanceName=server -port=3500 -r=1
 ```
 
 To run the Immortal Coordinator for the second server replica
 
  ```bat
- cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.0
+ cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2
  dotnet ImmortalCoordinator.dll -instanceName=server -port=4500 -r=2
 ```
 
 To run the HelloWorld server:
 
 ```bat
-cd Server\bin\x64\Debug\netcoreapp2.0
+cd Server\bin\x64\Debug\netcoreapp2.2
 dotnet Server.dll
 ```
 
 To run the HelloWorld server first replica:
 
 ```bat
-cd Server\bin\x64\Debug\netcoreapp2.0
+cd Server\bin\x64\Debug\netcoreapp2.2
 dotnet Server.dll 3001 3000
 ```
 
 To run the HelloWorld server second replica:
 
 ```bat
-cd Server\bin\x64\Debug\netcoreapp2.0
+cd Server\bin\x64\Debug\netcoreapp2.2
 dotnet Server.dll 4001 4000
 ```
 
 To run the HelloWorld client:
 
 ```bat
-cd Client1\bin\x64\Debug\netcoreapp2.0
+cd Client1\bin\x64\Debug\netcoreapp2.2
 dotnet Client1.dll
 ```
 Like the AddReplica gesture, the server ImmortalCoordinator calls may use a -aa flag, although it's not necessary since this was already established when registering the server instance and its replicas.

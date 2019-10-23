@@ -35,7 +35,6 @@ namespace Server
             // Make call, wait for reply
             // Compute size of serialized arguments
             var totalArgSize = 0;
-
 			int arg0Size = 0;
 			byte[] arg0Bytes = null;
 
@@ -189,7 +188,6 @@ wp.curLength += arg0Bytes.Length;
             // Make call, wait for reply
             // Compute size of serialized arguments
             var totalArgSize = 0;
-
 
             var wp = this.StartRPC<object>(methodIdentifier: 3 /* method identifier for PrintBytesReceived */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
 			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };

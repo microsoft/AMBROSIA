@@ -11,7 +11,7 @@ ADD Ambrosia                      /ambrosia/Ambrosia
 ADD DevTools                      /ambrosia/DevTools
 WORKDIR /ambrosia
 
-ENV AMBROSIA_DOTNET_FRAMEWORK=netcoreapp2.0 \
+ENV AMBROSIA_DOTNET_FRAMEWORK=netcoreapp2.2 \
     AMBROSIA_DOTNET_CONF=Release \
     AMBROSIA_DOTNET_PLATFORM=linux-x64
 
@@ -19,7 +19,7 @@ ENV AMBROSIA_DOTNET_FRAMEWORK=netcoreapp2.0 \
 ENV BLDFLAGS " -c Release -f $AMBROSIA_DOTNET_FRAMEWORK -r $AMBROSIA_DOTNET_PLATFORM "
 ENV BUILDIT "dotnet publish $BLDFLAGS"
 # NOTE: use the following for a debug build of AMBROSIA:
-# ENV BLDFLAGS " -c Debug -f netcoreapp2.0 -r linux-x64 -p:DefineConstants=DEBUG "
+# ENV BLDFLAGS " -c Debug -f netcoreapp2.2 -r linux-x64 -p:DefineConstants=DEBUG "
 
 # (1) Build the core executables and libraries:
 # ---------------------------------------------

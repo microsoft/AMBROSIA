@@ -547,8 +547,8 @@ namespace AmbrosiaTest
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(serverProcessID2);
-            MyUtils.KillProcess(serverProcessID3);
             MyUtils.KillProcess(serverProcessID_Restarted1);
+            MyUtils.KillProcess(serverProcessID3); // primary
             MyUtils.KillProcess(clientJobProcessID);
             MyUtils.KillProcess(ImmCoordProcessID2);
             MyUtils.KillProcess(ImmCoordProcessID3);
