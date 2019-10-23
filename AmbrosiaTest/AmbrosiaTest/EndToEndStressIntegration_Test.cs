@@ -974,7 +974,7 @@ namespace AmbrosiaTest
 
         }
 
-        //** Upgrade scenario where the server is upgraded server before client is finished but the 
+        //** Upgrade scenario where the server is upgraded  before client is finished but the 
         //** Primary is not killed and it is automatically killed
         [TestMethod]
         public void AMB_UpgradeActiveActivePrimaryOnly_Test()

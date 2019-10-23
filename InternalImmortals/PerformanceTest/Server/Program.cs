@@ -59,7 +59,7 @@ namespace Server
         }
         protected override void BecomingPrimary()
         {
-            Console.WriteLine("Becoming a primary now");
+            Console.WriteLine("*X* Becoming a primary now");
         }
     }
 

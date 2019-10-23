@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>AmbrosiaLibCSDebug</id>
-    <version>1.0.11</version>
-    <title>AmbrosiaLibCS.Debug</title>
+    <id>Microsoft.Ambrosia.LibCSDebug</id>
+    <version>1.0.12</version>
+    <title>Microsoft.Ambrosia.LibCS.Debug</title>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <projectUrl>https://github.com/Microsoft/AMBROSIA</projectUrl>
-	<licenseUrl>https://github.com/Microsoft/AMBROSIA/blob/master/LICENSE</licenseUrl>
+    <license type="expression">MIT</license>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>The AmbrosiaLibCS Binary Distribution - Debug version</description>
+    <description>The Microsoft.AmbrosiaLibCS Binary Distribution - Debug version</description>
     <releaseNotes>None yet</releaseNotes>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <language>en-US</language>
@@ -26,9 +26,9 @@
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\net46\AmbrosiaLibCS.pdb" target="lib\net46" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\net46\Ambrosia.exe" target="lib\net46" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\net46\Ambrosia.pdb" target="lib\net46" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.0\AmbrosiaLibCS.dll" target="lib\netcoreapp2.0" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.0\AmbrosiaLibCS.pdb" target="lib\netcoreapp2.0" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.0\Ambrosia.dll" target="lib\netcoreapp2.0" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.0\Ambrosia.pdb" target="lib\netcoreapp2.0" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.2\AmbrosiaLibCS.dll" target="lib\netcoreapp2.2" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.2\AmbrosiaLibCS.pdb" target="lib\netcoreapp2.2" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.2\Ambrosia.dll" target="lib\netcoreapp2.2" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\Debug\netcoreapp2.2\Ambrosia.pdb" target="lib\netcoreapp2.2" />
   </files>
 </package>
