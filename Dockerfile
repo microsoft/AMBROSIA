@@ -1,6 +1,7 @@
 # FROM microsoft/dotnet:2.1-sdk
 # FROM microsoft/dotnet:2.0.9-sdk-2.1.202
-FROM microsoft/dotnet:2.0-sdk
+# FROM microsoft/dotnet:2.0-sdk
+FROM microsoft/dotnet:2.2-sdk-2.2.108
 
 RUN apt-get update -y && \
     apt-get install -y libunwind-dev apache2-utils make gcc
