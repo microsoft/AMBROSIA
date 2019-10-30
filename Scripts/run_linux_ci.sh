@@ -15,6 +15,7 @@ if ! [[ -e ./build_docker_images.sh ]]; then
     cd `dirname $0`/../
 fi
 # Set up common definitions.
+echo "*********  Setup Common Definitions ********************"
 source Scripts/ci_common_defs.sh
 
 function check_az_storage_and_bail() {
@@ -40,10 +41,12 @@ case $mode in
       
       # Application 1: PTI
       # ----------------------------------------
+	  echo "*********  PTI ********************"
       ./Scripts/internal/run_linux_PTI_docker.sh
 
       # Application 2: Hello World Sample
       # ----------------------------------------
+	  echo "*********  Hello World Sample ********************"
       # docker --rm ambrosia/ambrosia-dev ./Samples/HelloWorld/build_dotnetcore.sh
       cd "$AMBROSIA_ROOT"/Samples/HelloWorld
       docker build -t ambrosia-hello .
@@ -68,17 +71,21 @@ case $mode in
         
       echo "Executing raw-Linux, non-Docker build."
       export PATH="$PATH:$AMBROSIA_ROOT/bin"
+	  
+	  echo "********* Build DotNet Core ********************"
       cd "$AMBROSIA_ROOT"
       ./build_dotnetcore_bindist.sh
 
       # Build Application 1: PTI
       # ----------------------------------------
+	  echo "********* PTI ********************"
       cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
       ./build_dotnetcore.sh
 
       # Build Application 2: Hello World Sample
       # ----------------------------------------
-      cd "$AMBROSIA_ROOT"/Samples/HelloWorld
+  	  echo "*********  Hello World Sample ********************"
+	  cd "$AMBROSIA_ROOT"/Samples/HelloWorld
       #echo "HelloWorld: First make sure a straight-to-the-solution build works:"
       #dotnet publish -c $CONF -f $FMWK HelloWorld.sln
       echo "HelloWorld: Then make sure it builds from scratch:"
@@ -91,6 +98,8 @@ case $mode in
       
       # Test Application: Native client hello
       # ----------------------------------------
+   	  echo "*********  Test App: Hello World ********************"
+
       cd "$AMBROSIA_ROOT"/Clients/C
       ./run_hello_world.sh || echo "Allowed failure for now."
 
@@ -104,10 +113,16 @@ case $mode in
       
       # Test Application: PTI (last because it's slow)
       # ----------------------------------------------
-      cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+	  echo "********* Test App PTI ********************"
+	  sleep 10
+	  cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
       ./run_small_PTI_and_shutdown.sh $INSTPREF      
-      
+	  echo "*****************************"
+	  sleep 10
+     	  
       ;;
+	 	  
+	  
 
   *)
       echo "$0: ERROR: unknown first argument: $mode"
