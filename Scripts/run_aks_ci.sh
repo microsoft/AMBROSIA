@@ -50,7 +50,7 @@ NUM_ROUNDS=2 ./run-end-to-end-perftest-example.sh
 #fi
 
 #kubectl logs -f "$POD" \
-  || echo "Ok if this exits with error for now."
+ # || echo "Ok if this exits with error for now."
 
 echo "Cleaning up..."
 # Option 1:
