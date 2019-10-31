@@ -52,9 +52,9 @@ NUM_ROUNDS=2 ./run-end-to-end-perftest-example.sh
 #kubectl logs -f "$POD" \
  # || echo "Ok if this exits with error for now."
 
-echo "Cleaning up..."
+echo "Cleaning up... cleaning most as all doesn't work in CI script"
 # Option 1:
-./Clean-AKS.sh all
+./Clean-AKS.sh most
 
 # Leave the passive resources, but delete the active pods:
 #kubectl delete pods,deployments --all

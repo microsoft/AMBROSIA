@@ -35,12 +35,18 @@ INSTANCE_PREFIX=""
 if [ $# -ne 0 ];
 then INSTANCE_PREFIX="$1"
 fi
-CLIENTNAME=${INSTANCE_PREFIX}dockC
-SERVERNAME=${INSTANCE_PREFIX}dockS
+CLIENTNAME=${INSTANCE_PREFIX}dockc
+SERVERNAME=${INSTANCE_PREFIX}docks
 
-#-- Use Client name and server as part of Azure object so need to lower case
-CLIENTNAME="${CLIENTNAME,,}"
-SERVERNAME="${SERVERNAME,,}"
+echo "****************************"
+echo "********  $INSTANCE_PREFIX"
+echo "********  $CLIENTNAME, $SERVERNAME"
+echo "****************************"
+
+#-- Use Client name and server as part of Azure object so need to lower case -- not working on MacOS
+#CLIENTNAME="${CLIENTNAME,,}"
+#SERVERNAME="${SERVERNAME,,}"
+
 
 
 if ! which Ambrosia; then
@@ -105,3 +111,4 @@ UnsafeDeregisterInstance $SERVERNAME || true
 rm $slog $jlog
 set +x
 echo "All done."
+sleep 30
