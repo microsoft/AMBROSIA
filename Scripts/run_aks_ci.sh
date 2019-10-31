@@ -35,28 +35,28 @@ echo
 echo "Launching end-to-end test..." 
 NUM_ROUNDS=2 ./run-end-to-end-perftest-example.sh
 
-for ((i=0; i<10; i++)); do
-    sleep 2
-    kubectl get pods
-done
+#for ((i=0; i<10; i++)); do
+#    sleep 2
+#    kubectl get pods
+#done
 
-kubectl describe pods
+#kubectl describe pods
 
-POD=`kubectl get pods | grep Running | grep perftestclient | head -n1 | awk '{ print $1 }'`
+#POD=`kubectl get pods | grep Running | grep perftestclient | head -n1 | awk '{ print $1 }'`
 
-if [ "$POD" == ""]; then
-    echo "ERROR: could not find running client pod."
-    exit 1
-fi
+#if [ "$POD" == ""]; then
+#    echo "ERROR: could not find running client pod."
+#    exit 1
+#fi
 
-kubectl logs -f "$POD" \
+#kubectl logs -f "$POD" \
   || echo "Ok if this exits with error for now."
 
 echo "Cleaning up..."
 # Option 1:
-# ./Clean-AKS.sh all
+./Clean-AKS.sh all
 
 # Leave the passive resources, but delete the active pods:
-kubectl delete pods,deployments --all
+#kubectl delete pods,deployments --all
 
 
