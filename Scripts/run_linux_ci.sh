@@ -76,13 +76,7 @@ case $mode in
       cd "$AMBROSIA_ROOT"
       ./build_dotnetcore_bindist.sh
 
-      # Build Application 1: PTI
-      # ----------------------------------------
-	  echo "********* PTI ********************"
-      cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
-      ./build_dotnetcore.sh
-
-      # Build Application 2: Hello World Sample
+      # Build Application: Hello World Sample
       # ----------------------------------------
   	  echo "*********  Hello World Sample ********************"
 	  cd "$AMBROSIA_ROOT"/Samples/HelloWorld
@@ -110,7 +104,13 @@ case $mode in
       # # Expects stdin, so we pipe 'yes' to it:
       # yes | ./run_helloworld_both.sh || echo "Allowed failure for now."
       
-      
+	  # Build Application: PTI
+      # ----------------------------------------
+	  echo "********* PTI ********************"
+      cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
+      ./build_dotnetcore.sh
+
+  
       # Test Application: PTI (last because it's slow)
       # ----------------------------------------------
 	  echo "********* Test App PTI ********************"
@@ -119,6 +119,8 @@ case $mode in
       ./run_small_PTI_and_shutdown.sh $INSTPREF      
 	  echo "*****************************"
 	  sleep 10
+
+
      	  
       ;;
 	 	  
