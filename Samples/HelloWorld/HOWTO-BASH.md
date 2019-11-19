@@ -50,8 +50,8 @@ Before we can run the client/server, we need to register metadata
 about these AMBROSIA instances with in the cloud table storage.  Pick
 a name for your client and server instances.
 
-    Ambrosia RegisterInstance -i myclient --rp 1000 --sp 1001 -l ./ambrosia_logs
-    Ambrosia RegisterInstance -i myserver --rp 2000 --sp 2001 -l ./ambrosia_logs
+    Ambrosia RegisterInstance -i myclient --rp 2000 --sp 2001 -l ./ambrosia_logs
+    Ambrosia RegisterInstance -i myserver --rp 3000 --sp 3001 -l ./ambrosia_logs
 
 We've told AMBROSIA that it will use `./ambrosia_logs` for storing
 logs locally, but in a production environment of course logs would
@@ -65,7 +65,7 @@ the configuration information that will be used by the
 `runAmbrosiaService.sh` script to launch your process.
 
     export AMBROSIA_INSTANCE_NAME=myserver
-	export AMBROSIA_IMMORTALCOORDINATOR_PORT=2500
+	export AMBROSIA_IMMORTALCOORDINATOR_PORT=3500
 	export AZURE_STORAGE_CONN_STRING=...
 
 To launch a service we're going to use a convenience script called
@@ -81,7 +81,7 @@ You'll see a lot of output, with output from the coordinator tagged
 Alternatively, you could start ImmortalCoordinator yourself, by using
 two separate terminals to run:
 
-    ImmortalCoordinator -i myserver -p 2500
+    ImmortalCoordinator -i myserver -p 3500
     dotnet Server/publish/Server.dll myserver
 
 #### Running another instance.
@@ -90,7 +90,7 @@ Now you have the server running, but for this to be interesting, we
 need another client to connect to the server.
 
     export AMBROSIA_INSTANCE_NAME=myclient
-	export AMBROSIA_IMMORTALCOORDINATOR_PORT=1500
+	export AMBROSIA_IMMORTALCOORDINATOR_PORT=2500
 	export AZURE_STORAGE_CONN_STRING=...
 	runAmbrosiaService.sh dotnet Client1/Publish/Client1.dll myclient myserver
 

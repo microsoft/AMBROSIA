@@ -62,20 +62,30 @@ namespace Client2
         {
             finishedTokenQ = new AsyncQueue<int>();
 
-            int receivePort = 1001;
-            int sendPort = 1000;
+            int receivePort = 2001;
+            int sendPort = 2000;
             string clientInstanceName = "client";
             string serverInstanceName = "server";
 
             if (args.Length >= 1)
             {
-                clientInstanceName = args[0];
+                receivePort = Int32.Parse(args[0]); 
             }
 
-            if (args.Length == 2)
+            if (args.Length >= 2)
             {
-                serverInstanceName = args[1];
+                sendPort = Int32.Parse(args[1]); 
             }
+
+            if (args.Length >= 3)
+            {
+                clientInstanceName = args[2];
+            }
+
+            if (args.Length == 4)
+            {
+                serverInstanceName = args[3];
+            } 
 
             Client2 client = new Client2(serverInstanceName);
             using (var c = AmbrosiaFactory.Deploy<IClient2>(clientInstanceName, client, receivePort, sendPort))

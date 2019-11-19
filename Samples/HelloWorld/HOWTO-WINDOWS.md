@@ -24,13 +24,13 @@ For the purpose of this tutorial, we'll assume the following parameters:
 
 - Log directory: `C:\logs\`
 - Client instance name: `client`
-- Client ImmortalCoordinator receive port: `1000`
-- Client ImmortalCoordinator send port: `1001`
-- Client ImmortalCoordinator CRA port: `1500`
+- Client ImmortalCoordinator receive port: `2000`
+- Client ImmortalCoordinator send port: `2001`
+- Client ImmortalCoordinator CRA port: `2500`
 - Server instance name: `server`
-- Server ImmortalCoordinator receive port: `2000`
-- Server ImmortalCoordinator send port: `2001`
-- Server ImmortalCoordinator CRA port: `2500`
+- Server ImmortalCoordinator receive port: `3000`
+- Server ImmortalCoordinator send port: `3001`
+- Server ImmortalCoordinator CRA port: `3500`
 
 ### Storage Connection String
 
@@ -43,8 +43,8 @@ so that other Immortal instances can find them. Open a command prompt and enter 
 
 ```bat
 cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2\
-dotnet Ambrosia.dll RegisterInstance -i=client -rp=1000 -sp=1001 -l=C:\logs\
-dotnet Ambrosia.dll RegisterInstance -i=server -rp=2000 -sp=2001 -l=C:\logs\
+dotnet Ambrosia.dll RegisterInstance -i=client -rp=2000 -sp=2001 -l=C:\logs\
+dotnet Ambrosia.dll RegisterInstance -i=server -rp=3000 -sp=3001 -l=C:\logs\
 ```
 
 When each of these completes successfully, you will see the following message, one for each ```RegisterInstance```.
@@ -66,14 +66,14 @@ To run the server ImmortalCoordinator, in the first console window:
 
  ```bat
  cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2
- dotnet ImmortalCoordinator.dll --instanceName=server --port=2500
+ dotnet ImmortalCoordinator.dll --instanceName=server --port=3500
 ```
 
 To run the client ImmortalCoordinator, in the second console window:
 
 ```bat
 cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2
-dotnet ImmortalCoordinator.dll --instanceName=client --port=1500
+dotnet ImmortalCoordinator.dll --instanceName=client --port=2500
 ```
 
 To run the HelloWorld server, in the third console window:

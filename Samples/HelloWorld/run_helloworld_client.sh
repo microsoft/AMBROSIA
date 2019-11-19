@@ -4,9 +4,9 @@
 set -euo pipefail
 cd `dirname $0`
 
-PORT1=1000
-PORT2=1001
-CRAPORT1=1500
+PORT1=2000
+PORT2=2001
+CRAPORT1=2500
 
 ME=`whoami | sed 's/[^a-zA-Z0-9]//g'`
 CLIENTNAME=${ME}client
@@ -37,6 +37,6 @@ clog=`mktemp client-coord.XXXX.log`
 set -x
 AMBROSIA_INSTANCE_NAME=$CLIENTNAME AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT1 \
 COORDTAG=CoordCli AMBROSIA_IMMORTALCOORDINATOR_LOG=$clog \
-  runAmbrosiaService.sh dotnet Client1/publish/Client1.dll $CLIENTNAME $SERVERNAME
+  runAmbrosiaService.sh dotnet Client1/publish/Client1.dll $PORT2 $PORT1 $CLIENTNAME $SERVERNAME
 set +x
 echo "HelloWorld Client finished."

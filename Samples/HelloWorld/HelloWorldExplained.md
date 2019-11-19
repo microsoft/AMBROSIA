@@ -62,8 +62,8 @@ Note that the Immortal class defined above must be instantiated in a running C# 
 ```
         static void Main(string[] args)
         {
-            int receivePort = 2001;
-            int sendPort = 2000;
+            int receivePort = 3001;
+            int sendPort = 3000;
             string serviceName = "server";
 
             if (args.Length == 1)
@@ -156,8 +156,8 @@ After pressing Enter, the program continues, sending two more messages. The last
         {
             finishedTokenQ = new AsyncQueue<int>();
 
-            int receivePort = 1001;
-            int sendPort = 1000;
+            int receivePort = 2001;
+            int sendPort = 2000;
             string clientInstanceName = "client";
             string serverInstanceName = "server";
 
