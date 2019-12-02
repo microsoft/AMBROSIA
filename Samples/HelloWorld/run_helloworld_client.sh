@@ -4,9 +4,9 @@
 set -euo pipefail
 cd `dirname $0`
 
-PORT1=1000
-PORT2=1001
-CRAPORT1=1500
+PORT1=3000
+PORT2=3001
+CRAPORT1=3500
 
 ME=`whoami | sed 's/[^a-zA-Z0-9]//g'`
 CLIENTNAME=${ME}client

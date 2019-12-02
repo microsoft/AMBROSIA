@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define ZLDEBUG
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +16,6 @@ using System.Xml;
 using LocalAmbrosiaRuntime;
 using Remote.Linq.Expressions;
 using static Ambrosia.StreamCommunicator;
-
 namespace Ambrosia
 {
     [DataContract]
@@ -42,6 +42,8 @@ namespace Ambrosia
         private Dispatcher _dispatcher;
         private static FlexReadBuffer _inputFlexBuffer;
         private static int _cursor;
+
+        private long _seqNoWatermark = -1;
 
         public bool IsPrimary = false;
 
@@ -262,6 +264,12 @@ namespace Ambrosia
 #if DEBUG
             //Console.WriteLine($"Dispatch loop starting on task '{Thread.CurrentThread.ManagedThreadId}'");
 #endif
+
+            // __zl__
+            // new PRC encoding:
+            //               |m|f|b| lFR|n| args|
+            // |R|W|ret|
+            //               |n|returnValue|
 
             #region RPC Encoding
             //       |m|f|b| lFR|n| args|
@@ -609,6 +617,13 @@ namespace Ambrosia
                                         //    );
                                         try
                                         {
+                                            // __zl__
+                                            // SeqNoWatermark is used to determine high watermark of out-rpc
+                                            // By single thread semantic, _seqNoWatermark won't be changed during the call to DispatchToMethod
+                                            _seqNoWatermark = sequenceNumber;
+#if ZLDEBUG
+                                            Console.WriteLine("[ZLDEBUG] [From: {0}] Set watermark to {1}", senderOfRPC, _seqNoWatermark);
+#endif
                                             await _dispatcher.DispatchToMethod(methodId, rpcType, senderOfRPC, sequenceNumber, localBuffer, 0);
                                         }
                                         catch (Exception ex)
@@ -955,6 +970,11 @@ namespace Ambrosia
             long newSequenceNumber = 0;
 
             int optionalPartSize = 0;
+
+#if ZLDEBUG
+            string destination = Encoding.UTF8.GetString(encodedDestinationLFR);
+            Console.WriteLine("[ZLDEBUG] [To: {0}] Sending RPC, watermark: {1}", destination, _seqNoWatermark);
+#endif
 
             if (!rpcType.IsFireAndForget())
             {

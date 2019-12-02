@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GeneratedSourceFiles\Client3Interfaces\latest\Client3Interfaces.csproj" />
+    <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
   </ItemGroup>
 
 </Project>

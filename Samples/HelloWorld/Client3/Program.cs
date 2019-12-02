@@ -70,8 +70,8 @@ namespace Client3
         {
             finishedTokenQ = new AsyncQueue<int>();
 
-            int receivePort = 1001;
-            int sendPort = 1000;
+            int receivePort = 3001;
+            int sendPort = 3000;
             string clientInstanceName = "client";
             string serverInstanceName = "server";
 

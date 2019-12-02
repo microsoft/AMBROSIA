@@ -9,5 +9,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GeneratedSourceFiles\Client2Interfaces\latest\Client2Interfaces.csproj" />
+    <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
   </ItemGroup>
 </Project>

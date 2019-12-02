@@ -1297,6 +1297,53 @@ namespace Ambrosia
             {
                 try
                 {
+                    _workStream.Write(firstBufToCommit, 0, 4);
+                    _workStream.WriteIntFixed(length1 + length2);
+                    _workStream.Write(firstBufToCommit, 8, 16);
+                    await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
+                    await _workStream.WriteAsync(secondBufToCommit, 0, length2);
+                    // Return the second byte array to the FlexReader pool
+                    FlexReadBuffer.ReturnBuffer(secondBufToCommit);
+                    var flushtask = _workStream.FlushAsync();
+
+                    // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
+                    if (_persistLogs)
+                    {
+                        _logStream.Write(firstBufToCommit, 0, 4);
+                        _logStream.WriteIntFixed(length1 + length2);
+                        _logStream.Write(firstBufToCommit, 8, 16);
+                        await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
+                        await _logStream.WriteAsync(secondBufToCommit, 0, length2);
+                        await writeFullWaterMarksAsync(uncommittedWatermarks);
+                        await writeSimpleWaterMarksAsync(trimWatermarks);
+                        await _logStream.FlushAsync();
+                    }
+
+                    SendInputWatermarks(uncommittedWatermarks, outputs);
+                    
+                    _uncommittedWatermarksBak = uncommittedWatermarks;
+                    _uncommittedWatermarksBak.Clear();
+                    _trimWatermarksBak = trimWatermarks;
+                    _trimWatermarksBak.Clear();
+                }
+                catch (Exception e)
+                {
+                    _myAmbrosia.OnError(5, e.Message);
+                }
+                _bufbak = firstBufToCommit;
+                await TryCommitAsync(outputs);
+            }
+/*
+            private async Task Commit(byte[] firstBufToCommit,
+                                      int length1,
+                                      byte[] secondBufToCommit,
+                                      int length2,
+                                      ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
+                                      ConcurrentDictionary<string, long> trimWatermarks,
+                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+            {
+                try
+                {
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
@@ -1331,6 +1378,7 @@ namespace Ambrosia
                 _bufbak = firstBufToCommit;
                 await TryCommitAsync(outputs);
             }
+*/
 
             private async Task writeFullWaterMarksAsync(ConcurrentDictionary<string, LongPair> uncommittedWatermarks)
             {
@@ -1356,6 +1404,41 @@ namespace Ambrosia
                     _logStream.WriteLongFixed(kv.Value);
                 }
             }
+
+            private async Task Commit(byte[] buf,
+                                      int length,
+                                      ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
+                                      ConcurrentDictionary<string, long> trimWatermarks,
+                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+            {
+                try
+                {
+                    await _workStream.WriteAsync(buf, 0, length);
+                    var flushtask = _workStream.FlushAsync();
+
+                    // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
+                    if (_persistLogs)
+                    {
+                        await _logStream.WriteAsync(buf, 0, length);
+                        await writeFullWaterMarksAsync(uncommittedWatermarks);
+                        await writeSimpleWaterMarksAsync(trimWatermarks);
+                        await _logStream.FlushAsync();
+                    }
+                    SendInputWatermarks(uncommittedWatermarks, outputs);
+                    
+                    _uncommittedWatermarksBak = uncommittedWatermarks;
+                    _uncommittedWatermarksBak.Clear();
+                    _trimWatermarksBak = trimWatermarks;
+                    _trimWatermarksBak.Clear();
+                }
+                catch (Exception e)
+                {
+                    _myAmbrosia.OnError(5, e.Message);
+                }
+                _bufbak = buf;
+                await TryCommitAsync(outputs);
+            }
+/*
             private async Task Commit(byte[] buf,
                                       int length,
                                       ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
@@ -1387,6 +1470,7 @@ namespace Ambrosia
                 _bufbak = buf;
                 await TryCommitAsync(outputs);
             }
+*/
 
             public async Task SleepAsync()
             {
@@ -2118,7 +2202,7 @@ namespace Ambrosia
         long _lastLogFile;
         // A locking variable (with compare and swap) used to eliminate redundant log moves
         int _movingToNextLog = 0;
-        // A handle to a file used for an upgrading secondary to bring down the primary and prevent primary promotion amongst secondaries.
+        // A handle to a 
         // As long as the write lock is held, no promotion can happen
         FileStream _killFileHandle = null;
 
