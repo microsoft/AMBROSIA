@@ -68,4 +68,46 @@ namespace Ambrosia
             return;
         }
     }
+
+    public class AmbrosiaShardedRuntime : ShardedVertexBase
+    {
+        private AmbrosiaRuntime Runtime { get; set; }
+        public AmbrosiaShardedRuntime()
+        {
+            Runtime = new AmbrosiaRuntime();
+        }
+
+        public override async Task InitializeAsync(int shardId, ShardingInfo shardingInfo, object param)
+        {
+            // Workaround because of parameter type limitation in CRA
+            AmbrosiaRuntimeParams p = new AmbrosiaRuntimeParams();
+            XmlSerializer xmlSerializer = new XmlSerializer(p.GetType());
+            using (StringReader textReader = new StringReader((string)param))
+            {
+                p = (AmbrosiaRuntimeParams)xmlSerializer.Deserialize(textReader);
+            }
+
+            bool sharded = true;
+
+            Runtime.Initialize(
+                p.serviceReceiveFromPort,
+                p.serviceSendToPort,
+                p.serviceName,
+                p.serviceLogPath,
+                p.createService,
+                p.pauseAtStart,
+                p.persistLogs,
+                p.activeActive,
+                p.logTriggerSizeMB,
+                p.storageConnectionString,
+                p.currentVersion,
+                p.upgradeToVersion,
+                ClientLibrary,
+                AddAsyncInputEndpoint,
+                AddAsyncOutputEndpoint
+            );
+
+            return;
+        }
+    }
 }
