@@ -37,8 +37,8 @@ set AZURE_STORAGE_CONN_STRING and register the instances by hand using
 `Ambrosia RegisterInstance`.  This can be run on the host machine or
 inside a Docker container.
 
-    Ambrosia RegisterInstance -i myclient --rp 1000 --sp 1001 -l ./ambrosia_logs
-    Ambrosia RegisterInstance -i myserver - -rp 2000 --sp 2001 -l ./ambrosia_logs
+    Ambrosia RegisterInstance -i myclient --rp 2000 --sp 2001 -l ./ambrosia_logs
+    Ambrosia RegisterInstance -i myserver - -rp 3000 --sp 3001 -l ./ambrosia_logs
 
 Then open up two terminals, and spawn the server container:
 

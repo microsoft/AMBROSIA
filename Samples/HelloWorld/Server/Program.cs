@@ -52,8 +52,8 @@ namespace Server
 
         static void Main(string[] args)
         {
-            int receivePort = 2001;
-            int sendPort = 2000;
+            int receivePort = 3001;
+            int sendPort = 3000;
             string serviceName = "server";
 
             if (args.Length >= 1)

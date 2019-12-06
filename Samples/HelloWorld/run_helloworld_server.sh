@@ -4,9 +4,9 @@
 set -euo pipefail
 cd `dirname $0`
 
-PORT3=2000
-PORT4=2001
-CRAPORT2=2500
+PORT3=3000
+PORT4=3001
+CRAPORT2=3500
 
 ME=`whoami | sed 's/[^a-zA-Z0-9]//g'`
 SERVERNAME=${ME}server
