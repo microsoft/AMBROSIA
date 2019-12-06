@@ -6,8 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
+    <ProjectReference Include="..\..\..\Ambrosia\Ambrosia\Ambrosia.csproj" />
+    <!--
     <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.13" Condition="'$(Configuration)' == 'Release' " />
     <PackageReference Include="Microsoft.Ambrosia.LibCSDebug" Version="1.0.13" Condition="'$(Configuration)' == 'Debug'" />
+    -->
   </ItemGroup>
 
 </Project>

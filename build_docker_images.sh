@@ -20,6 +20,7 @@ if ! [[ ${DOCKER:+defined} ]]; then
    DOCKER=docker
 fi
 
+
 export AMBROSIA_ROOT=`pwd`
 
 # Default logs location:
