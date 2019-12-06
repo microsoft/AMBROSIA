@@ -209,6 +209,22 @@ namespace Ambrosia
         /// <returns></returns>
         public IEnumerator<T> GetEnumerator() => Iterate().GetEnumerator();
 
+        IEnumerable<T> LastItemEnumerable()
+        {
+            if (tail.Value.IsEmpty())
+                throw new InvalidOperationException("The list is empty!");
+            yield return PeekLast();
+        }
+
+        // Wrap the last item in an enumerator
+        public IEnumerator<T> GetLastEnumerator()
+        {
+            var enumerator = LastItemEnumerable().GetEnumerator();
+            enumerator.MoveNext();
+            return enumerator;
+        }
+        
+
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

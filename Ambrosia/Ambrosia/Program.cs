@@ -1,5 +1,7 @@
-﻿using System;
+﻿#define ASYNC_LOGGING
+using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -211,6 +213,10 @@ namespace Ambrosia
         AmbrosiaRuntime _owningRuntime;
         OutputConnectionRecord _owningOutputRecord;
 
+        long _waitingCommitWriteID = -1;
+        BuffersCursor _readyToSendEnd = null;
+        
+
         internal class BufferPage
         {
             public byte[] PageBytes { get; set; }
@@ -297,6 +303,7 @@ namespace Ambrosia
                 }
             }
 
+
             internal void CheckSendBytes(int posToStart,
                                          int numRPCs,
                                          int bytes)
@@ -376,6 +383,20 @@ namespace Ambrosia
             _curBufPages = 0;
             _owningOutputRecord = owningOutputRecord;
             _trimLock = 0;
+        }
+
+        public void SetWaitingCommit(long commitWriteID)
+        {
+            AcquireAppendLock();
+            _waitingCommitWriteID = commitWriteID;
+            if (!_bufferQ.IsEmpty()) {
+                BufferPage lastPage = _bufferQ.Last();
+                _readyToSendEnd = new BuffersCursor(_bufferQ.GetLastEnumerator(), lastPage.curLength, (int)(lastPage.HighestSeqNo - lastPage.LowestSeqNo + 1), (int)lastPage.TotalReplayableMessages);
+            } else
+            {
+                _readyToSendEnd = new BuffersCursor(null, -1, 0, 0);
+            }
+            ReleaseAppendLock();
         }
 
         internal void Serialize(ILogWriter writeToStream)
@@ -466,57 +487,88 @@ namespace Ambrosia
             Interlocked.Exchange(ref _trimLock, 0);
         }
 
+        internal class BufferEndPoint
+        {
+            public BufferPage Page;
+            public int PagePos;
+            public int EndSeqNo;
+            public int NumberOfReplayableSofar;
+            public BufferEndPoint(BufferPage inPage, 
+                                  int inPagePos,
+                                  int inEndSeqNo,
+                                  int inNumberOfReplayableSofar)
+            {
+                Page = inPage;
+                PagePos = inPagePos;
+                EndSeqNo = inEndSeqNo;
+                NumberOfReplayableSofar = inNumberOfReplayableSofar;
+            }
+        }
+
         internal class BuffersCursor
         {
             public IEnumerator<BufferPage> PageEnumerator { get; set; }
             public int PagePos { get; set; }
             public int RelSeqPos { get; set; }
+            public int RelReplayableSeqPos { get; set; }
             public BuffersCursor(IEnumerator<BufferPage> inPageEnumerator,
                                  int inPagePos,
-                                 int inRelSeqPos)
+                                 int inRelSeqPos,
+                                 int inRelReplayableSeqPos)
             {
                 RelSeqPos = inRelSeqPos;
                 PageEnumerator = inPageEnumerator;
                 PagePos = inPagePos;
+                RelReplayableSeqPos = inRelReplayableSeqPos;
             }
         }
 
         internal async Task<BuffersCursor> SendAsync(Stream outputStream,
                                                      BuffersCursor placeToStart,
-                                                     bool reconnecting)
+                                                     bool reconnecting, 
+                                                     long committedWriteID=Int64.MaxValue)
         {
             // If the cursor is invalid because of trimming or reconnecting, create it again
             if (placeToStart.PagePos == -1)
             {
-                return await ReplayFromAsync(outputStream, _owningOutputRecord.LastSeqSentToReceiver + 1, reconnecting);
+                return await ReplayFromAsync(outputStream, _owningOutputRecord.LastSeqSentToReceiver + 1, reconnecting, committedWriteID);
 
             }
+            var placeToStop = _readyToSendEnd;
             var nextSeqNo = _owningOutputRecord.LastSeqSentToReceiver + 1;
             var bufferEnumerator = placeToStart.PageEnumerator;
             var posToStart = placeToStart.PagePos;
             var relSeqPos = placeToStart.RelSeqPos;
+            var relReplayableSeqPos = placeToStart.RelReplayableSeqPos;
 
             // We are guaranteed to have an enumerator and starting point. Must send output.
             AcquireAppendLock(2);
             bool needToUnlockAtEnd = true;
             do
             {
-                var curBuffer = bufferEnumerator.Current;
-                var pageLength = curBuffer.curLength;
-                var morePages = (curBuffer != _bufferQ.Last());
+                BufferPage curBuffer = bufferEnumerator.Current;
+                int pageLength;
+                bool morePages;
                 int numReplayableMessagesToSend;
-                if (posToStart == 0)
+                int numRPCs;
+
+                if (placeToStop != null && committedWriteID < _waitingCommitWriteID && (placeToStop.PagePos == -1 || curBuffer == placeToStop.PageEnumerator.Current))
                 {
-                    // We are starting to send contents of the page. Send everything
-                    numReplayableMessagesToSend = (int)curBuffer.TotalReplayableMessages;
+                    // hit the waiting-to-commit page
+                    morePages = false;
+                    pageLength = placeToStop.PagePos;
+                    numReplayableMessagesToSend = placeToStop.RelReplayableSeqPos - relReplayableSeqPos;
+                    numRPCs = (int)(placeToStop.RelSeqPos - relSeqPos);
+                    curBuffer.UnsentReplayableMessages = curBuffer.TotalReplayableMessages - placeToStop.RelReplayableSeqPos;
+                } else {
+                    // not in waiting-to-commit page
+                    morePages = (curBuffer != _bufferQ.Last());
+                    pageLength = curBuffer.curLength;
+                    numReplayableMessagesToSend = (int)(curBuffer.TotalReplayableMessages - relReplayableSeqPos);
+                    numRPCs = (int)(curBuffer.HighestSeqNo - curBuffer.LowestSeqNo + 1 - relSeqPos);
+                    curBuffer.UnsentReplayableMessages = 0;
                 }
-                else
-                {
-                    // We are in the middle of sending this page. Respect the previously set counter
-                    numReplayableMessagesToSend = (int)curBuffer.UnsentReplayableMessages;
-                }
-                int numRPCs = (int)(curBuffer.HighestSeqNo - curBuffer.LowestSeqNo + 1 - relSeqPos);
-                curBuffer.UnsentReplayableMessages = 0;
+
                 ReleaseAppendLock();
                 Debug.Assert((nextSeqNo == curBuffer.LowestSeqNo + relSeqPos) && (nextSeqNo >= curBuffer.LowestSeqNo) && ((nextSeqNo + numRPCs - 1) <= curBuffer.HighestSeqNo));
                 ReleaseTrimLock();
@@ -609,12 +661,14 @@ namespace Ambrosia
                     // More pages to output
                     posToStart = 0;
                     relSeqPos = 0;
+                    relReplayableSeqPos = 0;
                 }
                 else
                 {
                     // Future output may be put on this page
                     posToStart = pageLength;
                     relSeqPos += numRPCs;
+                    relReplayableSeqPos += numReplayableMessagesToSend;
                     needToUnlockAtEnd = false;
                     break;
                 }
@@ -624,6 +678,7 @@ namespace Ambrosia
             placeToStart.PageEnumerator = bufferEnumerator;
             placeToStart.PagePos = posToStart;
             placeToStart.RelSeqPos = relSeqPos;
+            placeToStart.RelReplayableSeqPos = relReplayableSeqPos;
             if (needToUnlockAtEnd)
             {
                 ReleaseAppendLock();
@@ -633,7 +688,8 @@ namespace Ambrosia
 
         internal async Task<BuffersCursor> ReplayFromAsync(Stream outputStream,
                                                            long firstSeqNo,
-                                                           bool reconnecting)
+                                                           bool reconnecting,
+                                                           long committedWriteID)
         {
 /*            if (reconnecting)
             {
@@ -674,10 +730,12 @@ namespace Ambrosia
             {
                 var curBuffer = bufferEnumerator.Current;
                 Debug.Assert(curBuffer.LowestSeqNo <= firstSeqNo);
+
                 if (curBuffer.HighestSeqNo >= firstSeqNo)
                 {
                     // We need to send some or all of this buffer
                     int skipEvents = (int)(Math.Max(0, firstSeqNo - curBuffer.LowestSeqNo));
+                    int sentReplayableMessages = 0;
 
                     int bufferPos = 0;
                     if (true) // BUGBUG We are temporarily disabling this optimization which avoids unnecessary locking as reconnecting is not a sufficient criteria: We found a case where input is arriving during reconnection where counting was getting disabled incorrectly. Further investigation is required.
@@ -697,6 +755,7 @@ namespace Ambrosia
                             }
                             bufferPos += eventSize + StreamCommunicator.IntSize(eventSize);
                         }
+                        sentReplayableMessages = (int)(curBuffer.TotalReplayableMessages - curBuffer.UnsentReplayableMessages);
                         ReleaseAppendLock();
                     }
                     else
@@ -709,11 +768,13 @@ namespace Ambrosia
                         }
 
                     }
-                    return await SendAsync(outputStream, new BuffersCursor(bufferEnumerator, bufferPos, skipEvents), false);
+
+                    return await SendAsync(outputStream, new BuffersCursor(bufferEnumerator, bufferPos, skipEvents, sentReplayableMessages), false, committedWriteID);
                 }
             }
+
             // There's no output to replay
-            return new BuffersCursor(bufferEnumerator, -1, 0);
+            return new BuffersCursor(bufferEnumerator, -1, 0, 0);
         }
 
         private void addBufferPage(int writeLength,
@@ -817,6 +878,8 @@ namespace Ambrosia
                         {
                             placeToStart.PagePos = -1;
                         }
+                        placeToStart.RelSeqPos = 0;
+                        placeToStart.RelReplayableSeqPos = 0;
                     }
                     _bufferQ.Dequeue();
                     if (acquiredLock)
@@ -1193,6 +1256,7 @@ namespace Ambrosia
             int _committerID;
             internal long _nextWriteID;
             AmbrosiaRuntime _myAmbrosia;
+            public long CommittedWriteID = -1;
 
             public Committer(Stream workStream,
                              bool persistLogs,
@@ -1214,6 +1278,7 @@ namespace Ambrosia
                     var bufSize = recoveryStream.ReadIntFixed();
                     _status = bufSize << SealedBits;
                     recoveryStream.Read(_buf, 0, bufSize);
+                    CommittedWriteID = recoveryStream.ReadLongFixed();
                     _uncommittedWatermarks = _uncommittedWatermarks.AmbrosiaDeserialize(recoveryStream);
                     _trimWatermarks = _trimWatermarks.AmbrosiaDeserialize(recoveryStream);
                 }
@@ -1250,6 +1315,7 @@ namespace Ambrosia
                 serializeStream.WriteIntFixed((int)_maxBufSize);
                 serializeStream.WriteIntFixed((int)bufLength);
                 serializeStream.Write(_buf, 0, (int)bufLength);
+                serializeStream.WriteLongFixed(CommittedWriteID);
                 _uncommittedWatermarks.AmbrosiaSerialize(serializeStream);
                 _trimWatermarks.AmbrosiaSerialize(serializeStream);
             }
@@ -1286,6 +1352,71 @@ namespace Ambrosia
                     }
                 }
             }
+            private async Task LoggingWrapper(byte[] firstBufToCommit,
+                                              int length1,
+                                              byte[] secondBufToCommit,
+                                              int length2,
+                                              ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
+                                              ConcurrentDictionary<string, long> trimWatermarks,
+                                              ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+            {
+                var ws = new Stopwatch();
+                ws.Restart();
+                _logStream.Write(firstBufToCommit, 0, 4);
+                _logStream.WriteIntFixed(length1 + length2);
+                _logStream.Write(firstBufToCommit, 8, 16);
+                await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
+                await _logStream.WriteAsync(secondBufToCommit, 0, length2);
+                await writeFullWaterMarksAsync(uncommittedWatermarks);
+                await writeSimpleWaterMarksAsync(trimWatermarks);
+                await _logStream.FlushAsync();
+                SendInputWatermarks(uncommittedWatermarks, outputs);
+                _uncommittedWatermarksBak = uncommittedWatermarks;
+                _uncommittedWatermarksBak.Clear();
+                _trimWatermarksBak = trimWatermarks;
+                _trimWatermarksBak.Clear();
+
+                using(var ms = new MemoryStream(firstBufToCommit, 16, 8))
+                {
+                    Interlocked.Exchange(ref CommittedWriteID, ms.ReadLongFixed());
+                }
+
+                // notify send thread to send
+                foreach(KeyValuePair<string, OutputConnectionRecord> output in _myAmbrosia._outputs)
+                {
+                    if (output.Value._sendsEnqueued == 0)
+                    {
+                        Interlocked.Increment(ref output.Value._sendsEnqueued);
+                        output.Value.DataWorkQ.Enqueue(-1);
+                    }
+                }
+                
+                _bufbak = firstBufToCommit;
+                ws.Stop();
+                Console.WriteLine("*X* logging time: {0}ms", ws.ElapsedMilliseconds);
+#if ASYNC_LOGGING
+                await TryCommitAsync(outputs);
+#endif
+            }
+
+            private async Task ReturnFlexBuffer(Task loggingTask, Task sendingTask, byte[] buffer)
+            {
+                if (loggingTask != null)
+                    await loggingTask;
+                await sendingTask;
+                FlexReadBuffer.ReturnBuffer(buffer);
+            }
+            private async Task SendtoLocalServiceWrapper(byte[] firstBufToCommit,
+                                                         int length1,
+                                                         byte[] secondBufToCommit,
+                                                         int length2)
+            {
+                _workStream.Write(firstBufToCommit, 0, 4);
+                _workStream.WriteIntFixed(length1 + length2);
+                _workStream.Write(firstBufToCommit, 8, 16);
+                await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
+                await _workStream.WriteAsync(secondBufToCommit, 0, length2);
+            }
 
             private async Task Commit(byte[] firstBufToCommit,
                                       int length1,
@@ -1297,75 +1428,30 @@ namespace Ambrosia
             {
                 try
                 {
-                    _workStream.Write(firstBufToCommit, 0, 4);
-                    _workStream.WriteIntFixed(length1 + length2);
-                    _workStream.Write(firstBufToCommit, 8, 16);
-                    await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
-                    await _workStream.WriteAsync(secondBufToCommit, 0, length2);
+#if ASYNC_LOGGING
+                    Task sendingTask = SendtoLocalServiceWrapper(firstBufToCommit, length1, secondBufToCommit, length2);
+                    Task loggingTask = null;
                     // Return the second byte array to the FlexReader pool
                     FlexReadBuffer.ReturnBuffer(secondBufToCommit);
-                    var flushtask = _workStream.FlushAsync();
-
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
-                        _logStream.Write(firstBufToCommit, 0, 4);
-                        _logStream.WriteIntFixed(length1 + length2);
-                        _logStream.Write(firstBufToCommit, 8, 16);
-                        await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
-                        await _logStream.WriteAsync(secondBufToCommit, 0, length2);
-                        await writeFullWaterMarksAsync(uncommittedWatermarks);
-                        await writeSimpleWaterMarksAsync(trimWatermarks);
-                        await _logStream.FlushAsync();
+                        loggingTask = LoggingWrapper(firstBufToCommit, length1, secondBufToCommit, length2, uncommittedWatermarks, trimWatermarks, outputs);                        
                     }
-
-                    SendInputWatermarks(uncommittedWatermarks, outputs);
+                    ReturnFlexBuffer(loggingTask, sendingTask, secondBufToCommit);
+#else
                     
-                    _uncommittedWatermarksBak = uncommittedWatermarks;
-                    _uncommittedWatermarksBak.Clear();
-                    _trimWatermarksBak = trimWatermarks;
-                    _trimWatermarksBak.Clear();
-                }
-                catch (Exception e)
-                {
-                    _myAmbrosia.OnError(5, e.Message);
-                }
-                _bufbak = firstBufToCommit;
-                await TryCommitAsync(outputs);
-            }
-/*
-            private async Task Commit(byte[] firstBufToCommit,
-                                      int length1,
-                                      byte[] secondBufToCommit,
-                                      int length2,
-                                      ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
-                                      ConcurrentDictionary<string, long> trimWatermarks,
-                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs)
-            {
-                try
-                {
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
-                        _logStream.Write(firstBufToCommit, 0, 4);
-                        _logStream.WriteIntFixed(length1 + length2);
-                        _logStream.Write(firstBufToCommit, 8, 16);
-                        await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
-                        await _logStream.WriteAsync(secondBufToCommit, 0, length2);
-                        await writeFullWaterMarksAsync(uncommittedWatermarks);
-                        await writeSimpleWaterMarksAsync(trimWatermarks);
-                        await _logStream.FlushAsync();
+                        await LoggingWrapper(firstBufToCommit, length1, secondBufToCommit, length2, uncommittedWatermarks, trimWatermarks, outputs);                        
                     }
 
-                    SendInputWatermarks(uncommittedWatermarks, outputs);
-                    _workStream.Write(firstBufToCommit, 0, 4);
-                    _workStream.WriteIntFixed(length1 + length2);
-                    _workStream.Write(firstBufToCommit, 8, 16);
-                    await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
-                    await _workStream.WriteAsync(secondBufToCommit, 0, length2);
+                    await SendtoLocalServiceWrapper(firstBufToCommit, length1, secondBufToCommit, length2);
                     // Return the second byte array to the FlexReader pool
                     FlexReadBuffer.ReturnBuffer(secondBufToCommit);
                     var flushtask = _workStream.FlushAsync();
+#endif
                     _uncommittedWatermarksBak = uncommittedWatermarks;
                     _uncommittedWatermarksBak.Clear();
                     _trimWatermarksBak = trimWatermarks;
@@ -1378,7 +1464,6 @@ namespace Ambrosia
                 _bufbak = firstBufToCommit;
                 await TryCommitAsync(outputs);
             }
-*/
 
             private async Task writeFullWaterMarksAsync(ConcurrentDictionary<string, LongPair> uncommittedWatermarks)
             {
@@ -1405,40 +1490,52 @@ namespace Ambrosia
                 }
             }
 
-            private async Task Commit(byte[] buf,
-                                      int length,
-                                      ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
-                                      ConcurrentDictionary<string, long> trimWatermarks,
-                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+            private async Task LoggingWrapper(byte[] buf,
+                                              int length,
+                                              ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
+                                              ConcurrentDictionary<string, long> trimWatermarks,
+                                              ConcurrentDictionary<string, OutputConnectionRecord> outputs)
             {
-                try
-                {
-                    await _workStream.WriteAsync(buf, 0, length);
-                    var flushtask = _workStream.FlushAsync();
+                var ws = new Stopwatch();
+                ws.Restart();
+                await _logStream.WriteAsync(buf, 0, length);
+                await writeFullWaterMarksAsync(uncommittedWatermarks);
+                await writeSimpleWaterMarksAsync(trimWatermarks);
+                await _logStream.FlushAsync();
+                SendInputWatermarks(uncommittedWatermarks, outputs);
+                _uncommittedWatermarksBak = uncommittedWatermarks;
+                _uncommittedWatermarksBak.Clear();
+                _trimWatermarksBak = trimWatermarks;
+                _trimWatermarksBak.Clear();
 
-                    // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
-                    if (_persistLogs)
-                    {
-                        await _logStream.WriteAsync(buf, 0, length);
-                        await writeFullWaterMarksAsync(uncommittedWatermarks);
-                        await writeSimpleWaterMarksAsync(trimWatermarks);
-                        await _logStream.FlushAsync();
-                    }
-                    SendInputWatermarks(uncommittedWatermarks, outputs);
-                    
-                    _uncommittedWatermarksBak = uncommittedWatermarks;
-                    _uncommittedWatermarksBak.Clear();
-                    _trimWatermarksBak = trimWatermarks;
-                    _trimWatermarksBak.Clear();
-                }
-                catch (Exception e)
+                using(var ms = new MemoryStream(buf, 16, 8))
                 {
-                    _myAmbrosia.OnError(5, e.Message);
+                    Interlocked.Exchange(ref CommittedWriteID, ms.ReadLongFixed());
                 }
+
+                // notify send thread to send
+                foreach(KeyValuePair<string, OutputConnectionRecord> output in _myAmbrosia._outputs)
+                {
+                    if (output.Value._sendsEnqueued == 0)
+                    {
+                        Interlocked.Increment(ref output.Value._sendsEnqueued);
+                        output.Value.DataWorkQ.Enqueue(-1);
+                    }
+                }
+
                 _bufbak = buf;
+                ws.Stop();
+                Console.WriteLine("*X* logging time: {0}ms", ws.ElapsedMilliseconds);
+#if ASYNC_LOGGING
                 await TryCommitAsync(outputs);
+#endif
             }
-/*
+            private async Task SendtoLocalServiceWrapper(byte[] buf, int length)
+            {
+                await _workStream.WriteAsync(buf, 0, length);
+                await _workStream.FlushAsync();
+            }
+
             private async Task Commit(byte[] buf,
                                       int length,
                                       ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
@@ -1447,30 +1544,28 @@ namespace Ambrosia
             {
                 try
                 {
+#if ASYNC_LOGGING
+                    SendtoLocalServiceWrapper(buf, length);
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
-                        await _logStream.WriteAsync(buf, 0, length);
-                        await writeFullWaterMarksAsync(uncommittedWatermarks);
-                        await writeSimpleWaterMarksAsync(trimWatermarks);
-                        await _logStream.FlushAsync();
+                        LoggingWrapper(buf, length, uncommittedWatermarks, trimWatermarks, outputs);
                     }
-                    SendInputWatermarks(uncommittedWatermarks, outputs);
-                    await _workStream.WriteAsync(buf, 0, length);
-                    var flushtask = _workStream.FlushAsync();
-                    _uncommittedWatermarksBak = uncommittedWatermarks;
-                    _uncommittedWatermarksBak.Clear();
-                    _trimWatermarksBak = trimWatermarks;
-                    _trimWatermarksBak.Clear();
+#else
+                    // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
+                    if (_persistLogs)
+                    {
+                        await LoggingWrapper(buf, length, uncommittedWatermarks, trimWatermarks, outputs);
+                    }
+                    await SendtoLocalServiceWrapper(buf, length);
+                    await TryCommitAsync(outputs);
+#endif
                 }
                 catch (Exception e)
                 {
                     _myAmbrosia.OnError(5, e.Message);
                 }
-                _bufbak = buf;
-                await TryCommitAsync(outputs);
             }
-*/
 
             public async Task SleepAsync()
             {
@@ -2168,6 +2263,7 @@ namespace Ambrosia
         public const byte CountReplayableRPCBatchByte = 13;
         public const byte trimToByte = 14;
         public const byte becomingPrimaryByte = 15;
+        public const byte WaitingCommitByte = 16;
 
         CRAClientLibrary _coral;
 
@@ -3262,6 +3358,15 @@ namespace Ambrosia
                     ProcessRPC(localServiceBuffer);
                     memStream.Dispose();
                     break;
+                
+                case WaitingCommitByte:
+                    long waitingCommitWriteID = localServiceBuffer.Buffer.ReadBufferedLong(sizeBytes + 1);
+                    localServiceBuffer.ResetBuffer();
+                    foreach(KeyValuePair<string, OutputConnectionRecord> output in _outputs)
+                    {
+                        output.Value.BufferedOutput.SetWaitingCommit(waitingCommitWriteID);
+                    }
+                    break;
 
                 default:
                     // This one really should terminate the process; no recovery allowed.
@@ -3391,7 +3496,7 @@ namespace Ambrosia
             {
                 // Reset the output cursor if it exists
                 outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
-                outputConnectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
+                outputConnectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0, 0);
                 outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
                 // Process replay message
                 var inputFlexBuffer = new FlexReadBuffer();
@@ -3461,7 +3566,7 @@ namespace Ambrosia
                         outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                         var placeAtCall = outputConnectionRecord.LastSeqSentToReceiver;
                         outputConnectionRecord.placeInOutput =
-                                await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput, reconnecting);
+                                await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput, reconnecting, Interlocked.Read(ref _committer.CommittedWriteID));
                         reconnecting = false;
                         outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
                         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Code to manually trim for performance testing
@@ -4131,6 +4236,9 @@ namespace Ambrosia
 
         static void Main(string[] args)
         {
+#if ASYNC_LOGGING
+            Console.WriteLine("*X* In async logging mode");
+#endif
             ParseAndValidateOptions(args);
 
             switch (_runtimeMode)

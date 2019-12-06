@@ -1,5 +1,4 @@
-﻿#define ZLDEBUG
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -42,9 +41,6 @@ namespace Ambrosia
         private Dispatcher _dispatcher;
         private static FlexReadBuffer _inputFlexBuffer;
         private static int _cursor;
-
-        private long _seqNoWatermark = -1;
-
         public bool IsPrimary = false;
 
         [DataMember]
@@ -265,11 +261,6 @@ namespace Ambrosia
             //Console.WriteLine($"Dispatch loop starting on task '{Thread.CurrentThread.ManagedThreadId}'");
 #endif
 
-            // __zl__
-            // new PRC encoding:
-            //               |m|f|b| lFR|n| args|
-            // |R|W|ret|
-            //               |n|returnValue|
 
             #region RPC Encoding
             //       |m|f|b| lFR|n| args|
@@ -293,7 +284,6 @@ namespace Ambrosia
             // if it is a return value
             // n = sequence number (variable)
             // returnValue = serialized return value, size baked into the generated code
-
             #endregion
 
             _inputFlexBuffer = new FlexReadBuffer();
@@ -313,12 +303,15 @@ namespace Ambrosia
                     }
                 }
 
+                bool firstMsgInPage = false;
+                long writeSeqID = -1;
                 if (bytesToRead <= 24)
                 {
                     int commitID = await this._ambrosiaReceiveFromStream.ReadIntFixedAsync(cancelTokenSource.Token);
                     bytesToRead = await this._ambrosiaReceiveFromStream.ReadIntFixedAsync(cancelTokenSource.Token);
                     long checkBytes = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
-                    long writeSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
+                    writeSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
+                    firstMsgInPage = true;
                 }
 
                 while (bytesToRead > 24)
@@ -484,6 +477,12 @@ namespace Ambrosia
                                 var lengthOfCurrentRPC = 0;
                                 int endIndexOfCurrentRPC = 0;
 
+                                if (firstMsgInPage)
+                                {
+                                    SendWaitingCommit(writeSeqID);
+                                    firstMsgInPage = false;
+                                }
+
                                 if (firstByte == AmbrosiaRuntime.RPCBatchByte || firstByte == AmbrosiaRuntime.CountReplayableRPCBatchByte)
                                 {
                                     _cursor++;
@@ -617,13 +616,6 @@ namespace Ambrosia
                                         //    );
                                         try
                                         {
-                                            // __zl__
-                                            // SeqNoWatermark is used to determine high watermark of out-rpc
-                                            // By single thread semantic, _seqNoWatermark won't be changed during the call to DispatchToMethod
-                                            _seqNoWatermark = sequenceNumber;
-#if ZLDEBUG
-                                            Console.WriteLine("[ZLDEBUG] [From: {0}] Set watermark to {1}", senderOfRPC, _seqNoWatermark);
-#endif
                                             await _dispatcher.DispatchToMethod(methodId, rpcType, senderOfRPC, sequenceNumber, localBuffer, 0);
                                         }
                                         catch (Exception ex)
@@ -935,6 +927,25 @@ namespace Ambrosia
             InstanceProxy.Immortal = this;
         }
 
+        internal void SendWaitingCommit(long waitingCommitWriteID)
+        {
+            int bytesPerMessage = 1 + LongSize(waitingCommitWriteID);
+            int totalBytesPerMessage = bytesPerMessage + IntSize(bytesPerMessage);
+            var writablePage = this._ambrosiaSendToConnectionRecord.BufferedOutput.getWritablePage(totalBytesPerMessage);
+
+            writablePage.NumMessages++;
+            var localBuffer = writablePage.PageBytes;
+
+            writablePage.curLength += localBuffer.WriteInt(writablePage.curLength, bytesPerMessage);
+
+            // Write byte signalling that this is a waiting commit message
+            localBuffer[writablePage.curLength++] = (byte) AmbrosiaRuntime.WaitingCommitByte;
+
+            // Write destination length, followed by the destination
+            writablePage.curLength += localBuffer.WriteLong(writablePage.curLength, waitingCommitWriteID);
+            ReleaseBufferAndSend();
+        }
+
         // Bundling at source
         private EventBuffer.BufferPage StartRPC<T>(
             int methodIdentifier,
@@ -971,11 +982,6 @@ namespace Ambrosia
 
             int optionalPartSize = 0;
 
-#if ZLDEBUG
-            string destination = Encoding.UTF8.GetString(encodedDestinationLFR);
-            Console.WriteLine("[ZLDEBUG] [To: {0}] Sending RPC, watermark: {1}", destination, _seqNoWatermark);
-#endif
-
             if (!rpcType.IsFireAndForget())
             {
                 newSequenceNumber = Interlocked.Increment(ref this.CurrentSequenceNumber);
@@ -990,7 +996,9 @@ namespace Ambrosia
             var bytesPerMessageWithoutSerializedArguments =
                 1 // RPCByte
                 + IntSize(encodedDestinationLFRLength) // size of the length of the destination bytes
-                + encodedDestinationLFRLength // size of the destination bytes
+                + encodedDestinationLFRLength // size of the destination byt// __zl__
+                                            // SeqNoWatermark is used to determine high watermark of out-rpc
+                                            // By single thread semantic, _seqNoWatermark won't be changed during the call to DispatchToMethodes
                 + 1 // size of the return-value flag byte
                 + IntSize(methodIdentifier) // size of the method identifier
                 + 1 // size of the fire-and-forget value
