@@ -20,6 +20,9 @@ namespace Ambrosia
         public string storageConnectionString;
         public long currentVersion;
         public long upgradeToVersion;
+        public long shardID;
+        public string oldShards;
+        public string newShards;
     }
 
     public static class AmbrosiaRuntimeParms
@@ -33,6 +36,23 @@ namespace Ambrosia
         public AmbrosiaNonShardedRuntime()
         {
             Runtime = new AmbrosiaRuntime();
+        }
+
+        private long[] ParseLongs(string s)
+        {
+            if (s.Trim() == "")
+            {
+                return new long[] { };
+            }
+            string[] shards = s.Split(',');
+            long[] ids = new long[shards.Length];
+
+            for (int i = 0; i < shards.Length; i++)
+            {
+                ids[i] = long.Parse(shards[i]);
+            }
+            return ids;
+
         }
 
         public override async Task InitializeAsync(object param)
@@ -62,7 +82,9 @@ namespace Ambrosia
                 p.upgradeToVersion,
                 ClientLibrary,
                 AddAsyncInputEndpoint,
-                AddAsyncOutputEndpoint
+                AddAsyncOutputEndpoint,
+                ParseLongs(p.oldShards),
+                ParseLongs(p.newShards)
             );
 
             return;
@@ -104,7 +126,9 @@ namespace Ambrosia
                 p.upgradeToVersion,
                 ClientLibrary,
                 AddAsyncInputEndpoint,
-                AddAsyncOutputEndpoint
+                AddAsyncOutputEndpoint,
+                new long[0],
+                new long[0]
             );
 
             return;
