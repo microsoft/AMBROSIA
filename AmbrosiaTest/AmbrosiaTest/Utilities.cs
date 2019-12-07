@@ -28,11 +28,13 @@ namespace AmbrosiaTest
         public string AMB_Version { get; set; }
         public string AMB_UpgradeToVersion { get; set; }
         public string AMB_ReplicaNumber { get; set; }
-
+        public string AMB_ShardID { get; set; }
+        public string AMB_OldShards { get; set; }
+        public string AMB_NewShards { get; set; }
     }
 
     // These are the different modes of what the AMB is called 
-    public enum AMB_ModeConsts { RegisterInstance, AddReplica, DebugInstance };
+    public enum AMB_ModeConsts { RegisterInstance, AddReplica, DebugInstance, AddShard };
 
     public class Utilities
     {
@@ -460,7 +462,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false)
+        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false, long shardID = -1)
         {
 
             // Basically doing this for multi client stuff
@@ -481,6 +483,11 @@ namespace AmbrosiaTest
             // used to get log file
             string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
             string ambrosiaServerLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "server_" + CurrentVersion;
+            if (shardID != -1)
+            {
+                ambrosiaClientLogDir += "\\" + shardID.ToString();
+                ambrosiaServerLogDir += "\\" + shardID.ToString();
+            }
             string startingClientChkPtVersionNumber = "1";
             string clientFirstFile = "";
 
@@ -578,6 +585,10 @@ namespace AmbrosiaTest
                 AMB_PortAppReceives = "1000",
                 AMB_PortAMBSends = "1001"
             };
+            if (shardID != -1)
+            {
+                AMB1.AMB_ShardID = shardID.ToString();
+            }
             CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.DebugInstance);
 
             // AMB for Server
@@ -592,6 +603,10 @@ namespace AmbrosiaTest
                 AMB_PortAppReceives = "2000",
                 AMB_PortAMBSends = "2001"
             };
+            if (shardID != -1)
+            {
+                AMB2.AMB_ShardID = shardID.ToString();
+            }
             CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.DebugInstance);
 
             string logOutputFileName_ClientJob_Verify;
@@ -634,7 +649,7 @@ namespace AmbrosiaTest
 
         }
 
-        public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive=false, int replicaNum = 9999)
+        public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive=false, int replicaNum = 9999, long shardID = -1)
         {
 
             // Launch the AMB process with these values
@@ -646,7 +661,10 @@ namespace AmbrosiaTest
             }
 
             string argString = "-i=" + ImmCoordName + " -p=" + portImmCoordListensAMB.ToString();
-
+            if (shardID != -1)
+            {
+                argString = argString + " -si=" + shardID.ToString();
+            }
 
             // if Active Active then required to get replicanu
             if (ActiveActive)
@@ -721,6 +739,9 @@ namespace AmbrosiaTest
                     if (AMBSettings.AMB_UpgradeToVersion != null)
                         argString = argString + " -uv=" + AMBSettings.AMB_UpgradeToVersion;
 
+                    if (AMBSettings.AMB_ShardID != null)
+                        argString = argString + " -si=" + AMBSettings.AMB_ShardID;
+
                     // add current version if it exists
                     if (AMBSettings.AMB_Version != null)
                         argString = argString + " -cv=" + AMBSettings.AMB_Version;
@@ -788,7 +809,43 @@ namespace AmbrosiaTest
                     // testing upgrade
                     if (AMBSettings.AMB_TestingUpgrade != null && AMBSettings.AMB_TestingUpgrade != "N")
                         argString = argString + " -tu";
+                    if (AMBSettings.AMB_ShardID != null)
+                        argString = argString + " -si=" + AMBSettings.AMB_ShardID;
+                    break;
 
+                case AMB_ModeConsts.AddShard:
+                    argString = "AddShard " + "-si=" + AMBSettings.AMB_ShardID + " -i=" + AMBSettings.AMB_ServiceName
+                        + " -rp=" + AMBSettings.AMB_PortAppReceives + " -sp=" + AMBSettings.AMB_PortAMBSends
+                        + " -r=" + AMBSettings.AMB_ReplicaNumber + " -os=" + AMBSettings.AMB_OldShards
+                        + " -ns=" + AMBSettings.AMB_NewShards;
+
+                    // add Service log path
+                    if (AMBSettings.AMB_ServiceLogPath != null)
+                        argString = argString + " -l=" + AMBSettings.AMB_ServiceLogPath;
+
+                    // add pause at start
+                    if (AMBSettings.AMB_PauseAtStart != null && AMBSettings.AMB_PauseAtStart != "N")
+                        argString = argString + " -ps";
+
+                    // add no persist logs at start
+                    if (AMBSettings.AMB_PersistLogs != null && AMBSettings.AMB_PersistLogs != "Y")
+                        argString = argString + " -npl";
+
+                    // add new log trigger size if it exists
+                    if (AMBSettings.AMB_NewLogTriggerSize != null)
+                        argString = argString + " -lts=" + AMBSettings.AMB_NewLogTriggerSize;
+
+                    // add active active
+                    if (AMBSettings.AMB_ActiveActive != null && AMBSettings.AMB_ActiveActive != "N")
+                        argString = argString + " -aa";
+
+                    // add current version if it exists
+                    if (AMBSettings.AMB_Version != null)
+                        argString = argString + " -cv=" + AMBSettings.AMB_Version;
+
+                    // add upgrade version if it exists
+                    if (AMBSettings.AMB_UpgradeToVersion != null)
+                        argString = argString + " -uv=" + AMBSettings.AMB_UpgradeToVersion;
                     break;
             }
 

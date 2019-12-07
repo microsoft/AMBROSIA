@@ -2038,6 +2038,8 @@ namespace Ambrosia
         bool _sharded;
         internal bool _createService;
         long _shardID;
+        long[] _oldShards;
+        long[] _newShards;
         bool _runningRepro;
         long _currentVersion;
         long _upgradeToVersion;
@@ -3903,7 +3905,9 @@ namespace Ambrosia
                        long upgradeToVersion,
                        CRAClientLibrary coral,
                        Action<string, IAsyncVertexInputEndpoint> addInput,
-                       Action<string, IAsyncVertexOutputEndpoint> addOutput
+                       Action<string, IAsyncVertexOutputEndpoint> addOutput,
+                       long[] oldShards,
+                       long[] newShards
                        )
         {
             InitializeLogWriterStatics();
@@ -3921,6 +3925,8 @@ namespace Ambrosia
             {
                 Console.WriteLine("Ready ...");
             }
+            _oldShards = oldShards;
+            _newShards = newShards;
             _persistLogs = persistLogs;
             _activeActive = activeActive;
             _newLogTriggerSize = logTriggerSizeMB * 1000000;
@@ -3992,6 +3998,45 @@ namespace Ambrosia
         private static long _logTriggerSizeMB = 1000;
         private static int _currentVersion = 0;
         private static long _upgradeVersion = -1;
+        private static long _shardID = -1;
+        private static string _oldShards = "";
+        private static string _newShards = "";
+
+        private static void DefineVertex(CRAClientLibrary client, string vertexDefinition, bool sharded)
+        {
+            Task<CRAErrorCode> result;
+            if (!sharded)
+            {
+                result = client.DefineVertexAsync(vertexDefinition, () => new AmbrosiaNonShardedRuntime());
+            } else
+            {
+                result = client.DefineVertexAsync(vertexDefinition, () => new AmbrosiaShardedRuntime());
+            }
+
+            if (result.GetAwaiter().GetResult() != CRAErrorCode.Success)
+            {
+                throw new Exception();
+            }
+        }
+
+        private static void InstantiateVertex(CRAClientLibrary client, string instanceName, string vertexName, string vertexDefinition, object vertexParameter, long shardID)
+        {
+            CRAErrorCode result;
+            if (shardID == -1)
+            {
+                result = client.InstantiateVertexAsync(instanceName, vertexName, vertexDefinition, vertexParameter).GetAwaiter().GetResult();
+            }
+            else
+            {
+                ConcurrentDictionary<string, int> vertexShards = new ConcurrentDictionary<string, int>();
+                vertexShards[instanceName] = (int)shardID;
+                result = client.InstantiateShardedVertex(vertexName, vertexDefinition, vertexParameter, vertexShards);
+            }
+            if (result != CRAErrorCode.Success)
+            {
+                throw new Exception();
+            }
+        }
 
         static void Main(string[] args)
         {
@@ -4005,6 +4050,7 @@ namespace Ambrosia
                         _isTestingUpgrade, _serviceReceiveFromPort, _serviceSendToPort);
                     return;
                 case LocalAmbrosiaRuntimeModes.AddReplica:
+                case LocalAmbrosiaRuntimeModes.AddShard:
                 case LocalAmbrosiaRuntimeModes.RegisterInstance:
                     if (_runtimeMode == LocalAmbrosiaRuntimeModes.AddReplica)
                     {
@@ -4016,6 +4062,7 @@ namespace Ambrosia
                     client.DisableArtifactUploading();
 
                     var replicaName = $"{_instanceName}{_replicaNumber}";
+
                     AmbrosiaRuntimeParams param = new AmbrosiaRuntimeParams();
                     param.createService = _recoveryMode == AmbrosiaRecoveryModes.A
                         ? (bool?)null
@@ -4032,13 +4079,13 @@ namespace Ambrosia
                     param.serviceLogPath = _serviceLogPath;
                     param.AmbrosiaBinariesLocation = _binariesLocation;
                     param.storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
+                    param.shardID = _shardID;
+                    param.oldShards = _oldShards;
+                    param.newShards = _newShards;
 
                     try
                     {
-                        if (client.DefineVertexAsync(param.AmbrosiaBinariesLocation, () => new AmbrosiaNonShardedRuntime()).GetAwaiter().GetResult() != CRAErrorCode.Success)
-                        {
-                            throw new Exception();
-                        }
+                        DefineVertex(client, param.AmbrosiaBinariesLocation, _shardID >= 0);
 
                         // Workaround because of limitation in parameter serialization in CRA
                         XmlSerializer xmlSerializer = new XmlSerializer(param.GetType());
@@ -4048,11 +4095,7 @@ namespace Ambrosia
                             xmlSerializer.Serialize(textWriter, param);
                             serializedParams = textWriter.ToString();
                         }
-
-                        if (client.InstantiateVertexAsync(replicaName, param.serviceName, param.AmbrosiaBinariesLocation, serializedParams).GetAwaiter().GetResult() != CRAErrorCode.Success)
-                        {
-                            throw new Exception();
-                        }
+                        InstantiateVertex(client, replicaName, param.serviceName, param.AmbrosiaBinariesLocation, serializedParams, _shardID);
                         client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true).Wait();
                         client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true).Wait();
                         client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaControlInputsName, true, true).Wait();
@@ -4085,6 +4128,7 @@ namespace Ambrosia
                 { "rp|receivePort=", "The service receive from port [REQUIRED].", rp => _serviceReceiveFromPort = int.Parse(rp) },
                 { "sp|sendPort=", "The service send to port. [REQUIRED]", sp => _serviceSendToPort = int.Parse(sp) },
                 { "l|log=", "The service log path.", l => _serviceLogPath = l },
+                {"si|shardID=", "The shard ID of the instance", si => _shardID = long.Parse(si) },
             };
 
             var helpOption = new OptionSet
@@ -4118,16 +4162,23 @@ namespace Ambrosia
                 { "tu|testingUpgrade", "Is testing upgrade.", u => _isTestingUpgrade = true },
             });
 
+            var addShardOptionSet = new OptionSet
+            {
+                {"os|oldShards=", "Comma separated list of shards to recover from [REQUIRED].", os => _oldShards = os },
+                {"ns|newShards=", "Comma separated list of new shards being created [REQUIRED].", ns => _newShards = ns }
+            }.AddMany(registerInstanceOptionSet);
+
             registerInstanceOptionSet = registerInstanceOptionSet.AddMany(helpOption);
             addReplicaOptionSet = addReplicaOptionSet.AddMany(helpOption);
             debugInstanceOptionSet = debugInstanceOptionSet.AddMany(helpOption);
-
+            addShardOptionSet = addShardOptionSet.AddMany(helpOption);
 
             var runtimeModeToOptionSet = new Dictionary<LocalAmbrosiaRuntimeModes, OptionSet>
             {
                 { LocalAmbrosiaRuntimeModes.RegisterInstance, registerInstanceOptionSet},
                 { LocalAmbrosiaRuntimeModes.AddReplica, addReplicaOptionSet},
                 { LocalAmbrosiaRuntimeModes.DebugInstance, debugInstanceOptionSet},
+                { LocalAmbrosiaRuntimeModes.AddShard, addShardOptionSet },
             };
 
             _runtimeMode = default(LocalAmbrosiaRuntimeModes);
@@ -4160,6 +4211,7 @@ namespace Ambrosia
             AddReplica,
             RegisterInstance,
             DebugInstance,
+            AddShard,
         }
 
         public enum AmbrosiaRecoveryModes
@@ -4191,6 +4243,14 @@ namespace Ambrosia
                 if (_replicaNumber == 0)
                 {
                     errorMessage += "Replica number is required.\n";
+                }
+            }
+
+            if (_runtimeMode == LocalAmbrosiaRuntimeModes.AddShard)
+            {
+                if (_shardID == -1)
+                {
+                    errorMessage += "Shard ID is required.\n";
                 }
             }
 
