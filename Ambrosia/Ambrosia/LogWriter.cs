@@ -263,7 +263,7 @@ namespace Ambrosia
             return lpBytesPerSector;
         }
 
-        public unsafe void ReadAsync(ulong sourceAddress,
+        public unsafe void AsyncRead(ulong sourceAddress,
                                      IntPtr destinationAddress,
                                      uint readLength,
                                      IAsyncResult asyncResult)
@@ -308,7 +308,7 @@ namespace Ambrosia
             }
         }
 
-        public unsafe void ReadAsync(ulong sourceAddress,
+        public unsafe void AsyncRead(ulong sourceAddress,
                                      IntPtr destinationAddress,
                                      uint readLength,
                                      IOCompletionCallback callback,
@@ -345,7 +345,7 @@ namespace Ambrosia
             }
         }
 
-        public unsafe void WriteAsync(IntPtr sourceAddress,
+        public unsafe void AsyncWrite(IntPtr sourceAddress,
                                       ulong destinationAddress,
                                       uint numBytesToWrite,
                                       IOCompletionCallback callback,
@@ -549,15 +549,15 @@ namespace Ambrosia
                                     ulong chunkNum,
                                     uint length)
         {
-            _IOThreadInfo[chunkNum].filePointer.WriteAsync((IntPtr)(_buf._ptr + writePosInBuffer), filePos, length, FlushCallback, _IOThreadInfo[chunkNum].ov_native);
+            _IOThreadInfo[chunkNum].filePointer.AsyncWrite((IntPtr)(_buf._ptr + writePosInBuffer), filePos, length, FlushCallback, _IOThreadInfo[chunkNum].ov_native);
         }
 
-        private unsafe void DoWriteForAsync(ulong writePosInBuffer,
-                                            ulong filePos,
-                                            ulong chunkNum,
-                                            uint length)
+        private unsafe void DoWriteForAsyncWrites(ulong writePosInBuffer,
+                                                  ulong filePos,
+                                                  ulong chunkNum,
+                                                  uint length)
         {
-            _IOThreadInfoAsync[chunkNum].filePointer.WriteAsync((IntPtr)(_buf._ptr + writePosInBuffer), filePos, length, FlushAsyncCallBack, _IOThreadInfoAsync[chunkNum].ov_native);
+            _IOThreadInfoAsync[chunkNum].filePointer.AsyncWrite((IntPtr)(_buf._ptr + writePosInBuffer), filePos, length, FlushAsyncCallBack, _IOThreadInfoAsync[chunkNum].ov_native);
         }
 
         public void Flush()
@@ -641,14 +641,14 @@ namespace Ambrosia
             }
             for (ulong i = 0; i < numFullChunksToWrite; i++)
             {
-                DoWriteForAsync(curWritePos, _filePos + curWritePos, i, _chunkSize);
+                DoWriteForAsyncWrites(curWritePos, _filePos + curWritePos, i, _chunkSize);
                 curWritePos += _chunkSize;
             }
             _bufBytesOccupied = finalChunkSize % sectorSize;
             if (_bufBytesOccupied != 0)
             {
                 uint finalWriteSize = (uint)((finalChunkSize - 1) / sectorSize + 1) * sectorSize;
-                DoWriteForAsync(curWritePos, _filePos + curWritePos, numFullChunksToWrite, finalWriteSize);
+                DoWriteForAsyncWrites(curWritePos, _filePos + curWritePos, numFullChunksToWrite, finalWriteSize);
                 curWritePos += finalWriteSize;
                 await _writesFinishedQ.DequeueAsync();
                 _filePos = _filePos + curWritePos - sectorSize;
@@ -658,7 +658,7 @@ namespace Ambrosia
             {
                 if (finalChunkSize != 0)
                 {
-                    DoWriteForAsync(curWritePos, _filePos + curWritePos, numFullChunksToWrite, finalChunkSize);
+                    DoWriteForAsyncWrites(curWritePos, _filePos + curWritePos, numFullChunksToWrite, finalChunkSize);
                     await _writesFinishedQ.DequeueAsync();
                 }
                 else
