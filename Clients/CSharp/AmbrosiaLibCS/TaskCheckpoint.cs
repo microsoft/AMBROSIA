@@ -221,15 +221,15 @@ namespace Ambrosia
             }
             public void OnCompletedRunner()
             {
-                var deleteFile = true;
+//                var deleteFile = true;
                 try
                 {
                     awaiter.GetResult();
                 }
-                catch (DeferRemainderException)
+/*                catch (DeferRemainderException)
                 {
                     deleteFile = false;
-                }
+                }*/
                 catch (Exception)
                 {
                 }
