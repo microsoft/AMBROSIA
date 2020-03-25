@@ -35,7 +35,6 @@ namespace Server
             // Make call, wait for reply
             // Compute size of serialized arguments
             var totalArgSize = 0;
-			var p_1 = default(Byte[]);
 			int arg0Size = 0;
 			byte[] arg0Bytes = null;
 
