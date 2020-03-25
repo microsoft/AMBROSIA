@@ -233,6 +233,7 @@ namespace Ambrosia
                 catch (Exception)
                 {
                 }
+
                 //if (deleteFile /*&& File.Exists(fn)*/) fn.Clear();
 
                 continuation();

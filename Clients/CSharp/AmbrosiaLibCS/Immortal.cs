@@ -840,7 +840,7 @@ namespace Ambrosia
 
         public async Task<long> SaveTaskContextAsync()
         {
-            var sequenceNumber = -1l;
+            var sequenceNumber = -1L;
             var message = await this._toTaskBuffer.Buffer.ReceiveAsync();
 
             if (message is SaveContextMessageContainer saveContextMessage)
@@ -1159,7 +1159,7 @@ namespace Ambrosia
         }
 
         private bool disposedValue = false; // To detect redundant calls
-        volatile private int _quiesce;
+       //volatile private int _quiesce;
         private CustomLock _outputLock = new CustomLock(0);
 
         protected virtual void Dispose(bool disposing)
