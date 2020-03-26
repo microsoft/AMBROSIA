@@ -44,9 +44,11 @@ namespace Job
                     {
                         // deserialize arguments
                         // call the method
+						byte[] argExBytes = null;
 						int argExSize = 0;
 						Exception currEx = null;
 						int arg0Size = 0;
+						byte[] arg0Bytes = null;
 
 						try 
 						{
