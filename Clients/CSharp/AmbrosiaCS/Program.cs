@@ -237,6 +237,7 @@ namespace Ambrosia
 $@" <Project Sdk=""Microsoft.NET.Sdk"">
         <PropertyGroup>
             <TargetFrameworks>{string.Join(";", _targetFrameworks)}</TargetFrameworks>
+            <Platforms>x64</Platforms>
         </PropertyGroup>
         {string.Join(string.Empty, conditionalPackageReferences)}
         {string.Join(string.Empty, conditionalProjectReferences)}
