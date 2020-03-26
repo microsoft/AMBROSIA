@@ -1,9 +1,11 @@
 # Perform the code-generation step for this example application.
-if ( $env:AMBVARIANT ) {
-    $AMBVARIANT = $env:AMBVARIANT
-} else {
+
+# PerformanceTest requires to be in Debug
+#if ( $env:AMBVARIANT ) {
+#    $AMBVARIANT = $env:AMBVARIANT
+#} else {
     $AMBVARIANT="x64\Debug\net46"
-}
+#}
 
 if ( $env:AMBROSIATOOLS ) {
     $AMBROSIATOOLS=$env:AMBROSIATOOLS
