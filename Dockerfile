@@ -2,7 +2,8 @@
 # FROM microsoft/dotnet:2.0.9-sdk-2.1.202
 # FROM microsoft/dotnet:2.0-sdk
 # FROM microsoft/dotnet:2.2-sdk-2.2.108  -- want this version
-FROM microsoft/dotnet:2.2-sdk
+# FROM microsoft/dotnet:2.2-sdk
+FROM microsoft/dotnet:3.1-sdk
 
 RUN apt-get update -y && \
     apt-get install -y libunwind-dev apache2-utils make gcc
@@ -13,7 +14,7 @@ ADD Ambrosia                      /ambrosia/Ambrosia
 ADD DevTools                      /ambrosia/DevTools
 WORKDIR /ambrosia
 
-ENV AMBROSIA_DOTNET_FRAMEWORK=netcoreapp2.2 \
+ENV AMBROSIA_DOTNET_FRAMEWORK=netcoreapp3.1 \
     AMBROSIA_DOTNET_CONF=Release \
     AMBROSIA_DOTNET_PLATFORM=linux-x64
 
@@ -21,7 +22,7 @@ ENV AMBROSIA_DOTNET_FRAMEWORK=netcoreapp2.2 \
 ENV BLDFLAGS " -c Release -f $AMBROSIA_DOTNET_FRAMEWORK -r $AMBROSIA_DOTNET_PLATFORM "
 ENV BUILDIT "dotnet publish $BLDFLAGS"
 # NOTE: use the following for a debug build of AMBROSIA:
-# ENV BLDFLAGS " -c Debug -f netcoreapp2.2 -r linux-x64 -p:DefineConstants=DEBUG "
+# ENV BLDFLAGS " -c Debug -f netcoreapp3.1 -r linux-x64 -p:DefineConstants=DEBUG "
 
 # (1) Build the core executables and libraries:
 # ---------------------------------------------
