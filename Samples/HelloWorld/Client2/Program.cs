@@ -78,7 +78,7 @@ namespace Client2
             }
 
             Client2 client = new Client2(serverInstanceName);
-            using (var c = AmbrosiaFactory.Deploy<IClient2>(clientInstanceName, client, receivePort, sendPort))
+            using (AmbrosiaFactory.Deploy<IClient2>(clientInstanceName, client, receivePort, sendPort))
             {
                 while (finishedTokenQ.IsEmpty)
                 {

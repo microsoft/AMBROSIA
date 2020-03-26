@@ -86,7 +86,7 @@ namespace Client1
                 serverInstanceName = args[1];
             }
 
-            using (var c = AmbrosiaFactory.Deploy<IClient1>(clientInstanceName, new Client1(serverInstanceName), receivePort, sendPort))
+            using (AmbrosiaFactory.Deploy<IClient1>(clientInstanceName, new Client1(serverInstanceName), receivePort, sendPort))
             {
                 finishedTokenQ.DequeueAsync().Wait();
             }
