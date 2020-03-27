@@ -53,9 +53,11 @@ cursor += p_0_ValueLength;
 var p_0 = Ambrosia.BinarySerializer.Deserialize<TwitterObservable.AnalyticsResultString>(p_0_ValueBuffer);
 
                         // call the method
+						byte[] argExBytes = null;
 						int argExSize = 0;
 						Exception currEx = null;
 						int arg1Size = 0;
+						byte[] arg1Bytes = null;
 
 						try 
 						{

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net46;netcoreapp2.2</TargetFrameworks>
+    <TargetFrameworks>net46</TargetFrameworks>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.13" Condition="'$(Configuration)' == 'Release' " />
@@ -19,10 +20,11 @@
       <Version>4.3.0</Version>
     </PackageReference>
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
     <PackageReference Update="Microsoft.NETCore.App=" Version="2.0.0=" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.2'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
     <PackageReference Include="System.CodeDom">
       <Version>4.5.0</Version>
     </PackageReference>
@@ -32,6 +34,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../../TwitterObservable/TwitterObservable.csproj" />
-    <ProjectReference Include="../../../DashboardAPI/DashboardAPI.csproj" />
   </ItemGroup>
 </Project>
