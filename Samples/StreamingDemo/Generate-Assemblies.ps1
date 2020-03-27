@@ -14,8 +14,8 @@ if ( $env:AMBROSIATOOLS ) {
 Write-Host "Using variant of AmbrosiaCS: $AMBVARIANT"
 
 # Generate the assemblies, assumes an .exe which is created by a .Net Framework build:
-Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=DashboardAPI\bin\$AMBVARIANT\DashboardAPI.dll -p=DashboardAPI\DashboardAPI.csproj -o=DashboardAPIGenerated -f=net46 -f=netcoreapp2.2"
-& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="DashboardAPI\bin\$AMBVARIANT\DashboardAPI.dll" -p="DashboardAPI\DashboardAPI.csproj" -o="DashboardAPIGenerated" -f="net46" -f="netcoreapp2.2"
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=DashboardAPI\bin\$AMBVARIANT\DashboardAPI.dll -p=DashboardAPI\DashboardAPI.csproj -o=DashboardAPIGenerated -f=net46"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="DashboardAPI\bin\$AMBVARIANT\DashboardAPI.dll" -p="DashboardAPI\DashboardAPI.csproj" -o="DashboardAPIGenerated" -f="net46"
 
-Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=DashboardAPI\bin\$AMBVARIANT\DashboardAPI.dll -a=AnalyticsAPI\bin\$AMBVARIANT\AnalyticsAPI.dll -p=DashboardAPI\DashboardAPI.csproj -p=AnalyticsAPI\AnalyticsAPI.csproj -o=AnalyticsAPIGenerated -f=net46 -f=netcoreapp2.2"
-& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="DashboardAPI\bin\$AMBVARIANT\DashboardAPI.dll" -a="AnalyticsAPI\bin\$AMBVARIANT\AnalyticsAPI.dll" -p="DashboardAPI\DashboardAPI.csproj" -p="AnalyticsAPI\AnalyticsAPI.csproj" -o="AnalyticsAPIGenerated" -f="net46" -f="netcoreapp2.2"
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=DashboardAPI\bin\$AMBVARIANT\DashboardAPI.dll -a=AnalyticsAPI\bin\$AMBVARIANT\AnalyticsAPI.dll -p=DashboardAPI\DashboardAPI.csproj -p=AnalyticsAPI\AnalyticsAPI.csproj -o=AnalyticsAPIGenerated -f=net46"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="DashboardAPI\bin\$AMBVARIANT\DashboardAPI.dll" -a="AnalyticsAPI\bin\$AMBVARIANT\AnalyticsAPI.dll" -p="DashboardAPI\DashboardAPI.csproj" -p="AnalyticsAPI\AnalyticsAPI.csproj" -o="AnalyticsAPIGenerated" -f="net46"
