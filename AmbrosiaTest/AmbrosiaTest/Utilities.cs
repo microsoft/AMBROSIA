@@ -94,7 +94,7 @@ namespace AmbrosiaTest
                     process.WaitForExit();
 
                 // Give it a second to completely start
-                Thread.Sleep(2000);
+                Thread.Sleep(1000);
 
                 //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
                 Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
