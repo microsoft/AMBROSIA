@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net46;netcoreapp2.2</TargetFrameworks>
-    <Platforms>x64</Platforms>
+    <TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

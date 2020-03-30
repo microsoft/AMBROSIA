@@ -69,7 +69,7 @@ namespace Server
                 serviceName = args[2];
             }
 
-            using (var c = AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
+            using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
             {
                 Thread.Sleep(14 * 24 * 3600 * 1000);
             }

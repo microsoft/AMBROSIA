@@ -1,3 +1,4 @@
+*X* Trying to connect IC and Language Binding
 *X* InstanceProxy created to communicate with . (Attach: False)
 *X* Start Start()
 *X* Received a checkpoint message
@@ -7,7 +8,7 @@
 *X* Received an initial message
 *X* Server in Entry Point
 *X* Received a becoming primary message
-Becoming a primary now
+*X* Becoming a primary now
 *X* Received 1024 MB so far
 *X* Received 2048 MB so far
 Bytes received: 2147483648

@@ -1,9 +1,11 @@
 # Perform the code-generation step for this example application.
-if ( $env:AMBVARIANT ) {
-    $AMBVARIANT = $env:AMBVARIANT
-} else {
+
+# PerformanceTest requires to be in Debug
+#if ( $env:AMBVARIANT ) {
+#    $AMBVARIANT = $env:AMBVARIANT
+#} else {
     $AMBVARIANT="x64\Debug\net46"
-}
+#}
 
 if ( $env:AMBROSIATOOLS ) {
     $AMBROSIATOOLS=$env:AMBROSIATOOLS
@@ -14,5 +16,5 @@ if ( $env:AMBROSIATOOLS ) {
 Write-Host "Using variant of AmbrosiaCS: $AMBVARIANT"
 
 # Generate the assemblies, assumes an .exe which is created by a .Net Framework build:
-Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=API\bin\$AMBVARIANT\ServerAPI.dll -a=ClientAPI\bin\$AMBVARIANT\ClientAPI.dll -p=API\ServerAPI.csproj -p=ClientAPI\ClientAPI.csproj -o=PTAmbrosiaGeneratedAPI -f=net46 -f=netcoreapp2.2"
-& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="API\bin\$AMBVARIANT\ServerAPI.dll" -a="ClientAPI\bin\$AMBVARIANT\ClientAPI.dll" -p="API\ServerAPI.csproj" -p="ClientAPI\ClientAPI.csproj" -o="PTAmbrosiaGeneratedAPI" -f="net46" -f="netcoreapp2.2"
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=API\bin\$AMBVARIANT\ServerAPI.dll -a=ClientAPI\bin\$AMBVARIANT\ClientAPI.dll -p=API\ServerAPI.csproj -p=ClientAPI\ClientAPI.csproj -o=PTAmbrosiaGeneratedAPI -f=net46 -f=netcoreapp3.1"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="API\bin\$AMBVARIANT\ServerAPI.dll" -a="ClientAPI\bin\$AMBVARIANT\ClientAPI.dll" -p="API\ServerAPI.csproj" -p="ClientAPI\ClientAPI.csproj" -o="PTAmbrosiaGeneratedAPI" -f="net46" -f="netcoreapp3.1"

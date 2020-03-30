@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net46;netcoreapp2.2</TargetFrameworks>
+    <TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
