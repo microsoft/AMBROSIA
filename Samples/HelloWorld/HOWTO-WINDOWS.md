@@ -42,7 +42,7 @@ Before running the application, you need to register each Immortal instance
 so that other Immortal instances can find them. Open a command prompt and enter the following commands:
 
 ```bat
-cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2\
+cd %AMBROSIATOOLS%\x64\Release\netcoreapp3.1\
 dotnet Ambrosia.dll RegisterInstance -i=client -rp=1000 -sp=1001 -l=C:\logs\
 dotnet Ambrosia.dll RegisterInstance -i=server -rp=2000 -sp=2001 -l=C:\logs\
 ```
@@ -65,28 +65,28 @@ each Immortal.
 To run the server ImmortalCoordinator, in the first console window:
 
  ```bat
- cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2
+ cd %AMBROSIATOOLS%\x64\Release\netcoreapp3.1
  dotnet ImmortalCoordinator.dll --instanceName=server --port=2500
 ```
 
 To run the client ImmortalCoordinator, in the second console window:
 
 ```bat
-cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2
+cd %AMBROSIATOOLS%\x64\Release\netcoreapp3.1
 dotnet ImmortalCoordinator.dll --instanceName=client --port=1500
 ```
 
 To run the HelloWorld server, in the third console window:
 
 ```bat
-cd Server\bin\x64\Debug\netcoreapp2.2
+cd Server\bin\x64\Debug\netcoreapp3.1
 dotnet Server.dll
 ```
 
 To run the HelloWorld client, in the fourth console window:
 
 ```bat
-cd Client1\bin\x64\Debug\netcoreapp2.2
+cd Client1\bin\x64\Debug\netcoreapp3.1
 dotnet Client1.dll
 ```
 
@@ -108,7 +108,7 @@ If you want to run Hello World a second time, it is not enough to just restart t
 Optionally, you can also delete the registrations in the Azure table:
 
 ```bat
-cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2\
+cd %AMBROSIATOOLS%\x64\Release\netcoreapp3.1\
 dotnet UnsafeDeregisterInstance.dll server
 dotnet UnsafeDeregisterInstance.dll client
 ```
