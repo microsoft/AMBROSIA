@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Microsoft.Ambrosia.LibCS</id>
-    <version>1.0.13</version>
+    <version>1.0.14</version>
     <title>Microsoft.Ambrosia.LibCS</title>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
@@ -26,9 +26,9 @@
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\AmbrosiaLibCS.pdb" target="lib\net46" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\Ambrosia.exe" target="lib\net46" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\net46\Ambrosia.pdb" target="lib\net46" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.2\AmbrosiaLibCS.dll" target="lib\netcoreapp2.2" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.2\AmbrosiaLibCS.pdb" target="lib\netcoreapp2.2" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.2\Ambrosia.dll" target="lib\netcoreapp2.2" />
-    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp2.2\Ambrosia.pdb" target="lib\netcoreapp2.2" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp3.1\AmbrosiaLibCS.dll" target="lib\netcoreapp3.1" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp3.1\AmbrosiaLibCS.pdb" target="lib\netcoreapp3.1" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp3.1\Ambrosia.dll" target="lib\netcoreapp3.1" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\x64\$configuration$\netcoreapp3.1\Ambrosia.pdb" target="lib\netcoreapp3.1" />
   </files>
 </package>
