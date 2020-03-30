@@ -48,7 +48,7 @@ namespace AmbrosiaTest
         //*********
         // NetFrameworkTestRun
         // when = true, the test will run under the assumption that .Net Framework files in AmbrosiaTest\bin\x64\debug (or release) directory (from net46 directory)
-        // when = false, the test will run under the assumption that .Net Core files in AmbrosiaTest\bin\x64\debug (or release) directory (from netcoreapp2.2 directory)
+        // when = false, the test will run under the assumption that .Net Core files in AmbrosiaTest\bin\x64\debug (or release) directory (from netcoreapp3.1 directory)
         // .NET CORE only has DLLs, so no AMB exe so run by using "dotnet"
         //*********
         public bool NetFrameworkTestRun = true;
@@ -857,7 +857,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(4000);
+            Thread.Sleep(6000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             return processID;
@@ -905,7 +905,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(4000);
+            Thread.Sleep(6000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             return processID;

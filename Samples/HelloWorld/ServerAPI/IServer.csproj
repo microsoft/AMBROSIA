@@ -1,8 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net46;netcoreapp2.2</TargetFrameworks>
+    <TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
     <Platforms>x64</Platforms>
+    <AssemblyName>IServer</AssemblyName>
+    <RootNamespace>IServer</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
