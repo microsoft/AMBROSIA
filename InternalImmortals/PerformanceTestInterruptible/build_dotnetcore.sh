@@ -12,7 +12,7 @@ else PLAT=win10-x64
 fi
 
 # Set defaults if these environment vars aren't present:
-FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.2}"
+FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp3.1}"
 CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
 # Use a non-absolute directory here to prevent collisions:
@@ -37,7 +37,7 @@ echo "Generate the assemblies (assumes the AmbrosiaCS executable was built):"
 echo "----------------------------------------------------------------------"
 set -x
 # Alternatively: "dotnet ../../bin/AmbrosiaCS.dll"
-../../bin/AmbrosiaCS CodeGen -a "API/publish/ServerAPI.dll" -a "IJob/publish/IJob.dll" -p "API/ServerAPI.csproj" -p "IJob/IJob.csproj" -o $GENDEST -f "net46" -f "netcoreapp2.2" 
+../../bin/AmbrosiaCS CodeGen -a "API/publish/ServerAPI.dll" -a "IJob/publish/IJob.dll" -p "API/ServerAPI.csproj" -p "IJob/IJob.csproj" -o $GENDEST -f "net46" -f "netcoreapp3.1" 
 set +x
 
 echo

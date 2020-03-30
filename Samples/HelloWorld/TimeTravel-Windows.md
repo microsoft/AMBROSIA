@@ -17,7 +17,7 @@ Like running instances for real, debugging an instance involves running two proc
 
 ```bat
 
-cd Server\bin\x64\Debug\netcoreapp2.2
+cd Server\bin\x64\Debug\netcoreapp3.1
 
 dotnet Server.dll
 
@@ -30,7 +30,7 @@ Now, instead of starting an ImmortalCoordinator, we run Ambrosia.dll in a differ
 
 ```bat
 
-cd %AMBROSIATOOLS%\x64\Release\netcoreapp2.2
+cd %AMBROSIATOOLS%\x64\Release\netcoreapp3.1
 
 dotnet Ambrosia.dll DebugInstance -i=server -rp=2000 -sp=2001 -l=C:\logs\ -c=1
 ```
