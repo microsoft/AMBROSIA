@@ -3,7 +3,8 @@
 # FROM microsoft/dotnet:2.0-sdk
 # FROM microsoft/dotnet:2.2-sdk-2.2.108  -- want this version
 # FROM microsoft/dotnet:2.2-sdk
-FROM microsoft/dotnet:3.1-sdk
+# FROM microsoft/dotnet:3.1-sdk -- no longer proper string format
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1
 
 RUN apt-get update -y && \
     apt-get install -y libunwind-dev apache2-utils make gcc
