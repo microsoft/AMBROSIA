@@ -19,17 +19,20 @@ ENV PATH="${PATH}:/ambrosia/InternalImmortals/PerformanceTestInterruptible/Clien
 # This Dockerfile is an example of adding the application
 # *piece-by-piece* to enable incremental rebuilds.
 ADD IJob /ambrosia/InternalImmortals/PerformanceTestInterruptible/IJob
+
 WORKDIR /ambrosia/InternalImmortals/PerformanceTestInterruptible
 RUN dotnet publish -o publish $BLDFLAGS IJob/IJob.csproj
+
 
 # DANGER, WARNING, FIXME: it is UNSAFE to dotnet publish twice to the same absolute path:
 ADD API /ambrosia/InternalImmortals/PerformanceTestInterruptible/API
 RUN dotnet publish -o publish $BLDFLAGS API/ServerAPI.csproj
 
 # Run the code-generation tool:
-RUN rm -rf ./GeneratedSourceFiles && \
-    mkdir -p GeneratedSourceFiles 
+RUN rm -rf ./GeneratedSourceFiles && mkdir -p GeneratedSourceFiles 
+#RUN AmbrosiaCS CodeGen -a IJob/publish/IJob.dll -a API/publish/ServerAPI.dll -p IJob/IJob.csproj -p API/ServerAPI.csproj -o PTIAmbrosiaGeneratedAPI -f netcoreapp3.1 -f net46
 RUN AmbrosiaCS CodeGen -a publish/IJob.dll -a publish/ServerAPI.dll -p IJob/IJob.csproj -p API/ServerAPI.csproj -o PTIAmbrosiaGeneratedAPI -f netcoreapp3.1 -f net46
+
 
 # Be wary: absolute paths have rather different behavior for dotnet publish.
 ENV BUILDIT="dotnet publish -o publish $BLDFLAGS"
