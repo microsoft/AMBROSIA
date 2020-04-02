@@ -16,10 +16,9 @@ export AMBROSIA_DOTNET_CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
 UNAME=`uname`
 if [ $AMBROSIA_DOTNET_FRAMEWORK == "net46" ]; then
-    PLAT=x64
+    PLAT=win10-x64
     OS=Windows_NT
 else
-    # netcore gives an error on Ambrosia.csproj with x64...
     if [ "$UNAME" == Linux ];
     then PLAT=linux-x64
     elif [ "$UNAME" == Darwin ];
