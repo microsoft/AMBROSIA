@@ -9,17 +9,16 @@ cd `dirname $0`
 # big build step instead of granular ones.
 # --------------------------------------------------------------------
 
-# Should be "net46" or "netcoreapp2.2".  Set a default if not set:
-export AMBROSIA_DOTNET_FRAMEWORK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp2.2}"
+# Should be "net46" or "netcoreapp3.1".  Set a default if not set:
+export AMBROSIA_DOTNET_FRAMEWORK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp3.1}"
 # Release or Debug:
 export AMBROSIA_DOTNET_CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
 UNAME=`uname`
 if [ $AMBROSIA_DOTNET_FRAMEWORK == "net46" ]; then
-    PLAT=x64
+    PLAT=win10-x64
     OS=Windows_NT
 else
-    # netcore gives an error on Ambrosia.csproj with x64...
     if [ "$UNAME" == Linux ];
     then PLAT=linux-x64
     elif [ "$UNAME" == Darwin ];

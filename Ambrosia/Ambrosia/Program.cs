@@ -2274,7 +2274,7 @@ namespace Ambrosia
                         ReleaseAndTryCleanupKillFile();
                         break;
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         // Maybe we are tying to upgrade, but maybe someone else is checking. Try 3 times before committing suicide
                         if (i==2)
@@ -2555,6 +2555,7 @@ namespace Ambrosia
             }
             catch (Exception e)
             {
+                Console.WriteLine(e.ToString());
             }
         }
 
@@ -2893,7 +2894,7 @@ namespace Ambrosia
                                 LockKillFile();
                                 break;
                             }
-                            catch (Exception e)
+                            catch (Exception)
                             {
                                 // Someone may be checking promotability. Keep trying until successful
                             }
