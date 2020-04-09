@@ -1,7 +1,7 @@
 
 # ------------------------------
 FROM ambrosia/ambrosia as amb
-FROM microsoft/dotnet:2.2-sdk
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1
 COPY --from=amb /ambrosia/bin /ambrosia/bin
 ENV PATH="$PATH:/ambrosia/bin"
 # ------------------------------

@@ -100,6 +100,7 @@ SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $Cur
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\AnalyticsAPI\AnalyticsAPI.csproj' -NoBOMEncoding 'F';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\GeneratedSourceFiles\AnalyticsAPIGenerated\latest\AnalyticsAPIGenerated.csproj' -NoBOMEncoding 'T';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\DashboardAPI\DashboardAPI.csproj' -NoBOMEncoding 'F';
+SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\Dashboard\Dashboard.csproj' -NoBOMEncoding 'F';
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Samples\StreamingDemo\GeneratedSourceFiles\DashboardAPIGenerated\latest\DashboardAPIGenerated.csproj' -NoBOMEncoding 'T';
 
 

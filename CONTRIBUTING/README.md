@@ -12,7 +12,7 @@ We invite developers wishing to build on or contribute to AMBROSIA to join our [
 Overview of repository
 ----------------------
 
-AMBROSIA is implemented in C# and built with Visual Studio or dotnet
+AMBROSIA is implemented in C# and built with Visual Studio 2019 or dotnet
 CLI tooling. Within the top level of this source repository, you will
 find.
 
