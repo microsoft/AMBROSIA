@@ -3081,6 +3081,12 @@ namespace Ambrosia
             var sizeBytes = localServiceBuffer.LengthLength;
             Task createCheckpointTask = null;
             // Process the Async message
+#if DEBUG
+            if ((_createService) && (localServiceBuffer.Buffer[sizeBytes] != InitalMessageByte))
+            {
+                OnError(0, "Missing initial message from the application");
+            }
+#endif
             switch (localServiceBuffer.Buffer[sizeBytes])
             {
                 case takeCheckpointByte:
