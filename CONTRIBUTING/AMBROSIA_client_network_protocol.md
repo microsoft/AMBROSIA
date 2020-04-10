@@ -92,7 +92,9 @@ Message types and associated data which may be sent to or received by services:
 
  * 10 – `UpgradeTakeCheckpoint` (Received): No data
 
- * 9 – `InitialMessage` (Sent/Received): Data is a complete (incoming rpc) message which is given back to the service as the very first RPC message it ever receives. Used to bootstrap service start behavior.
+ * 9 – `InitialMessage` (Sent/Received): Data can be any arbitrary bytes. The `InitialMessage` message will simply be echoed back
+   to the service which can use it to bootstrap service start behavior. In the C# language binding, the data is a complete incoming RPC
+   message that will be the very first RPC message it ever receives. 
 
  * 8 – `Checkpoint` (Sent/Received): The payload is a single 64 bit number (ZigZagLong).
    That payload in turn is the size in bytes of a checkpoint itself, which is a
