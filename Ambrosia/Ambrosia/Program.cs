@@ -3083,10 +3083,7 @@ namespace Ambrosia
             Task createCheckpointTask = null;
             // Process the Async message
 #if DEBUG
-            if ((_createService) && (localServiceBuffer.Buffer[sizeBytes] != InitalMessageByte))
-            {
-                OnError(0, "Missing initial message from the application");
-            }
+            ValidateMessageValidity(localServiceBuffer.Buffer[sizeBytes]);
 #endif
             switch (localServiceBuffer.Buffer[sizeBytes])
             {
@@ -3150,10 +3147,6 @@ namespace Ambrosia
 
                 case InitalMessageByte:
                     // Process the Async RPC request
-                    if (ServiceInitializationMessage != null)
-                    {
-                        OnError(0, "Getting second initialization message");
-                    }
                     ServiceInitializationMessage = localServiceBuffer;
                     localServiceBuffer = new FlexReadBuffer();
                     break;
@@ -3190,6 +3183,19 @@ namespace Ambrosia
                     // This one really should terminate the process; no recovery allowed.
                     OnError(0, "Illegal leading byte in local message");
                     break;
+            }
+        }
+
+        private void ValidateMessageValidity(byte messageType)
+        {
+            if ((_createService) && (ServiceInitializationMessage == null) && (messageType != InitalMessageByte))
+            {
+                OnError(0, "Missing initial message from the application");
+            }
+            if (((_createService) && (ServiceInitializationMessage != null) && (messageType == InitalMessageByte)) ||
+                (!_createService && (messageType == InitalMessageByte)))
+            {
+                OnError(0, "Extra initialization message");
             }
         }
 
