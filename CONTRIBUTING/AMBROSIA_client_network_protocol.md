@@ -111,9 +111,9 @@ Message types and associated data which may be sent to or received by services:
 
  * 0 - Incoming RPC (Received):
 
-   - Byte 0 of data is reserved (RPC or return value), and is currently always set to 0 (RPC).
+   - Byte 0 of data is reserved (RPC or return value)
    - Next is a variable length int (ZigZagInt) which is a method ID.
-   - The next byte is a reserved byte (Fire and forget (1), Async/Await (0), or Impulse (2)) and is currently always set to 1 (Fire and Forget).
+   - The next byte is a reserved byte (Fire and forget (1), Async/Await (0), or Impulse (2))
    - The remaining bytes are the serialized arguments packed tightly.
 
  * 0 - Outgoing RPC (Sent):
