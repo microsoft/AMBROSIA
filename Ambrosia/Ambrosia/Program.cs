@@ -1869,6 +1869,10 @@ namespace Ambrosia
                 var messageBuf = new byte[numMessageBytes];
                 var memStream = new MemoryStream(messageBuf);
                 memStream.WriteInt(1);
+#if DEBUG
+                // We are about to request a checkpoint from the language binding. Get ready to error check the incoming checkpoint
+                _myAmbrosia.ExpectingCheckpoint = true;
+#endif
                 if (upgrading)
                 {
                     memStream.WriteByte(upgradeTakeCheckpointByte);
@@ -2066,6 +2070,7 @@ namespace Ambrosia
         bool _upgrading;
         internal bool _restartWithRecovery;
         internal bool CheckpointingService { get; set; }
+        internal bool ExpectingCheckpoint { get; set; }
 
         // Constants for leading byte communicated between services;
         public const byte RPCByte = 0;
@@ -3196,6 +3201,17 @@ namespace Ambrosia
                 (!_createService && (messageType == InitalMessageByte)))
             {
                 OnError(0, "Extra initialization message");
+            }
+            if (messageType == checkpointByte)
+            {
+                if (ExpectingCheckpoint)
+                {
+                    ExpectingCheckpoint = false;
+                }
+                else
+                {
+                    OnError(0, "Received unexpected checkpoint");
+                }
             }
         }
 
