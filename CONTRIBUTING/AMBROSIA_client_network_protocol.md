@@ -58,8 +58,6 @@ following serialized datatypes.
  * IntFixed  - a 32-bit little endian number 
  * LongFixed - a 64-bit little endian number 
 
- * CheckSum - FINISHME
-
 The variable-length integers are in the same format used by, e.g.,
 [Protobufs](https://developers.google.com/protocol-buffers/docs/encoding).
 
@@ -148,40 +146,40 @@ If starting up for the first time:
 
 If recovering but not upgrading, or starting as a non-upgrading secondary, or running a repro or what-if test:
 
- * Receive a checkpoint message
+ * Receive a `Checkpoint` message
  * Receive logged replay messages
- * Receive takeBecomingPrimaryCheckpoint message
+ * Receive `TakeBecomingPrimaryCheckpoint` message
  * Send a `Checkpoint` message
  * Normal processing
 
 If recovering and upgrading, or starting as an upgrading secondary:
 
- * Receive a checkpoint message
+ * Receive a `Checkpoint` message
  * Receive logged replay messages 
-   <br/>*Note: MUST be processed by the old (pre-upgrade) code to prevent changing the generated sequence
-   of messages that will be sent to the IC as a consequence of replay. Further, this requires that your
-   service (application) is capable of dynamically switching (at runtime) from the old to the new version of its code.*
+   > Note: MUST be processed by the old (pre-upgrade) code to prevent changing the generated sequence
+   of messages that will be sent to the IC as a consequence of replay. <br/>Further, this requires that your
+   service (application) is capable of dynamically switching (at runtime) from the old to the new version of its code.
  * Receive `UpgradeTakeCheckpoint` message
  * Upgrade state and code
- * Send a checkpoint message for upgraded state
+ * Send a `Checkpoint` message for upgraded state
  * Normal processing
 
 If performing an upgrade what-if test:
 
- * Receive a checkpoint message
+ * Receive a `Checkpoint` message
  * Receive `UpgradeService` message
  * Upgrade state and code
  * Receive logged replay messages
 
-The what-if testing allows messages to replayed against a (nominally) upgraded service to verify if the changes cause bugs.
+The what-if testing allows messages to be replayed against a (nominally) upgraded service to verify if the changes cause bugs.
 This helps catch regressions before actually upgrading the live service. To receive `UpgradeTakeCheckpoint` or `UpgradeService`
 messages requires special command line parameters to be passed to the IC.
 
 ### Normal operation:
 
- * Receive an arbitrary mix of RPCs, RPC batches, and TakeCheckpoint messages.
+ * Receive an arbitrary mix of `RPC`, `RPCBatch`, and `TakeCheckpoint` messages.
 
-When a TakeCheckpoint message is received, no further messages may be processed until the state is serialized and sent in a checkpoint message. Note that the serialized state must include any unsent output messages which resulted from previous incoming calls. Those serialized unsent messages must follow the checkpoint message.
+When a `TakeCheckpoint` message is received, no further messages may be processed until the state is serialized and sent in a `Checkpoint` message. Note that the serialized state must include any unsent output messages which resulted from previous incoming calls. Those serialized unsent messages must follow the checkpoint message.
 
 ### Attach-before-send protocol
 
