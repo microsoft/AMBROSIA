@@ -6,8 +6,9 @@ This document covers how an application should communicate with the AMBROSIA
 reliability coordinator assigned to it.  The coordinator is located within the
 same physical machine/container and assumed to survive or fail with the
 application process.  The coordinator communicates via TCP/IP over a local
-socket with the application.  This process separation is designed to minimize
-assumptions about the application and maximize language-agnosticity.
+socket with the application through a language-specific binding.  This process
+separation is designed to minimize assumptions about the application and maximize
+language-agnosticity.
 
 Overview and Terminology
 ------------------------
@@ -40,6 +41,10 @@ Below we use the following terminology:
    information back to the caller.  Note that even an async/await RPC with
    "void" return value indicates more to the caller (namely, that the remote
    computation has completed).
+
+ * "Language Binding" (LB) - the language-specific AMBROSIA binding that 
+   exposes the programming interfaces and handles all communication with
+   the associated Immortal Coordinator (IC).
 
 Required Helper Functions
 -------------------------
@@ -83,8 +88,10 @@ The rest of the record is a sequence of messages, packed tightly, each with the 
 All information sent to the reliability coordinator is in the form of a sequence of messages with the format specified above.
 Message types and associated data which may be sent to or received by services:
 
- * 14 - TrimTo (FINISHME - INTERNAL!??!)
- * 13 - CountReplayableRPCBatchByte (FINISHME - INTERNAL!??!)
+ * 14 - `TrimTo`: Only used in IC to IC communication. The IC will never send this message type to the LB.
+
+ * 13 - `CountReplayableRPCBatchByte` (Recieved): Similar to `RPCBatch`, but the data also includes a count (ZigZagInt)
+   of non-Impulse (replayable) messages after the count of RPC messages.
 
  * 12 – `UpgradeService` (Received): No data
 
@@ -94,20 +101,22 @@ Message types and associated data which may be sent to or received by services:
 
  * 9 – `InitialMessage` (Sent/Received): Data can be any arbitrary bytes. The `InitialMessage` message will simply be echoed back
    to the service which can use it to bootstrap service start behavior. In the C# language binding, the data is a complete incoming RPC
-   message that will be the very first RPC message it ever receives. 
+   message that will be the very first RPC message it receives. 
 
- * 8 – `Checkpoint` (Sent/Received): The payload is a single 64 bit number (ZigZagLong).
-   That payload in turn is the size in bytes of a checkpoint itself, which is a
-   binary blob that follows this message immediately (no additional header).
+ * 8 – `Checkpoint` (Sent/Received): The data is a single 64 bit number (ZigZagLong).
+   This message is immediately followed (no additional header) by checkpoint itself, 
+   which is a binary blob.
    The reason that checkpoints are not sent in the message payload directly is
    so that they can have a 64-bit instead of 32-bit length, in order to support
    large checkpoints.
 
- * 5 – `RPCBatch` (Sent/Received): Data are a count of the number of RPC messages in the batch, followed by the corresponding number of RPC messages. Note that the count is in variable sized WriteInt format
+ * 5 – `RPCBatch` (Sent/Received): Data is a count (ZigZagInt) of the number of RPC messages in the batch, followed by the corresponding RPC messages.
 
  * 2 – `TakeCheckpoint` (Received): No data
 
- * 1 – `AttachTo` (Sent): Data are the destination bytes. Note that these must match the names used when services are logically created using localambrosiaruntime
+ * 1 – `AttachTo` (Sent): Data is the destination instance name length (ZigZagInt) followed by the name in UTF-8. Note that the name must match the
+       name used when a service is logically created (registered). The `AttachTo` message must be sent (once) for each each outgoing RPC destination,
+       exluding the local instance, prior to sending an RPC.
 
  * 0 - Incoming RPC (Received):
 
@@ -119,7 +128,7 @@ Message types and associated data which may be sent to or received by services:
  * 0 - Outgoing RPC (Sent):
 
    - First is a variable length int (ZigZagInt) which is the length of the destination service.  For a self call, this should be set to 0 and the following field omitted.
-   - Next are the actual bytes for the name of the destination service.
+   - Next are the actual bytes (in UTF-8) for the name of the destination service.
    - Next follow all four fields listed above under "Incoming RPC".
 
 That is, an Outgoing RPC is just an incoming RPC with two extra fields on the front.
@@ -134,7 +143,7 @@ If starting up for the first time:
 
  * Receive a `TakeBecomingPrimaryCheckpoint` message
  * Send an `InitialMessage`
- * Send a checkpoint message
+ * Send a `Checkpoint` message
  * Normal processing
 
 If recovering but not upgrading, or starting as a non-upgrading secondary, or running a repro or what-if test:
@@ -142,24 +151,31 @@ If recovering but not upgrading, or starting as a non-upgrading secondary, or ru
  * Receive a checkpoint message
  * Receive logged replay messages
  * Receive takeBecomingPrimaryCheckpoint message
- * Send a checkpoint message
+ * Send a `Checkpoint` message
  * Normal processing
 
 If recovering and upgrading, or starting as an upgrading secondary:
 
  * Receive a checkpoint message
- * Receive logged replay messages
- * Receive UpgradeTakeCheckpoint message
- * Upgrade state
+ * Receive logged replay messages 
+   <br/>*Note: MUST be processed by the old (pre-upgrade) code to prevent changing the generated sequence
+   of messages that will be sent to the IC as a consequence of replay. Further, this requires that your
+   service (application) is capable of dynamically switching (at runtime) from the old to the new version of its code.*
+ * Receive `UpgradeTakeCheckpoint` message
+ * Upgrade state and code
  * Send a checkpoint message for upgraded state
  * Normal processing
 
 If performing an upgrade what-if test:
 
  * Receive a checkpoint message
- * Receive upgradeService message
- * Upgrade state
+ * Receive `UpgradeService` message
+ * Upgrade state and code
  * Receive logged replay messages
+
+The what-if testing allows messages to replayed against a (nominally) upgraded service to verify if the changes cause bugs.
+This helps catch regressions before actually upgrading the live service. To receive `UpgradeTakeCheckpoint` or `UpgradeService`
+messages requires special command line parameters to be passed to the IC.
 
 ### Normal operation:
 
@@ -169,5 +185,6 @@ When a TakeCheckpoint message is received, no further messages may be processed 
 
 ### Attach-before-send protocol
 
-FINISHME...
+* Before an RPC is sent to an Immortal instance (other than to the local Immortal), the `AttachTo` message must be sent (once).
+  This instructs the local IC to make the necessary TCP connections to the destination IC.
 
