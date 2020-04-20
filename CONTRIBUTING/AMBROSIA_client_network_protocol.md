@@ -156,7 +156,7 @@ If recovering and upgrading, or starting as an upgrading secondary:
 
  * Receive a `Checkpoint` message
  * Receive logged replay messages 
-   > Note: MUST be processed by the old (pre-upgrade) code to prevent changing the generated sequence
+   > Note: Replayed messages MUST be processed by the old (pre-upgrade) code to prevent changing the generated sequence
    of messages that will be sent to the IC as a consequence of replay. <br/>Further, this requires that your
    service (application) is capable of dynamically switching (at runtime) from the old to the new version of its code.
  * Receive `UpgradeTakeCheckpoint` message
@@ -175,13 +175,16 @@ The what-if testing allows messages to be replayed against a (nominally) upgrade
 This helps catch regressions before actually upgrading the live service. To receive `UpgradeTakeCheckpoint` or `UpgradeService`
 messages requires special command line parameters to be passed to the IC.
 
-### Normal operation:
+### Normal processing:
 
  * Receive an arbitrary mix of `RPC`, `RPCBatch`, and `TakeCheckpoint` messages.
 
-When a `TakeCheckpoint` message is received, no further messages may be processed until the state is serialized and sent in a `Checkpoint` message. Note that the serialized state must include any unsent output messages which resulted from previous incoming calls. Those serialized unsent messages must follow the checkpoint message.
+### Receive logged replay messages:
 
-### Attach-before-send protocol
+ * During recovery, it is a violation of the recovery protocol for the application to send an Impulse RPC. So while a replayed Impulse RPC can send 
+   Fork RPCs, it cannot send Impulse RPCs. If it does, the language binding should throw an error.
+
+### Attach-before-send protocol:
 
 * Before an RPC is sent to an Immortal instance (other than to the local Immortal), the `AttachTo` message must be sent (once).
   This instructs the local IC to make the necessary TCP connections to the destination IC.
