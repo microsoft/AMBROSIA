@@ -2,13 +2,15 @@
 Client Protocol for AMBROSIA network participants
 =================================================
 
-This document covers how an application should communicate with the AMBROSIA
-reliability coordinator assigned to it.  The coordinator is located within the
-same physical machine/container and assumed to survive or fail with the
-application process.  The coordinator communicates via TCP/IP over a local
-socket with the application through a language-specific binding.  This process
-separation is designed to minimize assumptions about the application and maximize
-language-agnosticity.
+Each application has an AMBROSIA reliability coordinator assigned to it. 
+The coordinator is located within the same physical machine/container, and 
+must survive or fail with the application process. This process separation
+is designed to minimize assumptions about the application and maximize 
+language-agnosticity. 
+The coordinator (also known as an Immortal Coordinator) communicates
+via TCP/IP over 2 local sockets with the application through a language-specific
+binding. This document covers how a language binding should communicate with
+it's Immortal Coordinator, providing a high-level spec for a language binding author.
 
 Overview and Terminology
 ------------------------
@@ -178,6 +180,12 @@ messages requires special command line parameters to be passed to the IC.
 ### Normal processing:
 
  * Receive an arbitrary mix of `RPC`, `RPCBatch`, and `TakeCheckpoint` messages.
+ * Persisted application state (the content of a checkpoint) should only ever be changed
+   as a consequence of processing `RPC` and `RPCBatch` messages. This ensures that the 
+   application state can always be deterministically re-created during replay (recovery).
+ * The LB must never process messages [that modify application state] while it's in the process
+   of either loading (receiving) or taking (sending) a checkpoint. This ensures the integrity of
+   the checkpoint as a point-in-time snapshot of application state.
 
 ### Receive logged replay messages:
 
