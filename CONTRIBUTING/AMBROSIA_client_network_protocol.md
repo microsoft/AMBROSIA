@@ -114,9 +114,8 @@ Message types and associated data which may be sent to or received by services:
 
  * 2 – `TakeCheckpoint` (Received): No data
 
- * 1 – `AttachTo` (Sent): Data is the destination instance name length (ZigZagInt) followed by the name in UTF-8. Note that the name must match the
-       name used when a service is logically created (registered). The `AttachTo` message must be sent (once) for each each outgoing RPC destination,
-       exluding the local instance, prior to sending an RPC.
+ * 1 – `AttachTo` (Sent): Data is the destination instance name in UTF-8. The name must match the name used when the instance was logically created (registered).
+       The `AttachTo` message must be sent (once) for each outgoing RPC destination, excluding the local instance, prior to sending an RPC.
 
  * 0 - Incoming RPC (Received):
 
