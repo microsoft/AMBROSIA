@@ -37,7 +37,7 @@ namespace Ambrosia
         }
     }
 
-#if NETFRAMEWORK || NETCORE
+#if NETFRAMEWORK || NETCORE || NETSTANDARD
     public class LogReader : IDisposable
     {
         Stream stream;
