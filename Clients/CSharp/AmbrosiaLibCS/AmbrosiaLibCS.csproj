@@ -3,10 +3,10 @@
     <OutputType>Library</OutputType>
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
-    <Platforms>x64</Platforms>
-    <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
+    <Platforms>ARM64</Platforms>
+    <RuntimeIdentifiers>linux-arm64</RuntimeIdentifiers>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>AmbrosiaLibCS</RootNamespace>
     <ApplicationIcon />
@@ -19,6 +19,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^netcoreapp\d'))">
     <DefineConstants>NETCORE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^netstandard\d'))">
+    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Immortal.md" />
