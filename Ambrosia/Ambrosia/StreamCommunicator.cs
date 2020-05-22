@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,7 +14,7 @@ namespace Ambrosia
     public class FlexReadBuffer
     {
         static Queue<byte[]> _bufferPool = new Queue<byte[]>();
-        byte[] _buffer;
+        protected byte[] _buffer;
         int _curSize;
         int _curSizeSize;
         byte[] _sizeBuf;
@@ -859,3 +859,4 @@ namespace Ambrosia
         }
     }
 }
+*/

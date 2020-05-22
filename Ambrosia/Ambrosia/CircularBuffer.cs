@@ -1,4 +1,4 @@
-﻿// *********************************************************************
+﻿/*// *********************************************************************
 //            Copyright (C) Microsoft. All rights reserved.       
 // *********************************************************************
 using System;
@@ -212,3 +212,4 @@ namespace Ambrosia
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }
+*/

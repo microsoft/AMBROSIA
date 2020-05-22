@@ -12,8 +12,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Xml;
-using LocalAmbrosiaRuntime;
 using Remote.Linq.Expressions;
+using SharedAmbrosiaConstants;
 using static Ambrosia.StreamCommunicator;
 
 namespace Ambrosia
@@ -163,12 +163,53 @@ namespace Ambrosia
                     Thread.Sleep(1000);
                 }
             }
-            TcpClient tcpSendToClient = new TcpClient();
-            tcpSendToClient.Client = mySocket;
-            sendStream = tcpSendToClient.GetStream();
+            TcpClient tcpClient = new TcpClient();
+            tcpClient.Client = mySocket;
+            sendStream = tcpClient.GetStream();
             connectionRecord = new OutputConnectionRecord();
             connectionRecord.ConnectionStream = sendStream;
             connectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
+
+
+
+
+
+
+#if _WINDOWS
+            mySocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+            mySocket.IOControl(SIO_LOOPBACK_FAST_PATH, optionBytes, null);
+#else
+            mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+#endif
+            while (true)
+            {
+                Console.WriteLine("*X* Trying to do second connection between IC and Language Binding");
+                try
+                {
+#if _WINDOWS
+                    mySocket.Connect(IPAddress.IPv6Loopback, receivePort);
+#else
+                    mySocket.Connect(IPAddress.Loopback, receivePort);
+#endif
+                    break;
+                }
+                catch
+                {
+                    Thread.Sleep(1000);
+                }
+            }
+            tcpClient = new TcpClient();
+            tcpClient.Client = mySocket;
+            receiveStream = tcpClient.GetStream();
+            var processOutputTask = processOutputRequestsAsync();
+
+
+
+
+
+
+
+/*
 #if _WINDOWS
             var ipAddress = IPAddress.IPv6Loopback;
             mySocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
@@ -183,7 +224,7 @@ namespace Ambrosia
             var socket = mySocket.Accept();
             receiveStream = new NetworkStream(socket);
 
-            var processOutputTask = processOutputRequestsAsync();
+            var processOutputTask = processOutputRequestsAsync();*/
         }
 
         private async Task processOutputRequestsAsync()

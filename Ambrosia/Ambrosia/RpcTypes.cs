@@ -1,4 +1,4 @@
-﻿namespace Ambrosia
+﻿/*namespace Ambrosia
 {
     public static class RpcTypes
     {
@@ -14,4 +14,4 @@
             return rpcType == RpcType.FireAndForget || rpcType == RpcType.Impulse;
         }
     }
-}
+}*/

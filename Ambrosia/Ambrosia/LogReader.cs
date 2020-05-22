@@ -36,9 +36,33 @@ namespace Ambrosia
             }
         }
     }
+    /*
+    public interface ILogReader : IDisposable
+    {
+        long Position { get; set; }
+        Task<Tuple<int, int>> ReadIntAsync(byte[] buffer);
+        Task<Tuple<int, int>> ReadIntAsync(byte[] buffer, CancellationToken ct);
+        Tuple<int, int> ReadInt(byte[] buffer);
+        int ReadInt();
+        Task<int> ReadAllRequiredBytesAsync(byte[] buffer,
+                                            int offset,
+                                            int count,
+                                            CancellationToken ct);
+        Task<int> ReadAllRequiredBytesAsync(byte[] buffer,
+                                            int offset,
+                                            int count);
+        int ReadAllRequiredBytes(byte[] buffer,
+                                       int offset,
+                                       int count);
+        long ReadLongFixed();
+        int ReadIntFixed();
+        byte[] ReadByteArray();
+        int ReadByte();
+        int Read(byte[] buffer, int offset, int count);
+    }*/
 
 #if NETFRAMEWORK || NETCORE || NETSTANDARD
-    public class LogReader : IDisposable
+    public class LogReader : ILogReader
     {
         Stream stream;
 
@@ -137,7 +161,7 @@ namespace Ambrosia
     //
     // TODO: Figure out if waiting on a Task in the Position setter will cause
     // problems.
-    public class LogReader : IDisposable
+    public class LogReader : ILogReader
     {
         StorageFile _file;
         IRandomAccessStream _stream;
