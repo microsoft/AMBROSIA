@@ -23,6 +23,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Reflection;
 using System.Xml.Serialization;
+using SharedAmbrosiaConstants;
 
 namespace Ambrosia
 {
@@ -2204,30 +2205,56 @@ namespace Ambrosia
             var socket = mySocket.Accept();
             _localServiceReceiveFromStream = new NetworkStream(socket);
 
+
+            // Note that the local service must setup the listener and sender in reverse order or there will be a deadlock
+            // First establish receiver - Use fast IP6 loopback
 #if _WINDOWS
-            // Now establish sender - Also use fast IP6 loopback
             mySocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
             mySocket.IOControl(SIO_LOOPBACK_FAST_PATH, optionBytes, null);
 #else
             mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 #endif
-            while (true)
-            {
-                Console.WriteLine("Trying to connect IC and Language Binding");
-                try
-                {
-#if _WINDOWS
-                    mySocket.Connect(IPAddress.IPv6Loopback, _localServiceSendToPort);
-#else
-                    mySocket.Connect(IPAddress.Loopback, _localServiceSendToPort);
-#endif
-                    break;
-                }
-                catch { }
-            }
-            TcpClient tcpSendToClient = new TcpClient();
-            tcpSendToClient.Client = mySocket;
-            _localServiceSendToStream = tcpSendToClient.GetStream();
+            var mySendEP = new IPEndPoint(ipAddress, _localServiceSendToPort);
+            mySocket.Bind(mySendEP);
+            mySocket.Listen(1);
+            socket = mySocket.Accept();
+            _localServiceSendToStream = new NetworkStream(socket);
+
+
+
+
+
+
+
+
+
+
+
+            /*
+            #if _WINDOWS
+                        // Now establish sender - Also use fast IP6 loopback
+                        mySocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+                        mySocket.IOControl(SIO_LOOPBACK_FAST_PATH, optionBytes, null);
+            #else
+                        mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            #endif
+                        while (true)
+                        {
+                            Console.WriteLine("Trying to connect IC and Language Binding");
+                            try
+                            {
+            #if _WINDOWS
+                                mySocket.Connect(IPAddress.IPv6Loopback, _localServiceSendToPort);
+            #else
+                                mySocket.Connect(IPAddress.Loopback, _localServiceSendToPort);
+            #endif
+                                break;
+                            }
+                            catch { }
+                        }
+                        TcpClient tcpSendToClient = new TcpClient();
+                        tcpSendToClient.Client = mySocket;
+                        _localServiceSendToStream = tcpSendToClient.GetStream();*/
         }
 
         private void SetupAzureConnections()

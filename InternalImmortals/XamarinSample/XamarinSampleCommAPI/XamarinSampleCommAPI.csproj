@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AMBROSIA\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
+    <ProjectReference Include="..\CommInterfaceClasses\CommInterfaceClasses.csproj" />
+  </ItemGroup>
+
+</Project>
