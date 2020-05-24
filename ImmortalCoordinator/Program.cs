@@ -11,7 +11,7 @@ using Ambrosia;
 
 namespace CRA.Worker
 {
-    class Program
+    public class Program
     {
         private static string _instanceName;
         private static int _port = -1;
@@ -21,7 +21,7 @@ namespace CRA.Worker
         private static bool _isActiveActive = false;
         private static int _replicaNumber = 0;
 
-        static void Main(string[] args)
+        public static void main(string[] args)
         {
             ParseAndValidateOptions(args);
 
@@ -34,9 +34,9 @@ namespace CRA.Worker
 
             string storageConnectionString = null;
 
-//#if !DOTNETCORE
-//            storageConnectionString = ConfigurationManager.AppSettings.Get("AZURE_STORAGE_CONN_STRING");
-//#endif
+            //#if !DOTNETCORE
+            //            storageConnectionString = ConfigurationManager.AppSettings.Get("AZURE_STORAGE_CONN_STRING");
+            //#endif
 
             if (storageConnectionString == null)
             {
@@ -55,9 +55,9 @@ namespace CRA.Worker
 
             int connectionsPoolPerWorker;
             string connectionsPoolPerWorkerString = "0";
-//#if !DOTNETCORE
-//            ConfigurationManager.AppSettings.Get("CRA_WORKER_MAX_CONN_POOL");
-//#endif
+            //#if !DOTNETCORE
+            //            ConfigurationManager.AppSettings.Get("CRA_WORKER_MAX_CONN_POOL");
+            //#endif
             if (connectionsPoolPerWorkerString != null)
             {
                 try
@@ -99,6 +99,11 @@ namespace CRA.Worker
             worker.SideloadVertex(new AmbrosiaRuntime(), "ambrosia");
 
             worker.Start();
+        }
+
+        static void Main(string[] args)
+        {
+            main(args);
         }
 
         private static string GetLocalIPAddress()

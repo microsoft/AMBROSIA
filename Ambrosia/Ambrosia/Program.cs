@@ -3914,7 +3914,7 @@ namespace Ambrosia
 #if NETFRAMEWORK
             _logWriterStatics = new LogWriterStaticsWindows();
 #endif
-#if NETCORE
+#if NETSTANDARD
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 _logWriterStatics = new LogWriterStaticsWindows();
