@@ -61,7 +61,7 @@ namespace Ambrosia
         int Read(byte[] buffer, int offset, int count);
     }*/
 
-#if NETFRAMEWORK || NETCORE || NETSTANDARD
+#if (!WINDOWS_UWP)
     public class LogReader : ILogReader
     {
         Stream stream;

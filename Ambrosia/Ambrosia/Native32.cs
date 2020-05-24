@@ -234,7 +234,7 @@ namespace FASTER.core
         /// <returns></returns>
         public static bool EnableProcessPrivileges()
         {
-#if DOTNETCORE
+#if NETSTANDARD
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return false;
 #endif
@@ -271,7 +271,7 @@ namespace FASTER.core
 
         internal static bool EnableVolumePrivileges(string filename, SafeFileHandle handle)
         {
-#if DOTNETCORE
+#if NETSTANDARD
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return false;
 #endif
@@ -309,7 +309,7 @@ namespace FASTER.core
         /// <returns></returns>
         public static bool SetFileSize(SafeFileHandle file_handle, long file_size)
         {
-#if DOTNETCORE
+#if NETSTANDARD
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return false;
 #endif

@@ -20,6 +20,9 @@ namespace XamarinSample.Services
         {
             [DataMember]
             List<Item> items;
+            [DataMember]
+            bool _initialized;
+            bool _normalOp;
 
             static public AmbrosiaMockDataStore myDataStore = null;
 
@@ -30,25 +33,29 @@ namespace XamarinSample.Services
             protected override async Task<bool> OnFirstStart()
             {
                 items = new List<Item>()
-            {
-                new Item { Id = Guid.NewGuid().ToString(), Text = "First item", Description="This is an item description." },
-                new Item { Id = Guid.NewGuid().ToString(), Text = "Second item", Description="This is an item description." },
-                new Item { Id = Guid.NewGuid().ToString(), Text = "Third item", Description="This is an item description." },
-                new Item { Id = Guid.NewGuid().ToString(), Text = "Fourth item", Description="This is an item description." },
-                new Item { Id = Guid.NewGuid().ToString(), Text = "Fifth item", Description="This is an item description." },
-                new Item { Id = Guid.NewGuid().ToString(), Text = "Sixth item", Description="This is an item description." }
-            };
+                {
+                    new Item { Id = Guid.NewGuid().ToString(), Text = "First item", Description="This is an item description." },
+                    new Item { Id = Guid.NewGuid().ToString(), Text = "Second item", Description="This is an item description." },
+                    new Item { Id = Guid.NewGuid().ToString(), Text = "Third item", Description="This is an item description." },
+                    new Item { Id = Guid.NewGuid().ToString(), Text = "Fourth item", Description="This is an item description." },
+                    new Item { Id = Guid.NewGuid().ToString(), Text = "Fifth item", Description="This is an item description." },
+                    new Item { Id = Guid.NewGuid().ToString(), Text = "Sixth item", Description="This is an item description." }
+                };
+                _initialized = true;
+                if (_normalOp)
+                {
+                    myDataStore = this;
+                }
                 return true;
             }
 
             protected override void BecomingPrimary()
             {
-                myDataStore = this;
-            }
-
-            protected override void OnRestore(Stream stream)
-            {
-                base.OnRestore(stream);
+                _normalOp = true;
+                if (_initialized)
+                {
+                    myDataStore = this;
+                }
             }
 
             public async Task<bool> DetAddItemAsync(Item item)
