@@ -128,6 +128,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <ItemGroup>
+    <ProjectReference Include="..\..\GenericLogPicker\GenericLogPicker.csproj">
+      <Project>{d3885c87-d8f7-4523-857c-7a5b36b5bd10}</Project>
+      <Name>GenericLogPicker</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ICGUI\ICGUI.csproj">
       <Project>{51B9AB64-D654-45D2-8F28-A193D3E6D6BA}</Project>
       <Name>ICGUI</Name>

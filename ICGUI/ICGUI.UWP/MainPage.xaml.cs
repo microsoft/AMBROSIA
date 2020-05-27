@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ambrosia;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace ICGUI.UWP
     {
         public MainPage()
         {
+            UWPLogsInterface.SetToUWPLogs();
             this.InitializeComponent();
 
             LoadApplication(new ICGUI.App());

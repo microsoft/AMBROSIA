@@ -1,156 +1,204 @@
-﻿using System;
+﻿using Ambrosia;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using CRA.ClientLibrary;
-#if WINDOWS_UWP
 using Windows.Storage;
+using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
-#endif
 
 namespace Ambrosia
 {
-    internal static class LogReaderUtils
+    // I wrote this version of LogWriter using the documentation here:
+    // https://docs.microsoft.com/en-us/windows/uwp/files/quickstart-reading-and-writing-files
+    //
+    // TODO: figure out proper way to handle synchronous LogWriter methods when underlying UWP
+    // class only provides an async implementation
+    //
+    // TODO: figure out proper way to handle async LogWriter methods when underlying UWP class only
+    // provides a synchronous implementation
+    internal class LogWriterUWP : IDisposable, ILogWriter
     {
-        internal static void ReadBig(this LogReader reader,
-                                     Stream writeToStream,
-                                     long checkpointSize)
+        StorageFile _file;
+        IRandomAccessStream _stream;
+        IOutputStream _outputStream;
+        DataWriter _dataWriter;
+
+        private ulong _fileSize = 0;
+
+        public LogWriterUWP(string fileName,
+                                   uint chunkSize,
+                                   uint maxChunksPerWrite,
+                                   bool appendOpen = false)
         {
-            var blockSize = 1024 * 1024;
-            var buffer = new byte[blockSize];
-            while (checkpointSize > 0)
+            InitializeAsync(fileName, appendOpen).Wait();
+        }
+
+        public async Task InitializeAsync(string fileName, bool appendOpen = false)
+        {
+            DirectoryInfo pathInfo = new DirectoryInfo(fileName);
+            string parentPath = pathInfo.Parent.FullName;
+            StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(parentPath);
+            _file = await folder.CreateFileAsync(pathInfo.Name, CreationCollisionOption.OpenIfExists);
+
+            _stream = await _file.OpenAsync(FileAccessMode.ReadWrite);
+            ulong position = 0;
+            if (appendOpen)
             {
-                int bytesRead;
-                if (checkpointSize >= blockSize)
-                {
-                    bytesRead = reader.Read(buffer, 0, blockSize);
-                }
-                else
-                {
-                    bytesRead = reader.Read(buffer, 0, (int)checkpointSize);
-                }
-                writeToStream.Write(buffer, 0, bytesRead);
-                checkpointSize -= bytesRead;
+                BasicProperties properties = await _file.GetBasicPropertiesAsync();
+                position = properties.Size;
             }
-        }
-    }
-    /*
-    public interface ILogReader : IDisposable
-    {
-        long Position { get; set; }
-        Task<Tuple<int, int>> ReadIntAsync(byte[] buffer);
-        Task<Tuple<int, int>> ReadIntAsync(byte[] buffer, CancellationToken ct);
-        Tuple<int, int> ReadInt(byte[] buffer);
-        int ReadInt();
-        Task<int> ReadAllRequiredBytesAsync(byte[] buffer,
-                                            int offset,
-                                            int count,
-                                            CancellationToken ct);
-        Task<int> ReadAllRequiredBytesAsync(byte[] buffer,
-                                            int offset,
-                                            int count);
-        int ReadAllRequiredBytes(byte[] buffer,
-                                       int offset,
-                                       int count);
-        long ReadLongFixed();
-        int ReadIntFixed();
-        byte[] ReadByteArray();
-        int ReadByte();
-        int Read(byte[] buffer, int offset, int count);
-    }*/
-
-#if (!WINDOWS_UWP)
-    public class LogReader : ILogReader
-    {
-        Stream stream;
-
-        public long Position
-        {
-            get { return stream.Position;  }
-            set { stream.Position = value; }
+            _outputStream = _stream.GetOutputStreamAt(position);
+            _dataWriter = new DataWriter(_outputStream);
         }
 
-        public LogReader(string fileName)
-        {
-            stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        }
-
-        public async Task<Tuple<int, int>> ReadIntAsync(byte[] buffer)
-        {
-            return await stream.ReadIntAsync(buffer);
-        }
-
-        public async Task<Tuple<int, int>> ReadIntAsync(byte[] buffer, CancellationToken ct)
-        {
-            return await stream.ReadIntAsync(buffer, ct);
-        }
-
-        public Tuple<int, int> ReadInt(byte[] buffer)
-        {
-            return stream.ReadInt(buffer);
-        }
-
-        public int ReadInt()
-        {
-            return stream.ReadInt();
-        }
-
-        public async Task<int> ReadAllRequiredBytesAsync(byte[] buffer,
-                                                        int offset,
-                                                        int count,
-                                                        CancellationToken ct)
-        {
-            return await stream.ReadAllRequiredBytesAsync(buffer, offset, count, ct);
-        }
-
-        public async Task<int> ReadAllRequiredBytesAsync(byte[] buffer,
-                                                int offset,
-                                                int count)
-        {
-            return await stream.ReadAllRequiredBytesAsync(buffer, offset, count);
-        }
-
-        public int ReadAllRequiredBytes(byte[] buffer,
-                                       int offset,
-                                       int count)
-        {
-            return stream.ReadAllRequiredBytes(buffer, offset, count);
-        }
-
-        public long ReadLongFixed()
-        {
-            return stream.ReadLongFixed();
-        }
-
-        public int ReadIntFixed()
-        {
-            return stream.ReadIntFixed();
-        }
-
-        public byte[] ReadByteArray()
-        {
-            return stream.ReadByteArray();
-        }
-
-        public int ReadByte()
-        {
-            return stream.ReadByte();
-        }
-
-        public int Read(byte[] buffer, int offset, int count)
-        {
-            return stream.Read(buffer, offset, count);
-        }
+        public ulong FileSize { get { return _fileSize; } }
 
         public void Dispose()
         {
-            stream.Dispose();
+            _dataWriter.Dispose();
+            _outputStream.Dispose();
+            _stream.Dispose();
+        }
+        public void Flush()
+        {
+            _dataWriter.StoreAsync().AsTask().Wait();
+            _outputStream.FlushAsync().AsTask().Wait();
+        }
+
+        public async Task FlushAsync()
+        {
+            await _dataWriter.StoreAsync();
+            await _outputStream.FlushAsync();
+        }
+
+        public void WriteByte(byte value)
+        {
+            _fileSize++;
+            _dataWriter.WriteByte(value);
+        }
+
+        // These three methods are all copied from the .NET Framework version of LogWriter
+        public unsafe void WriteInt(int value)
+        {
+            var zigZagEncoded = unchecked((uint)((value << 1) ^ (value >> 31)));
+            while ((zigZagEncoded & ~0x7F) != 0)
+            {
+                WriteByte((byte)((zigZagEncoded | 0x80) & 0xFF));
+                zigZagEncoded >>= 7;
+            }
+            WriteByte((byte)zigZagEncoded);
+        }
+        public void WriteIntFixed(int value)
+        {
+            WriteByte((byte)(value & 0xFF));
+            WriteByte((byte)((value >> 0x8) & 0xFF));
+            WriteByte((byte)((value >> 0x10) & 0xFF));
+            WriteByte((byte)((value >> 0x18) & 0xFF));
+        }
+
+        public void WriteLongFixed(long value)
+        {
+            WriteByte((byte)(value & 0xFF));
+            WriteByte((byte)((value >> 0x8) & 0xFF));
+            WriteByte((byte)((value >> 0x10) & 0xFF));
+            WriteByte((byte)((value >> 0x18) & 0xFF));
+            WriteByte((byte)((value >> 0x20) & 0xFF));
+            WriteByte((byte)((value >> 0x28) & 0xFF));
+            WriteByte((byte)((value >> 0x30) & 0xFF));
+            WriteByte((byte)((value >> 0x38) & 0xFF));
+        }
+
+        public void Write(byte[] buffer,
+                          int offset,
+                          int length)
+        {
+            _fileSize += (ulong)length;
+
+            // Hopefully there is a more performant way to do this
+            byte[] subBuffer = new byte[length];
+            Array.Copy(buffer, offset, subBuffer, 0, length);
+            _dataWriter.WriteBytes(subBuffer);
+        }
+
+        // Copied from Write() implementation above
+        public async Task WriteAsync(byte[] buffer,
+                                     int offset,
+                                     int length)
+        {
+            _fileSize += (ulong)length;
+
+            // Hopefully there is a more performant way to do this
+            byte[] subBuffer = new byte[length];
+            Array.Copy(buffer, offset, subBuffer, 0, length);
+            _dataWriter.WriteBytes(subBuffer);
         }
     }
-#endif
-#if WINDOWS_UWP
+
+    internal class LogWriterStaticsUWP : ILogWriterStatic
+    {
+        public void CreateDirectoryIfNotExists(string path)
+        {
+            DirectoryInfo pathInfo = new DirectoryInfo(path);
+            string parentPath = pathInfo.Parent.FullName;
+            StorageFolder folder = StorageFolder.GetFolderFromPathAsync(parentPath).AsTask().Result;
+            folder.CreateFolderAsync(pathInfo.Name, CreationCollisionOption.OpenIfExists).AsTask().Wait();
+        }
+
+        public bool DirectoryExists(string path)
+        {
+            DirectoryInfo pathInfo = new DirectoryInfo(path);
+            string parentPath = pathInfo.Parent.FullName;
+            StorageFolder parentFolder = StorageFolder.GetFolderFromPathAsync(parentPath).AsTask().Result;
+            bool result;
+            try
+            {
+                StorageFolder queriedFolder = parentFolder.GetFolderAsync(pathInfo.Name).AsTask().Result;
+                result = true;
+            }
+            catch (System.AggregateException)
+            {
+                result = false;
+            }
+            return result;
+        }
+
+        public bool FileExists(string path)
+        {
+            FileInfo pathInfo = new FileInfo(path);
+            string parentPath = pathInfo.Directory.FullName;
+            StorageFolder parentFolder = StorageFolder.GetFolderFromPathAsync(parentPath).AsTask().Result;
+            bool result;
+            try
+            {
+                StorageFile queriedFile = parentFolder.GetFileAsync(pathInfo.Name).AsTask().Result;
+                result = true;
+            }
+            catch (System.AggregateException)
+            {
+                result = false;
+            }
+            return result;
+        }
+
+        public void DeleteFile(string path)
+        {
+            StorageFile file = StorageFile.GetFileFromPathAsync(path).AsTask().Result;
+            file.DeleteAsync().AsTask().Wait();
+        }
+
+        public ILogWriter Generate(string fileName,
+                                   uint chunkSize,
+                                   uint maxChunksPerWrite,
+                                   bool appendOpen = false)
+        {
+            return new LogWriterUWP(fileName, chunkSize, maxChunksPerWrite, appendOpen);
+        }
+    }
+
     // TODO: Figure out if there is a better way to implement Read().
     //
     // TODO: Figure out if there's a way to avoid having so much duplicated code
@@ -161,7 +209,7 @@ namespace Ambrosia
     //
     // TODO: Figure out if waiting on a Task in the Position setter will cause
     // problems.
-    public class LogReader : ILogReader
+    public class UWPLogReader : ILogReader
     {
         StorageFile _file;
         IRandomAccessStream _stream;
@@ -182,7 +230,7 @@ namespace Ambrosia
             }
         }
 
-        public LogReader(string fileName)
+        public UWPLogReader(string fileName)
         {
             InitializeAsync(fileName).Wait();
         }
@@ -368,5 +416,21 @@ namespace Ambrosia
             _stream.Dispose();
         }
     }
-#endif
+
+    internal class UWPLogReaderStatics : ILogReaderStatic
+    {
+        public ILogReader Generate(string fileName)
+        {
+            return new UWPLogReader(fileName);
+        }
+    }
+
+    public static class UWPLogsInterface
+    {
+        public static void SetToUWPLogs()
+        {
+            LogReaderStaticPicker.curStatic = new UWPLogReaderStatics();
+            LogWriterStaticPicker.curStatic = new LogWriterStaticsUWP();
+        }
+    }
 }

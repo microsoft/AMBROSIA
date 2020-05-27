@@ -103,6 +103,7 @@ namespace CRA.Worker
 
         static void Main(string[] args)
         {
+            GenericLogsInterface.SetToGenericLogs();
             main(args);
         }
 

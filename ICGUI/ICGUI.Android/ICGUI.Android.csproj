@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -89,10 +89,14 @@
     <Folder Include="Resources\drawable\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\GenericLogPicker\GenericLogPicker.csproj">
+      <Project>{d3885c87-d8f7-4523-857c-7a5b36b5bd10}</Project>
+      <Name>GenericLogPicker</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ICGUI\ICGUI.csproj">
       <Project>{51B9AB64-D654-45D2-8F28-A193D3E6D6BA}</Project>
       <Name>ICGUI</Name>
     </ProjectReference>
   </ItemGroup>
- <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

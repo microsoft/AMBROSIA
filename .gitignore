@@ -266,3 +266,4 @@ CodeGenDependencies
 
 **/publish/*
 /BuildAmbrosiaAfterNugetChange.ps1
+/AmbrosiaBak
