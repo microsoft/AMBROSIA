@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,6 +57,60 @@ namespace SharedAmbrosiaConstants
 
 namespace Ambrosia
 {
+    public interface ILogWriter : IDisposable
+    {
+        ulong FileSize { get; }
+
+        void Flush();
+
+        Task FlushAsync();
+
+        void WriteInt(int value);
+
+        void WriteIntFixed(int value);
+
+        void WriteLongFixed(long value);
+
+        void Write(byte[] buffer,
+                   int offset,
+                   int length);
+
+        Task WriteAsync(byte[] buffer,
+                        int offset,
+                        int length);
+    }
+
+    public interface ILogWriterStatic
+    {
+        void CreateDirectoryIfNotExists(string path);
+
+        bool DirectoryExists(string path);
+
+        bool FileExists(string path);
+
+        void DeleteFile(string path);
+
+        ILogWriter Generate(string fileName,
+                            uint chunkSize,
+                            uint maxChunksPerWrite,
+                            bool appendOpen = false);
+    }
+
+    public static class LogWriterStaticPicker
+    {
+        public static ILogWriterStatic curStatic { get; set; }
+    }
+
+    public interface ILogReaderStatic
+    {
+        ILogReader Generate(string fileName);
+    }
+
+    public static class LogReaderStaticPicker
+    {
+        public static ILogReaderStatic curStatic { get; set; }
+    }
+
     public interface ILogReader : IDisposable
     {
         long Position { get; set; }
@@ -289,6 +344,49 @@ namespace Ambrosia
 
     public static class StreamCommunicator
     {
+        public static void ReadBig(this ILogReader reader,
+                             Stream writeToStream,
+                             long checkpointSize)
+        {
+            var blockSize = 1024 * 1024;
+            var buffer = new byte[blockSize];
+            while (checkpointSize > 0)
+            {
+                int bytesRead;
+                if (checkpointSize >= blockSize)
+                {
+                    bytesRead = reader.Read(buffer, 0, blockSize);
+                }
+                else
+                {
+                    bytesRead = reader.Read(buffer, 0, (int)checkpointSize);
+                }
+                writeToStream.Write(buffer, 0, bytesRead);
+                checkpointSize -= bytesRead;
+            }
+        }
+
+        public static void Write(this ILogWriter writer,
+                           NetworkStream readStream,
+                           long checkpointSize)
+        {
+            var blockSize = 1024 * 1024;
+            var buffer = new byte[blockSize];
+            while (checkpointSize > 0)
+            {
+                int bytesRead;
+                if (checkpointSize >= blockSize)
+                {
+                    bytesRead = readStream.Read(buffer, 0, blockSize);
+                }
+                else
+                {
+                    bytesRead = readStream.Read(buffer, 0, (int)checkpointSize);
+                }
+                writer.Write(buffer, 0, bytesRead);
+                checkpointSize -= bytesRead;
+            }
+        }
 
         public static int ReadIntFixed(this Stream stream)
         {

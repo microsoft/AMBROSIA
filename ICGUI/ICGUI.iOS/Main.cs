@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using Ambrosia;
 using Foundation;
 using UIKit;
 
@@ -14,6 +14,7 @@ namespace ICGUI.iOS
         {
             // if you want to use a different Application Delegate class from "AppDelegate"
             // you can specify it here.
+            GenericLogsInterface.SetToGenericLogs();
             UIApplication.Main(args, null, "AppDelegate");
         }
     }

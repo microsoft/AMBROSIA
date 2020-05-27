@@ -6,6 +6,7 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
+using Ambrosia;
 
 namespace ICGUI.Droid
 {
@@ -14,6 +15,7 @@ namespace ICGUI.Droid
     {
         protected override void OnCreate(Bundle savedInstanceState)
         {
+            GenericLogsInterface.SetToGenericLogs();
             TabLayoutResource = Resource.Layout.Tabbar;
             ToolbarResource = Resource.Layout.Toolbar;
 

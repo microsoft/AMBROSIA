@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
-    <ProjectReference Include="..\CommInterfaceClasses\CommInterfaceClasses.csproj" />
     <ProjectReference Include="..\GeneratedSourceFiles\XamarinSampleCommAPIGened\latest\XamarinSampleCommAPIGened.csproj" />
   </ItemGroup>
 </Project>
