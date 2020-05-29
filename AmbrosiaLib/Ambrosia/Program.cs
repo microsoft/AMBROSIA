@@ -3903,22 +3903,6 @@ namespace Ambrosia
         private void InitializeLogWriterStatics()
         {
             _logWriterStatics = LogWriterStaticPicker.curStatic;
-/*#if WINDOWS_UWP
-            _logWriterStatics = new LogWriterStaticsUWP();
-#endif
-#if NETFRAMEWORK
-//            _logWriterStatics = new LogWriterStaticsWindows();
-#endif
-#if NETSTANDARD
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                _logWriterStatics = new LogWriterStaticsWindows();
-            }
-            else
-            {
-                _logWriterStatics = new LogWriterStaticsGeneric();
-            }
-#endif*/
         }
 
         public override async Task InitializeAsync(object param)
