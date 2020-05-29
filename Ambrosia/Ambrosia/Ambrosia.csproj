@@ -104,6 +104,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\AmbrosiaLib\Ambrosia\AmbrosiaLib.csproj" />
     <ProjectReference Include="..\..\GenericLogPicker\GenericLogPicker.csproj" />
-    <ProjectReference Include="..\..\SharedAmbrosiaTools\SharedAmbrosiaTools.csproj" />
   </ItemGroup>
 </Project>
