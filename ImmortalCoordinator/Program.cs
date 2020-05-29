@@ -23,7 +23,6 @@ namespace CRA.Worker
 
         public static void main(string[] args)
         {
-            GenericLogsInterface.SetToGenericLogs();
             ParseAndValidateOptions(args);
 
             var replicaName = $"{_instanceName}{_replicaNumber}";
