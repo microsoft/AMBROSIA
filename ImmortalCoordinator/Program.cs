@@ -95,7 +95,7 @@ namespace CRA.Worker
                 (replicaName, _ipAddress, _port,
                 dataProvider, descriptor, connectionsPoolPerWorker);
 
-            worker.DisableDynamicLoading();
+            worker.DisableDynamicLoading(); 
             worker.SideloadVertex(new AmbrosiaRuntime(), "ambrosia");
 
             worker.Start();
@@ -104,6 +104,7 @@ namespace CRA.Worker
         static void Main(string[] args)
         {
             GenericLogsInterface.SetToGenericLogs();
+            //AzureBlobsLogsInterface.SetToAzureBlobsLogs();
             main(args);
         }
 
