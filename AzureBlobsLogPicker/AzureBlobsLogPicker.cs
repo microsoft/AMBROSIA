@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using CRA.ClientLibrary;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Ambrosia
 {
@@ -20,6 +21,7 @@ namespace Ambrosia
                                    string fileName,
                                    bool appendOpen = false)
         {
+            fileName = AzureBlobsLogsInterface.PathFixer(fileName);
             _blobsContainerClient = blobsContainerClient;
             _logClient = _blobsContainerClient.GetAppendBlobClient(fileName);
             if (appendOpen)
@@ -100,6 +102,7 @@ namespace Ambrosia
 
         public void CreateDirectoryIfNotExists(string path)
         {
+            path = AzureBlobsLogsInterface.PathFixer(path);
             var logClient = _blobsContainerClient.GetAppendBlobClient(path);
             if (!logClient.Exists())
             {
@@ -109,17 +112,20 @@ namespace Ambrosia
 
         public bool DirectoryExists(string path)
         {
+            path = AzureBlobsLogsInterface.PathFixer(path);
             return FileExists(path);
         }
 
         public bool FileExists(string path)
         {
+            path = AzureBlobsLogsInterface.PathFixer(path);
             var logClient = _blobsContainerClient.GetAppendBlobClient(path);
             return logClient.Exists();
         }
 
         public void DeleteFile(string path)
         {
+            path = AzureBlobsLogsInterface.PathFixer(path);
             var logClient = _blobsContainerClient.GetAppendBlobClient(path);
             logClient.Delete(DeleteSnapshotsOption.IncludeSnapshots);
         }
@@ -129,6 +135,7 @@ namespace Ambrosia
                                    uint maxChunksPerWrite,
                                    bool appendOpen = false)
         {
+            fileName = AzureBlobsLogsInterface.PathFixer(fileName);
             return new AzureBlobsLogWriter(_blobsContainerClient, fileName, appendOpen);
         }
     }
@@ -151,6 +158,7 @@ namespace Ambrosia
 
         public AzureBlobsLogReader(BlobContainerClient blobsContainerClient, string fileName)
         {
+            fileName = AzureBlobsLogsInterface.PathFixer(fileName);
             _logClient = blobsContainerClient.GetBlobClient(fileName);
             var downloadRange = new HttpRange(0);
             _download = _logClient.Download(downloadRange);
@@ -249,6 +257,34 @@ namespace Ambrosia
     {
         static BlobServiceClient _blobsClient;
         static BlobContainerClient _blobsContainerClient;
+
+        internal static string PathFixer(string fileName)
+        {
+            var substrings = fileName.Split('/');
+            string fixedFileName = "";
+            bool emptyFileName = true;
+            foreach (var substring in substrings)
+            {
+                var subdirCands = substring.Split('\\');
+                foreach (var subdir in subdirCands)
+                {
+                    if (subdir.CompareTo("") != 0)
+                    {
+                        if (emptyFileName)
+                        {
+                            fixedFileName = subdir;
+                            emptyFileName = false;
+                        }
+                        else
+                        {
+                            fixedFileName += "/" + subdir;
+                        }
+                    }
+                }
+            }
+            return fixedFileName;
+        }
+
         public static void SetToAzureBlobsLogs()
         {
             var storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
