@@ -1869,6 +1869,10 @@ namespace Ambrosia
                 var messageBuf = new byte[numMessageBytes];
                 var memStream = new MemoryStream(messageBuf);
                 memStream.WriteInt(1);
+#if DEBUG
+                // We are about to request a checkpoint from the language binding. Get ready to error check the incoming checkpoint
+                _myAmbrosia.ExpectingCheckpoint = true;
+#endif
                 if (upgrading)
                 {
                     memStream.WriteByte(upgradeTakeCheckpointByte);
@@ -2066,6 +2070,7 @@ namespace Ambrosia
         bool _upgrading;
         internal bool _restartWithRecovery;
         internal bool CheckpointingService { get; set; }
+        internal bool ExpectingCheckpoint { get; set; }
 
         // Constants for leading byte communicated between services;
         public const byte RPCByte = 0;
@@ -3082,6 +3087,9 @@ namespace Ambrosia
             var sizeBytes = localServiceBuffer.LengthLength;
             Task createCheckpointTask = null;
             // Process the Async message
+#if DEBUG
+            ValidateMessageValidity(localServiceBuffer.Buffer[sizeBytes]);
+#endif
             switch (localServiceBuffer.Buffer[sizeBytes])
             {
                 case takeCheckpointByte:
@@ -3144,10 +3152,6 @@ namespace Ambrosia
 
                 case InitalMessageByte:
                     // Process the Async RPC request
-                    if (ServiceInitializationMessage != null)
-                    {
-                        OnError(0, "Getting second initialization message");
-                    }
                     ServiceInitializationMessage = localServiceBuffer;
                     localServiceBuffer = new FlexReadBuffer();
                     break;
@@ -3184,6 +3188,30 @@ namespace Ambrosia
                     // This one really should terminate the process; no recovery allowed.
                     OnError(0, "Illegal leading byte in local message");
                     break;
+            }
+        }
+
+        private void ValidateMessageValidity(byte messageType)
+        {
+            if ((_createService) && (ServiceInitializationMessage == null) && (messageType != InitalMessageByte))
+            {
+                OnError(0, "Missing initial message from the application");
+            }
+            if (((_createService) && (ServiceInitializationMessage != null) && (messageType == InitalMessageByte)) ||
+                (!_createService && (messageType == InitalMessageByte)))
+            {
+                OnError(0, "Extra initialization message");
+            }
+            if (messageType == checkpointByte)
+            {
+                if (ExpectingCheckpoint)
+                {
+                    ExpectingCheckpoint = false;
+                }
+                else
+                {
+                    OnError(0, "Received unexpected checkpoint");
+                }
             }
         }
 
