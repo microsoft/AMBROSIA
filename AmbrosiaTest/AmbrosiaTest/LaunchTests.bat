@@ -7,7 +7,8 @@ echo "* https://www.visualstudio.com/downloads/?q=agents"
 echo "* "
 echo "* To run this .bat file, make sure to build the AmbrosiaTest or AmbrosiaTest_Local solution (in VS) which will"
 echo "* build AmbrosiaTest.dll and put it in the bin directory."
-echo "****************************""
+echo "*"
+echo "****************************"
 
 set "testdir=%cd%"
 c:
