@@ -10,7 +10,7 @@ echo "* Need the file CodeCoverage.runsettings in the same directory as all exes
 echo "*"
 echo "* After the run, import the .coverage file into Visual Studio (just open the .coverage file in VS). This file is found in TestResults in the "
 echo "* directory ...\CommonExtensions\Microsoft\TestWindow\TestResults"
-echo "****************************""
+echo "****************************"
 
 set "testdir=%cd%"
 c:
