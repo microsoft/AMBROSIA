@@ -6,7 +6,7 @@ echo "* To use this .bat file you need TestAgent to be installed:"
 echo "* https://www.visualstudio.com/downloads/?q=agents"
 echo "* "
 echo "* TO DO: Add Javascript unit tests"
-echo "****************************"
+echo "******************************"
 
 set "testdir=%cd%"
 c:
