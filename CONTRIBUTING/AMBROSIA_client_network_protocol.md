@@ -74,15 +74,15 @@ All information received from the reliability coordinator is in the form of a se
 Each log record has a 24 byte header, followed by the actual record contents. The header is as follows:
 
  * Bytes [0-3]: The committer ID for the service, this should be constant for all records for the lifetime of the service, format IntFixed.
- * Bytes [4-7]: The size of the whole log record, in bytes, including the header. The format is IntFixed
+ * Bytes [4-7]: The size of the whole log record, in bytes, including the header. The format is IntFixed.
  * Bytes [8-15]: The check bytes to check the integrity of the log record. The format is LongFixed.
- * Bytes [16-23]: The log record sequence ID. Excluding records labeled with sequence ID “-1”, these should be in order. The format is LongFixed
+ * Bytes [16-23]: The log record sequence ID. Excluding records labeled with sequence ID “-1”, these should be in order. The format is LongFixed.
 
 The rest of the record is a sequence of messages, packed tightly, each with the following format:
 
- * Size : Number of bytes taken by Type and Data – 1 to 5 bytes, depending on value (format ZigZagInt)
- * Type : A byte which indicates the type of message
- * Data : A variable length sequence of bytes which depends on the message type
+ * Size : Number of bytes taken by Type and Data; 1 to 5 bytes, depending on value (format ZigZagInt).
+ * Type : A byte which indicates the type of message.
+ * Data : A variable length sequence of bytes which depends on the message type.
 
 
 All information sent to the reliability coordinator is in the form of a sequence of messages with the format specified above.
@@ -119,9 +119,9 @@ Message types and associated data which may be sent to or received by services:
 
  * 0 - Incoming RPC (Received):
 
-   - Byte 0 of data is reserved (RPC or return value)
-   - Next is a variable length int (ZigZagInt) which is a method ID.
-   - The next byte is a reserved byte (Fire and forget (1), Async/Await (0), or Impulse (2))
+   - Byte 0 of data is reserved (RPC or return value).
+   - Next is a variable length int (ZigZagInt) which is a method ID. Negative method ID's are reserved for system use.
+   - The next byte is a reserved byte (Fire and forget (1), Async/Await (0), or Impulse (2)).
    - The remaining bytes are the serialized arguments packed tightly.
 
  * 0 - Outgoing RPC (Sent):
