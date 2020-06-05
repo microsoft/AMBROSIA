@@ -8,6 +8,8 @@ using System.Threading;
 using CRA.ClientLibrary;
 using System.IO;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.ComponentModel;
 
 namespace Ambrosia
 {
@@ -16,6 +18,10 @@ namespace Ambrosia
         BlobContainerClient _blobsContainerClient;
         AppendBlobClient _logClient;
         MemoryStream _bytesToSend;
+        BlobLeaseClient _leaseClient;
+        BlobLease _curLease;
+        AppendBlobRequestConditions _leaseCondition;
+        Thread _leaseRenewThread;
 
         public AzureBlobsLogWriter(BlobContainerClient blobsContainerClient,
                                    string fileName,
@@ -24,14 +30,41 @@ namespace Ambrosia
             fileName = AzureBlobsLogsInterface.PathFixer(fileName);
             _blobsContainerClient = blobsContainerClient;
             _logClient = _blobsContainerClient.GetAppendBlobClient(fileName);
+            ETag currentETag;
+
             if (appendOpen)
             {
-                _logClient.CreateIfNotExists();
+                var response = _logClient.CreateIfNotExists();
+                if (response != null)
+                {
+                    currentETag = response.Value.ETag;
+                }
+                else
+                {
+                    currentETag = _logClient.GetProperties().Value.ETag;
+                }
             }
             else
             {
-                _logClient.Create();
+                currentETag = _logClient.Create().Value.ETag;
             }
+
+            _leaseClient = _logClient.GetBlobLeaseClient();
+            var etagCondition = new RequestConditions();
+            etagCondition.IfMatch = currentETag;
+            _curLease = _leaseClient.Acquire(TimeSpan.FromSeconds(15), etagCondition).Value;
+            _leaseRenewThread = new Thread(() =>
+            {
+                while (true)
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    _leaseClient.Renew();
+                }
+            })
+            { IsBackground = true };
+            _leaseRenewThread.Start();
+            _leaseCondition = new AppendBlobRequestConditions();
+            _leaseCondition.LeaseId = _curLease.LeaseId;
             _bytesToSend = new MemoryStream();
         }
 
@@ -45,20 +78,44 @@ namespace Ambrosia
 
         public void Dispose()
         {
+            _leaseRenewThread.Abort();
+            _leaseClient.Release();
         }
 
         public void Flush()
         {
-            _bytesToSend.Position = 0;
-            _logClient.AppendBlock(_bytesToSend);
+            var numSendBytes = _bytesToSend.Length;
+            var OrigSendBytes = numSendBytes;
+            var buffer = _bytesToSend.GetBuffer();
+            int bufferPosition = 0;
+            while (numSendBytes > 0)
+            {
+                int numAppendBytes = (int) Math.Min(numSendBytes, 1024*1024);
+                var sendStream = new MemoryStream(buffer, bufferPosition, numAppendBytes);
+                _logClient.AppendBlock(sendStream, null, _leaseCondition);
+                bufferPosition += numAppendBytes;
+                numSendBytes -= numAppendBytes;
+            }
+            Debug.Assert(OrigSendBytes == _bytesToSend.Length);
             _bytesToSend.Position = 0;
             _bytesToSend.SetLength(0);
         }
 
         public async Task FlushAsync()
         {
-            _bytesToSend.Position = 0;
-            await _logClient.AppendBlockAsync(_bytesToSend);
+            var numSendBytes = _bytesToSend.Length;
+            var OrigSendBytes = numSendBytes;
+            var buffer = _bytesToSend.GetBuffer();
+            int bufferPosition = 0;
+            while (numSendBytes > 0)
+            {
+                int numAppendBytes = (int)Math.Min(numSendBytes, 1024 * 1024);
+                var sendStream = new MemoryStream(buffer, bufferPosition, numAppendBytes);
+                await _logClient.AppendBlockAsync(sendStream, null, _leaseCondition);
+                bufferPosition += numAppendBytes;
+                numSendBytes -= numAppendBytes;
+            }
+            Debug.Assert(OrigSendBytes == _bytesToSend.Length);
             _bytesToSend.Position = 0;
             _bytesToSend.SetLength(0);
         }
@@ -135,7 +192,6 @@ namespace Ambrosia
                                    uint maxChunksPerWrite,
                                    bool appendOpen = false)
         {
-            fileName = AzureBlobsLogsInterface.PathFixer(fileName);
             return new AzureBlobsLogWriter(_blobsContainerClient, fileName, appendOpen);
         }
     }
@@ -144,15 +200,26 @@ namespace Ambrosia
     {
         BlobDownloadInfo _download;
         BlobClient _logClient;
+        long _streamOffset;
 
         public long Position
         {
-            get { return _download.Content.Position; }
+            get { return _download.Content.Position + _streamOffset; }
             set 
             {
                 _download.Content.Dispose();
-                var downloadRange = new HttpRange(value);
-                _download = _logClient.Download(downloadRange); 
+                if (value > 0)
+                {
+                    _streamOffset = value - 1;
+                    var downloadRange = new HttpRange(value - 1);
+                    _download = _logClient.Download(downloadRange);
+                    _download.Content.ReadByte();
+                }
+                else
+                {
+                    _streamOffset = 0;
+                    _download = _logClient.Download();
+                }
             }
         }
 

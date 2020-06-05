@@ -107,14 +107,14 @@ namespace Ambrosia
             for (int i = 0; i < dictCount; i++)
             {
                 var myBytes = new byte[16];
-                readFromStream.Read(myBytes, 0, 16);
+                readFromStream.ReadAllRequiredBytes(myBytes, 0, 16);
                 var newGuid = new Guid(myBytes);
                 byte addressSize = (byte)readFromStream.ReadByte();
                 if (addressSize > 16)
                 {
                     myBytes = new byte[addressSize];
                 }
-                readFromStream.Read(myBytes, 0, addressSize);
+                readFromStream.ReadAllRequiredBytes(myBytes, 0, addressSize);
                 var newAddress = new IPAddress(myBytes);
                 _retVal.TryAdd(newGuid, newAddress);
             }
@@ -399,7 +399,7 @@ namespace Ambrosia
                 var pageSize = readFromStream.ReadIntFixed();
                 var pageFilled = readFromStream.ReadIntFixed();
                 var myBytes = new byte[pageSize];
-                readFromStream.Read(myBytes, 0, pageFilled);
+                readFromStream.ReadAllRequiredBytes(myBytes, 0, pageFilled);
                 var newBufferPage = new BufferPage(myBytes);
                 newBufferPage.curLength = pageFilled;
                 newBufferPage.HighestSeqNo = readFromStream.ReadLongFixed();
@@ -1208,7 +1208,7 @@ namespace Ambrosia
                     _buf = new byte[_maxBufSize];
                     var bufSize = recoveryStream.ReadIntFixed();
                     _status = bufSize << SealedBits;
-                    recoveryStream.Read(_buf, 0, bufSize);
+                    recoveryStream.ReadAllRequiredBytes(_buf, 0, bufSize);
                     _uncommittedWatermarks = _uncommittedWatermarks.AmbrosiaDeserialize(recoveryStream);
                     _trimWatermarks = _trimWatermarks.AmbrosiaDeserialize(recoveryStream);
                 }
@@ -2120,7 +2120,7 @@ namespace Ambrosia
         int _movingToNextLog = 0;
         // A handle to a file used for an upgrading secondary to bring down the primary and prevent primary promotion amongst secondaries.
         // As long as the write lock is held, no promotion can happen
-        FileStream _killFileHandle = null;
+        ILogWriter _killFileHandle = null;
 
 
 
@@ -2549,7 +2549,7 @@ namespace Ambrosia
         {
             if (_logWriterStatics.FileExists(LogFileName(_lastLogFile + 1, _shardID, _currentVersion)))
             {
-                File.Delete(LogFileName(_lastLogFile + 1, _shardID, _currentVersion));
+                _logWriterStatics.DeleteFile(LogFileName(_lastLogFile + 1, _shardID, _currentVersion));
             }
             ILogWriter retVal = null;
             try
@@ -2567,7 +2567,7 @@ namespace Ambrosia
         // lasts until the returned file handle is released.
         private void LockKillFile()
         {
-            _killFileHandle = new FileStream(_logFileNameBase + "killFile", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read & ~FileShare.Inheritable);
+            _killFileHandle = _logWriterStatics.Generate(_logFileNameBase + "killFile", 1024 * 1024, 6);
         }
 
         private void ReleaseAndTryCleanupKillFile()
@@ -2577,7 +2577,7 @@ namespace Ambrosia
             try
             {
                 // Try to delete the file. Someone may beat us to it.
-                File.Delete(_logFileNameBase + "killFile");
+                _logWriterStatics.DeleteFile(_logFileNameBase + "killFile");
             }
             catch (Exception e)
             {
@@ -2589,7 +2589,7 @@ namespace Ambrosia
         {
             if (_logWriterStatics.FileExists(LogFileName(_lastLogFile + 1)))
             {
-                File.Delete(LogFileName(_lastLogFile + 1));
+                _logWriterStatics.DeleteFile(LogFileName(_lastLogFile + 1));
             }
             ILogWriter retVal = null;
             try
@@ -2674,6 +2674,7 @@ namespace Ambrosia
                 // Compete for Checkpoint Write Permission
                 state.CheckpointWriter = _logWriterStatics.Generate(CheckpointName(state.LastCommittedCheckpoint), 1024 * 1024, 6, true);
                 state.MyRole = AARole.Checkpointer; // I'm a checkpointing secondary
+                Console.WriteLine("I'm a checkpointer");
                 var oldCheckpoint = state.LastCommittedCheckpoint;
                 state.LastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", state.ShardID)));
                 if (oldCheckpoint != state.LastCommittedCheckpoint)
@@ -2686,6 +2687,7 @@ namespace Ambrosia
             {
                 state.CheckpointWriter = null;
                 state.MyRole = AARole.Secondary; // I'm a secondary
+                Console.WriteLine("I'm a secondary");
             }
         }
 
@@ -2805,7 +2807,7 @@ namespace Ambrosia
                     {
                         tempBuf = new byte[commitSize];
                     }
-                    replayStream.Read(tempBuf, 0, commitSize);
+                    replayStream.ReadAllRequiredBytes(tempBuf, 0, commitSize);
                     // Perform integrity check
                     long checkBytesCalc = state.Committer.CheckBytes(tempBuf, 0, commitSize);
                     if (checkBytesCalc != checkBytes)
@@ -2823,7 +2825,7 @@ namespace Ambrosia
                         {
                             tempBuf2 = new byte[inputNameSize];
                         }
-                        replayStream.Read(tempBuf2, 0, inputNameSize);
+                        replayStream.ReadAllRequiredBytes(tempBuf2, 0, inputNameSize);
                         var inputName = Encoding.UTF8.GetString(tempBuf2, 0, inputNameSize);
                         var newLongPair = new LongPair();
                         newLongPair.First = replayStream.ReadLongFixed();
@@ -2840,7 +2842,7 @@ namespace Ambrosia
                         {
                             tempBuf2 = new byte[inputNameSize];
                         }
-                        replayStream.Read(tempBuf2, 0, inputNameSize);
+                        replayStream.ReadAllRequiredBytes(tempBuf2, 0, inputNameSize);
                         var inputName = Encoding.UTF8.GetString(tempBuf2, 0, inputNameSize);
                         long seqNo = replayStream.ReadLongFixed();
                         trimDict[inputName] = seqNo;
@@ -3806,7 +3808,7 @@ namespace Ambrosia
         {
             if (_logWriterStatics.FileExists(CheckpointName(_lastCommittedCheckpoint + 1)))
             {
-                File.Delete(CheckpointName(_lastCommittedCheckpoint + 1));
+                _logWriterStatics.DeleteFile(CheckpointName(_lastCommittedCheckpoint + 1));
             }
             ILogWriter retVal = null;
             try
@@ -3825,7 +3827,7 @@ namespace Ambrosia
             var fileNameToDelete = CheckpointName(_lastCommittedCheckpoint - 1);
             if (_logWriterStatics.FileExists(fileNameToDelete))
             {
-                File.Delete(fileNameToDelete);
+                _logWriterStatics.DeleteFile(fileNameToDelete);
             }
         }
 
