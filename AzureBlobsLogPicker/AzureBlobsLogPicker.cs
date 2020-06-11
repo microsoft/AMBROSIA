@@ -15,6 +15,7 @@ namespace Ambrosia
 {
     internal class AzureBlobsLogWriter : IDisposable, ILogWriter
     {
+        static Dictionary<string, ETag> _previousOpenAttempts = new Dictionary<string, ETag>();
         BlobContainerClient _blobsContainerClient;
         AppendBlobClient _logClient;
         MemoryStream _bytesToSend;
@@ -22,50 +23,103 @@ namespace Ambrosia
         BlobLease _curLease;
         AppendBlobRequestConditions _leaseCondition;
         Thread _leaseRenewThread;
+        IDictionary<string, string> _blobMetadata;
+        volatile bool _stopRelockThread;
+        volatile bool _relockThreadStopped;
 
         public AzureBlobsLogWriter(BlobContainerClient blobsContainerClient,
                                    string fileName,
                                    bool appendOpen = false)
         {
             fileName = AzureBlobsLogsInterface.PathFixer(fileName);
+            Console.WriteLine("Opening or creating " + fileName);
             _blobsContainerClient = blobsContainerClient;
             _logClient = _blobsContainerClient.GetAppendBlobClient(fileName);
             ETag currentETag;
-
-            if (appendOpen)
+            if (_previousOpenAttempts.ContainsKey(fileName) && appendOpen)
             {
-                var response = _logClient.CreateIfNotExists();
-                if (response != null)
-                {
-                    currentETag = response.Value.ETag;
-                }
-                else
-                {
-                    currentETag = _logClient.GetProperties().Value.ETag;
-                }
+                Console.WriteLine("Was open before");
+                // We've opened this blob before and want to be non-destructive. We don't need to CreateIfNotExists, which could be VERY slow.
+                currentETag = _logClient.GetProperties().Value.ETag;
             }
             else
             {
-                currentETag = _logClient.Create().Value.ETag;
+                Console.WriteLine("First time opening");
+                try
+                {
+                    // Create the file non-destructively if needed, guaranteeing write continuity on creation by grabbing the etag of the create, if needed
+                    if (appendOpen)
+                    {
+                        var response = _logClient.CreateIfNotExists();
+                        if (response != null)
+                        {
+                            currentETag = response.Value.ETag;
+                        }
+                        else
+                        {
+                            currentETag = _logClient.GetProperties().Value.ETag;
+                        }
+                    }
+                    else
+                    {
+                        currentETag = _logClient.Create().Value.ETag;
+                    }
+                }
+                catch { currentETag = _logClient.GetProperties().Value.ETag; }
+            }
+            // Try to grab the blob lease
+            _leaseClient = _logClient.GetBlobLeaseClient();
+            // The blob hasn't be touched since the last time. This is a candidate for breaking the lease.
+            if (_previousOpenAttempts.ContainsKey(fileName) && (_previousOpenAttempts[fileName].ToString().Equals(currentETag.ToString())))
+            {
+                Console.WriteLine("Passed Test" + currentETag.ToString());
+                _previousOpenAttempts[fileName] = currentETag;
+                // The blob hasn't been updated. Try to break the lease and reacquire
+                var requestConditions = new BlobRequestConditions();
+                requestConditions = new BlobRequestConditions();
+                requestConditions.IfMatch = currentETag;
+                // If the condition fails in the break, it's because someone else managed to touch the file, so give up
+                Console.WriteLine("Breaking Lease");
+                ETag newETag;
+                try
+                {
+                    newETag = _leaseClient.Break(null, requestConditions).Value.ETag;
+                }
+                catch (Exception e) { newETag = currentETag; }
+                Console.WriteLine("Broke old lease");
+                var etagCondition = new RequestConditions();
+                etagCondition.IfMatch = newETag;
+                // If the condition fails, someone snuck in and grabbed the lock before we could. Give up.
+                _curLease = _leaseClient.Acquire(TimeSpan.FromSeconds(-1), etagCondition).Value;
+                Console.WriteLine("Acquired lease");
+            }
+            else
+            {
+                Console.WriteLine("Failed Test" + currentETag.ToString());
+                // Not a candidate for breaking the lease. Just try to acquire.
+                _previousOpenAttempts[fileName] = currentETag;
+                _curLease = _leaseClient.Acquire(TimeSpan.FromSeconds(-1)).Value;
+                Console.WriteLine("Acquired lease");
             }
 
-            _leaseClient = _logClient.GetBlobLeaseClient();
-            var etagCondition = new RequestConditions();
-            etagCondition.IfMatch = currentETag;
-            _curLease = _leaseClient.Acquire(TimeSpan.FromSeconds(15), etagCondition).Value;
-            _leaseRenewThread = new Thread(() =>
-            {
-                while (true)
-                {
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
-                    _leaseClient.Renew();
-                }
-            })
-            { IsBackground = true };
-            _leaseRenewThread.Start();
             _leaseCondition = new AppendBlobRequestConditions();
             _leaseCondition.LeaseId = _curLease.LeaseId;
+            // We got the lease! Set up thread to periodically touch the blob to prevent others from breaking the lease.
+            _blobMetadata = _logClient.GetProperties().Value.Metadata;
+            _stopRelockThread = false;
+            _relockThreadStopped = false;
+            _leaseRenewThread = new Thread(() =>
+            {
+                while (!_stopRelockThread)               
+                {
+                    Thread.Sleep(100);
+                    var response = _logClient.SetMetadata(_blobMetadata, _leaseCondition);
+                }
+                _relockThreadStopped = true;
+            }) { IsBackground = true };
+            _leaseRenewThread.Start();
             _bytesToSend = new MemoryStream();
+            Debug.Assert(_logClient.Exists());
         }
 
         public ulong FileSize { 
@@ -78,6 +132,8 @@ namespace Ambrosia
 
         public void Dispose()
         {
+            _stopRelockThread = true;
+            while (!_relockThreadStopped) { Thread.Sleep(100); }
             _leaseRenewThread.Abort();
             _leaseClient.Release();
         }
@@ -109,7 +165,7 @@ namespace Ambrosia
             int bufferPosition = 0;
             while (numSendBytes > 0)
             {
-                int numAppendBytes = (int)Math.Min(numSendBytes, 1024 * 1024);
+                int numAppendBytes = (int)Math.Min(numSendBytes, 256 * 1024);
                 var sendStream = new MemoryStream(buffer, bufferPosition, numAppendBytes);
                 await _logClient.AppendBlockAsync(sendStream, null, _leaseCondition);
                 bufferPosition += numAppendBytes;
@@ -182,9 +238,11 @@ namespace Ambrosia
 
         public void DeleteFile(string path)
         {
-            path = AzureBlobsLogsInterface.PathFixer(path);
+            // This operation hangs mysteriously with Azure blobs sometimes, so I just won't do it. This will leave the kill file around, but it causes no harm
+/*            path = AzureBlobsLogsInterface.PathFixer(path);
+            Console.WriteLine("Deleting " + path);
             var logClient = _blobsContainerClient.GetAppendBlobClient(path);
-            logClient.Delete(DeleteSnapshotsOption.IncludeSnapshots);
+            logClient.DeleteIfExists();*/
         }
 
         public ILogWriter Generate(string fileName,

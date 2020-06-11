@@ -2290,9 +2290,9 @@ namespace Ambrosia
         {
             while (true)
             {
-                await Task.Delay(1000);
                 for (int i = 0; i < 3; i++)
                 {
+                    await Task.Delay(1500);
                     try
                     {
                         LockKillFile();
@@ -2567,7 +2567,7 @@ namespace Ambrosia
         // lasts until the returned file handle is released.
         private void LockKillFile()
         {
-            _killFileHandle = _logWriterStatics.Generate(_logFileNameBase + "killFile", 1024 * 1024, 6);
+            _killFileHandle = _logWriterStatics.Generate(_logFileNameBase + "killFile", 1024 * 1024, 6, true);
         }
 
         private void ReleaseAndTryCleanupKillFile()
@@ -2671,8 +2671,28 @@ namespace Ambrosia
             }
             try
             {
-                // Compete for Checkpoint Write Permission
-                state.CheckpointWriter = _logWriterStatics.Generate(CheckpointName(state.LastCommittedCheckpoint), 1024 * 1024, 6, true);
+                // Try to grab the checkpoint lock twice to break lingering locks on Azure blobs
+                bool gotLock = false;
+                for (int i=0; i<2; i++)
+                {
+                    try
+                    {
+                        if (i==1)
+                        {
+                            // Second attempt, wait 5 seconds to see if the lock can be grabbed
+                            Thread.Sleep(4000);
+                        }
+                        state.CheckpointWriter = _logWriterStatics.Generate(CheckpointName(state.LastCommittedCheckpoint), 1024 * 1024, 6, true);
+                    }
+                    catch { continue; }
+                    // Success!
+                    gotLock = true;
+                    break;
+                }
+                if (!gotLock)
+                {
+                    throw new Exception("Couldn't get checkpoint lock");
+                }
                 state.MyRole = AARole.Checkpointer; // I'm a checkpointing secondary
                 Console.WriteLine("I'm a checkpointer");
                 var oldCheckpoint = state.LastCommittedCheckpoint;
@@ -2702,7 +2722,7 @@ namespace Ambrosia
                 {
                     if (_upgrading && _activeActive && (_killFileHandle == null))
                     {
-                        await Task.Delay(1000);
+                        await Task.Delay(1500);
                         continue;
                     }
                     var oldLastLogFile = state.LastLogFile;
@@ -2762,7 +2782,7 @@ namespace Ambrosia
 
                         OnError(VersionMismatch, "Version changed during recovery: Expected " + _currentVersion + " was: " + readVersion.ToString());
                     }
-                    await Task.Delay(1000);
+                    await Task.Delay(1500);
                 }
             }
         }
