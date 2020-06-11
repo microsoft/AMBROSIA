@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net461;netcoreapp3.1</TargetFrameworks>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
@@ -31,6 +31,7 @@
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\AmbrosiaLib\Ambrosia\AmbrosiaLib.csproj" />
     <ProjectReference Include="..\GeneratedSourceFiles\PTIAmbrosiaGeneratedAPI\latest\PTIAmbrosiaGeneratedAPI.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
