@@ -139,6 +139,8 @@ namespace CRA.Worker
                 { "ac|assemblyClass=", "The secure network assembly class.", ac => _secureNetworkClassName = ac },
                 { "ip|IPAddr=", "Override automatic self IP detection", i => _ipAddress = i },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
+                { "rp|receivePort=", "The service receive from port override.", rp => StartupParamOverrides.receivePort = int.Parse(rp) },
+                { "sp|sendPort=", "The service send to port override.", sp => StartupParamOverrides.sendPort = int.Parse(sp) },
             };
 
             try
