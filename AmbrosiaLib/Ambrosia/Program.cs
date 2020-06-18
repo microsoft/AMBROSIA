@@ -21,6 +21,12 @@ using SharedAmbrosiaConstants;
 
 namespace Ambrosia
 {
+    public static class StartupParamOverrides
+    {
+        public static int receivePort = -1;
+        public static int sendPort = -1;
+    }
+
     internal struct LongPair
     {
         public LongPair(long first,
@@ -2286,7 +2292,7 @@ namespace Ambrosia
             localListenerThread.Start();
         }
 
-        private async Task CheckForUpgradeAsync()
+        private async Task CheckForMigrationOrUpgradeAsync()
         {
             while (true)
             {
@@ -2306,7 +2312,7 @@ namespace Ambrosia
                         if (i==2)
                         {
                             // Failed 3 times. Commit suicide
-                            OnError(0, "Upgrading. Must commit suicide since I'm the primary");
+                            OnError(0, "Migrating or upgrading. Must commit suicide since I'm the primary");
                         }
                     }
                 }
@@ -2332,11 +2338,15 @@ namespace Ambrosia
                 await RecoverAsync(state, checkpointToLoad, testUpgrade);
                 UpdateAmbrosiaState(state);
                 await PrepareToBecomePrimaryAsync();
+                // Start task to periodically check if someone's trying to upgrade
+                (new Task(() => CheckForMigrationOrUpgradeAsync())).Start();
                 Recovering = false;
             }
             else
             {
                 await StartAsync();
+                // Start task to periodically check if someone's trying to upgrade
+                (new Task(() => CheckForMigrationOrUpgradeAsync())).Start();
             }
         }
 
@@ -2427,12 +2437,6 @@ namespace Ambrosia
                 // Moving to the next file means the first log file is empty, but it immediately causes failures of all old secondaries.
                 await MoveServiceToNextLogFileAsync();
             }
-
-            if (_activeActive)
-            {
-                // Start task to periodically check if someone's trying to upgrade
-                (new Task(() => CheckForUpgradeAsync())).Start();
-            }
         }
 
         private async Task StartAsync()
@@ -2453,11 +2457,6 @@ namespace Ambrosia
             await ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
             await MoveServiceToNextLogFileAsync(true, true);
             InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
-            if (_activeActive)
-            {
-                // Start task to periodically check if someone's trying to upgrade
-                (new Task(() => CheckForUpgradeAsync())).Start();
-            }
         }
 
         private void UnbufferNonreplayableCalls(ConcurrentDictionary<string, OutputConnectionRecord> outputs)
@@ -2798,6 +2797,8 @@ namespace Ambrosia
             var detectedEOF = false;
             var detectedEOL = false;
             var clearedCommitterWrite = false;
+            var haveWriterLockForNonActiveActive = false;
+            ILogWriter lastLogFileStreamWriter = null;
             // Keep replaying commits until we run out of replay data
             while (true)
             {
@@ -2870,10 +2871,95 @@ namespace Ambrosia
                 }
                 catch
                 {
-                    // Couldn't recover replay segment. Could be for a number of reasons.
-                    if (!_activeActive || detectedEOL)
+                    // Non-Active/Active case for couldn't recover replay segment. Could be for a number of reasons.
+
+                    // Do we already have the write lock on the latest log?
+                    if (!_activeActive)
                     {
-                        // Leave replay and continue recovery.
+                        // Since it's not the active/active case, take over (migrations scenario using the kill file, or just recover)
+                        // But first, make sure we have fully consumed the log (except a bit at the end)
+                        var actualLastLogFileNum = long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID)));
+                        if (!_logWriterStatics.FileExists(LogFileName(actualLastLogFileNum, state.ShardID)))
+                        {
+                            OnError(MissingLog, "Missing log in replay or update happened" + state.LastLogFile.ToString());
+                        }
+                        if (actualLastLogFileNum > state.LastLogFile) // there are more log files to read. Move on.
+                        {
+                            state.LastLogFile++;
+                            replayStream.Dispose();
+                            replayStream = LogReaderStaticPicker.curStatic.Generate(LogFileName(state.LastLogFile, state.ShardID));
+                            continue;
+                        }
+
+                        if (!haveWriterLockForNonActiveActive)
+                        {
+                            // We're as close to the end of the log as we can get. We need to grab and hold the lock on the kill file. 
+                            while (true)
+                            {
+                                Thread.Sleep(200);
+                                try
+                                {
+                                    LockKillFile();
+                                    // We have the lock!
+                                    break;
+                                }
+                                catch (Exception)
+                                {
+                                    // Keep trying until successful
+                                }
+                            }
+
+                            // keep trying to take the write permission on LOG file until the old execution instance dies and lets go
+                            while (true)
+                            {
+                                try
+                                {
+                                    actualLastLogFileNum = long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID)));
+                                    if (!_logWriterStatics.FileExists(LogFileName(actualLastLogFileNum, state.ShardID)))
+                                    {
+                                        OnError(MissingLog, "Missing log in replay or update happened" + state.LastLogFile.ToString());
+                                    }
+                                    Debug.Assert(lastLogFileStreamWriter == null);
+                                    // See if we've successfully killed the old instance execution
+                                    lastLogFileStreamWriter = _logWriterStatics.Generate(LogFileName(actualLastLogFileNum, state.ShardID), 1024 * 1024, 6, true);
+                                    if (long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID))) != actualLastLogFileNum)
+                                    {
+                                        // We got an old log. Try again
+                                        throw new Exception();
+                                    }
+                                    // The old instance execution died. We need to finish recovery, then exit!
+                                    break;
+                                }
+                                catch
+                                {
+                                    if (lastLogFileStreamWriter != null)
+                                    {
+                                        lastLogFileStreamWriter.Dispose();
+                                        lastLogFileStreamWriter = null;
+                                    }
+                                    await Task.Delay(200);
+                                }
+                            }
+                            // We've locked the log. There may be more log to consume. Continue until we hit the true end.
+                            haveWriterLockForNonActiveActive = true;
+                            replayStream.Position = logRecordPos;
+                            continue;
+                        }
+                        else
+                        {
+                            // We've consumed the whole log and have all the necessary locks.
+                            await state.Committer.SleepAsync();
+                            state.Committer.SwitchLogStreams(lastLogFileStreamWriter);
+                            await state.Committer.WakeupAsync();
+                            Debug.Assert(_killFileHandle != null);
+                            ReleaseAndTryCleanupKillFile();
+                            break;
+                        }
+                    }
+
+                    // Active/Active case for couldn't recover replay segment. Could be for a number of reasons.
+                    if (detectedEOL)
+                    {
                         break;
                     }
                     if (detectedEOF)
@@ -4032,8 +4118,22 @@ namespace Ambrosia
             _activeActive = activeActive;
             _newLogTriggerSize = logTriggerSizeMB * 1000000;
             _serviceLogPath = serviceLogPath;
-            _localServiceReceiveFromPort = serviceReceiveFromPort;
-            _localServiceSendToPort = serviceSendToPort;
+            if (StartupParamOverrides.receivePort == -1)
+            {
+                _localServiceReceiveFromPort = serviceReceiveFromPort;
+            }
+            else
+            {
+                _localServiceReceiveFromPort = StartupParamOverrides.receivePort;
+            }
+            if (StartupParamOverrides.sendPort == -1)
+            {
+                _localServiceSendToPort = serviceSendToPort;
+            }
+            else
+            {
+                _localServiceSendToPort = StartupParamOverrides.sendPort;
+            }
             _serviceName = serviceName;
             _storageConnectionString = storageConnectionString;
             _sharded = sharded;
