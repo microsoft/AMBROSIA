@@ -117,14 +117,14 @@ Message types and associated data which may be sent to or received by services:
  * 1 – `AttachTo` (Sent): Data is the destination instance name in UTF-8. The name must match the name used when the instance was logically created (registered).
        The `AttachTo` message must be sent (once) for each outgoing RPC destination, excluding the local instance, prior to sending an RPC.
 
- * 0 - Incoming RPC (Received):
+ * 0 - Incoming `RPC` (Received):
 
    - Byte 0 of data is reserved (RPC or return value).
    - Next is a variable length int (ZigZagInt) which is a method ID. Negative method ID's are reserved for system use.
-   - The next byte is a reserved byte (Fire and forget (1), Async/Await (0), or Impulse (2)).
+   - The next byte is the RPC type: 0 = Async/Await, 1 = Fire-and-Forget (aka. Fork), 2 = Impulse.
    - The remaining bytes are the serialized arguments packed tightly.
 
- * 0 - Outgoing RPC (Sent):
+ * 0 - Outgoing `RPC` (Sent):
 
    - First is a variable length int (ZigZagInt) which is the length of the destination service.  For a self call, this should be set to 0 and the following field omitted.
    - Next are the actual bytes (in UTF-8) for the name of the destination service.
