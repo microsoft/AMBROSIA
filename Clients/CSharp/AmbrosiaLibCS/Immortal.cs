@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Xml;
 using Remote.Linq.Expressions;
-using SharedAmbrosiaConstants;
 using static Ambrosia.StreamCommunicator;
 
 namespace Ambrosia
@@ -202,29 +201,6 @@ namespace Ambrosia
             tcpClient.Client = mySocket;
             receiveStream = tcpClient.GetStream();
             var processOutputTask = processOutputRequestsAsync();
-
-
-
-
-
-
-
-/*
-#if _WINDOWS
-            var ipAddress = IPAddress.IPv6Loopback;
-            mySocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
-            mySocket.IOControl(SIO_LOOPBACK_FAST_PATH, optionBytes, null);
-#else
-            var ipAddress = IPAddress.Loopback;
-            mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-#endif
-            var myReceiveFromEP = new IPEndPoint(ipAddress, receivePort);
-            mySocket.Bind(myReceiveFromEP);
-            mySocket.Listen(1);
-            var socket = mySocket.Accept();
-            receiveStream = new NetworkStream(socket);
-
-            var processOutputTask = processOutputRequestsAsync();*/
         }
 
         private async Task processOutputRequestsAsync()
@@ -368,7 +344,7 @@ namespace Ambrosia
 
                     switch (firstByte)
                     {
-                        case AmbrosiaRuntime.InitalMessageByte:
+                        case AmbrosiaRuntimeLBConstants.InitalMessageByte:
                             {
 #if DEBUG
                                 Console.WriteLine("*X* Received an initial message");
@@ -391,7 +367,7 @@ namespace Ambrosia
 
                                 break;
                             }
-                        case AmbrosiaRuntime.checkpointByte:
+                        case AmbrosiaRuntimeLBConstants.checkpointByte:
                             {
 #if DEBUG
                                 Console.WriteLine("*X* Received a checkpoint message");
@@ -408,7 +384,7 @@ namespace Ambrosia
                                 break;
                             }
 
-                        case AmbrosiaRuntime.takeCheckpointByte:
+                        case AmbrosiaRuntimeLBConstants.takeCheckpointByte:
                             {
 #if DEBUG
                                 Console.WriteLine("*X* Received a take checkpoint message");
@@ -420,7 +396,7 @@ namespace Ambrosia
                                 break;
                             }
 
-                        case AmbrosiaRuntime.becomingPrimaryByte:
+                        case AmbrosiaRuntimeLBConstants.becomingPrimaryByte:
                             {
 #if DEBUG
                                 Console.WriteLine("*X* Received a becoming primary message");
@@ -432,7 +408,7 @@ namespace Ambrosia
                             }
 
 
-                        case AmbrosiaRuntime.takeBecomingPrimaryCheckpointByte:
+                        case AmbrosiaRuntimeLBConstants.takeBecomingPrimaryCheckpointByte:
                             {
 #if DEBUG
                                 Console.WriteLine("*X* Received a take checkpoint message");
@@ -446,10 +422,10 @@ namespace Ambrosia
                                 break;
                             }
 
-                        case AmbrosiaRuntime.upgradeTakeCheckpointByte:
-                        case AmbrosiaRuntime.upgradeServiceByte:
+                        case AmbrosiaRuntimeLBConstants.upgradeTakeCheckpointByte:
+                        case AmbrosiaRuntimeLBConstants.upgradeServiceByte:
                             {
-                                if (firstByte == AmbrosiaRuntime.upgradeTakeCheckpointByte)
+                                if (firstByte == AmbrosiaRuntimeLBConstants.upgradeTakeCheckpointByte)
                                 {
 #if DEBUG
                                     Console.WriteLine("*X* Received a upgrade and take checkpoint message");
@@ -487,7 +463,7 @@ namespace Ambrosia
                                 // IMPORTANT: But the value for the back pointer to the server proxy should be the newly generated proxy
                                 newImmortal._dispatcher = typedProxy;
 
-                                if (firstByte == AmbrosiaRuntime.upgradeTakeCheckpointByte)
+                                if (firstByte == AmbrosiaRuntimeLBConstants.upgradeTakeCheckpointByte)
                                 {
                                     await newImmortal.TakeCheckpointAsync();
                                     newImmortal.IsPrimary = true;
@@ -508,21 +484,21 @@ namespace Ambrosia
 
                             }
 
-                        case AmbrosiaRuntime.RPCByte:
-                        case AmbrosiaRuntime.RPCBatchByte:
-                        case AmbrosiaRuntime.CountReplayableRPCBatchByte:
+                        case AmbrosiaRuntimeLBConstants.RPCByte:
+                        case AmbrosiaRuntimeLBConstants.RPCBatchByte:
+                        case AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte:
                             {
                                 RPCsReceived++;
                                 var numberOfRPCs = 1;
                                 var lengthOfCurrentRPC = 0;
                                 int endIndexOfCurrentRPC = 0;
 
-                                if (firstByte == AmbrosiaRuntime.RPCBatchByte || firstByte == AmbrosiaRuntime.CountReplayableRPCBatchByte)
+                                if (firstByte == AmbrosiaRuntimeLBConstants.RPCBatchByte || firstByte == AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte)
                                 {
                                     _cursor++;
                                     numberOfRPCs = _inputFlexBuffer.Buffer.ReadBufferedInt(_cursor);
                                     _cursor += IntSize(numberOfRPCs);
-                                    if (firstByte == AmbrosiaRuntime.CountReplayableRPCBatchByte)
+                                    if (firstByte == AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte)
                                     {
                                         var numReplayableRPCs = _inputFlexBuffer.Buffer.ReadBufferedInt(_cursor);
                                         _cursor += IntSize(numReplayableRPCs);
@@ -546,7 +522,7 @@ namespace Ambrosia
                                     }
 
                                     var shouldBeRPCByte = _inputFlexBuffer.Buffer[_cursor];
-                                    if (shouldBeRPCByte != AmbrosiaRuntime.RPCByte)
+                                    if (shouldBeRPCByte != AmbrosiaRuntimeLBConstants.RPCByte)
                                     {
                                         Console.WriteLine("UNKNOWN BYTE: {0}!!", shouldBeRPCByte);
                                         throw new Exception("Illegal leading byte in message");
@@ -814,7 +790,7 @@ namespace Ambrosia
             var checkpointSize = _immortalSerializer.SerializeSize(this);
             var sizeOfMessage = 1 + LongSize(checkpointSize);
             _ambrosiaSendToStream.WriteInt(sizeOfMessage);
-            _ambrosiaSendToStream.WriteByte(AmbrosiaRuntime.checkpointByte);
+            _ambrosiaSendToStream.WriteByte(AmbrosiaRuntimeLBConstants.checkpointByte);
             _ambrosiaSendToStream.WriteLong(checkpointSize);
             using (var passThruStream = new PassThruWriteStream(_ambrosiaSendToStream))
             {
@@ -1038,7 +1014,7 @@ namespace Ambrosia
             writablePage.curLength += localBuffer.WriteInt(writablePage.curLength, bytesPerMessage);
 
             // Write byte signalling that this is a RPC call
-            localBuffer[writablePage.curLength++] = AmbrosiaRuntime.RPCByte;
+            localBuffer[writablePage.curLength++] = AmbrosiaRuntimeLBConstants.RPCByte;
 
             // Write destination length, followed by the destination
             writablePage.curLength += localBuffer.WriteInt(writablePage.curLength, encodedDestinationLFRLength);
@@ -1313,7 +1289,7 @@ namespace Ambrosia
                     // Write message size
                     Immortal._ambrosiaSendToStream.WriteInt(1 + destinationBytes.Length);
                     // Write message type
-                    Immortal._ambrosiaSendToStream.WriteByte(AmbrosiaRuntime.attachToByte);
+                    Immortal._ambrosiaSendToStream.WriteByte(AmbrosiaRuntimeLBConstants.attachToByte);
                     // Write Destination
                     Immortal._ambrosiaSendToStream.Write(destinationBytes, 0, destinationBytes.Length);
                     Immortal._outputLock.Release();
@@ -1406,7 +1382,7 @@ namespace Ambrosia
 
                 var firstByte = inputFlexBuffer.Buffer[cursor++];
 
-                if (firstByte == AmbrosiaRuntime.checkpointByte)
+                if (firstByte == AmbrosiaRuntimeLBConstants.checkpointByte)
                 {
                     // Then this container is recovering
 #if DEBUG
@@ -1434,10 +1410,10 @@ namespace Ambrosia
                         this.MyImmortal.StartDispatchLoop();
                     }
                 }
-                else if (firstByte == AmbrosiaRuntime.takeCheckpointByte || firstByte == AmbrosiaRuntime.takeBecomingPrimaryCheckpointByte)
+                else if (firstByte == AmbrosiaRuntimeLBConstants.takeCheckpointByte || firstByte == AmbrosiaRuntimeLBConstants.takeBecomingPrimaryCheckpointByte)
                 {
                     // Then this container is starting for the first time
-                    if (firstByte == AmbrosiaRuntime.takeCheckpointByte)
+                    if (firstByte == AmbrosiaRuntimeLBConstants.takeCheckpointByte)
                     {
 #if DEBUG
                         Console.WriteLine("*X* Received a take checkpoint message");
@@ -1460,7 +1436,7 @@ namespace Ambrosia
                         var initialMessageSize = initialMessageBytes.Length;
                         sizeOfMessage = 1 + IntSize(initialMessageSize) + initialMessageSize;
                         MyImmortal._ambrosiaSendToStream.WriteInt(sizeOfMessage);
-                        MyImmortal._ambrosiaSendToStream.WriteByte(AmbrosiaRuntime.InitalMessageByte);
+                        MyImmortal._ambrosiaSendToStream.WriteByte(AmbrosiaRuntimeLBConstants.InitalMessageByte);
                         MyImmortal._ambrosiaSendToStream.WriteInt(initialMessageSize);
                         MyImmortal._ambrosiaSendToStream.Write(initialMessageBytes, 0, initialMessageSize);
                         MyImmortal._ambrosiaSendToStream.Flush();
@@ -1487,7 +1463,7 @@ namespace Ambrosia
                         var checkpointSize = this.MyImmortal._immortalSerializer.SerializeSize(this.MyImmortal);
                         sizeOfMessage = 1 + LongSize(checkpointSize);
                         MyImmortal._ambrosiaSendToStream.WriteInt(sizeOfMessage);
-                        MyImmortal._ambrosiaSendToStream.WriteByte(AmbrosiaRuntime.checkpointByte);
+                        MyImmortal._ambrosiaSendToStream.WriteByte(AmbrosiaRuntimeLBConstants.checkpointByte);
                         MyImmortal._ambrosiaSendToStream.WriteLong(checkpointSize);
                         using (var passThruStream = new PassThruWriteStream(MyImmortal._ambrosiaSendToStream))
                         {
@@ -1504,7 +1480,7 @@ namespace Ambrosia
                     Console.WriteLine("*X* Sent checkpoint back to LAR");
 #endif
 
-                    if (firstByte == AmbrosiaRuntime.takeBecomingPrimaryCheckpointByte)
+                    if (firstByte == AmbrosiaRuntimeLBConstants.takeBecomingPrimaryCheckpointByte)
                     {
                         this.MyImmortal.IsPrimary = true;
                         this.MyImmortal.BecomingPrimary();
@@ -1578,7 +1554,7 @@ namespace Ambrosia
                 writablePage.curLength += localBuffer.WriteInt(writablePage.curLength, bytesPerMessage);
 
                 // Write byte signalling that this is a RPC call
-                localBuffer[writablePage.curLength++] = AmbrosiaRuntime.RPCByte;
+                localBuffer[writablePage.curLength++] = AmbrosiaRuntimeLBConstants.RPCByte;
 
                 // Write destination length, followed by the destination
                 writablePage.curLength += localBuffer.WriteInt(writablePage.curLength, destinationBytes.Length);

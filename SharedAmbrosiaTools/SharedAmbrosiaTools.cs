@@ -9,10 +9,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 
-namespace SharedAmbrosiaConstants
+namespace Ambrosia
 {
     // Constants for leading byte communicated between services;
-    public static class AmbrosiaRuntime
+    public static class AmbrosiaRuntimeLBConstants
     {
         public const byte RPCByte = 0;
         public const byte attachToByte = 1;

@@ -1,5 +1,4 @@
-﻿using SharedAmbrosiaConstants;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -166,7 +165,7 @@ namespace Ambrosia
                         int numBytes = IntSize(bytesInBatchData + 1 + IntSize(numRPCs)) + 1 +
                                        IntSize(numRPCs);
                         MemStreamForWritingBatchBytes.WriteInt(bytesInBatchData + 1 + IntSize(numRPCs));
-                        MemStreamForWritingBatchBytes.WriteByte(AmbrosiaRuntime.RPCBatchByte);
+                        MemStreamForWritingBatchBytes.WriteByte(AmbrosiaRuntimeLBConstants.RPCBatchByte);
                         MemStreamForWritingBatchBytes.WriteInt(numRPCs);
                         await outputStream.WriteAsync(TempArrForWritingBatchBytes, 0, numBytes);
                         await outputStream.WriteAsync(curBuffer.PageBytes, posToStart, bytesInBatchData);

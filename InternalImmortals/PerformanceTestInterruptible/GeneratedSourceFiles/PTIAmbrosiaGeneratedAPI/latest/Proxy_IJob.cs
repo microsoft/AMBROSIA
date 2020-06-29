@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Ambrosia;
 using static Ambrosia.StreamCommunicator;
-using SharedAmbrosiaConstants;
 
 
 namespace JobAPI

@@ -17,7 +17,6 @@ using System.Runtime.CompilerServices;
 using CRA.ClientLibrary;
 using System.Diagnostics;
 using System.Xml.Serialization;
-using SharedAmbrosiaConstants;
 
 namespace Ambrosia
 {
@@ -2074,22 +2073,22 @@ namespace Ambrosia
         internal bool ExpectingCheckpoint { get; set; }
 
         // Constants for leading byte communicated between services;
-        public const byte RPCByte = 0;
-        public const byte attachToByte = 1;
-        public const byte takeCheckpointByte = 2;
-        public const byte CommitByte = 3;
-        public const byte replayFromByte = 4;
-        public const byte RPCBatchByte = 5;
-        public const byte PingByte = 6;
-        public const byte PingReturnByte = 7;
-        public const byte checkpointByte = 8;
-        public const byte InitalMessageByte = 9;
-        public const byte upgradeTakeCheckpointByte = 10;
-        public const byte takeBecomingPrimaryCheckpointByte = 11;
-        public const byte upgradeServiceByte = 12;
-        public const byte CountReplayableRPCBatchByte = 13;
-        public const byte trimToByte = 14;
-        public const byte becomingPrimaryByte = 15;
+        public const byte RPCByte = AmbrosiaRuntimeLBConstants.RPCByte;
+        public const byte attachToByte = AmbrosiaRuntimeLBConstants.attachToByte;
+        public const byte takeCheckpointByte = AmbrosiaRuntimeLBConstants.takeCheckpointByte;
+        public const byte CommitByte = AmbrosiaRuntimeLBConstants.CommitByte;
+        public const byte replayFromByte = AmbrosiaRuntimeLBConstants.replayFromByte;
+        public const byte RPCBatchByte = AmbrosiaRuntimeLBConstants.RPCBatchByte;
+        public const byte PingByte = AmbrosiaRuntimeLBConstants.PingByte;
+        public const byte PingReturnByte = AmbrosiaRuntimeLBConstants.PingReturnByte;
+        public const byte checkpointByte = AmbrosiaRuntimeLBConstants.checkpointByte;
+        public const byte InitalMessageByte = AmbrosiaRuntimeLBConstants.InitalMessageByte;
+        public const byte upgradeTakeCheckpointByte = AmbrosiaRuntimeLBConstants.upgradeTakeCheckpointByte;
+        public const byte takeBecomingPrimaryCheckpointByte = AmbrosiaRuntimeLBConstants.takeBecomingPrimaryCheckpointByte;
+        public const byte upgradeServiceByte = AmbrosiaRuntimeLBConstants.upgradeServiceByte;
+        public const byte CountReplayableRPCBatchByte = AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte;
+        public const byte trimToByte = AmbrosiaRuntimeLBConstants.trimToByte;
+        public const byte becomingPrimaryByte = AmbrosiaRuntimeLBConstants.becomingPrimaryByte;
 
         CRAClientLibrary _coral;
 
@@ -2219,42 +2218,6 @@ namespace Ambrosia
             mySocket.Listen(1);
             socket = mySocket.Accept();
             _localServiceSendToStream = new NetworkStream(socket);
-
-
-
-
-
-
-
-
-
-
-
-            /*
-            #if _WINDOWS
-                        // Now establish sender - Also use fast IP6 loopback
-                        mySocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
-                        mySocket.IOControl(SIO_LOOPBACK_FAST_PATH, optionBytes, null);
-            #else
-                        mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            #endif
-                        while (true)
-                        {
-                            Console.WriteLine("Trying to connect IC and Language Binding");
-                            try
-                            {
-            #if _WINDOWS
-                                mySocket.Connect(IPAddress.IPv6Loopback, _localServiceSendToPort);
-            #else
-                                mySocket.Connect(IPAddress.Loopback, _localServiceSendToPort);
-            #endif
-                                break;
-                            }
-                            catch { }
-                        }
-                        TcpClient tcpSendToClient = new TcpClient();
-                        tcpSendToClient.Client = mySocket;
-                        _localServiceSendToStream = tcpSendToClient.GetStream();*/
         }
 
         private void SetupAzureConnections()
