@@ -20,7 +20,7 @@ namespace ICGUI.UWP
     {
         public MainPage()
         {
-            UWPLogsInterface.SetToUWPLogs();
+            AzureBlobsLogsInterface.SetToAzureBlobsLogs();
             this.InitializeComponent();
 
             LoadApplication(new ICGUI.App());

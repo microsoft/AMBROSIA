@@ -60,8 +60,6 @@ namespace ICGUI
             ambrosiaArgs[0] = "-i=" + myName;
             ambrosiaArgs[1] = "-p=" + myPort;
             Console.WriteLine("ImmortalCoordinator -i=" + myName + " -p=" + myPort.ToString());
-            // CRA.Worker.Program.main(ambrosiaArgs);
-
             _ambrosiaThread = new Thread(() => CRA.Worker.Program.main(ambrosiaArgs)) { IsBackground = true };
             _ambrosiaThread.Start();
         }

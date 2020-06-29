@@ -980,10 +980,6 @@ namespace Ambrosia
         public static void SetToGenericLogs()
         {
             LogReaderStaticPicker.curStatic = new GenericFileLogReaderStatics();
-#if NETFRAMEWORK
-            LogWriterStaticPicker.curStatic = new LogWriterStaticsWindows();
-#endif
-#if NETSTANDARD
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 LogWriterStaticPicker.curStatic = new LogWriterStaticsWindows();
@@ -992,7 +988,6 @@ namespace Ambrosia
             {
                 LogWriterStaticPicker.curStatic = new LogWriterStaticsGeneric();
             }
-#endif
         }
     }
 }
