@@ -1,12 +1,11 @@
-echo "****************************"
-echo "* Batch file to launch Ambrosia unit tests"
-echo "* This takes Visual Studio out of the equation"
-echo "* Keeps it simple. "
-echo "* To use this .bat file you need TestAgent to be installed:"
-echo "* https://www.visualstudio.com/downloads/?q=agents"
-echo "* "
-echo "* TO DO: Add Javascript unit tests"
-echo "******************************"
+rem ****************************
+rem * Batch file to launch Ambrosia unit tests
+rem * This takes Visual Studio out of the equation
+rem * Keeps it simple. 
+rem * To use this .bat file you need TestAgent to be installed:
+rem * https://www.visualstudio.com/downloads/?q=agents
+rem * 
+rem ******************************"
 
 set "testdir=%cd%"
 c:
