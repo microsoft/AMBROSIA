@@ -37,7 +37,6 @@ namespace Ambrosia
         private readonly SerializableBufferBlock<MessageContainer> _toTaskBuffer = new SerializableBufferBlock<MessageContainer>();
         private readonly SerializableBufferBlock<MessageContainer> _fromTaskBuffer = new SerializableBufferBlock<MessageContainer>();
 
-        private bool _isFirstCheckpoint = true;
         private Dispatcher _dispatcher;
         private static FlexReadBuffer _inputFlexBuffer;
         private static int _cursor;
@@ -778,12 +777,8 @@ namespace Ambrosia
             _outputLock.Acquire(2);
             _ambrosiaSendToConnectionRecord.BufferedOutput.LockOutputBuffer();
 
-            // Save current task state unless just resumed from a serialized task
-            if (!this._isFirstCheckpoint || string.IsNullOrEmpty(this.SerializedTask.ToString()))
-            {
-                await this.SaveTaskAsync();
-            }
-            this._isFirstCheckpoint = false;
+            // Save current task state
+            await this.SaveTaskAsync();
 
             // Second, serialize state and send checkpoint
             // Need to directly write checkpoint to the stream so it comes *before*
