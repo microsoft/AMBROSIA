@@ -203,6 +203,7 @@ namespace AmbrosiaTest
 
 
         //** Test starts job and server then kills the job and restarts it and runs to completion
+        //** NOTE - this actually kills job once, restarts it, kills again and then restarts it again
         [TestMethod]
         public void AMB_KillJob_Test()
         {
@@ -281,14 +282,30 @@ namespace AmbrosiaTest
             string logOutputFileName_ClientJob_Restarted = testName + "_ClientJob_Restarted.log";
             int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted);
 
+            // Give it 5seconds to do something before killing it again
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            //Kill job at this point as well as ImmCoord1
+            MyUtils.KillProcess(clientJobProcessID_Restarted);
+            MyUtils.KillProcess(ImmCoordProcessID1_Restarted);
+
+            //Restart ImmCoord1 Again
+            string logOutputFileName_ImmCoord1_Restarted_Again = testName + "_ImmCoord1_Restarted_Again.log";
+            int ImmCoordProcessID1_Restarted_Again = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1_Restarted_Again);
+
+            // Restart Job Process Again
+            string logOutputFileName_ClientJob_Restarted_Again = testName + "_ClientJob_Restarted_Again.log";
+            int clientJobProcessID_Restarted_Again = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted_Again);
+
             //Delay until client is done - also check Server just to make sure
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted, byteSize, 15, false, testName, true); // Total bytes received
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted_Again, byteSize, 15, false, testName, true); // Total bytes received
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName,true );
 
             // Stop things so file is freed up and can be opened in verify
-            MyUtils.KillProcess(clientJobProcessID_Restarted);
+            MyUtils.KillProcess(clientJobProcessID_Restarted_Again);
             MyUtils.KillProcess(serverProcessID);
-            MyUtils.KillProcess(ImmCoordProcessID1_Restarted);
+            MyUtils.KillProcess(ImmCoordProcessID1_Restarted_Again);
             MyUtils.KillProcess(ImmCoordProcessID2);
 
             //Verify AMB 
@@ -298,6 +315,7 @@ namespace AmbrosiaTest
             // Verify Client (before and after restart)
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted_Again);
 
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
