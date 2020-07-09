@@ -134,7 +134,7 @@ namespace Ambrosia
         {
             _stopRelockThread = true;
             while (!_relockThreadStopped) { Thread.Sleep(100); }
-            _leaseRenewThread.Abort();
+            while(_leaseRenewThread.IsAlive);
             _leaseClient.Release();
         }
 

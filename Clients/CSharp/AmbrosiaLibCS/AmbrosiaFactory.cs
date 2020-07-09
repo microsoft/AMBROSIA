@@ -7,6 +7,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
 using Ambrosia;
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+using CRA.ClientLibrary;
 
 namespace Ambrosia
 {
@@ -43,6 +47,113 @@ namespace Ambrosia
 
     public class AmbrosiaFactory
     {
+        static Thread _iCThread;
+        private static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new InvalidOperationException("Local IP Address Not Found!");
+        }
+
+        static void startIC(string _instanceName, 
+                            int port, 
+                            int replicaNumber, 
+                            string secureNetworkClassName, 
+                            string secureNetworkAssemblyName)
+        {
+            StartupParamOverrides.sendPort = 0;
+            StartupParamOverrides.receivePort = 0;
+            var replicaName = $"{_instanceName}{replicaNumber}";
+
+            var ipAddress = GetLocalIPAddress();
+
+            string storageConnectionString = null;
+
+            if (storageConnectionString == null)
+            {
+                storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
+            }
+
+            if (storageConnectionString == null)
+            {
+                throw new InvalidOperationException("Cannot start the IC. Azure storage connection string not found. Use appSettings in your app.config to provide this using the key AZURE_STORAGE_CONN_STRING, or use the environment variable AZURE_STORAGE_CONN_STRING.");
+            }
+
+            int connectionsPoolPerWorker;
+            string connectionsPoolPerWorkerString = "0";
+            if (connectionsPoolPerWorkerString != null)
+            {
+                try
+                {
+                    connectionsPoolPerWorker = Convert.ToInt32(connectionsPoolPerWorkerString);
+                }
+                catch
+                {
+                    throw new InvalidOperationException("Maximum number of connections per CRA worker is wrong. Use appSettings in your app.config to provide this using the key CRA_WORKER_MAX_CONN_POOL.");
+                }
+            }
+            else
+            {
+                connectionsPoolPerWorker = 1000;
+            }
+
+            ISecureStreamConnectionDescriptor descriptor = null;
+            if (secureNetworkClassName != null)
+            {
+                Type type;
+                if (secureNetworkAssemblyName != null)
+                {
+                    var assembly = Assembly.Load(secureNetworkAssemblyName);
+                    type = assembly.GetType(secureNetworkClassName);
+                }
+                else
+                {
+                    type = Type.GetType(secureNetworkClassName);
+                }
+                descriptor = (ISecureStreamConnectionDescriptor)Activator.CreateInstance(type);
+            }
+
+            var dataProvider = new CRA.DataProvider.Azure.AzureDataProvider(storageConnectionString);
+            var worker = new CRAWorker
+                (replicaName, ipAddress, port,
+                dataProvider, descriptor, connectionsPoolPerWorker);
+
+            worker.DisableDynamicLoading();
+            worker.SideloadVertex(new AmbrosiaRuntime(), "ambrosia");
+
+            worker.Start();
+        }
+
+        /// <summary>
+        /// Gesture that deploys a (non-upgradeable) service WITH its IC running in the same process. The result is a service that implements the API defined
+        /// in <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The interface that defines the API of the deployed service.</typeparam>
+        /// <param name="serviceName"></param>
+        /// <param name="instance">The instance to deploy. It must implement <typeparamref name="T"/>.</param>
+        /// <param name="iCPort">The IC communication port number.</param>
+        /// <param name="replicaNumber">The replica number of this instance if this is an active/active deployment. 0 otherwise</param>
+        /// <param name="secureNetworkClassName">The name of the class used to ensure secure communication, if used.</param>
+        /// <param name="secureNetworkAssemblyName">The bane if the assembly used to ensure secure communication, if used.</param>
+        /// <returns></returns>
+        public static IDisposable Deploy<T>(string serviceName, 
+                                            Immortal instance, 
+                                            int iCPort,
+                                            int replicaNumber = 0,
+                                            string secureNetworkClassName = null,
+                                            string secureNetworkAssemblyName = null)
+        {
+            _iCThread = new Thread(() => startIC(serviceName, iCPort, replicaNumber, secureNetworkClassName, secureNetworkAssemblyName)) { IsBackground = true };
+            _iCThread.Start();
+            return Deploy<T>(serviceName, instance, 0, 0);
+        }
+
         /// <summary>
         /// Gesture that deploys a (non-upgradeable) service. The result is a service that implements the API defined
         /// in <typeparamref name="T"/>.
@@ -65,7 +176,7 @@ namespace Ambrosia
             {
                 throw new ArgumentException($"The instance to be deployed is of type '{immortalType.Name}' does not implement the type {typeOfT.Name}.");
             }
-            
+
             // Generate server Ambrosia instance and cache it. Use type parameter T to tell the generation what 
             // interface to generate a proxy for.
             Immortal.Dispatcher serverContainer;
@@ -88,6 +199,40 @@ namespace Ambrosia
 
             serverContainer.Start();
             return serverContainer;
+        }
+
+        /// <summary>
+        /// Gesture that deploys an upgradeable service WITH its IC running in the same process. The result is a service that implements the API defined
+        /// in <typeparamref name="T"/>, but when it gets a special upgrade message, turns into a service that
+        /// implements the API defined by <typeparamref name="T2"/>.
+        /// The upgrade happens by creating an instance of the type <typeparamref name="Z2"/> and passing to its
+        /// constructor the existing service instance so it can migrate over any needed state from it.
+        /// </summary>
+        /// <typeparam name="T">The interface that defines the API of the deployed service.</typeparam>
+        /// <typeparam name="T2">The interface that defines the API of the service after it has been upgraded.</typeparam>
+        /// <typeparam name="Z2">
+        /// The type of the class that implements <typeparamref name="T2"/> and which has a unary
+        /// constructor that takes an argument of type <see cref="Immortal"/>.
+        /// </typeparam>
+        /// <param name="serviceName"></param>
+        /// <param name="instance">The instance to deploy. It must implement <typeparamref name="T"/>.</param>
+        /// <param name="iCPort">The IC communication port number.</param>
+        /// <param name="replicaNumber">The replica number of this instance if this is an active/active deployment. 0 otherwise</param>
+        /// <param name="secureNetworkClassName">The name of the class used to ensure secure communication, if used.</param>
+        /// <param name="secureNetworkAssemblyName">The bane if the assembly used to ensure secure communication, if used.</param>
+        /// <returns></returns>
+        public static IDisposable Deploy<T, T2, Z2>(string serviceName, 
+                                                    Immortal instance,
+                                                    int iCPort,
+                                                    int replicaNumber = 0,
+                                                    string secureNetworkClassName = null,
+                                                    string secureNetworkAssemblyName = null)
+            where T2 : T
+            where Z2 : Immortal, T2 // *and* Z2 has a ctor that takes a Immortal as a parameter
+        {
+            _iCThread = new Thread(() => startIC(serviceName, iCPort, replicaNumber, secureNetworkClassName, secureNetworkAssemblyName)) { IsBackground = true };
+            _iCThread.Start();
+            return Deploy<T, T2, Z2>(serviceName, instance, 0, 0);
         }
 
         /// <summary>

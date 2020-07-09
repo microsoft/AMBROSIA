@@ -153,7 +153,8 @@ namespace XamarinSample.Services
 
         public MockDataStore()
         {
-            new Thread(new ThreadStart(() => _container = AmbrosiaFactory.Deploy<IXamarinSampleComm>("MockDataStore", new AmbrosiaMockDataStore(), 1001, 1000))).Start();
+            AzureBlobsLogsInterface.SetToAzureBlobsLogs();
+            new Thread(new ThreadStart(() => _container = AmbrosiaFactory.Deploy<IXamarinSampleComm>("MockDataStore", new AmbrosiaMockDataStore(), 1500))).Start();
             while (AmbrosiaMockDataStore.myDataStore == null) ;
         }
 

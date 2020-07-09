@@ -17,15 +17,10 @@ using System.Runtime.CompilerServices;
 using CRA.ClientLibrary;
 using System.Diagnostics;
 using System.Xml.Serialization;
+using System.IO.Pipes;
 
 namespace Ambrosia
 {
-    public static class StartupParamOverrides
-    {
-        public static int receivePort = -1;
-        public static int sendPort = -1;
-    }
-
     internal struct LongPair
     {
         public LongPair(long first,
@@ -132,8 +127,8 @@ namespace Ambrosia
             foreach (var entry in dict)
             {
                 var keyEncoding = Encoding.UTF8.GetBytes(entry.Key);
-                Console.WriteLine("input {0} seq no: {1}", entry.Key, entry.Value.LastProcessedID);
-                Console.WriteLine("input {0} replayable seq no: {1}", entry.Key, entry.Value.LastProcessedReplayableID);
+                StartupParamOverrides.OutputStream.WriteLine("input {0} seq no: {1}", entry.Key, entry.Value.LastProcessedID);
+                StartupParamOverrides.OutputStream.WriteLine("input {0} replayable seq no: {1}", entry.Key, entry.Value.LastProcessedReplayableID);
                 writeToStream.WriteInt(keyEncoding.Length);
                 writeToStream.Write(keyEncoding, 0, keyEncoding.Length);
                 writeToStream.WriteLongFixed(entry.Value.LastProcessedID);
@@ -244,14 +239,14 @@ namespace Ambrosia
                     endIndexOfCurrentRPC = cursor + lengthOfCurrentRPC;
                     if (endIndexOfCurrentRPC > curLength)
                     {
-                        Console.WriteLine("RPC Exceeded length of Page!!");
+                        StartupParamOverrides.OutputStream.WriteLine("RPC Exceeded length of Page!!");
                         throw new Exception("RPC Exceeded length of Page!!");
                     }
 
                     var shouldBeRPCByte = PageBytes[cursor];
                     if (shouldBeRPCByte != AmbrosiaRuntime.RPCByte)
                     {
-                        Console.WriteLine("UNKNOWN BYTE: {0}!!", shouldBeRPCByte);
+                        StartupParamOverrides.OutputStream.WriteLine("UNKNOWN BYTE: {0}!!", shouldBeRPCByte);
                         throw new Exception("Illegal leading byte in message");
                     }
                     cursor++;
@@ -283,12 +278,12 @@ namespace Ambrosia
                             cursor += senderOfRPCLength;
                             sequenceNumber = PageBytes.ReadBufferedLong(cursor);
                             cursor += StreamCommunicator.LongSize(sequenceNumber);
-                            //Console.WriteLine("Received RPC call to method with id: {0} and sequence number {1}", methodId, sequenceNumber);
+                            //StartupParamOverrides.OutputStream.WriteLine("Received RPC call to method with id: {0} and sequence number {1}", methodId, sequenceNumber);
                         }
                         else
                         {
 
-                            //Console.WriteLine("Received fire-and-forget RPC call to method with id: {0}", methodId);
+                            //StartupParamOverrides.OutputStream.WriteLine("Received fire-and-forget RPC call to method with id: {0}", methodId);
                         }
 
                         var lengthOfSerializedArguments = endIndexOfCurrentRPC - cursor;
@@ -309,14 +304,14 @@ namespace Ambrosia
                     var endIndexOfCurrentRPC = cursor + lengthOfCurrentRPC;
                     if (endIndexOfCurrentRPC > curLength)
                     {
-                        Console.WriteLine("RPC Exceeded length of Page!!");
+                        StartupParamOverrides.OutputStream.WriteLine("RPC Exceeded length of Page!!");
                         throw new Exception("RPC Exceeded length of Page!!");
                     }
 
                     var shouldBeRPCByte = PageBytes[cursor];
                     if (shouldBeRPCByte != AmbrosiaRuntime.RPCByte)
                     {
-                        Console.WriteLine("UNKNOWN BYTE: {0}!!", shouldBeRPCByte);
+                        StartupParamOverrides.OutputStream.WriteLine("UNKNOWN BYTE: {0}!!", shouldBeRPCByte);
                         throw new Exception("Illegal leading byte in message");
                     }
                     cursor++;
@@ -347,12 +342,12 @@ namespace Ambrosia
                             cursor += senderOfRPCLength;
                             sequenceNumber = PageBytes.ReadBufferedLong(cursor);
                             cursor += StreamCommunicator.LongSize(sequenceNumber);
-                            //Console.WriteLine("Received RPC call to method with id: {0} and sequence number {1}", methodId, sequenceNumber);
+                            //StartupParamOverrides.OutputStream.WriteLine("Received RPC call to method with id: {0} and sequence number {1}", methodId, sequenceNumber);
                         }
                         else
                         {
 
-                            //Console.WriteLine("Received fire-and-forget RPC call to method with id: {0}", methodId);
+                            //StartupParamOverrides.OutputStream.WriteLine("Received fire-and-forget RPC call to method with id: {0}", methodId);
                         }
 
                         var lengthOfSerializedArguments = endIndexOfCurrentRPC - cursor;
@@ -525,7 +520,7 @@ namespace Ambrosia
                 {
                     // We really have output to send. Send it.
                     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Uncomment/Comment for testing
-                    //Console.WriteLine("Wrote from {0} to {1}, {2}", curBuffer.LowestSeqNo, curBuffer.HighestSeqNo, morePages);
+                    //StartupParamOverrides.OutputStream.WriteLine("Wrote from {0} to {1}, {2}", curBuffer.LowestSeqNo, curBuffer.HighestSeqNo, morePages);
                     int bytesInBatchData = pageLength - posToStart;
                     if (numRPCs > 1)
                     {
@@ -541,7 +536,7 @@ namespace Ambrosia
                                 curBuffer.CheckSendBytes(posToStart, numRPCs, pageLength - posToStart);
                             } catch (Exception e)
                             {
-                                Console.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
+                                StartupParamOverrides.OutputStream.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
                                 curBuffer.CheckPageIntegrity();
                                 throw e;
                             }
@@ -562,7 +557,7 @@ namespace Ambrosia
                                 curBuffer.CheckSendBytes(posToStart, numRPCs, pageLength - posToStart);
                             } catch (Exception e)
                             {
-                                Console.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
+                                StartupParamOverrides.OutputStream.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
                                 curBuffer.CheckPageIntegrity();
                                 throw e;
                             }
@@ -1271,7 +1266,7 @@ namespace Ambrosia
                             // Set up the output record for the first time and add it to the dictionary
                             outputConnectionRecord = new OutputConnectionRecord(_myAmbrosia);
                             outputs[kv.Key] = outputConnectionRecord;
-                            Console.WriteLine("Adding output:{0}", kv.Key);
+                            StartupParamOverrides.OutputStream.WriteLine("Adding output:{0}", kv.Key);
                         }
                         // Must lock to atomically update due to race with ToControlStreamAsync
                         lock (outputConnectionRecord._remoteTrimLock)
@@ -2093,8 +2088,8 @@ namespace Ambrosia
         CRAClientLibrary _coral;
 
         // Connection to local service
-        NetworkStream _localServiceReceiveFromStream;
-        NetworkStream _localServiceSendToStream;
+        Stream _localServiceReceiveFromStream;
+        Stream _localServiceSendToStream;
 
         // Precommit buffers used for writing things to append blobs
         Committer _committer;
@@ -2138,9 +2133,9 @@ namespace Ambrosia
 
         internal void OnError(int ErrNo, string ErrorMessage)
         {
-            Console.WriteLine("FATAL ERROR " + ErrNo.ToString() + ": " + ErrorMessage);
-            Console.Out.Flush();
-            Console.Out.Flush();
+            StartupParamOverrides.OutputStream.WriteLine("FATAL ERROR " + ErrNo.ToString() + ": " + ErrorMessage);
+            StartupParamOverrides.OutputStream.Flush();
+            StartupParamOverrides.OutputStream.Flush();
             _coral.KillLocalWorker("");
         }
 
@@ -2186,6 +2181,20 @@ namespace Ambrosia
 
         void SetupLocalServiceStreams()
         {
+            // Check to see if this is a tightly bound IC 
+            if ((_localServiceReceiveFromPort == 0) && (_localServiceSendToPort == 0))
+            {
+                //Use anonymous pipes for communication rather than TCP
+                var pipeServer = new AnonymousPipeServerStream(PipeDirection.In, HandleInheritability.Inheritable);
+                StartupParamOverrides.ICReceivePipeName = pipeServer.GetClientHandleAsString();
+                _localServiceReceiveFromStream = pipeServer;
+                pipeServer = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.Inheritable);
+                StartupParamOverrides.ICSendPipeName = pipeServer.GetClientHandleAsString();
+                _localServiceSendToStream = pipeServer;
+                return;
+            }
+
+            // We the IC and LB are using TCP to communicate
             // Note that the local service must setup the listener and sender in reverse order or there will be a deadlock
             // First establish receiver - Use fast IP6 loopback
             Byte[] optionBytes = BitConverter.GetBytes(1);
@@ -2543,7 +2552,7 @@ namespace Ambrosia
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                StartupParamOverrides.OutputStream.WriteLine(e.ToString());
             }
         }
 
@@ -2656,7 +2665,7 @@ namespace Ambrosia
                     throw new Exception("Couldn't get checkpoint lock");
                 }
                 state.MyRole = AARole.Checkpointer; // I'm a checkpointing secondary
-                Console.WriteLine("I'm a checkpointer");
+                StartupParamOverrides.OutputStream.WriteLine("I'm a checkpointer");
                 var oldCheckpoint = state.LastCommittedCheckpoint;
                 state.LastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", state.ShardID)));
                 if (oldCheckpoint != state.LastCommittedCheckpoint)
@@ -2669,7 +2678,7 @@ namespace Ambrosia
             {
                 state.CheckpointWriter = null;
                 state.MyRole = AARole.Secondary; // I'm a secondary
-                Console.WriteLine("I'm a secondary");
+                StartupParamOverrides.OutputStream.WriteLine("I'm a secondary");
             }
         }
 
@@ -2720,7 +2729,7 @@ namespace Ambrosia
                     state.Committer.SwitchLogStreams(lastLogFileStream);
                     await state.Committer.WakeupAsync();
                     state.MyRole = AARole.Primary;  // this will stop  and break the loop in the function  replayInput_Sec()
-                    Console.WriteLine("\n\nNOW I'm Primary\n\n");
+                    StartupParamOverrides.OutputStream.WriteLine("\n\nNOW I'm Primary\n\n");
                     // if we are an upgrader : Time to release the kill file lock and cleanup. Note that since we have the log lock
                     // everyone is prevented from promotion until we succeed or fail.
                     if (_upgrading && _activeActive)
@@ -3159,7 +3168,7 @@ namespace Ambrosia
         {
             while (true)
             {
-                Console.WriteLine("Attempting to attach", destination);
+                StartupParamOverrides.OutputStream.WriteLine("Attempting to attach", destination);
                 var connectionResult1 = ConnectAsync(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
                 var connectionResult2 = ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
                 var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName).GetAwaiter().GetResult();
@@ -3167,7 +3176,7 @@ namespace Ambrosia
                 if ((connectionResult1 == CRAErrorCode.Success) && (connectionResult2 == CRAErrorCode.Success) &&
                     (connectionResult3 == CRAErrorCode.Success) && (connectionResult4 == CRAErrorCode.Success))
                 {
-                    Console.WriteLine("Attached to {0}", destination);
+                    StartupParamOverrides.OutputStream.WriteLine("Attached to {0}", destination);
                     return;
                 }
                 Thread.Sleep(1000);
@@ -3193,7 +3202,7 @@ namespace Ambrosia
 
                 case checkpointByte:
                     _lastReceivedCheckpointSize = StreamCommunicator.ReadBufferedLong(localServiceBuffer.Buffer, sizeBytes + 1);
-                    Console.WriteLine("Reading a checkpoint {0} bytes", _lastReceivedCheckpointSize);
+                    StartupParamOverrides.OutputStream.WriteLine("Reading a checkpoint {0} bytes", _lastReceivedCheckpointSize);
                     LastReceivedCheckpoint = localServiceBuffer;
                     // Block this thread until checkpointing is complete
                     while (LastReceivedCheckpoint != null) { Thread.Yield(); };
@@ -3213,7 +3222,7 @@ namespace Ambrosia
                         }
                         else
                         {
-                            Console.WriteLine("Attaching to {0}", destination);
+                            StartupParamOverrides.OutputStream.WriteLine("Attaching to {0}", destination);
                             var connectionResult1 = ConnectAsync(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
                             var connectionResult2 = ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
                             var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName).GetAwaiter().GetResult();
@@ -3222,7 +3231,7 @@ namespace Ambrosia
                                 (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
                             {
 
-                                Console.WriteLine("Error attaching " + ServiceName() + " to " + destination);
+                                StartupParamOverrides.OutputStream.WriteLine("Error attaching " + ServiceName() + " to " + destination);
 // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
                             }
                         }
@@ -3417,11 +3426,11 @@ namespace Ambrosia
                     // Set up the output record for the first time and add it to the dictionary
                     outputConnectionRecord = new OutputConnectionRecord(this);
                     _outputs[destString] = outputConnectionRecord;
-                    Console.WriteLine("Adding output:{0}", destString);
+                    StartupParamOverrides.OutputStream.WriteLine("Adding output:{0}", destString);
                 }
                 else
                 {
-                    Console.WriteLine("restoring output:{0}", destString);
+                    StartupParamOverrides.OutputStream.WriteLine("restoring output:{0}", destString);
                 }
             }
             try
@@ -3494,7 +3503,7 @@ namespace Ambrosia
 
                         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Code to manually trim for performance testing
                         //                    int placeToTrimTo = outputConnectionRecord.LastSeqNoFromLocalService;
-                        // Console.WriteLine("send to {0}", outputConnectionRecord.LastSeqNoFromLocalService);
+                        // StartupParamOverrides.OutputStream.WriteLine("send to {0}", outputConnectionRecord.LastSeqNoFromLocalService);
                         outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                         var placeAtCall = outputConnectionRecord.LastSeqSentToReceiver;
                         outputConnectionRecord.placeInOutput =
@@ -3541,11 +3550,11 @@ namespace Ambrosia
                     // Set up the output record for the first time and add it to the dictionary
                     outputConnectionRecord = new OutputConnectionRecord(this);
                     _outputs[destString] = outputConnectionRecord;
-                    Console.WriteLine("Adding output:{0}", destString);
+                    StartupParamOverrides.OutputStream.WriteLine("Adding output:{0}", destString);
                 }
                 else
                 {
-                    Console.WriteLine("restoring output:{0}", destString);
+                    StartupParamOverrides.OutputStream.WriteLine("restoring output:{0}", destString);
                 }
             }
             // Process remote trim message
@@ -3658,11 +3667,11 @@ namespace Ambrosia
                 // Create input record and add it to the dictionary
                 inputConnectionRecord = new InputConnectionRecord();
                 _inputs[sourceString] = inputConnectionRecord;
-                Console.WriteLine("Adding input:{0}", sourceString);
+                StartupParamOverrides.OutputStream.WriteLine("Adding input:{0}", sourceString);
             }
             else
             {
-                Console.WriteLine("restoring input:{0}", sourceString);
+                StartupParamOverrides.OutputStream.WriteLine("restoring input:{0}", sourceString);
             }
             inputConnectionRecord.DataConnectionStream = (NetworkStream)readFromStream;
             await SendReplayMessageAsync(readFromStream, inputConnectionRecord.LastProcessedID + 1, inputConnectionRecord.LastProcessedReplayableID + 1, ct);
@@ -3686,11 +3695,11 @@ namespace Ambrosia
                 // Create input record and add it to the dictionary
                 inputConnectionRecord = new InputConnectionRecord();
                 _inputs[sourceString] = inputConnectionRecord;
-                Console.WriteLine("Adding input:{0}", sourceString);
+                StartupParamOverrides.OutputStream.WriteLine("Adding input:{0}", sourceString);
             }
             else
             {
-                Console.WriteLine("restoring input:{0}", sourceString);
+                StartupParamOverrides.OutputStream.WriteLine("restoring input:{0}", sourceString);
             }
             inputConnectionRecord.ControlConnectionStream = (NetworkStream)readFromStream;
             OutputConnectionRecord outputConnectionRecord;
@@ -4070,12 +4079,12 @@ namespace Ambrosia
             _upgrading = (_currentVersion < _upgradeToVersion);
             if (pauseAtStart == true)
             {
-                Console.WriteLine("Hit Enter to continue:");
+                StartupParamOverrides.OutputStream.WriteLine("Hit Enter to continue:");
                 Console.ReadLine();
             }
             else
             {
-                Console.WriteLine("Ready ...");
+                StartupParamOverrides.OutputStream.WriteLine("Ready ...");
             }
             _persistLogs = persistLogs;
             _activeActive = activeActive;
@@ -4102,7 +4111,7 @@ namespace Ambrosia
             _sharded = sharded;
             _coral = ClientLibrary;
 
-            Console.WriteLine("Logs directory: {0}", _serviceLogPath);
+            StartupParamOverrides.OutputStream.WriteLine("Logs directory: {0}", _serviceLogPath);
 
             if (createService == null)
             {
