@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -26,8 +27,8 @@ namespace Ambrosia
     public abstract class Immortal : IDisposable
     {
         // Connection to the LocalAmbrosiaRuntime
-        private NetworkStream _ambrosiaReceiveFromStream;
-        private NetworkStream _ambrosiaSendToStream;
+        private Stream _ambrosiaReceiveFromStream;
+        private Stream _ambrosiaSendToStream;
         private OutputConnectionRecord _ambrosiaSendToConnectionRecord;
 
         protected string localAmbrosiaRuntime; // if at least one method in this API requires a return address
@@ -133,72 +134,82 @@ namespace Ambrosia
         // Hack for enabling fast IP6 loopback in Windows on .NET
         const int SIO_LOOPBACK_FAST_PATH = (-1744830448);
 
-        private void SetupConnections(int receivePort, int sendPort, out NetworkStream receiveStream, out NetworkStream sendStream, out OutputConnectionRecord connectionRecord)
+        private void SetupConnections(int receivePort, int sendPort, out Stream receiveStream, out Stream sendStream, out OutputConnectionRecord connectionRecord)
         {
-            Socket mySocket = null;
-            Byte[] optionBytes = BitConverter.GetBytes(1);
-
-#if _WINDOWS
-            mySocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
-            mySocket.IOControl(SIO_LOOPBACK_FAST_PATH, optionBytes, null);
-#else
-            mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-#endif
-            while (true)
+            if ((sendPort == 0) && (receivePort == 0))
             {
-                Console.WriteLine("*X* Trying to connect IC and Language Binding");
-                try
-                {
-#if _WINDOWS
-                    mySocket.Connect(IPAddress.IPv6Loopback, sendPort);
-#else
-                    mySocket.Connect(IPAddress.Loopback, sendPort);
+#if DEBUG
+                Console.WriteLine("*X* Running tightly bound");
 #endif
-                    break;
-                }
-                catch
-                {
-                    Thread.Sleep(1000);
-                }
+                // Note that we must wait for the IC to set up the anonymous pipes before getting the streams
+                while (StartupParamOverrides.ICSendPipeName == null) ;
+                receiveStream = new AnonymousPipeClientStream(PipeDirection.In, StartupParamOverrides.ICSendPipeName);
+                while (StartupParamOverrides.ICReceivePipeName == null) ;
+                sendStream = new AnonymousPipeClientStream(PipeDirection.Out, StartupParamOverrides.ICReceivePipeName);
             }
-            TcpClient tcpClient = new TcpClient();
-            tcpClient.Client = mySocket;
-            sendStream = tcpClient.GetStream();
-            connectionRecord = new OutputConnectionRecord();
-            connectionRecord.ConnectionStream = sendStream;
-            connectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
-
-
-
-
-
+            else
+            {
+                Socket mySocket = null;
+                Byte[] optionBytes = BitConverter.GetBytes(1);
 
 #if _WINDOWS
-            mySocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
-            mySocket.IOControl(SIO_LOOPBACK_FAST_PATH, optionBytes, null);
+                mySocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+                mySocket.IOControl(SIO_LOOPBACK_FAST_PATH, optionBytes, null);
 #else
-            mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 #endif
-            while (true)
-            {
-                Console.WriteLine("*X* Trying to do second connection between IC and Language Binding");
-                try
+                while (true)
                 {
+                    Console.WriteLine("*X* Trying to connect IC and Language Binding");
+                    try
+                    {
+#if _WINDOWS
+                        mySocket.Connect(IPAddress.IPv6Loopback, sendPort);
+#else
+                        mySocket.Connect(IPAddress.Loopback, sendPort);
+#endif
+                        break;
+                    }
+                    catch
+                    {
+                        Thread.Sleep(1000);
+                    }
+                }
+                TcpClient tcpClient = new TcpClient();
+                tcpClient.Client = mySocket;
+                sendStream = tcpClient.GetStream();
+
+#if _WINDOWS
+                mySocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+                mySocket.IOControl(SIO_LOOPBACK_FAST_PATH, optionBytes, null);
+#else
+                mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+#endif
+                while (true)
+                {
+                    Console.WriteLine("*X* Trying to do second connection between IC and Language Binding");
+                    try
+                    {
 #if _WINDOWS
                     mySocket.Connect(IPAddress.IPv6Loopback, receivePort);
 #else
-                    mySocket.Connect(IPAddress.Loopback, receivePort);
+                        mySocket.Connect(IPAddress.Loopback, receivePort);
 #endif
-                    break;
+                        break;
+                    }
+                    catch
+                    {
+                        Thread.Sleep(1000);
+                    }
                 }
-                catch
-                {
-                    Thread.Sleep(1000);
-                }
+                tcpClient = new TcpClient();
+                tcpClient.Client = mySocket;
+                receiveStream = tcpClient.GetStream();
             }
-            tcpClient = new TcpClient();
-            tcpClient.Client = mySocket;
-            receiveStream = tcpClient.GetStream();
+
+            connectionRecord = new OutputConnectionRecord();
+            connectionRecord.ConnectionStream = sendStream;
+            connectionRecord.placeInOutput = new EventBuffer.BuffersCursor(null, -1, 0);
             var processOutputTask = processOutputRequestsAsync();
         }
 

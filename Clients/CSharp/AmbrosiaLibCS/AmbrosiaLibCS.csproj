@@ -12,7 +12,6 @@
     <StartupObject />
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../../../Ambrosia/Ambrosia.snk</AssemblyOriginatorKeyFile>
-    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -44,9 +43,8 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\..\SharedAmbrosiaTools\SharedAmbrosiaTools.csproj" />
+    <ProjectReference Include="..\..\..\AmbrosiaLib\Ambrosia\AmbrosiaLib.csproj" />
   </ItemGroup>
 
   <ItemGroup>

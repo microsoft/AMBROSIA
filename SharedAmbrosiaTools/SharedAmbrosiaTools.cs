@@ -11,6 +11,15 @@ using System.Threading.Tasks;
 
 namespace Ambrosia
 {
+    public static class StartupParamOverrides
+    {
+        public static int receivePort = -1;
+        public static int sendPort = -1;
+        public static TextWriter OutputStream = Console.Out;
+        public static string ICReceivePipeName;
+        public static string ICSendPipeName;
+    }
+
     // Constants for leading byte communicated between services;
     public static class AmbrosiaRuntimeLBConstants
     {
@@ -367,7 +376,7 @@ namespace Ambrosia
         }
 
         public static void Write(this ILogWriter writer,
-                           NetworkStream readStream,
+                           Stream readStream,
                            long checkpointSize)
         {
             var blockSize = 1024 * 1024;

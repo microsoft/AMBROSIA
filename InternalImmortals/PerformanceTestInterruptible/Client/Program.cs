@@ -156,6 +156,7 @@ namespace Job
     {
         private static int _receivePort = -1;
         private static int _sendPort = -1;
+        private static int _icPort = -1;
         private static string _perfJob;
         private static string _perfServer;
         private static bool _autoContinue;
@@ -163,10 +164,12 @@ namespace Job
         private static int _numRounds = 13;
         private static bool _descendingSize = true;
         public static AsyncQueue<int> finishedTokenQ;
+        static Thread _iCThread;
 
         static void Main(string[] args)
         {
             ParseAndValidateOptions(args);
+            GenericLogsInterface.SetToGenericLogs();
 
             finishedTokenQ = new AsyncQueue<int>();
             
@@ -180,15 +183,26 @@ namespace Job
 #if DEBUG
             Console.WriteLine("*X* Connecting to: " + _perfServer + "....");
 #endif
-
             var myClient = new Job(_perfServer, _maxMessageSize, _numRounds, _descendingSize);
 
             // Use "Empty" as the type parameter because this container doesn't run a service
             // that responds to any RPC calls.
-            using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
+            if (_icPort == -1)
             {
+                using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
+                {
 
-                finishedTokenQ.DequeueAsync().Wait();
+                    finishedTokenQ.DequeueAsync().Wait();
+                }
+
+            }
+            else
+            {
+                using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _icPort))
+                {
+
+                    finishedTokenQ.DequeueAsync().Wait();
+                }
             }
         }
 
@@ -204,8 +218,9 @@ namespace Job
             var options = new OptionSet {
                 { "j|jobName=", "The service name of the job [REQUIRED].", j => _perfJob = j },
                 { "s|serverName=", "The service name of the server [REQUIRED].", s => _perfServer = s },
-                { "rp|receivePort=", "The service receive from port [REQUIRED].", rp => _receivePort = int.Parse(rp) },
-                { "sp|sendPort=", "The service send to port. [REQUIRED]", sp => _sendPort = int.Parse(sp) },
+                { "rp|receivePort=", "The service receive from port.", rp => _receivePort = int.Parse(rp) },
+                { "sp|sendPort=", "The service send to port.", sp => _sendPort = int.Parse(sp) },
+                { "icp|ICPort=", "The IC port, if the IC should be run in proc. Note that if this is specified, the command line ports override stored registration settings", icp => _icPort = int.Parse(icp) },
                 { "mms|maxMessageSize=", "The maximum message size.", mms => _maxMessageSize = int.Parse(mms) },
                 { "n|numOfRounds=", "The number of rounds.", n => _numRounds = int.Parse(n) },
                 { "nds|noDescendingSize", "Disable message descending size.", nds => _descendingSize = false },
@@ -234,8 +249,14 @@ namespace Job
             var errorMessage = string.Empty;
             if (_perfJob == null) errorMessage += "Job name is required.\n";
             if (_perfServer == null) errorMessage += "Server name is required.\n";
-            if (_sendPort == -1) errorMessage += "Send port is required.\n";
-            if (_receivePort == -1) errorMessage += "Receive port is required.\n";
+
+            if (((_sendPort != -1) && (_receivePort == -1)) || 
+                ((_sendPort == -1) && (_receivePort != -1)) ||
+                ((_sendPort == -1) && (_receivePort == -1) && (_icPort == -1)) ||
+                (((_sendPort != -1) || (_receivePort != -1)) && (_icPort != -1)))
+            {
+                errorMessage += "Must specify either IC port or both send and receive ports.\n";
+            }
 
             if (errorMessage != string.Empty)
             {

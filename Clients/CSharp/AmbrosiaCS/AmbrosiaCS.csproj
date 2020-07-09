@@ -20,7 +20,6 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.14" Condition="'$(Configuration)' == 'Release' " />
     <PackageReference Include="Microsoft.CRA" Version="2019.10.21.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
@@ -125,7 +124,6 @@
     </ContentWithTargetPath>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\AmbrosiaLib\Ambrosia\AmbrosiaLib.csproj" />
     <ProjectReference Include="..\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
   </ItemGroup>
 </Project>

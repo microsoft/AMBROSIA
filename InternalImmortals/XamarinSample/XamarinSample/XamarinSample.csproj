@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\AzureBlobsLogPicker\AzureBlobsLogPicker.csproj" />
     <ProjectReference Include="..\..\..\Clients\CSharp\AmbrosiaLibCS\AmbrosiaLibCS.csproj" />
     <ProjectReference Include="..\GeneratedSourceFiles\XamarinSampleCommAPIGened\latest\XamarinSampleCommAPIGened.csproj" />
   </ItemGroup>
