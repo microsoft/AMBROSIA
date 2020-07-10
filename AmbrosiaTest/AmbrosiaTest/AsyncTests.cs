@@ -194,6 +194,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_Async_KillJob_Test()
         {
+
+            //*#***************************************************
+            //*#* TO DO - either modify this test to kill and restart job several times or create a new test
+            //*#* Probably modify this one as adding another round or two of kill \ restart is just
+            //*#* additional testing
+            //*#* Do the same for Sync Kill Job test
+            //*#***************************************************
+
             //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
             string testName = "asynckilljobtest";
             string clientJobName = testName + "clientjob";

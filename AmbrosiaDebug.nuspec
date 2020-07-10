@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Microsoft.Ambrosia.LibCSDebug</id>
-    <version>1.0.14</version>
+    <version>1.0.15</version>
     <title>Microsoft.Ambrosia.LibCS.Debug</title>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
@@ -22,7 +22,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="Clients\CSharp\AmbrosiaLibCS\binDebug\netstandard2.0\AmbrosiaLibCS.dll" target="lib\netstandard2.0" />
+    <file src="Clients\CSharp\AmbrosiaLibCS\bin\Debug\netstandard2.0\AmbrosiaLibCS.dll" target="lib\netstandard2.0" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\Debug\netstandard2.0\AmbrosiaLibCS.pdb" target="lib\netstandard2.0" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\Debug\netstandard2.0\AmbrosiaLib.dll" target="lib\netstandard2.0" />
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\Debug\netstandard2.0\AmbrosiaLib.pdb" target="lib\netstandard2.0" />

@@ -15,7 +15,7 @@ namespace AmbrosiaTest
     {
         public string AMB_ServiceName { get; set; }
         public string AMB_ImmCoordName { get; set; }   // This will go away
-        public string AMB_PortAppReceives { get; set; } 
+        public string AMB_PortAppReceives { get; set; }
         public string AMB_PortAMBSends { get; set; }
         public string AMB_TestingUpgrade { get; set; }
         public string AMB_ServiceLogPath { get; set; }
@@ -50,8 +50,11 @@ namespace AmbrosiaTest
         // when = true, the test will run under the assumption that .Net Framework files in AmbrosiaTest\bin\x64\debug (or release) directory (from net46 directory)
         // when = false, the test will run under the assumption that .Net Core files in AmbrosiaTest\bin\x64\debug (or release) directory (from netcoreapp3.1 directory)
         // .NET CORE only has DLLs, so no AMB exe so run by using "dotnet"
+        // The two strings (NetFramework and NetCoreFramework) are part of the path when calling PTI and PT - called in helper functions
         //*********
         public bool NetFrameworkTestRun = true;
+        public string NetFramework = "net46";
+        public string NetCoreFramework = "netcoreapp3.1";
 
         // Returns the Process ID of the process so you then can something with it
         // Currently output to file using ">", but using cmd.exe to do that.
@@ -323,6 +326,9 @@ namespace AmbrosiaTest
         public void VerifyTestEnvironment()
         {
 
+            // used in PT and PTI - set here by default and change below if need to
+            string current_framework = NetFramework;
+
             // Verify logging directory ... if doesn't exist, create it
             string testLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             if (Directory.Exists(testLogDir) == false)
@@ -345,6 +351,7 @@ namespace AmbrosiaTest
                 string AMBExe = "Ambrosia.exe";
                 if (File.Exists(AMBExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing AMB exe. Expecting:" + AMBExe);
+
             }
             else  // .net core only has dll ...
             {
@@ -357,6 +364,10 @@ namespace AmbrosiaTest
                 string AMBExe = "Ambrosia.dll";
                 if (File.Exists(AMBExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing AMB dll. Expecting:" + AMBExe);
+
+                // used in PTI and PT calls 
+                current_framework = NetCoreFramework;
+
             }
 
             // Don't need AmbrosiaLibCS.exe as part of tests
@@ -364,19 +375,19 @@ namespace AmbrosiaTest
             // if (File.Exists(AmbrosiaLibCSExe) == false)
             //     Assert.Fail("<VerifyTestEnvironment> Missing AmbrosiaLibcs dll. Expecting:" + AmbrosiaLibCSExe);
 
-            string perfTestJobFile = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + "\\job.exe";
+            string perfTestJobFile = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
             if (File.Exists(perfTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
 
-            string perfTestServerFile = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + "\\server.exe";
+            string perfTestServerFile = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
             if (File.Exists(perfTestServerFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
 
-            string perfAsyncTestJobFile = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + "\\job.exe";
+            string perfAsyncTestJobFile = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
             if (File.Exists(perfAsyncTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest job.exe. Expecting:" + perfAsyncTestJobFile);
 
-            string perfAsyncTestServerFile = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + "\\server.exe";
+            string perfAsyncTestServerFile = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
             if (File.Exists(perfAsyncTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest server.exe. Expecting:" + perfAsyncTestJobFile);
 
@@ -634,7 +645,7 @@ namespace AmbrosiaTest
 
         }
 
-        public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive=false, int replicaNum = 9999)
+        public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999)
         {
 
             // Launch the AMB process with these values
@@ -657,7 +668,7 @@ namespace AmbrosiaTest
                     FailureSupport(ImmCoordName);
                     Assert.Fail("<StartImmCoord> Replica Number is required when doing active active ");
                 }
-                argString = argString + " -aa -r="+ replicaNum.ToString();
+                argString = argString + " -aa -r=" + replicaNum.ToString();
             }
 
 
@@ -694,8 +705,8 @@ namespace AmbrosiaTest
             {
                 case AMB_ModeConsts.RegisterInstance:
 
-                    argString = "RegisterInstance " + "-i=" + AMBSettings.AMB_ServiceName 
-                        + " -rp=" + AMBSettings.AMB_PortAppReceives+ " -sp=" + AMBSettings.AMB_PortAMBSends;
+                    argString = "RegisterInstance " + "-i=" + AMBSettings.AMB_ServiceName
+                        + " -rp=" + AMBSettings.AMB_PortAppReceives + " -sp=" + AMBSettings.AMB_PortAMBSends;
 
                     // add pause at start
                     if (AMBSettings.AMB_PauseAtStart != null && AMBSettings.AMB_PauseAtStart != "N")
@@ -732,7 +743,7 @@ namespace AmbrosiaTest
                     break;
 
                 case AMB_ModeConsts.AddReplica:
-                    argString = "AddReplica " + "-r=" + AMBSettings.AMB_ReplicaNumber+ " -i=" + AMBSettings.AMB_ServiceName
+                    argString = "AddReplica " + "-r=" + AMBSettings.AMB_ReplicaNumber + " -i=" + AMBSettings.AMB_ServiceName
                         + " -rp=" + AMBSettings.AMB_PortAppReceives + " -sp=" + AMBSettings.AMB_PortAMBSends;
 
                     // add Service log path
@@ -770,7 +781,7 @@ namespace AmbrosiaTest
                     break;
 
                 case AMB_ModeConsts.DebugInstance:
-                    argString = "DebugInstance " + "-i=" + AMBSettings.AMB_ServiceName + " -rp=" + AMBSettings.AMB_PortAppReceives 
+                    argString = "DebugInstance " + "-i=" + AMBSettings.AMB_ServiceName + " -rp=" + AMBSettings.AMB_PortAppReceives
                         + " -sp=" + AMBSettings.AMB_PortAMBSends;
 
                     // add Service log path
@@ -804,7 +815,7 @@ namespace AmbrosiaTest
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
         }
-        
+
         // Starts the server.exe from PerformanceTestUninterruptible.  
         public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0)
         {
@@ -816,11 +827,16 @@ namespace AmbrosiaTest
                 upgradeString = "Y";
             }
 
+            // Set path by using proper framework
+            string current_framework = NetCoreFramework;
+            if (NetFrameworkTestRun)
+                current_framework = NetFramework;
+
             // Launch the server process with these values
-            string workingDir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"];
+            string workingDir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Server.exe";
-            string argString = "-j="+perfJobName + " -s=" + perfServerName +" -rp="+receivePort + " -sp=" + sendPort 
-                + " -n="+ NumClients.ToString() +" -m="+ optionalMemoryAllocat.ToString() + " -c";
+            string argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
+                + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c";
 
             // add upgrade switch if upgradeing
             if (upgradeString != null && upgradeString != "N")
@@ -844,10 +860,15 @@ namespace AmbrosiaTest
         public int StartAsyncPerfServer(string receivePort, string sendPort, string perfServerName, string testOutputLogFile)
         {
 
+            // Set path by using proper framework
+            string current_framework = NetCoreFramework;
+            if (NetFrameworkTestRun)
+                current_framework = NetFramework;
+
             // Launch the server process with these values
-            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"];
+            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Server.exe";
-            string argString = "-rp="+receivePort + " -sp=" + sendPort + " -s=" + perfServerName + " -c ";
+            string argString = "-rp=" + receivePort + " -sp=" + sendPort + " -s=" + perfServerName + " -c ";
 
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
@@ -868,10 +889,15 @@ namespace AmbrosiaTest
         public int StartPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfMessageSize, string perfNumberRounds, string testOutputLogFile)
         {
 
+            // Set path by using proper framework
+            string current_framework = NetCoreFramework;
+            if (NetFrameworkTestRun)
+                current_framework = NetFramework;
+
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"];
+            string workingDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Job.exe";
-            string argString = "-j="+perfJobName + " -s=" + perfServerName +" -rp="+ receivePort + " -sp=" + sendPort 
+            string argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
                 + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c";
 
             // Start process
@@ -890,12 +916,18 @@ namespace AmbrosiaTest
         }
 
         // Perf Client from PerformanceTest --- runs in Async
-        public int StartAsyncPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfNumberRounds,string testOutputLogFile)
+        public int StartAsyncPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfNumberRounds, string testOutputLogFile)
         {
+
+            // Set path by using proper framework
+            string current_framework = NetCoreFramework;
+            if (NetFrameworkTestRun)
+                current_framework = NetFramework;
+
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"];
+            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Job.exe";
-            string argString = "-rp="+receivePort + " -sp=" + sendPort + " -j=" + perfJobName + " -s=" + perfServerName +" -n="+ perfNumberRounds + " -c "; 
+            string argString = "-rp=" + receivePort + " -sp=" + sendPort + " -j=" + perfJobName + " -s=" + perfServerName + " -n=" + perfNumberRounds + " -c ";
 
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
@@ -926,7 +958,7 @@ namespace AmbrosiaTest
                     File.AppendAllText(logDir + @"\AmbrosiaTest_Debug.log", logEntry);
                 }
             }
-            catch 
+            catch
             {
                 // If debug logging fails ... no biggie, don't want it to stop test
             }
@@ -941,7 +973,7 @@ namespace AmbrosiaTest
         public void TruncateAmbrosiaLogDir(string testName)
         {
             // Assuming _0 for directory files ... this might be bad assumption
-            string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"]+"\\"+testName+"clientjob_0";
+            string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob_0";
             string ambrosiaServerLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "server_0";
             int numberOfFilesToKeep = 8;
 
@@ -955,7 +987,7 @@ namespace AmbrosiaTest
                     int i = 0;
                     foreach (FileInfo file in files)
                     {
-                        
+
                         string currentFile = file.Name;
                         i++;
 
@@ -1011,8 +1043,8 @@ namespace AmbrosiaTest
             try
             {
                 // set default to something different so if not existent, then know it fails
-                string bytesReceivedFile1="0";
-                string bytesReceivedFile2="1"; 
+                string bytesReceivedFile1 = "0";
+                string bytesReceivedFile2 = "1";
 
                 using (var streamReader = File.OpenText(firstLogFile))
                 {
@@ -1040,7 +1072,7 @@ namespace AmbrosiaTest
                 }
 
                 // Make sure has bytes recieved in it
-                if (bytesReceivedFile1=="0")
+                if (bytesReceivedFile1 == "0")
                 {
                     FailureSupport("");
                     Assert.Fail("Could not find 'Bytes received' in log file:" + logFile1);
@@ -1055,13 +1087,13 @@ namespace AmbrosiaTest
                 if (Convert.ToInt64(bytesReceivedFile1) != Convert.ToInt64(bytesReceivedFile2))
                 {
                     FailureSupport("");
-                    Assert.Fail("'Bytes received' did not match up. Log:"+logFile1+" had:"+ bytesReceivedFile1+" and Log:"+logFile2+" had:"+bytesReceivedFile2);
+                    Assert.Fail("'Bytes received' did not match up. Log:" + logFile1 + " had:" + bytesReceivedFile1 + " and Log:" + logFile2 + " had:" + bytesReceivedFile2);
                 }
             }
             catch (Exception e)
             {
                 FailureSupport("");
-                Assert.Fail("<VerifyBytesRecievedInTwoLogFiles> Exception happened:"+e.Message);
+                Assert.Fail("<VerifyBytesRecievedInTwoLogFiles> Exception happened:" + e.Message);
             }
         }
 
@@ -1077,10 +1109,10 @@ namespace AmbrosiaTest
             }
 
             // Kill all ImmortalCoordinators, Job and Server exes
-            MyUtils.KillProcessByName("ImmortalCoordinator");  
+            MyUtils.KillProcessByName("ImmortalCoordinator");
             MyUtils.KillProcessByName("Job");
             MyUtils.KillProcessByName("Server");
-            MyUtils.KillProcessByName("Ambrosia"); 
+            MyUtils.KillProcessByName("Ambrosia");
             MyUtils.KillProcessByName("MSBuild");
             //MyUtils.KillProcessByName("cmd");  // sometimes processes hang
 
@@ -1108,10 +1140,10 @@ namespace AmbrosiaTest
             }
 
             // Kill all ImmortalCoordinators, Job and Server exes
-            MyUtils.KillProcessByName("ImmortalCoordinator"); 
+            MyUtils.KillProcessByName("ImmortalCoordinator");
             MyUtils.KillProcessByName("Job");
             MyUtils.KillProcessByName("Server");
-            MyUtils.KillProcessByName("Ambrosia"); 
+            MyUtils.KillProcessByName("Ambrosia");
             MyUtils.KillProcessByName("MSBuild");
             MyUtils.KillProcessByName("dotnet");
             //MyUtils.KillProcessByName("cmd");  // sometimes processes hang
@@ -1134,7 +1166,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("mtfnokill");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("mtfnokillpersist"); 
+            MyUtils.CleanupAzureTables("mtfnokillpersist");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("mtfkillpersist");
             Thread.Sleep(2000);
@@ -1146,7 +1178,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("activeactivekillsecondary");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("activeactivekillsecondaryandcheckpoint"); 
+            MyUtils.CleanupAzureTables("activeactivekillsecondaryandcheckpoint");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("activeactivekillclientandserver");
             Thread.Sleep(2000);
@@ -1162,7 +1194,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("upgradeserverbeforestarts");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("upgradeactiveactiveprimaryonly"); 
+            MyUtils.CleanupAzureTables("upgradeactiveactiveprimaryonly");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("multipleclientsperserver");
             Thread.Sleep(2000);
