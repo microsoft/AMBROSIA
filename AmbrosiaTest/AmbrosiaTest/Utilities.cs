@@ -50,8 +50,11 @@ namespace AmbrosiaTest
         // when = true, the test will run under the assumption that .Net Framework files in AmbrosiaTest\bin\x64\debug (or release) directory (from net46 directory)
         // when = false, the test will run under the assumption that .Net Core files in AmbrosiaTest\bin\x64\debug (or release) directory (from netcoreapp3.1 directory)
         // .NET CORE only has DLLs, so no AMB exe so run by using "dotnet"
+        // The two strings (NetFramework and NetCoreFramework) are part of the path when calling PTI and PT - called in helper functions
         //*********
         public bool NetFrameworkTestRun = true;
+        public string NetFramework = "net46";
+        public string NetCoreFramework = "netcoreapp3.1";
 
         // Returns the Process ID of the process so you then can something with it
         // Currently output to file using ">", but using cmd.exe to do that.
@@ -323,6 +326,9 @@ namespace AmbrosiaTest
         public void VerifyTestEnvironment()
         {
 
+            // used in PT and PTI - set here by default and change below if need to
+            string current_framework = NetFramework;
+
             // Verify logging directory ... if doesn't exist, create it
             string testLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             if (Directory.Exists(testLogDir) == false)
@@ -345,6 +351,7 @@ namespace AmbrosiaTest
                 string AMBExe = "Ambrosia.exe";
                 if (File.Exists(AMBExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing AMB exe. Expecting:" + AMBExe);
+
             }
             else  // .net core only has dll ...
             {
@@ -357,6 +364,10 @@ namespace AmbrosiaTest
                 string AMBExe = "Ambrosia.dll";
                 if (File.Exists(AMBExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing AMB dll. Expecting:" + AMBExe);
+
+                // used in PTI and PT calls 
+                current_framework = NetCoreFramework;
+
             }
 
             // Don't need AmbrosiaLibCS.exe as part of tests
@@ -364,19 +375,19 @@ namespace AmbrosiaTest
             // if (File.Exists(AmbrosiaLibCSExe) == false)
             //     Assert.Fail("<VerifyTestEnvironment> Missing AmbrosiaLibcs dll. Expecting:" + AmbrosiaLibCSExe);
 
-            string perfTestJobFile = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + "\\job.exe";
+            string perfTestJobFile = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework+"\\job.exe";
             if (File.Exists(perfTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
 
-            string perfTestServerFile = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + "\\server.exe";
+            string perfTestServerFile = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework+"\\server.exe";
             if (File.Exists(perfTestServerFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
 
-            string perfAsyncTestJobFile = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + "\\job.exe";
+            string perfAsyncTestJobFile = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + current_framework+"\\job.exe";
             if (File.Exists(perfAsyncTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest job.exe. Expecting:" + perfAsyncTestJobFile);
 
-            string perfAsyncTestServerFile = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + "\\server.exe";
+            string perfAsyncTestServerFile = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + current_framework+"\\server.exe";
             if (File.Exists(perfAsyncTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest server.exe. Expecting:" + perfAsyncTestJobFile);
 
@@ -816,8 +827,13 @@ namespace AmbrosiaTest
                 upgradeString = "Y";
             }
 
+            // Set path by using proper framework
+            string current_framework = NetCoreFramework;
+            if (NetFrameworkTestRun)
+                current_framework = NetFramework;
+
             // Launch the server process with these values
-            string workingDir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"];
+            string workingDir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"]+ current_framework;
             string fileNameExe = "Server.exe";
             string argString = "-j="+perfJobName + " -s=" + perfServerName +" -rp="+receivePort + " -sp=" + sendPort 
                 + " -n="+ NumClients.ToString() +" -m="+ optionalMemoryAllocat.ToString() + " -c";
@@ -844,8 +860,13 @@ namespace AmbrosiaTest
         public int StartAsyncPerfServer(string receivePort, string sendPort, string perfServerName, string testOutputLogFile)
         {
 
+            // Set path by using proper framework
+            string current_framework = NetCoreFramework;
+            if (NetFrameworkTestRun)
+                current_framework = NetFramework;
+
             // Launch the server process with these values
-            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"];
+            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"]+ current_framework;
             string fileNameExe = "Server.exe";
             string argString = "-rp="+receivePort + " -sp=" + sendPort + " -s=" + perfServerName + " -c ";
 
@@ -868,8 +889,13 @@ namespace AmbrosiaTest
         public int StartPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfMessageSize, string perfNumberRounds, string testOutputLogFile)
         {
 
+            // Set path by using proper framework
+            string current_framework = NetCoreFramework;
+            if (NetFrameworkTestRun)
+                current_framework = NetFramework;
+
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"];
+            string workingDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ current_framework;
             string fileNameExe = "Job.exe";
             string argString = "-j="+perfJobName + " -s=" + perfServerName +" -rp="+ receivePort + " -sp=" + sendPort 
                 + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c";
@@ -892,8 +918,14 @@ namespace AmbrosiaTest
         // Perf Client from PerformanceTest --- runs in Async
         public int StartAsyncPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfNumberRounds,string testOutputLogFile)
         {
+
+            // Set path by using proper framework
+            string current_framework = NetCoreFramework;
+            if (NetFrameworkTestRun)
+                current_framework = NetFramework;
+
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"];
+            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"]+ current_framework;
             string fileNameExe = "Job.exe";
             string argString = "-rp="+receivePort + " -sp=" + sendPort + " -j=" + perfJobName + " -s=" + perfServerName +" -n="+ perfNumberRounds + " -c "; 
 
