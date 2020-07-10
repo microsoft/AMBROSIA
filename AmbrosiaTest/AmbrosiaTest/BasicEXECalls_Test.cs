@@ -24,42 +24,60 @@ namespace AmbrosiaTest
         [TestMethod]
         public void Help_ShowHelp_Ambrosia_Test()
         {
-            Utilities MyUtils = new Utilities();
+            // Don't need to check for framework as proper file is in AmbrosiaTest ... bin directory
             string testName = "showhelpambrosia";
             string fileName = "Ambrosia";
-            GenericVerifyHelp(testName, fileName, "",false);
+            GenericVerifyHelp(testName, fileName, "");
         }
 
         //**** Show Immortal Coord Help 
         [TestMethod]
         public void Help_ShowHelp_ImmCoord_Test()
         {
-            Utilities MyUtils = new Utilities();
+            // Don't need to check for framework as proper file is in AmbrosiaTest ... bin directory
             string testName = "showhelpimmcoord";
             string fileName = "ImmortalCoordinator";
-            GenericVerifyHelp(testName, fileName, "", false);
+            GenericVerifyHelp(testName, fileName, "");
         }
 
         //**** Show PTI Job Help 
         [TestMethod]
         public void Help_ShowHelp_PTIJob_Test()
         {
+
             Utilities MyUtils = new Utilities();
+
+            // add proper framework 
+            string current_framework;
+            if (MyUtils.NetFrameworkTestRun)
+                current_framework = MyUtils.NetFramework;
+            else
+                current_framework = MyUtils.NetCoreFramework;
+
             string testName = "showhelpptijob";
             string fileName = "job";
-            string workingDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"];
-            GenericVerifyHelp(testName, fileName, workingDir,true);
+            string workingDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework;
+            GenericVerifyHelp(testName, fileName, workingDir);
         }
 
         //**** Show PTI Server Help 
         [TestMethod]
         public void Help_ShowHelp_PTIServer_Test()
         {
+
             Utilities MyUtils = new Utilities();
+
+            // add proper framework 
+            string current_framework;
+            if (MyUtils.NetFrameworkTestRun)
+                current_framework = MyUtils.NetFramework;
+            else
+                current_framework = MyUtils.NetCoreFramework;
+
             string testName = "showhelpptiserver";
             string fileName = "server";
-            string workingDir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"];
-            GenericVerifyHelp(testName, fileName, workingDir,true);
+            string workingDir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework;
+            GenericVerifyHelp(testName, fileName, workingDir);
         }
 
         //**** Show PT Job Help 
@@ -67,10 +85,18 @@ namespace AmbrosiaTest
         public void Help_ShowHelp_PTJob_Test()
         {
             Utilities MyUtils = new Utilities();
+
+            // add proper framework 
+            string current_framework;
+            if (MyUtils.NetFrameworkTestRun)
+                current_framework = MyUtils.NetFramework;
+            else
+                current_framework = MyUtils.NetCoreFramework;
+
             string testName = "showhelpptjob";
             string fileName = "job";
-            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"];
-            GenericVerifyHelp(testName, fileName, workingDir,true);
+            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + current_framework;
+            GenericVerifyHelp(testName, fileName, workingDir);
         }
 
         //**** Show PT Server Help 
@@ -78,10 +104,18 @@ namespace AmbrosiaTest
         public void Help_ShowHelp_PTServer_Test()
         {
             Utilities MyUtils = new Utilities();
+
+            // add proper framework 
+            string current_framework;
+            if (MyUtils.NetFrameworkTestRun)
+                current_framework = MyUtils.NetFramework;
+            else
+                current_framework = MyUtils.NetCoreFramework;
+
             string testName = "showhelpptserver";
             string fileName = "server";
-            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"];
-            GenericVerifyHelp(testName, fileName, workingDir,true);
+            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + current_framework;
+            GenericVerifyHelp(testName, fileName, workingDir);
         }
 
 
@@ -89,7 +123,7 @@ namespace AmbrosiaTest
         //************* Helper Method *****************
         // basic helper method to call and exe with no params so shows help - verify getting proper help screen
         //*********************************************
-        public void GenericVerifyHelp(string testName, string fileName, string workingDir, bool ignoreFrameworkType)
+        public void GenericVerifyHelp(string testName, string fileName, string workingDir)
         {
             Utilities MyUtils = new Utilities();
             string TestLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
@@ -97,13 +131,10 @@ namespace AmbrosiaTest
 
             // Get and log the proper help based on if netframework netcore
             string fileNameExe = fileName + ".exe";
-            if (ignoreFrameworkType == false)
+            if (MyUtils.NetFrameworkTestRun == false)
             {
-                if (MyUtils.NetFrameworkTestRun == false)
-                {
-                    fileNameExe = "dotnet " + fileName + ".dll";
-                    logOutputFileName = testName + "_Core.log"; // help message different than netframework so have separate cmp file
-                }
+                fileNameExe = "dotnet " + fileName + ".dll";
+                logOutputFileName = testName + "_Core.log"; // help message different than netframework so have separate cmp file
             }
             string LogOutputDirFileName = TestLogDir + "\\" + logOutputFileName;
 
