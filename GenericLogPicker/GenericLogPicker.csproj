@@ -10,6 +10,11 @@
     <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.4" />
+    <PackageReference Include="Azure.Storage.Common" Version="12.4.3" />
+    <PackageReference Include="Azure.Storage.Files.Shares" Version="12.2.3" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\AmbrosiaLib\Ambrosia\AmbrosiaLib.csproj" />
   </ItemGroup>
 </Project>
