@@ -77,7 +77,6 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.4.4" />
-    <PackageReference Include="Azure.Storage.Common" Version="12.4.3" />
     <PackageReference Include="Azure.Storage.Files.Shares" Version="12.2.3" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
