@@ -12,3 +12,6 @@ Options:
                              The secure network assembly class.
       --ip, --IPAddr=VALUE   Override automatic self IP detection
   -h, --help                 show this message and exit
+      --rp, --receivePort=VALUE
+                             The service receive from port override.
+      --sp, --sendPort=VALUE The service send to port override.
