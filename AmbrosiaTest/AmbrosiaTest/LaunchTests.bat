@@ -11,6 +11,6 @@ echo "****************************""
 
 set "testdir=%cd%"
 c:
-cd\"Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TestWindow"
+cd\"Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TestWindow"
 vstest.console.exe %testdir%\bin\x64\Release\AmbrosiaTest.dll > AmbrosiaTestResults.txt
 echo vstest.console.exe %testdir%\AmbrosiaTest.dll /Tests:AMB_KillServer_Test
