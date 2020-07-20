@@ -1005,7 +1005,7 @@ namespace AmbrosiaTest
             string byteSize = "2147481250";
             string newPrimary = "NOW I'm Primary";
             string serverUpgradePrimary = "becoming upgraded primary";
-            string upgradingImmCoordPrimary = "Upgrading. Must commit suicide since I'm the primary";
+            string upgradingImmCoordPrimary = "Migrating or upgrading. Must commit suicide since I'm the primary";
             string serverKilledMessage = "connection was forcibly closed";
             string immCoordKilledMessage = "KILLING WORKER:";
 
