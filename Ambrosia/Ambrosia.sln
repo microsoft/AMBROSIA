@@ -5,7 +5,17 @@ VisualStudioVersion = 16.0.29920.165
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0BEADEF6-C937-465D-814B-726C3E2A22BA}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImmortalCoordinator", "..\ImmortalCoordinator\ImmortalCoordinator.csproj", "{5C94C516-377C-4113-8C5F-DF4A016D1B3A}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ambrosia", "Ambrosia\Ambrosia.csproj", "{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmbrosiaLib", "..\AmbrosiaLib\Ambrosia\AmbrosiaLib.csproj", "{00CD200C-75B7-4CE2-8A43-8F57DBE19FD6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureBlobsLogPicker", "..\AzureBlobsLogPicker\AzureBlobsLogPicker.csproj", "{347F5EFE-683B-4E8C-A078-DE8D90BD3ADC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenericLogPicker", "..\GenericLogPicker\GenericLogPicker.csproj", "{B22994AB-76F3-4650-A9DD-6BEBAA7A4632}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedAmbrosiaTools", "..\SharedAmbrosiaTools\SharedAmbrosiaTools.csproj", "{2E0E096C-DD42-4E16-8B22-8F67B73E1BE8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,10 +23,30 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5C94C516-377C-4113-8C5F-DF4A016D1B3A}.Debug|x64.ActiveCfg = Debug|x64
+		{5C94C516-377C-4113-8C5F-DF4A016D1B3A}.Debug|x64.Build.0 = Debug|x64
+		{5C94C516-377C-4113-8C5F-DF4A016D1B3A}.Release|x64.ActiveCfg = Release|x64
+		{5C94C516-377C-4113-8C5F-DF4A016D1B3A}.Release|x64.Build.0 = Release|x64
 		{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}.Debug|x64.ActiveCfg = Debug|x64
 		{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}.Debug|x64.Build.0 = Debug|x64
 		{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}.Release|x64.ActiveCfg = Release|x64
 		{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}.Release|x64.Build.0 = Release|x64
+		{00CD200C-75B7-4CE2-8A43-8F57DBE19FD6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{00CD200C-75B7-4CE2-8A43-8F57DBE19FD6}.Debug|x64.Build.0 = Debug|Any CPU
+		{00CD200C-75B7-4CE2-8A43-8F57DBE19FD6}.Release|x64.ActiveCfg = Release|Any CPU
+		{00CD200C-75B7-4CE2-8A43-8F57DBE19FD6}.Release|x64.Build.0 = Release|Any CPU
+		{347F5EFE-683B-4E8C-A078-DE8D90BD3ADC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{347F5EFE-683B-4E8C-A078-DE8D90BD3ADC}.Debug|x64.Build.0 = Debug|Any CPU
+		{347F5EFE-683B-4E8C-A078-DE8D90BD3ADC}.Release|x64.ActiveCfg = Release|Any CPU
+		{347F5EFE-683B-4E8C-A078-DE8D90BD3ADC}.Release|x64.Build.0 = Release|Any CPU
+		{B22994AB-76F3-4650-A9DD-6BEBAA7A4632}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B22994AB-76F3-4650-A9DD-6BEBAA7A4632}.Debug|x64.Build.0 = Debug|Any CPU
+		{B22994AB-76F3-4650-A9DD-6BEBAA7A4632}.Release|x64.ActiveCfg = Release|Any CPU
+		{B22994AB-76F3-4650-A9DD-6BEBAA7A4632}.Release|x64.Build.0 = Release|Any CPU
+		{2E0E096C-DD42-4E16-8B22-8F67B73E1BE8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2E0E096C-DD42-4E16-8B22-8F67B73E1BE8}.Debug|x64.Build.0 = Debug|Any CPU
+		{2E0E096C-DD42-4E16-8B22-8F67B73E1BE8}.Release|x64.ActiveCfg = Release|Any CPU
+		{2E0E096C-DD42-4E16-8B22-8F67B73E1BE8}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
