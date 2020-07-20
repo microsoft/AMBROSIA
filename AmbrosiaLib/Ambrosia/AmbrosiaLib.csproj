@@ -33,8 +33,4 @@
       <Version>2019.10.21.1</Version>
     </PackageReference>
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\SharedAmbrosiaTools\SharedAmbrosiaTools.csproj" />
-  </ItemGroup>
 </Project>
