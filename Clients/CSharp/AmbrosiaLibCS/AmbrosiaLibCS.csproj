@@ -12,7 +12,6 @@
     <StartupObject />
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../../../Ambrosia/Ambrosia.snk</AssemblyOriginatorKeyFile>
-	<Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
