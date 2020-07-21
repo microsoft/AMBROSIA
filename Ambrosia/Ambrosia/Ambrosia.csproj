@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <TargetFrameworks>net461;netcoreapp3.1</TargetFrameworks>
+	<RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>	  
     <OutputType>Exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>Ambrosia</RootNamespace>
