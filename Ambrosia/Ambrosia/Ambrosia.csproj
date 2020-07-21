@@ -78,5 +78,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\AmbrosiaLib\Ambrosia\AmbrosiaLib.csproj" />
+    <ProjectReference Include="..\..\AzureBlobsLogPicker\AzureBlobsLogPicker.csproj" />
+    <ProjectReference Include="..\..\GenericLogPicker\GenericLogPicker.csproj" />
   </ItemGroup>
 </Project>
