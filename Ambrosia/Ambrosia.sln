@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ambrosia", "Ambrosia\Ambrosia.csproj", "{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmbrosiaLib", "..\AmbrosiaLib\Ambrosia\AmbrosiaLib.csproj", "{00CD200C-75B7-4CE2-8A43-8F57DBE19FD6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -17,6 +19,10 @@ Global
 		{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}.Debug|x64.Build.0 = Debug|x64
 		{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}.Release|x64.ActiveCfg = Release|x64
 		{F704AE0A-C37B-4D30-B9ED-0C76C62D66EC}.Release|x64.Build.0 = Release|x64
+		{00CD200C-75B7-4CE2-8A43-8F57DBE19FD6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{00CD200C-75B7-4CE2-8A43-8F57DBE19FD6}.Debug|x64.Build.0 = Debug|Any CPU
+		{00CD200C-75B7-4CE2-8A43-8F57DBE19FD6}.Release|x64.ActiveCfg = Release|Any CPU
+		{00CD200C-75B7-4CE2-8A43-8F57DBE19FD6}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

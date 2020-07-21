@@ -75,4 +75,8 @@
       <Version>4.5.0</Version>
     </PackageReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AmbrosiaLib\Ambrosia\AmbrosiaLib.csproj" />
+  </ItemGroup>
 </Project>
