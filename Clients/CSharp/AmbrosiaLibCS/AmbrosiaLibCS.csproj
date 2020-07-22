@@ -8,6 +8,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>AmbrosiaLibCS</RootNamespace>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+	<Platforms>x64</Platforms>	  
     <ApplicationIcon />
     <StartupObject />
     <SignAssembly>true</SignAssembly>
