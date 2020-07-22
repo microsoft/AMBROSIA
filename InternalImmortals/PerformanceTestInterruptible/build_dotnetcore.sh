@@ -16,7 +16,10 @@ FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp3.1}"
 CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
 # Use a non-absolute directory here to prevent collisions:
-BUILDIT="dotnet publish -o publish -c $CONF -f $FMWK -r $PLAT"
+# BUILDIT="dotnet publish -o publish -c $CONF -f $FMWK -r $PLAT"
+# *#*#*##*#
+BUILDIT="dotnet publish -o publish -r $PLAT"
+# *#*#*##*#
 
 echo
 echo "Build the projects that contain the RPC APIs"
@@ -37,6 +40,9 @@ echo "Generate the assemblies (assumes the AmbrosiaCS executable was built):"
 echo "----------------------------------------------------------------------"
 set -x
 # Alternatively: "dotnet ../../bin/AmbrosiaCS.dll"
+# *#*#*##*#
+pwd
+# *#*#*##*#
 ../../bin/AmbrosiaCS CodeGen -a "publish/ServerAPI.dll" -a "publish/IJob.dll" -p "API/ServerAPI.csproj" -p "IJob/IJob.csproj" -o $GENDEST -f "net461" -f "netcoreapp3.1" 
 set +x
 
