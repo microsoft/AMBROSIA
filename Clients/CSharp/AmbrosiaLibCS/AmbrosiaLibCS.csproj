@@ -12,9 +12,15 @@
     <StartupObject />
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../../../Ambrosia/Ambrosia.snk</AssemblyOriginatorKeyFile>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>

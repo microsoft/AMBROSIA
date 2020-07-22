@@ -4,6 +4,7 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../Ambrosia/Ambrosia.snk</AssemblyOriginatorKeyFile>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
