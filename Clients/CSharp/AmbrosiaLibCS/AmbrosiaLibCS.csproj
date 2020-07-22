@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\AmbrosiaLib\Ambrosia\AmbrosiaLib.csproj" />
+    <ProjectReference Include="..\..\..\ImmortalCoordinator\ImmortalCoordinator.csproj" />
   </ItemGroup>
 
   <ItemGroup>
