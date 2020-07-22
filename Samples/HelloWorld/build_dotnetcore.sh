@@ -29,7 +29,7 @@ set +x
 echo
 echo "(STEP 2) Use those DLL's to generate proxy code for RPC calls"
 
-CG="AmbrosiaCS CodeGen -f netcoreapp3.1 -f net46"
+CG="AmbrosiaCS CodeGen -f netcoreapp3.1 -f net461"
 set -x
 $CG -o ServerInterfaces  -a publish/IServer.dll -p ServerAPI/IServer.csproj
 $CG -o Client1Interfaces -a publish/IServer.dll  -a publish/IClient1.dll -p ServerAPI/IServer.csproj -p IClient1/IClient1.csproj

@@ -30,7 +30,7 @@ cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
 # Build Application 2: Hello World Sample
 # ----------------------------------------
 cd "$AMBROSIA_ROOT"/Samples/HelloWorld
-./build_dotnetcore.sh || echo "EXPECTED FAILURE - problems with Hello World net46 for now"
+./build_dotnetcore.sh || echo "EXPECTED FAILURE - problems with Hello World net461 for now"
 
 # ----------------------------------------
 echo
