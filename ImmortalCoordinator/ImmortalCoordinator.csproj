@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net461</TargetFrameworks>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>true</SignAssembly>
@@ -20,7 +19,7 @@
     <Platform>x64</Platform>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'debug|x64'">
     <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461;netcoreapp3.1;netstandard2.0</TargetFrameworks>
@@ -30,7 +29,7 @@
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'release|x64'">
     <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461;netcoreapp3.1;netstandard2.0</TargetFrameworks>
@@ -41,7 +40,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'debug|AnyCPU'">
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\Debug\</OutputPath>
@@ -49,7 +48,7 @@
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'release|AnyCPU'">
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;NETFX_CORE;WINDOWS</DefineConstants>
@@ -58,7 +57,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'debug|ARM64'">
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461;netcoreapp3.1;netstandard2.0</TargetFrameworks>
     <DebugSymbols>true</DebugSymbols>
@@ -68,7 +67,7 @@
     <PlatformTarget>ARM64</PlatformTarget>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'release|ARM64'">
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461;netcoreapp3.1;netstandard2.0</TargetFrameworks>
     <OutputPath>bin\ARM64\Release\</OutputPath>
