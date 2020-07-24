@@ -19,10 +19,6 @@
     <Platform>x64</Platform>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(PlatformTarget)' == 'x64'">
-    <Platform>x64</Platform>    
-  </PropertyGroup>
-  
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
     <OutputType>Exe</OutputType>
