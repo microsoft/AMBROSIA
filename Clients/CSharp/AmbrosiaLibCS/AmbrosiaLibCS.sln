@@ -16,6 +16,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedAmbrosiaTools", "..\.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImmortalCoordinator", "..\..\..\ImmortalCoordinator\ImmortalCoordinator.csproj", "{6DC6D762-9290-4C30-A9D3-8D60CBF85467}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureBlobsLogPicker", "..\..\..\AzureBlobsLogPicker\AzureBlobsLogPicker.csproj", "{1920E2E7-A110-4AFA-8808-A1D04FDCE841}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenericLogPicker", "..\..\..\GenericLogPicker\GenericLogPicker.csproj", "{475A559B-745C-4E92-A686-B94F05725DBE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,6 +78,30 @@ Global
 		{6DC6D762-9290-4C30-A9D3-8D60CBF85467}.Release|ARM64.Build.0 = Release|Any CPU
 		{6DC6D762-9290-4C30-A9D3-8D60CBF85467}.Release|x64.ActiveCfg = Release|Any CPU
 		{6DC6D762-9290-4C30-A9D3-8D60CBF85467}.Release|x64.Build.0 = Release|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Debug|x64.Build.0 = Debug|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Release|ARM64.Build.0 = Release|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Release|x64.ActiveCfg = Release|Any CPU
+		{1920E2E7-A110-4AFA-8808-A1D04FDCE841}.Release|x64.Build.0 = Release|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Debug|x64.Build.0 = Debug|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Release|ARM64.Build.0 = Release|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Release|x64.ActiveCfg = Release|Any CPU
+		{475A559B-745C-4E92-A686-B94F05725DBE}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
