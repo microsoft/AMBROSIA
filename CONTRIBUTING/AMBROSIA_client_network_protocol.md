@@ -111,6 +111,7 @@ Message types and associated data which may be sent to or received by services:
    large checkpoints.
 
  * 5 – `RPCBatch` (Sent/Received): Data is a count (ZigZagInt) of the number of RPC messages in the batch, followed by the corresponding RPC messages.
+   When sent by the LB, this message is essentially a performance hint to the IC that enables optimized processing of the RPCs, even for as few as 2 RPCs.
 
  * 2 – `TakeCheckpoint` (Received): No data
 
