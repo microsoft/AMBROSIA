@@ -36,6 +36,7 @@ namespace Server
 
         const long oneMB = ((long)1 * 1024 * 1024);
         const long oneGig = ((long)1 * 1024 * oneMB);
+        const long oneHundredMB = ((long)1 * 100 * oneMB);
 
         public Server(string jobName,
                       bool isBidirectional,
@@ -49,11 +50,11 @@ namespace Server
             if (memoryUsed > 0)
             {
                 _allocatedMemory = new List<byte[]>();
-                var buffer = new byte[memoryUsed % oneGig];
+                var buffer = new byte[memoryUsed % oneHundredMB];
                 _allocatedMemory.Add(buffer);
-                for (int i = 0; i < memoryUsed / oneGig; i++)
+                for (int i = 0; i < memoryUsed / oneHundredMB; i++)
                 {
-                    buffer = new byte[oneGig];
+                    buffer = new byte[oneHundredMB];
                     _allocatedMemory.Add(buffer);
                 }
             }
@@ -177,6 +178,7 @@ namespace Server
 
         const long oneMB = ((long)1 * 1024 * 1024);
         const long oneGig = ((long)1 * 1024 * oneMB);
+        const long oneHundredMB = ((long)1 * 100 * oneMB);
 
         public ServerUpgraded()
         {
