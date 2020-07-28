@@ -90,11 +90,12 @@ case $mode in
       check_az_storage_and_bail
       
       # Test Application: Native client hello
+      #  Changing anyways, so don't run
       # ----------------------------------------
-   	  echo "*********  Test App: Hello World ********************"
+   	  #echo "*********  Test App: Hello World ********************"
 
-      cd "$AMBROSIA_ROOT"/Clients/C
-      ./run_hello_world.sh || echo "Allowed failure for now."
+      #cd "$AMBROSIA_ROOT"/Clients/C
+      #./run_hello_world.sh || echo "Allowed failure for now."
 
  
       # Test Application: PTI (last because it's slow)
