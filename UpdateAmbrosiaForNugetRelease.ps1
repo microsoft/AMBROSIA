@@ -3,7 +3,7 @@
 # Script to update Ambrosia to the new Nuget Release
 #
 # Call: 
-#  .\UpdateAmbrosiaForNugetRelease.ps1 1.0.7 1.0.8
+#  .\UpdateAmbrosiaForNugetRelease.ps1 1.0.15 1.0.16
 #
 # Parameters:
 #	CurrentVersion - Version of the Nuget 

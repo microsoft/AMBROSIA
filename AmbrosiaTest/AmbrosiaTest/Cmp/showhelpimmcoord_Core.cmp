@@ -1,6 +1,6 @@
 Instance name is required.Port number is required.
 Worker for Common Runtime for Applications (CRA) [http://github.com/Microsoft/CRA]
-Usage: ImmortalCoordinator.exe [OPTIONS]
+Usage: dotnet ImmortalCoordinator.dll [OPTIONS]
 Options:
   -i, --instanceName=VALUE   The instance name [REQUIRED].
   -p, --port=VALUE           An port number [REQUIRED].
@@ -12,3 +12,6 @@ Options:
                              The secure network assembly class.
       --ip, --IPAddr=VALUE   Override automatic self IP detection
   -h, --help                 show this message and exit
+      --rp, --receivePort=VALUE
+                             The service receive from port override.
+      --sp, --sendPort=VALUE The service send to port override.
