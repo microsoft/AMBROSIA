@@ -72,7 +72,7 @@ echo
 echo "Building C# client tools"
 echo "----------------------------------------"
 set -x
-buildit $OUTDIR/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
+buildit_withframework $OUTDIR/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
 pushd $OUTDIR
 ln -s codegen/AmbrosiaCS
 popd
