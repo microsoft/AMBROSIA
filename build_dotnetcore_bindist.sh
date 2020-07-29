@@ -60,7 +60,10 @@ echo "------------------------------------"
 set -x
 buildit_withframework $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
 buildit_withframework $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
-buildit_withframework $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
+
+echo "*************** DEBUG INFO ************************"
+buildit $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
+echo "*************** DEBUG INFO ************************"
 pushd $OUTDIR
 ln -s runtime/Ambrosia Ambrosia
 ln -s coord/ImmortalCoordinator
