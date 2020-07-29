@@ -58,7 +58,7 @@ echo
 echo "Building AMBROSIA libraries/binaries"
 echo "------------------------------------"
 set -x
-buildit $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
+buildit_withframework $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
 buildit $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
 buildit $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
 pushd $OUTDIR
