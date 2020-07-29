@@ -29,9 +29,11 @@ else
 fi
 
 OUTDIR=`pwd`/bin
-# Shorthands:
-FMWK="${AMBROSIA_DOTNET_FRAMEWORK}"
-CONF="${AMBROSIA_DOTNET_CONF}"
+# Shorthands - set if not present
+FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp3.1}"
+STANDARD_FMWK="netstandard2.0"
+CONF="${AMBROSIA_DOTNET_CONF:-Release}"
+
 function buildit() {
     dir=$1
     shift
@@ -42,6 +44,12 @@ function buildit_withframework() {
     dir=$1
     shift
     dotnet publish --self-contained -o $dir -c $CONF -f $FMWK -r $PLAT $*
+}
+
+function buildit_withnetstandard() {
+    dir=$1
+    shift
+    dotnet publish --self-contained -o $dir -c $CONF -f $STANDARD_FMWK -r $PLAT $*
 }
 
 
@@ -62,7 +70,7 @@ buildit_withframework $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
 buildit_withframework $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
 
 echo "*************** DEBUG INFO ************************"
-buildit $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
+buildit_withnetstandard $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
 echo "*************** DEBUG INFO ************************"
 pushd $OUTDIR
 ln -s runtime/Ambrosia Ambrosia
