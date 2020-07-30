@@ -149,6 +149,7 @@ namespace CRA.Worker
                 { "h|help", "show this message and exit", h => showHelp = h != null },
                 { "rp|receivePort=", "The service receive from port override.", rp => StartupParamOverrides.receivePort = int.Parse(rp) },
                 { "sp|sendPort=", "The service send to port override.", sp => StartupParamOverrides.sendPort = int.Parse(sp) },
+                { "l|log=", "The service log path override.", l => StartupParamOverrides.ICLogLocation = l},
                 { "lst|logStorageType(files,blobs)=", lst => _logStorageType = (LogStorageOptions) Enum.Parse(typeof(LogStorageOptions), lst, true)},
             };
 
