@@ -1206,7 +1206,7 @@ namespace Ambrosia
 			option.Invoke (c);
 		}
 
-		private const int OptionWidth = 29;
+		private const int OptionWidth = 35;
 		private const int Description_FirstWidth  = 80 - OptionWidth;
 		private const int Description_RemWidth    = 80 - OptionWidth - 2;
 
@@ -1283,14 +1283,8 @@ namespace Ambrosia
 			if (i == names.Length)
 				return false;
 
-			if (names [i].Length == 1) {
-				Write (o, ref written, "  -");
-				Write (o, ref written, names [0]);
-			}
-			else {
-				Write (o, ref written, "      --");
-				Write (o, ref written, names [0]);
-			}
+			Write (o, ref written, "  -");
+			Write (o, ref written, names [0]);
 
 			for ( i = GetNextOptionIndex (names, i+1); 
 					i < names.Length; i = GetNextOptionIndex (names, i+1)) {
