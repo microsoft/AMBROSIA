@@ -29,27 +29,13 @@ else
 fi
 
 OUTDIR=`pwd`/bin
-# Shorthands - set if not present
-FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp3.1}"
-STANDARD_FMWK="netstandard2.0"
-CONF="${AMBROSIA_DOTNET_CONF:-Release}"
-
+# Shorthands:
+FMWK="${AMBROSIA_DOTNET_FRAMEWORK}"
+CONF="${AMBROSIA_DOTNET_CONF}"
 function buildit() {
     dir=$1
     shift
-    dotnet publish --self-contained -o $dir -r $PLAT $*
-}
-
-function buildit_withframework() {
-    dir=$1
-    shift
     dotnet publish --self-contained -o $dir -c $CONF -f $FMWK -r $PLAT $*
-}
-
-function buildit_withnetstandard() {
-    dir=$1
-    shift
-    dotnet publish --self-contained -o $dir -c $CONF -f $STANDARD_FMWK -r $PLAT $*
 }
 
 
@@ -66,12 +52,9 @@ echo
 echo "Building AMBROSIA libraries/binaries"
 echo "------------------------------------"
 set -x
-buildit_withframework $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
-buildit_withframework $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
-
-echo "*************** DEBUG INFO ************************"
-buildit_withnetstandard $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
-echo "*************** DEBUG INFO ************************"
+buildit $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
+buildit $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
+buildit $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
 pushd $OUTDIR
 ln -s runtime/Ambrosia Ambrosia
 ln -s coord/ImmortalCoordinator
@@ -83,7 +66,7 @@ echo
 echo "Building C# client tools"
 echo "----------------------------------------"
 set -x
-buildit_withframework $OUTDIR/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
+buildit $OUTDIR/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
 pushd $OUTDIR
 ln -s codegen/AmbrosiaCS
 popd
