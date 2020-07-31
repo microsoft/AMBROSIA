@@ -1439,20 +1439,18 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_OverrideOptions_Test()
         {
-
-            
-
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "overrideoptions";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
+            string ambrosiaLogDir_Invalid = "C:\\Junk\\";  // give invalid so know valid one overrode it
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
-            int overrideJobReceivePort = 8000;
-            int overrideJobSendPort = 8001;
-            int overrideServerReceivePort = 9000;
-            int overrideServerSendPort = 9001;
-            //*** TO DO: "ip|IPAddr= **
+            int overrideJobReceivePort = 3000;
+            int overrideJobSendPort = 3001;
+            int overrideServerReceivePort = 4000;
+            int overrideServerSendPort = 4001;
+            string overrideIPAddress = "99.999.6.11";
 
             Utilities MyUtils = new Utilities();
 
@@ -1461,9 +1459,9 @@ namespace AmbrosiaTest
             AMB_Settings AMB1 = new AMB_Settings
             {
                 AMB_ServiceName = clientJobName,
-                AMB_PortAppReceives = "1000",
-                AMB_PortAMBSends = "1001",
-                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_PortAppReceives = "8000", // set to invalid so has to change to valid
+                AMB_PortAMBSends = "8001",
+                AMB_ServiceLogPath = ambrosiaLogDir_Invalid,
                 AMB_CreateService = "A",
                 AMB_PauseAtStart = "N",
                 AMB_PersistLogs = "Y",
@@ -1478,9 +1476,9 @@ namespace AmbrosiaTest
             AMB_Settings AMB2 = new AMB_Settings
             {
                 AMB_ServiceName = serverName,
-                AMB_PortAppReceives = "2000",
-                AMB_PortAMBSends = "2001",
-                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_PortAppReceives = "9000",
+                AMB_PortAMBSends = "9001",
+                AMB_ServiceLogPath = ambrosiaLogDir_Invalid,
                 AMB_CreateService = "A",
                 AMB_PauseAtStart = "N",
                 AMB_PersistLogs = "Y",
@@ -1490,13 +1488,17 @@ namespace AmbrosiaTest
             };
             MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
 
-            //ImmCoord1
+            //ImmCoord -- WILL FAIL due to invalid IP but this will show that it is actually being set.
+            string logOutputFileName_ImmCoord_Bad = testName + "_ImmCoord_Bad.log";
+            int ImmCoordProcessID_Bad = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord_Bad, false, 9999, overrideJobReceivePort, overrideJobSendPort, ambrosiaLogDir, overrideIPAddress);
+
+            //ImmCoord1 -- Call again but let it auto pick IP which will pass
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
-            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1, false, 9999, overrideJobReceivePort, overrideJobSendPort);
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1, false, 9999, overrideJobReceivePort, overrideJobSendPort, ambrosiaLogDir);
 
             //ImmCoord2
             string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
-            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2, false, 9999, overrideServerReceivePort, overrideServerSendPort);
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2, false, 9999, overrideServerReceivePort, overrideServerSendPort, ambrosiaLogDir);
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
@@ -1518,7 +1520,8 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(serverProcessID);
             MyUtils.KillProcess(ImmCoordProcessID1);
             MyUtils.KillProcess(ImmCoordProcessID2);
-
+            MyUtils.KillProcess(ImmCoordProcessID_Bad);  // should be killed anyways but just make sure
+             
             //Verify AMB 
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
@@ -1528,6 +1531,9 @@ namespace AmbrosiaTest
 
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+
+            // verify ImmCoord has the string to show it failed because of bad IP ...
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord_Bad, overrideIPAddress, 5, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
