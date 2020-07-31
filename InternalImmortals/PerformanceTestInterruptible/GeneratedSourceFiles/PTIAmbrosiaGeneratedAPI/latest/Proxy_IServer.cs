@@ -23,12 +23,6 @@ namespace Server
         }
 
         async Task
-        IServerProxy.MAsync(System.Byte[] p_0)
-        {
-			 await MAsync(p_0);
-        }
-
-        async Task
         MAsync(System.Byte[] p_0)
         {
             SerializableTaskCompletionSource rpcTask;
@@ -131,6 +125,70 @@ wp.curLength += arg0Bytes.Length;
             // so nothing to read, just getting called is the signal to return to the client
             return this;
         }
+        async Task
+        AmIHealthyAsync(System.DateTime p_0)
+        {
+            SerializableTaskCompletionSource rpcTask;
+            // Make call, wait for reply
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+			int arg0Size = 0;
+			byte[] arg0Bytes = null;
+
+            // Argument 0
+            arg0Bytes = Ambrosia.BinarySerializer.Serialize<System.DateTime>(p_0);
+arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
+
+            totalArgSize += arg0Size;
+
+            var wp = this.StartRPC<object>(methodIdentifier: 2 /* method identifier for AmIHealthy */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
+			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
+
+            // Serialize arguments
+
+
+            // Serialize arg0
+            wp.curLength += wp.PageBytes.WriteInt(wp.curLength, arg0Bytes.Length);
+Buffer.BlockCopy(arg0Bytes, 0, wp.PageBytes, wp.curLength, arg0Bytes.Length);
+wp.curLength += arg0Bytes.Length;
+
+            int taskId;
+			lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                while (!Immortal.DispatchTaskIdQueue.Data.TryDequeue(out taskId)) { }
+            }
+
+            ReleaseBufferAndSend();
+
+			Immortal.StartDispatchLoop();
+
+			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+            var currentResult = await taskToWaitFor;
+
+			while (currentResult.AdditionalInfoType != ResultAdditionalInfoTypes.SetResult)
+            {
+                switch (currentResult.AdditionalInfoType)
+                {
+                    case ResultAdditionalInfoTypes.SaveContext:
+                        await Immortal.SaveTaskContextAsync();
+                        taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+                        break;
+                    case ResultAdditionalInfoTypes.TakeCheckpoint:
+                        var sequenceNumber = await Immortal.TakeTaskCheckpointAsync();
+                        Immortal.StartDispatchLoop();
+                        taskToWaitFor = Immortal.GetTaskToWaitForWithAdditionalInfoAsync(sequenceNumber);
+                        break;
+                }
+
+                currentResult = await taskToWaitFor;
+            }
+
+            lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                Immortal.DispatchTaskIdQueue.Data.Enqueue(taskId);
+            }	
+			return;
+        }
 
         void IServerProxy.AmIHealthyFork(System.DateTime p_0)
         {
@@ -175,12 +233,6 @@ wp.curLength += arg0Bytes.Length;
             // so nothing to read, just getting called is the signal to return to the client
             return this;
         }
-        async Task
-        IServerProxy.PrintBytesReceivedAsync()
-        {
-			 await PrintBytesReceivedAsync();
-        }
-
         async Task
         PrintBytesReceivedAsync()
         {

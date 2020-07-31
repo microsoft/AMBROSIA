@@ -24,10 +24,8 @@ namespace Server
     [Ambrosia.InstanceProxy(typeof(IServer))]
     public interface IServerProxy
     {
-        Task MAsync(System.Byte[] p_0);
         void MFork(System.Byte[] p_0);
         void AmIHealthyFork(System.DateTime p_0);
-        Task PrintBytesReceivedAsync();
         void PrintBytesReceivedFork();
     }
 }
