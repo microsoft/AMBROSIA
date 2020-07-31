@@ -18,6 +18,7 @@ namespace Ambrosia
         public static TextWriter OutputStream = Console.Out;
         public static string ICReceivePipeName;
         public static string ICSendPipeName;
+        public static string ICLogLocation = null;
     }
 
     // Constants for leading byte communicated between services;

@@ -13,6 +13,12 @@ namespace CRA.Worker
 {
     public class Program
     {
+        enum LogStorageOptions
+        {
+            Files,
+            Blobs
+        }
+
         private static string _instanceName;
         private static int _port = -1;
         private static string _ipAddress;
@@ -20,10 +26,21 @@ namespace CRA.Worker
         private static string _secureNetworkClassName;
         private static bool _isActiveActive = false;
         private static int _replicaNumber = 0;
+        private static LogStorageOptions _logStorageType = LogStorageOptions.Files;
 
         public static void main(string[] args)
         {
             ParseAndValidateOptions(args);
+
+            switch (_logStorageType)
+            {
+                case LogStorageOptions.Files:
+                    GenericLogsInterface.SetToGenericLogs();
+                    break;
+                case LogStorageOptions.Blobs:
+                    AzureBlobsLogsInterface.SetToAzureBlobsLogs();
+                    break;
+            }
 
             var replicaName = $"{_instanceName}{_replicaNumber}";
 
@@ -96,8 +113,6 @@ namespace CRA.Worker
 
         static void Main(string[] args)
         {
-            GenericLogsInterface.SetToGenericLogs();
-            //AzureBlobsLogsInterface.SetToAzureBlobsLogs();
             main(args);
         }
 
@@ -134,6 +149,8 @@ namespace CRA.Worker
                 { "h|help", "show this message and exit", h => showHelp = h != null },
                 { "rp|receivePort=", "The service receive from port override.", rp => StartupParamOverrides.receivePort = int.Parse(rp) },
                 { "sp|sendPort=", "The service send to port override.", sp => StartupParamOverrides.sendPort = int.Parse(sp) },
+                { "l|log=", "The service log path override.", l => StartupParamOverrides.ICLogLocation = l},
+                { "lst|logStorageType=", "Can be set to files or blobs. Defaults to files", lst => _logStorageType = (LogStorageOptions) Enum.Parse(typeof(LogStorageOptions), lst, true)},
             };
 
             try
