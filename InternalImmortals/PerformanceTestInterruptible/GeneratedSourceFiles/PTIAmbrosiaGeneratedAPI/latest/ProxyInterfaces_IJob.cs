@@ -24,11 +24,8 @@ namespace JobAPI
     [Ambrosia.InstanceProxy(typeof(IJob))]
     public interface IJobProxy
     {
-        Task JobContinueAsync(System.Int32 p_0,System.Int64 p_1,JobAPI.BoxedDateTime p_2);
         void JobContinueFork(System.Int32 p_0,System.Int64 p_1,JobAPI.BoxedDateTime p_2);
-        Task MAsync(System.Byte[] p_0);
         void MFork(System.Byte[] p_0);
-        Task PrintBytesReceivedAsync();
         void PrintBytesReceivedFork();
     }
 }

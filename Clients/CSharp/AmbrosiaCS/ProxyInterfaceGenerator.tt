@@ -37,9 +37,6 @@ namespace <#= this.interfaceType.Namespace #>
       var methodName = M.Name;
       var parameterDeclarationString = Utilities.ParameterDeclarationString(M);
 #>
-<# if (!M.isImpulseHandler) { #>
-        Task<#= M.voidMethod ? "" : "<" + M.ReturnType.Name + ">" #> <#= methodName #>Async(<#= parameterDeclarationString #>);
-<# } #>
         void <#= methodName #>Fork(<#= parameterDeclarationString #>);
 <# } #>
     }

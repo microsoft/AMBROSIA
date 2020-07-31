@@ -40,13 +40,6 @@ namespace <#= this.interfaceType.Namespace #>
       var voidMethod = M.voidMethod;
 
 #>
-<# if (!isImpulseHandler) { #>
-        async <#= "Task" + (voidMethod ? "" : "<" + returnTypeName + ">") #>
-        <#= generatedClientInterfaceName #>.<#= M.Name #>Async(<#= parameterDeclarationString #>)
-        {
-			<#= (voidMethod ? "" : "return") #> await <#= M.Name #>Async(<#= parameterString #>);
-        }
-
         async <#= "Task" + (voidMethod ? "" : "<" + returnTypeName + ">") #>
         <#= M.Name #>Async(<#= parameterDeclarationString #>)
         {
@@ -123,7 +116,6 @@ namespace <#= this.interfaceType.Namespace #>
 			return (<#= returnTypeName #>) currentResult.Result;
 <# } #>
         }
-<# } #>
 
         void <#= generatedClientInterfaceName #>.<#= M.Name #>Fork(<#= parameterDeclarationString #>)
         {

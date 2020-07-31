@@ -23,12 +23,6 @@ namespace JobAPI
         }
 
         async Task
-        IJobProxy.JobContinueAsync(System.Int32 p_0,System.Int64 p_1,JobAPI.BoxedDateTime p_2)
-        {
-			 await JobContinueAsync(p_0,p_1,p_2);
-        }
-
-        async Task
         JobContinueAsync(System.Int32 p_0,System.Int64 p_1,JobAPI.BoxedDateTime p_2)
         {
             SerializableTaskCompletionSource rpcTask;
@@ -188,12 +182,6 @@ wp.curLength += arg2Bytes.Length;
             return this;
         }
         async Task
-        IJobProxy.MAsync(System.Byte[] p_0)
-        {
-			 await MAsync(p_0);
-        }
-
-        async Task
         MAsync(System.Byte[] p_0)
         {
             SerializableTaskCompletionSource rpcTask;
@@ -296,12 +284,6 @@ wp.curLength += arg0Bytes.Length;
             // so nothing to read, just getting called is the signal to return to the client
             return this;
         }
-        async Task
-        IJobProxy.PrintBytesReceivedAsync()
-        {
-			 await PrintBytesReceivedAsync();
-        }
-
         async Task
         PrintBytesReceivedAsync()
         {
