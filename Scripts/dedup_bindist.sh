@@ -109,11 +109,11 @@ if [ $mode == symlink ]; then
         echo " |-> No broken links found."
     else
         echo
-        echo "ERROR: found broken links."
+        echo "WARNING: found broken links."
         echo "Number of broken: $(cat $broken | wc -l)"
         echo "Sample:"
         head -n10 $broken
-        exit 1
+        #exit 1
     fi
 else
     echo

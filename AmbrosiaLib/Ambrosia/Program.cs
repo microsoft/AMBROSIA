@@ -534,7 +534,8 @@ namespace Ambrosia
                             try
                             {
                                 curBuffer.CheckSendBytes(posToStart, numRPCs, pageLength - posToStart);
-                            } catch (Exception e)
+                            }
+                            catch (Exception e)
                             {
                                 StartupParamOverrides.OutputStream.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
                                 curBuffer.CheckPageIntegrity();
@@ -555,7 +556,8 @@ namespace Ambrosia
                             try
                             {
                                 curBuffer.CheckSendBytes(posToStart, numRPCs, pageLength - posToStart);
-                            } catch (Exception e)
+                            }
+                            catch (Exception e)
                             {
                                 StartupParamOverrides.OutputStream.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
                                 curBuffer.CheckPageIntegrity();
@@ -630,39 +632,39 @@ namespace Ambrosia
                                                            long firstSeqNo,
                                                            bool reconnecting)
         {
-/*            if (reconnecting)
-            {
-                var bufferE = _bufferQ.GetEnumerator();
-                while (bufferE.MoveNext())
-                {
-                    var curBuffer = bufferE.Current;
-                    Debug.Assert(curBuffer.LowestSeqNo <= firstSeqNo);
-                    int skipEvents = 0;
-                    if (curBuffer.HighestSeqNo >= firstSeqNo)
-                    {
-                        // We need to send some or all of this buffer
-                        skipEvents = (int)(Math.Max(0, firstSeqNo - curBuffer.LowestSeqNo));
-                    }
-                    else
-                    {
-                        skipEvents = 0;
-                    }
-                    int bufferPos = 0;
-                    AcquireAppendLock(2);
-                    curBuffer.UnsentReplayableMessages = curBuffer.TotalReplayableMessages;
-                    for (int i = 0; i < skipEvents; i++)
-                    {
-                        int eventSize = curBuffer.PageBytes.ReadBufferedInt(bufferPos);
-                        var methodID = curBuffer.PageBytes.ReadBufferedInt(bufferPos + StreamCommunicator.IntSize(eventSize) + 2);
-                        if (curBuffer.PageBytes[bufferPos + StreamCommunicator.IntSize(eventSize) + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
+            /*            if (reconnecting)
                         {
-                            curBuffer.UnsentReplayableMessages--;
-                        }
-                        bufferPos += eventSize + StreamCommunicator.IntSize(eventSize);
-                    }
-                    ReleaseAppendLock();
-                }
-            }*/
+                            var bufferE = _bufferQ.GetEnumerator();
+                            while (bufferE.MoveNext())
+                            {
+                                var curBuffer = bufferE.Current;
+                                Debug.Assert(curBuffer.LowestSeqNo <= firstSeqNo);
+                                int skipEvents = 0;
+                                if (curBuffer.HighestSeqNo >= firstSeqNo)
+                                {
+                                    // We need to send some or all of this buffer
+                                    skipEvents = (int)(Math.Max(0, firstSeqNo - curBuffer.LowestSeqNo));
+                                }
+                                else
+                                {
+                                    skipEvents = 0;
+                                }
+                                int bufferPos = 0;
+                                AcquireAppendLock(2);
+                                curBuffer.UnsentReplayableMessages = curBuffer.TotalReplayableMessages;
+                                for (int i = 0; i < skipEvents; i++)
+                                {
+                                    int eventSize = curBuffer.PageBytes.ReadBufferedInt(bufferPos);
+                                    var methodID = curBuffer.PageBytes.ReadBufferedInt(bufferPos + StreamCommunicator.IntSize(eventSize) + 2);
+                                    if (curBuffer.PageBytes[bufferPos + StreamCommunicator.IntSize(eventSize) + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
+                                    {
+                                        curBuffer.UnsentReplayableMessages--;
+                                    }
+                                    bufferPos += eventSize + StreamCommunicator.IntSize(eventSize);
+                                }
+                                ReleaseAppendLock();
+                            }
+                        }*/
             var bufferEnumerator = _bufferQ.GetEnumerator();
             // Scan through pages from head to tail looking for events to output
             while (bufferEnumerator.MoveNext())
@@ -676,7 +678,7 @@ namespace Ambrosia
 
                     int bufferPos = 0;
                     if (true) // BUGBUG We are temporarily disabling this optimization which avoids unnecessary locking as reconnecting is not a sufficient criteria: We found a case where input is arriving during reconnection where counting was getting disabled incorrectly. Further investigation is required.
-//                    if (reconnecting) // BUGBUG We are temporarily disabling this optimization which avoids unnecessary locking as reconnecting is not a sufficient criteria: We found a case where input is arriving during reconnection where counting was getting disabled incorrectly. Further investigation is required.
+                              //                    if (reconnecting) // BUGBUG We are temporarily disabling this optimization which avoids unnecessary locking as reconnecting is not a sufficient criteria: We found a case where input is arriving during reconnection where counting was getting disabled incorrectly. Further investigation is required.
                     {
                         // We need to reset how many replayable messages have been sent. We want to minimize the use of
                         // this codepath because of the expensive locking, which can compete with new RPCs getting appended
@@ -1896,7 +1898,7 @@ namespace Ambrosia
                 var messageBuf = new byte[numMessageBytes];
                 var memStream = new MemoryStream(messageBuf);
                 memStream.WriteInt(1);
-                    memStream.WriteByte(becomingPrimaryByte);
+                memStream.WriteByte(becomingPrimaryByte);
                 memStream.Dispose();
                 _workStream.WriteIntFixed((int)(HeaderSize + numMessageBytes));
                 long checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
@@ -2281,7 +2283,7 @@ namespace Ambrosia
                     catch (Exception)
                     {
                         // Maybe we are tying to upgrade, but maybe someone else is checking. Try 3 times before committing suicide
-                        if (i==2)
+                        if (i == 2)
                         {
                             // Failed 3 times. Commit suicide
                             OnError(0, "Migrating or upgrading. Must commit suicide since I'm the primary");
@@ -2644,11 +2646,11 @@ namespace Ambrosia
             {
                 // Try to grab the checkpoint lock twice to break lingering locks on Azure blobs
                 bool gotLock = false;
-                for (int i=0; i<2; i++)
+                for (int i = 0; i < 2; i++)
                 {
                     try
                     {
-                        if (i==1)
+                        if (i == 1)
                         {
                             // Second attempt, wait 5 seconds to see if the lock can be grabbed
                             Thread.Sleep(4000);
@@ -3232,7 +3234,7 @@ namespace Ambrosia
                             {
 
                                 StartupParamOverrides.OutputStream.WriteLine("Error attaching " + ServiceName() + " to " + destination);
-// BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
+                                // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
                             }
                         }
                     }
@@ -4089,7 +4091,14 @@ namespace Ambrosia
             _persistLogs = persistLogs;
             _activeActive = activeActive;
             _newLogTriggerSize = logTriggerSizeMB * 1000000;
-            _serviceLogPath = serviceLogPath;
+            if (StartupParamOverrides.ICLogLocation == null)
+            {
+                _serviceLogPath = serviceLogPath;
+            }
+            else
+            {
+                _serviceLogPath = StartupParamOverrides.ICLogLocation;
+            }
             if (StartupParamOverrides.receivePort == -1)
             {
                 _localServiceReceiveFromPort = serviceReceiveFromPort;
@@ -4133,12 +4142,12 @@ namespace Ambrosia
         }
 
         public void InitializeRepro(string serviceName,
-                                      string serviceLogPath,
-                                      long checkpointToLoad,
-                                      int version,
-                                      bool testUpgrade,
-                                      int serviceReceiveFromPort,
-                                      int serviceSendToPort)
+                                    string serviceLogPath,
+                                    long checkpointToLoad,
+                                    int version,
+                                    bool testUpgrade,
+                                    int serviceReceiveFromPort,
+                                    int serviceSendToPort)
         {
             _localServiceReceiveFromPort = serviceReceiveFromPort;
             _localServiceSendToPort = serviceSendToPort;

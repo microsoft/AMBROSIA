@@ -646,7 +646,7 @@ namespace AmbrosiaTest
 
         }
 
-        public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999)
+        public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999, int overRideReceivePort = 0, int overRideSendPort = 0)
         {
 
             // Launch the AMB process with these values
@@ -672,6 +672,15 @@ namespace AmbrosiaTest
                 argString = argString + " -aa -r=" + replicaNum.ToString();
             }
 
+            // If the over ride values sent through, then over ride existing ports
+            if (overRideReceivePort != 0)
+            {
+                argString = argString + " -rp=" + overRideReceivePort.ToString();
+            }
+            if (overRideSendPort != 0)
+            {
+                argString = argString + " -sp=" + overRideSendPort.ToString();
+            }
 
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
@@ -1200,7 +1209,9 @@ namespace AmbrosiaTest
             MyUtils.CleanupAzureTables("multipleclientsperserver");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("giantcheckpointtest");
-
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("overrideoptions");
+            
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
         }

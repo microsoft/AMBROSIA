@@ -32,19 +32,16 @@ namespace Ambrosia
                                    bool appendOpen = false)
         {
             fileName = AzureBlobsLogsInterface.PathFixer(fileName);
-            Console.WriteLine("Opening or creating " + fileName);
             _blobsContainerClient = blobsContainerClient;
             _logClient = _blobsContainerClient.GetAppendBlobClient(fileName);
             ETag currentETag;
             if (_previousOpenAttempts.ContainsKey(fileName) && appendOpen)
             {
-                Console.WriteLine("Was open before");
                 // We've opened this blob before and want to be non-destructive. We don't need to CreateIfNotExists, which could be VERY slow.
                 currentETag = _logClient.GetProperties().Value.ETag;
             }
             else
             {
-                Console.WriteLine("First time opening");
                 try
                 {
                     // Create the file non-destructively if needed, guaranteeing write continuity on creation by grabbing the etag of the create, if needed
@@ -72,34 +69,28 @@ namespace Ambrosia
             // The blob hasn't be touched since the last time. This is a candidate for breaking the lease.
             if (_previousOpenAttempts.ContainsKey(fileName) && (_previousOpenAttempts[fileName].ToString().Equals(currentETag.ToString())))
             {
-                Console.WriteLine("Passed Test" + currentETag.ToString());
                 _previousOpenAttempts[fileName] = currentETag;
                 // The blob hasn't been updated. Try to break the lease and reacquire
                 var requestConditions = new BlobRequestConditions();
                 requestConditions = new BlobRequestConditions();
                 requestConditions.IfMatch = currentETag;
                 // If the condition fails in the break, it's because someone else managed to touch the file, so give up
-                Console.WriteLine("Breaking Lease");
                 ETag newETag;
                 try
                 {
                     newETag = _leaseClient.Break(null, requestConditions).Value.ETag;
                 }
                 catch (Exception e) { newETag = currentETag; }
-                Console.WriteLine("Broke old lease");
                 var etagCondition = new RequestConditions();
                 etagCondition.IfMatch = newETag;
                 // If the condition fails, someone snuck in and grabbed the lock before we could. Give up.
                 _curLease = _leaseClient.Acquire(TimeSpan.FromSeconds(-1), etagCondition).Value;
-                Console.WriteLine("Acquired lease");
             }
             else
             {
-                Console.WriteLine("Failed Test" + currentETag.ToString());
                 // Not a candidate for breaking the lease. Just try to acquire.
                 _previousOpenAttempts[fileName] = currentETag;
                 _curLease = _leaseClient.Acquire(TimeSpan.FromSeconds(-1)).Value;
-                Console.WriteLine("Acquired lease");
             }
 
             _leaseCondition = new AppendBlobRequestConditions();
