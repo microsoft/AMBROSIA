@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Configuration;
 using System.Threading;
 using System.Windows.Forms; // need this to handle threading issue on sleeps
+using System.IO;
 
 namespace AmbrosiaTest
 {
@@ -1537,12 +1538,21 @@ namespace AmbrosiaTest
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+
         }
 
 
         [TestCleanup()]
         public void Cleanup()
         {
+
+            // Cleans up the bad IP file - it is just created in the local directory
+            string BadIPFileDirectory = "99.999.6.11overrideoptionsclientjob_0";
+            if (Directory.Exists(BadIPFileDirectory))
+            {
+                Directory.Delete(BadIPFileDirectory, true);
+            }
+
             // Kill all ImmortalCoordinators, Job and Server exes
             Utilities MyUtils = new Utilities();
             MyUtils.TestCleanup();
