@@ -384,6 +384,11 @@ namespace AmbrosiaTest
             if (File.Exists(perfTestServerFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
 
+            string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
+            if (connectionString == null)
+                Assert.Fail("<VerifyTestEnvironment> Missing Connection String environment variable 'AZURE_STORAGE_CONN_STRING'");
+
+/*   ** Async feature removed so Performance Test not needed
             string perfAsyncTestJobFile = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
             if (File.Exists(perfAsyncTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest job.exe. Expecting:" + perfAsyncTestJobFile);
@@ -391,10 +396,7 @@ namespace AmbrosiaTest
             string perfAsyncTestServerFile = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
             if (File.Exists(perfAsyncTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest server.exe. Expecting:" + perfAsyncTestJobFile);
-
-            string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
-            if (connectionString == null)
-                Assert.Fail("<VerifyTestEnvironment> Missing Connection String environment variable 'AZURE_STORAGE_CONN_STRING'");
+*/
         }
 
 
