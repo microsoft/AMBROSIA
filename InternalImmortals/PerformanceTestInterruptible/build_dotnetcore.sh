@@ -39,7 +39,7 @@ echo "Generate the assemblies (assumes the AmbrosiaCS executable was built):"
 echo "----------------------------------------------------------------------"
 set -x
 # Alternatively: "dotnet ../../bin/AmbrosiaCS.dll"
-../../bin/AmbrosiaCS CodeGen -a "publish/ServerAPI.dll" -a "publish/IJob.dll" -p "API/ServerAPI.csproj" -p "IJob/IJob.csproj" -o $GENDEST -f "netstandard2.0" -f "netcoreapp3.1"
+../../bin/AmbrosiaCS CodeGen -a "publish/ServerAPI.dll" -a "publish/IJob.dll" -p "API/ServerAPI.csproj" -p "IJob/IJob.csproj" -o $GENDEST -f "netstandard2.0" -f "netcoreapp3.1" -f "net461"
 set +x
 
 echo
