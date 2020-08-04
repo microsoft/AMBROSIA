@@ -1,0 +1,31 @@
+*X* Trying to connect IC and Language Binding
+*X* Trying to do second connection between IC and Language Binding
+Bytes per RPC	Throughput (GB/sec)
+*X* 65536	0.0028881205576843
+Service Received 1024 MB so far
+*X* 32768	0.00291145251251637
+Service Received 2048 MB so far
+*X* 16384	0.00308327571400177
+Service Received 3072 MB so far
+*X* 8192	0.00308822802592757
+Service Received 4096 MB so far
+*X* 4096	0.00309216507309636
+Service Received 5120 MB so far
+*X* 2048	0.00308936703975461
+Service Received 6144 MB so far
+*X* 1024	0.00309459465591775
+Service Received 7168 MB so far
+*X* 512	0.00309970663024979
+Service Received 8192 MB so far
+*X* 256	0.00309348320545075
+Service Received 9216 MB so far
+*X* 128	0.00306559699583659
+Service Received 10240 MB so far
+*X* 64	0.00296265299221154
+Service Received 11264 MB so far
+*X* 32	0.0027722750766569
+Service Received 12288 MB so far
+*X* 16	0.00250059008362161
+Service Received 13312 MB so far
+Bytes received: 13958643712
+DONE

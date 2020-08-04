@@ -1221,7 +1221,10 @@ namespace AmbrosiaTest
             MyUtils.CleanupAzureTables("giantcheckpointtest");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("overrideoptions");
-            
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("clientsideupgrade");
+           
+
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
         }
