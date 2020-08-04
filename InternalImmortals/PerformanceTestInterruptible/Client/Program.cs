@@ -151,6 +151,12 @@ namespace Job
         }
     }
 
+    enum ICDeploymentMode
+    {
+        SecondProc,
+        InProcDeploy,
+        InProcManual
+    }
 
     class ClientBootstrapper
     {
@@ -163,13 +169,13 @@ namespace Job
         private static int _maxMessageSize = 64 * 1024;
         private static int _numRounds = 13;
         private static bool _descendingSize = true;
+        private static ICDeploymentMode _ICDeploymentMode = ICDeploymentMode.SecondProc;
         public static AsyncQueue<int> finishedTokenQ;
         static Thread _iCThread;
 
         static void Main(string[] args)
         {
             ParseAndValidateOptions(args);
-            GenericLogsInterface.SetToGenericLogs();
 
             finishedTokenQ = new AsyncQueue<int>();
             
@@ -185,24 +191,39 @@ namespace Job
 #endif
             var myClient = new Job(_perfServer, _maxMessageSize, _numRounds, _descendingSize);
 
-            // Use "Empty" as the type parameter because this container doesn't run a service
-            // that responds to any RPC calls.
-            if (_icPort == -1)
+            switch (_ICDeploymentMode)
             {
-                using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
-                {
+                case ICDeploymentMode.SecondProc:
+                    using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
+                    {
 
-                    finishedTokenQ.DequeueAsync().Wait();
-                }
+                        finishedTokenQ.DequeueAsync().Wait();
+                    }
+                    break;
+                case ICDeploymentMode.InProcDeploy:
+                    GenericLogsInterface.SetToGenericLogs();
+                    using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _icPort))
+                    {
 
-            }
-            else
-            {
-                using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _icPort))
-                {
+                        finishedTokenQ.DequeueAsync().Wait();
+                    }
+                    break;
+                case ICDeploymentMode.InProcManual:
+                    GenericLogsInterface.SetToGenericLogs();
+                    var myName = _perfJob;
+                    var myPort = _icPort;
+                    var ambrosiaArgs = new string[2];
+                    ambrosiaArgs[0] = "-i=" + myName;
+                    ambrosiaArgs[1] = "-p=" + myPort;
+                    Console.WriteLine("ImmortalCoordinator -i=" + myName + " -p=" + myPort.ToString());
+                    _iCThread = new Thread(() => CRA.Worker.Program.main(ambrosiaArgs)) { IsBackground = true };
+                    _iCThread.Start();
+                    using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
+                    {
 
-                    finishedTokenQ.DequeueAsync().Wait();
-                }
+                        finishedTokenQ.DequeueAsync().Wait();
+                    }
+                    break;            
             }
         }
 
@@ -225,6 +246,7 @@ namespace Job
                 { "n|numOfRounds=", "The number of rounds.", n => _numRounds = int.Parse(n) },
                 { "nds|noDescendingSize", "Disable message descending size.", nds => _descendingSize = false },
                 { "c|autoContinue", "Is continued automatically at start", c => _autoContinue = true },
+                { "d|ICDeploymentMode=", "IC deployment mode specification (SecondProc(Default)/InProcDeploy/InProcManual)", d => _ICDeploymentMode = (ICDeploymentMode) Enum.Parse(typeof(ICDeploymentMode), d, true)},
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 
@@ -249,14 +271,6 @@ namespace Job
             var errorMessage = string.Empty;
             if (_perfJob == null) errorMessage += "Job name is required.\n";
             if (_perfServer == null) errorMessage += "Server name is required.\n";
-
-            if (((_sendPort != -1) && (_receivePort == -1)) || 
-                ((_sendPort == -1) && (_receivePort != -1)) ||
-                ((_sendPort == -1) && (_receivePort == -1) && (_icPort == -1)) ||
-                (((_sendPort != -1) || (_receivePort != -1)) && (_icPort != -1)))
-            {
-                errorMessage += "Must specify either IC port or both send and receive ports.\n";
-            }
 
             if (errorMessage != string.Empty)
             {

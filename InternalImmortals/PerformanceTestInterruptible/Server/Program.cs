@@ -280,11 +280,18 @@ namespace Server
 
     }
 
+    enum ICDeploymentMode
+    {
+        SecondProc,
+        InProcDeploy,
+        InProcManual
+    }
 
     class ServerBootstrapper
     {
         private static int _receivePort = -1;
         private static int _sendPort = -1;
+        private static int _icPort = -1;
         private static string _perfJob;
         private static string _perfServer;
         private static bool _autoContinue;
@@ -292,6 +299,8 @@ namespace Server
         private static int _numJobs = 1;
         private static bool _isUpgrading;
         private static long _memoryUsed;
+        private static ICDeploymentMode _ICDeploymentMode = ICDeploymentMode.SecondProc;
+        static Thread _iCThread;
 
         static void Main(string[] args)
         {
@@ -306,12 +315,43 @@ namespace Server
 
             if (!_isUpgrading)
             {
-                using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, new Server(_perfJob, _isBidirectional, _numJobs, _memoryUsed), _receivePort, _sendPort))
+                var myServer = new Server(_perfJob, _isBidirectional, _numJobs, _memoryUsed);
+                switch (_ICDeploymentMode)
                 {
-                    // nothing to call on c, just doing this for calling Dispose.
-                    //                Console.WriteLine("Press enter to terminate program.");
-                    //                Console.ReadLine();
-                    Thread.Sleep(14 * 24 * 3600 * 1000);
+                    case ICDeploymentMode.SecondProc:
+                        using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _receivePort, _sendPort))
+                        {
+                            // nothing to call on c, just doing this for calling Dispose.
+                            Console.WriteLine("*X* Press enter to terminate program.");
+                            Console.ReadLine();
+                        }
+                        break;
+                    case ICDeploymentMode.InProcDeploy:
+                        GenericLogsInterface.SetToGenericLogs();
+                        using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _icPort))
+                        {
+                            // nothing to call on c, just doing this for calling Dispose.
+                            Console.WriteLine("*X* Press enter to terminate program.");
+                            Console.ReadLine();
+                        }
+                        break;
+                    case ICDeploymentMode.InProcManual:
+                        GenericLogsInterface.SetToGenericLogs();
+                        var myName = _perfServer;
+                        var myPort = _icPort;
+                        var ambrosiaArgs = new string[2];
+                        ambrosiaArgs[0] = "-i=" + myName;
+                        ambrosiaArgs[1] = "-p=" + myPort;
+                        Console.WriteLine("ImmortalCoordinator -i=" + myName + " -p=" + myPort.ToString());
+                        _iCThread = new Thread(() => CRA.Worker.Program.main(ambrosiaArgs)) { IsBackground = true };
+                        _iCThread.Start();
+                        using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _receivePort, _sendPort))
+                        {
+                            // nothing to call on c, just doing this for calling Dispose.
+                            Console.WriteLine("*X* Press enter to terminate program.");
+                            Console.ReadLine();
+                        }
+                        break;
                 }
             }
             else
@@ -340,10 +380,12 @@ namespace Server
                 { "rp|receivePort=", "The service receive from port [REQUIRED].", rp => _receivePort = int.Parse(rp) },
                 { "sp|sendPort=", "The service send to port. [REQUIRED]", sp => _sendPort = int.Parse(sp) },
                 { "nbd|notBidirectional", "Disable bidirectional communication.", nbd => _isBidirectional = false },
+                { "icp|ICPort=", "The IC port, if the IC should be run in proc. Note that if this is specified, the command line ports override stored registration settings", icp => _icPort = int.Parse(icp) },
                 { "n|numOfJobs=", "The number of jobs.", n => _numJobs = int.Parse(n) },
                 { "u|upgrading", "Is upgrading.", u => _isUpgrading = true },
                 { "m|memoryUsed=", "Memory used.", m => _memoryUsed = long.Parse(m) },
                 { "c|autoContinue", "Is continued automatically at start", c => _autoContinue = true },
+                { "d|ICDeploymentMode=", "IC deployment mode specification (SecondProc(Default)/InProcDeploy/InProcManual)", d => _ICDeploymentMode = (ICDeploymentMode) Enum.Parse(typeof(ICDeploymentMode), d, true)},
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 
@@ -368,8 +410,6 @@ namespace Server
             var errorMessage = string.Empty;
             if (_perfJob == null) errorMessage += "Job name is required.\n";
             if (_perfServer == null) errorMessage += "Server name is required.\n";
-            if (_sendPort == -1) errorMessage += "Send port is required.\n";
-            if (_receivePort == -1) errorMessage += "Receive port is required.\n";
 
             if (errorMessage != string.Empty)
             {
