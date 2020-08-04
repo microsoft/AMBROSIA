@@ -25,6 +25,12 @@ namespace AmbrosiaTest
         }
         //************* Init Code *****************
 
+
+
+/*   **** All Async feature removed and being reworked at some point ... tests probably invalid but only comment out
+
+
+
         //** Basic end to end test starts job and server and runs a bunch of bytes through
         [TestMethod]
         public void AMB_Async_Basic_Test()
@@ -845,7 +851,7 @@ namespace AmbrosiaTest
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version, "", true);
         }
-
+*/
 
         [TestCleanup()]
         public void Cleanup()

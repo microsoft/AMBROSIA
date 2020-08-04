@@ -384,6 +384,11 @@ namespace AmbrosiaTest
             if (File.Exists(perfTestServerFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
 
+            string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
+            if (connectionString == null)
+                Assert.Fail("<VerifyTestEnvironment> Missing Connection String environment variable 'AZURE_STORAGE_CONN_STRING'");
+
+/*   ** Async feature removed so Performance Test not needed
             string perfAsyncTestJobFile = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
             if (File.Exists(perfAsyncTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest job.exe. Expecting:" + perfAsyncTestJobFile);
@@ -391,11 +396,7 @@ namespace AmbrosiaTest
             string perfAsyncTestServerFile = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
             if (File.Exists(perfAsyncTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PerformanceTest server.exe. Expecting:" + perfAsyncTestJobFile);
-
-
-            string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
-            if (connectionString == null)
-                Assert.Fail("<VerifyTestEnvironment> Missing Connection String environment variable 'AZURE_STORAGE_CONN_STRING'");
+*/
         }
 
 
@@ -646,7 +647,7 @@ namespace AmbrosiaTest
 
         }
 
-        public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999, int overRideReceivePort = 0, int overRideSendPort = 0)
+        public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999, int overRideReceivePort = 0, int overRideSendPort = 0, string overRideLogLoc = "", string overRideIPAddr = "")
         {
 
             // Launch the AMB process with these values
@@ -672,7 +673,7 @@ namespace AmbrosiaTest
                 argString = argString + " -aa -r=" + replicaNum.ToString();
             }
 
-            // If the over ride values sent through, then over ride existing ports
+            // If the override values sent through, then over ride existing ports, Log loc or IP
             if (overRideReceivePort != 0)
             {
                 argString = argString + " -rp=" + overRideReceivePort.ToString();
@@ -681,6 +682,15 @@ namespace AmbrosiaTest
             {
                 argString = argString + " -sp=" + overRideSendPort.ToString();
             }
+            if (overRideLogLoc != "")
+            {
+                argString = argString + " -l=" + overRideLogLoc;
+            }
+            if (overRideIPAddr != "")
+            {
+                argString = argString + " -ip=" + overRideIPAddr;
+            }
+
 
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
@@ -1211,7 +1221,10 @@ namespace AmbrosiaTest
             MyUtils.CleanupAzureTables("giantcheckpointtest");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("overrideoptions");
-            
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("clientsideupgrade");
+           
+
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
         }
