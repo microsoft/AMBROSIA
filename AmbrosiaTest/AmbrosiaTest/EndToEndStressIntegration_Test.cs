@@ -1541,6 +1541,119 @@ namespace AmbrosiaTest
 
         }
 
+        //** Similar to Double Kill restart but it doesn't actually kill it. It just restarts it and it
+        //** Takes on the new restarted process and original process dies.  It is a way to do client upgrade
+        [TestMethod]
+        public void AMB_ClientSideUpgrade_Test()
+        {
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "clientsideupgrade";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "13958643712";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //ImmCoord1
+            string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
+            int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
+
+            //ImmCoord2
+            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
+            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+
+            // Give it 5 seconds to do something before killing it
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // DO NOT Kill both Job (and ImmCoord) and Server (and ImmCoord)
+            // This is main part of test - get it to have Job and Server take over and run
+            // Orig Job and Server stop then
+//            MyUtils.KillProcess(clientJobProcessID);
+  //          MyUtils.KillProcess(serverProcessID);
+    //        MyUtils.KillProcess(ImmCoordProcessID1);
+      //      MyUtils.KillProcess(ImmCoordProcessID2);
+
+            // Restart Job / ImmCoord1
+            string logOutputFileName_ImmCoord1_Restarted = testName + "_ImmCoord1_Restarted.log";
+            int ImmCoordProcessID1_Restarted = MyUtils.StartImmCoord(clientJobName, 3500, logOutputFileName_ImmCoord1_Restarted);
+            string logOutputFileName_ClientJob_Restarted = testName + "_ClientJob_Restarted.log";
+            int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted);
+
+            // just give a rest 
+            Thread.Sleep(2000);
+
+            // Restart Server / ImmCoord2
+            string logOutputFileName_ImmCoord2_Restarted = testName + "_ImmCoord2_Restarted.log";
+            int ImmCoordProcessID2_Restarted = MyUtils.StartImmCoord(serverName, 4500, logOutputFileName_ImmCoord2_Restarted);
+            string logOutputFileName_Server_Restarted = testName + "_Server_Restarted.log";
+            int serverProcessID_Restarted = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Restarted, 1, false);
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted, byteSize, 20, false, testName, true); // Total bytes received
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_Restarted, byteSize, 20, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID_Restarted);
+            MyUtils.KillProcess(serverProcessID_Restarted);
+            MyUtils.KillProcess(ImmCoordProcessID1_Restarted);
+            MyUtils.KillProcess(ImmCoordProcessID2_Restarted);
+
+            // Verify Client (before and after restart)
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
 
         [TestCleanup()]
         public void Cleanup()
