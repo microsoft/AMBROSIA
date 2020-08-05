@@ -56,6 +56,13 @@ namespace AmbrosiaTest
         public string NetFramework = "net461";
         public string NetCoreFramework = "netcoreapp3.1";
 
+        //*********
+        // LogType
+        // This is type \ location of the logs.. "files" or "blobs" in the ImmortalCoordinator
+        //*********
+        public string logTypeFiles = "files";
+        public string logTypeBlobs = "blobs";
+
         // Returns the Process ID of the process so you then can something with it
         // Currently output to file using ">", but using cmd.exe to do that.
         // If want to run actual file name (instead of via cmd.exe), then need to use stream reader to get output and send to a file 
@@ -647,7 +654,7 @@ namespace AmbrosiaTest
 
         }
 
-        public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999, int overRideReceivePort = 0, int overRideSendPort = 0, string overRideLogLoc = "", string overRideIPAddr = "")
+        public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999, int overRideReceivePort = 0, int overRideSendPort = 0, string overRideLogLoc = "", string overRideIPAddr = "", string logToType = "")
         {
 
             // Launch the AMB process with these values
@@ -689,6 +696,10 @@ namespace AmbrosiaTest
             if (overRideIPAddr != "")
             {
                 argString = argString + " -ip=" + overRideIPAddr;
+            }
+            if (logToType != "")  // could make boolean but made it string so could pass "" to test default
+            {
+                argString = argString + " -lst="+ logToType;
             }
 
 
@@ -1223,7 +1234,11 @@ namespace AmbrosiaTest
             MyUtils.CleanupAzureTables("overrideoptions");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("clientsideupgrade");
-           
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("savelogtoblob");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("savelogtofileandblob");
+
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
