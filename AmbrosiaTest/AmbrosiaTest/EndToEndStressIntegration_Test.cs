@@ -1746,7 +1746,7 @@ namespace AmbrosiaTest
             string testName = "savelogtofileandblob";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaBlobLoc = testName + "blobstore";  // specify the name of the blob instead of taking default by making blank
+            string ambrosiaBlobLoc = testName + "blobstore\\";  // specify the name of the blob instead of taking default by making blank
             string ambrosiaFileLoc = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
 
