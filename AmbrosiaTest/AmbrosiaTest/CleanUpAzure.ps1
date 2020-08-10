@@ -67,22 +67,25 @@ Get-AzureStorageTable $ObjectName* -Context $ctx | Remove-AzureStorageTable -Con
 Write-host "------------- Delete items in Azure table: craconnectiontable filtered on $ObjectName -------------"
 $tableName = "craconnectiontable"
 $storageTable = Get-AzureStorageTable -Name $tableName -Context $ctx 
-Get-AzureStorageTableRowAll -table $storageTable | where PartitionKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
+Get-AzureStorageTableRowAll -table $storageTable | Where-Object PartitionKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
 Write-host 
 
 Write-host "------------- Delete items in Azure table: craendpointtable filtered on $ObjectName -------------"
 $tableName = "craendpointtable"
 $storageTable = Get-AzureStorageTable -Name $tableName -Context $ctx 
-Get-AzureStorageTableRowAll -table $storageTable | where PartitionKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
+Get-AzureStorageTableRowAll -table $storageTable | Where-Object PartitionKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
 Write-host 
 
 Write-host "------------- Delete items in Azure table: cravertextable filtered on $ObjectName -------------"
 $tableName = "cravertextable"
 $storageTable = Get-AzureStorageTable -Name $tableName -Context $ctx 
-Get-AzureStorageTableRowAll -table $storageTable | where PartitionKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
-Get-AzureStorageTableRowAll -table $storageTable | where RowKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
+Get-AzureStorageTableRowAll -table $storageTable | Where-Object PartitionKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
+Get-AzureStorageTableRowAll -table $storageTable | Where-Object RowKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
 
 Write-host 
+
+Write-host "------------- Delete Azure Blobs in Azure table: ambrosialogs filtered on $ObjectName -------------"
+#Get-AzStorageBlob -Container "ContainerName" -Prefix "blob" | where Name -Like $ObjectName | Remove-AzureStorageBlob -Container "ambrosialogs" -Blob $ObjectName
 
 #Write-host "------------- Clean Up Azure File Share -------------"
 #Write-host 
