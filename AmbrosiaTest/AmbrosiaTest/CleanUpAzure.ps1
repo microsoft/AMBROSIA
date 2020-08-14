@@ -2,14 +2,19 @@
 #
 # Script to clean up the Azure tables.
 #
+#  NOTE: This script requires PowerShell 7.  Make sure that is the version that is in the path.
+#  NOTE: powershell.exe is < ver 6.  pwsh.exe is ver 6+
+#
 # Parameters:
 #	ObjectName - name of the objects in Azure you want to delete - can use "*" as wild card ... so "process" will NOT delete "process1" but "process*" will.
 #
 #	Note - might need Microsoft Azure Powershell add in - http://go.microsoft.com/fwlink/p/?linkid=320376&clcid=0x409
 #		 - also need to do this at powershell prompt: 
-#				- Install-Module -Name AzureRM -AllowClobber
-#				- Install-Module AzureRmStorageTable
+#               - Install-Module Az -AllowClobber
+#               - Install-Module AzTable -AllowClobber
+#               - Enable-AzureRmAlias -Scope CurrentUser
 #				- Get-Module -ListAvailable AzureRM   -->> This should show 5.6 (just needs to be above 4.4)
+#                - NOTE - might need to run  Set-ExecutionPolicy Unrestricted
 #		- This script requires environment variable
 #				- AZURE_STORAGE_CONN_STRING - Connection string used to connect to the Azure subscription
 #
@@ -39,7 +44,6 @@ if ([string]::IsNullOrEmpty($env:AZURE_STORAGE_CONN_STRING)) {
 	exit
 }
 
-
 Write-host "------------- Clean Up Azure tables and file share -------------"
 Write-host 
 Write-host "--- Connection Info ---"
@@ -57,35 +61,50 @@ Write-host "----------------"
 Write-host
 
 # Get a storage context
-$ctx = New-AzureStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $storageKey
+$ctx = New-AzStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $storageKey
+$container = "ambrosialogs"
 
 # Delete the table created by the Ambrosia
 Write-host "------------- Delete Ambrosia created tables filtered on $ObjectName -------------"
-Get-AzureStorageTable $ObjectName* -Context $ctx | Remove-AzureStorageTable -Context $ctx -Force
+Get-AzStorageTable $ObjectName* -Context $ctx | Remove-AzStorageTable -Context $ctx -Force
 
-# Clean up the data in the CRA (Immortal Coordintor) tables
+# Clean up the data in the CRA (Immortal Coordinator) tables
 Write-host "------------- Delete items in Azure table: craconnectiontable filtered on $ObjectName -------------"
 $tableName = "craconnectiontable"
-$storageTable = Get-AzureStorageTable -Name $tableName -Context $ctx 
-Get-AzureStorageTableRowAll -table $storageTable | Where-Object PartitionKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
+$storageTable = Get-AzStorageTable -Name $tableName -Context $ctx 
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Write-host 
 
 Write-host "------------- Delete items in Azure table: craendpointtable filtered on $ObjectName -------------"
 $tableName = "craendpointtable"
-$storageTable = Get-AzureStorageTable -Name $tableName -Context $ctx 
-Get-AzureStorageTableRowAll -table $storageTable | Where-Object PartitionKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
+$storageTable = Get-AzStorageTable -Name $tableName -Context $ctx 
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Write-host 
 
 Write-host "------------- Delete items in Azure table: cravertextable filtered on $ObjectName -------------"
 $tableName = "cravertextable"
-$storageTable = Get-AzureStorageTable -Name $tableName -Context $ctx 
-Get-AzureStorageTableRowAll -table $storageTable | Where-Object PartitionKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
-Get-AzureStorageTableRowAll -table $storageTable | Where-Object RowKey -Like $ObjectName | Remove-AzureStorageTableRow -table $storageTable 
+$storageTable = Get-AzStorageTable  -Name $tableName -Context $ctx 
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server0" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob0" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server1" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob1" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server2" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob2" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 
 Write-host 
 
 Write-host "------------- Delete Azure Blobs in Azure table: ambrosialogs filtered on $ObjectName -------------"
-#Get-AzStorageBlob -Container "ContainerName" -Prefix "blob" | where Name -Like $ObjectName | Remove-AzureStorageBlob -Container "ambrosialogs" -Blob $ObjectName
+$blobs = Get-AzStorageBlob -Container $container -Context $ctx | Where-Object Name -Like $ObjectName
+
+#Remove lease on each Blob
+$blobs | ForEach-Object{$_.ICloudBlob.BreakLease()}
+
+#Delete blobs in a specified container.
+$blobs| Remove-AzStorageBlob
 
 #Write-host "------------- Clean Up Azure File Share -------------"
 #Write-host 

@@ -232,8 +232,8 @@ namespace AmbrosiaTest
 
                 // For some reason, the powershell script does NOT work if called from bin/x64/debug directory. Setting working directory to origin fixes it
                 string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest\AmbrosiaTest";
-                string fileName = "powershell.exe";
-                string parameters = "-file CleanUpAzure.ps1 " + nameOfObjects + "*";
+                string fileName = "pwsh.exe";
+                string parameters = "-file CleanUpAzure.ps1 " + nameOfObjects;
                 bool waitForExit = false;
                 string testOutputLogFile = nameOfObjects + "_CleanAzureTables.log";
 
