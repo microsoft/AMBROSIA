@@ -7,8 +7,10 @@
 #
 # Parameters:
 #	ObjectName - name of the objects in Azure you want to delete - can use "*" as wild card ... so "process" will NOT delete "process1" but "process*" will.
+#   NOTE: Powershell 7 does not have a "Like" with a "*" in the Get-AzTableRow so can't just use ObjectName and delete all
+#        the rows that start with that ObjectName. 
 #
-#	Note - might need Microsoft Azure Powershell add in - http://go.microsoft.com/fwlink/p/?linkid=320376&clcid=0x409
+#	NOTE - might need Microsoft Azure Powershell add in - http://go.microsoft.com/fwlink/p/?linkid=320376&clcid=0x409
 #		 - also need to do this at powershell prompt: 
 #               - Install-Module Az -AllowClobber
 #               - Install-Module AzTable -AllowClobber
@@ -73,32 +75,55 @@ Write-host "------------- Delete items in Azure table: craconnectiontable filter
 $tableName = "craconnectiontable"
 $storageTable = Get-AzStorageTable -Name $tableName -Context $ctx 
 Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server0" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server1" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server2" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server3" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob0" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob1" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob2" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob3" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Write-host 
 
 Write-host "------------- Delete items in Azure table: craendpointtable filtered on $ObjectName -------------"
 $tableName = "craendpointtable"
 $storageTable = Get-AzStorageTable -Name $tableName -Context $ctx 
 Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server0" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server1" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server2" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server3" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob0" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob1" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob2" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob3" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Write-host 
 
 Write-host "------------- Delete items in Azure table: cravertextable filtered on $ObjectName -------------"
 $tableName = "cravertextable"
 $storageTable = Get-AzStorageTable  -Name $tableName -Context $ctx 
 Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
-Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server0" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
-Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob0" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server1" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
-Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob1" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server2" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"server3" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob0" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob1" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob2" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value $ObjectName"clientjob3" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 
+# BAD HACK HERE - can't do wildcard and like so put special case ones here - if figure out wild card with Get-AzTableRow then can delete this part
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value "multipleclientsperserverclientjob00" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value "multipleclientsperserverclientjob10" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value "multipleclientsperserverclientjob20" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
+Get-AzTableRow -table $storageTable.CloudTable -columnName "PartitionKey" -value "multipleclientsperserverclientjob30" -operator Equal | Remove-AzTableRow -table $storageTable.CloudTable
 Write-host 
 
 Write-host "------------- Delete Azure Blobs in Azure table: ambrosialogs filtered on $ObjectName -------------"
-$blobs = Get-AzStorageBlob -Container $container -Context $ctx | Where-Object Name -Like $ObjectName
+$blobs = Get-AzStorageBlob -Container $container -Context $ctx | Where-Object Name -Like $ObjectName*
 
 #Remove lease on each Blob
 $blobs | ForEach-Object{$_.ICloudBlob.BreakLease()}
