@@ -64,14 +64,6 @@ Write-host
 $ctx = New-AzStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $storageKey
 $container = "ambrosialogs"
 
-
-#*********************
-Get-AzTableRow -table $storageTable.CloudTable | Where-Object -Property “PartitionKey” -CLike “darrenge*” | Remove-AzTableRow -table $storageTable.CloudTable
-
-
-
-#******************
-
 # Delete the table created by the Ambrosia
 Write-host "------------- Delete Ambrosia created tables filtered on $ObjectName -------------"
 Get-AzStorageTable $ObjectName -Context $ctx | Remove-AzStorageTable -Context $ctx -Force
