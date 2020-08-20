@@ -81,6 +81,7 @@ namespace AmbrosiaTest
         }
 
         //**** Show PT Job Help 
+        /*
         [TestMethod]
         public void Help_ShowHelp_PTJob_Test()
         {
@@ -117,7 +118,7 @@ namespace AmbrosiaTest
             string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + current_framework;
             GenericVerifyHelp(testName, fileName, workingDir);
         }
-
+        */
 
 
         //************* Helper Method *****************
