@@ -78,10 +78,10 @@ set -x
 # Set environment vars and make available for other scripts
 export AMBROSIA_INSTANCE_NAME=$SERVERNAME 
 export AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT1 
-export COORDTAG=coordserv 
+export COORDTAG=immcoordserv
 export AMBROSIA_IMMORTALCOORDINATOR_LOG=$slog
   
- runAmbrosiaService.sh ./publish/Server --rp $PORT4 --sp $PORT3 -j $CLIENTNAME -s $SERVERNAME -n 1 -c & 
+ runAmbrosiaService.sh ./publish/Server -rp=$PORT4 -sp=$PORT3 -j=$CLIENTNAME -s=$SERVERNAME -n=1 -c & 
 
 set +x
 pid_server=$!
@@ -101,10 +101,10 @@ set -x
 # Set environment vars
 export AMBROSIA_INSTANCE_NAME=$CLIENTNAME 
 export AMBROSIA_IMMORTALCOORDINATOR_PORT=$CRAPORT2
-export COORDTAG=coordcli 
+export COORDTAG=immcoordcli
 export AMBROSIA_IMMORTALCOORDINATOR_LOG=$jlog 
 
-  runAmbrosiaService.sh ./publish/Job --rp $PORT2 --sp $PORT1 -j $CLIENTNAME -s $SERVERNAME --mms 65536 -n 2 -c 
+  runAmbrosiaService.sh ./publish/Job -rp=$PORT2 -sp=$PORT1 -j=$CLIENTNAME -s=$SERVERNAME -mms=65536 -n=2 -c 
 set +x
 
 echo
