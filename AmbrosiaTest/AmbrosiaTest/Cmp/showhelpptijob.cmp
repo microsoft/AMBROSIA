@@ -1,6 +1,5 @@
 Job name is required.
 Server name is required.
-Must specify either IC port or both send and receive ports.
 
 Usage: Job.exe [OPTIONS]
 Options:
@@ -18,4 +17,7 @@ Options:
       --nds, --noDescendingSize
                              Disable message descending size.
   -c, --autoContinue         Is continued automatically at start
+  -d, --ICDeploymentMode=VALUE
+                             IC deployment mode specification (SecondProc(
+                               Default)/InProcDeploy/InProcManual)
   -h, --help                 show this message and exit
