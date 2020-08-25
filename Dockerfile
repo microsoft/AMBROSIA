@@ -34,10 +34,10 @@ RUN $BUILDIT -o /ambrosia/bin/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.cspro
 
 # (2) Build the core executables and libraries:
 # ---------------------------------------------
-RUN $BUILDIT -o /ambrosia/bin/runtime     Ambrosia/Ambrosia/Ambrosia.csproj
 RUN $BUILDIT -o /ambrosia/bin/AzureBlobsLogPicker       Ambrosia/AzureBlobsLogPicker/AzureBlobsLogPicker.csproj
 RUN $BUILDIT -o /ambrosia/bin/GenericLogPicker       Ambrosia/GenericLogPicker/GenericLogPicker.csproj
 RUN $BUILDIT -o /ambrosia/bin/SharedAmbrosiaTools       Ambrosia/SharedAmbrosiaTools/SharedAmbrosiaTools.csproj
+RUN $BUILDIT -o /ambrosia/bin/runtime     Ambrosia/Ambrosia/Ambrosia.csproj
 RUN $BUILDIT -o /ambrosia/bin/AmbrosiaLib       Ambrosia/AmbrosiaLib/AmbrosiaLib.csproj
 RUN $BUILDIT -o /ambrosia/bin/coord       ImmortalCoordinator/ImmortalCoordinator.csproj
 RUN $BUILDIT -o /ambrosia/bin/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
