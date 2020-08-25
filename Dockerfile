@@ -34,15 +34,21 @@ RUN $BUILDIT -o /ambrosia/bin/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.cspro
 
 # (2) Build the core executables and libraries:
 # ---------------------------------------------
-RUN $BUILDIT -o /ambrosia/bin/coord       ImmortalCoordinator/ImmortalCoordinator.csproj
 RUN $BUILDIT -o /ambrosia/bin/runtime     Ambrosia/Ambrosia/Ambrosia.csproj
+RUN $BUILDIT -o /ambrosia/bin/AzureBlobsLogPicker       Ambrosia/AzureBlobsLogPicker/AzureBlobsLogPicker.csproj
+RUN $BUILDIT -o /ambrosia/bin/GenericLogPicker       Ambrosia/GenericLogPicker/GenericLogPicker.csproj
+RUN $BUILDIT -o /ambrosia/bin/SharedAmbrosiaTools       Ambrosia/SharedAmbrosiaTools/SharedAmbrosiaTools.csproj
+RUN $BUILDIT -o /ambrosia/bin/AmbrosiaLib       Ambrosia/AmbrosiaLib/AmbrosiaLib.csproj
+RUN $BUILDIT -o /ambrosia/bin/coord       ImmortalCoordinator/ImmortalCoordinator.csproj
 RUN $BUILDIT -o /ambrosia/bin/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
 
 RUN cd bin && \
     ln -s runtime/Ambrosia Ambrosia && \
+    ln -s AzureBlobsLogPicker/AzureBlobsLogPicker && \
+    ln -s GenericLogPicker/GenericLogPicker && \
+    ln -s SharedAmbrosiaTools/SharedAmbrosiaTools && \
     ln -s coord/ImmortalCoordinator && \ 
     ln -s unsafedereg/UnsafeDeregisterInstance
-
 
 # (2B) Reduce the size of our dotnet binary distribution:
 ADD ./Scripts/dedup_bindist.sh Scripts/
