@@ -25,10 +25,17 @@ ENV BUILDIT "dotnet publish $BLDFLAGS"
 # NOTE: use the following for a debug build of AMBROSIA:
 # ENV BLDFLAGS " -c Debug -f netcoreapp3.1 -r linux-x64 -p:DefineConstants=DEBUG "
 
-# (1) Build the core executables and libraries:
+# (1) Language binding: CSharp (depends on AmbrosiaLibCS on nuget)
+# ----------------------------------------------------------------
+ADD Clients/CSharp                /ambrosia/Clients/CSharp
+RUN $BUILDIT -o /ambrosia/bin/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj && \
+    cd bin && ln -s codegen/AmbrosiaCS 
+
+
+# (2) Build the core executables and libraries:
 # ---------------------------------------------
-RUN $BUILDIT -o /ambrosia/bin/runtime     Ambrosia/Ambrosia/Ambrosia.csproj
 RUN $BUILDIT -o /ambrosia/bin/coord       ImmortalCoordinator/ImmortalCoordinator.csproj
+RUN $BUILDIT -o /ambrosia/bin/runtime     Ambrosia/Ambrosia/Ambrosia.csproj
 RUN $BUILDIT -o /ambrosia/bin/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
 
 RUN cd bin && \
@@ -36,11 +43,6 @@ RUN cd bin && \
     ln -s coord/ImmortalCoordinator && \ 
     ln -s unsafedereg/UnsafeDeregisterInstance
 
-# (2) Language binding: CSharp (depends on AmbrosiaLibCS on nuget)
-# ----------------------------------------------------------------
-ADD Clients/CSharp                /ambrosia/Clients/CSharp
-RUN $BUILDIT -o /ambrosia/bin/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj && \
-    cd bin && ln -s codegen/AmbrosiaCS 
 
 # (2B) Reduce the size of our dotnet binary distribution:
 ADD ./Scripts/dedup_bindist.sh Scripts/
