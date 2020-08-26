@@ -41,21 +41,22 @@ case $mode in
       
       # Application 1: PTI
       # ----------------------------------------
-	  echo "*********  PTI ********************"
+	  echo "****************************************** Start PTI ********************************"
+      
       ./Scripts/internal/run_linux_PTI_docker.sh
 
       # Application 2: Hello World Sample
       # ----------------------------------------
-	  echo "*********  Hello World Sample ********************"
+	  #echo "*********  Hello World Sample ********************"
       # docker --rm ambrosia/ambrosia-dev ./Samples/HelloWorld/build_dotnetcore.sh
-      cd "$AMBROSIA_ROOT"/Samples/HelloWorld
-      docker build -t ambrosia-hello .
-      if [ ${AZURE_STORAGE_CONN_STRING:+defined} ]; then
+      #cd "$AMBROSIA_ROOT"/Samples/HelloWorld
+      #docker build -t ambrosia-hello .
+      #if [ ${AZURE_STORAGE_CONN_STRING:+defined} ]; then
 	        # Expects stdin, so we pipe 'yes' to it:
-	        docker run --rm --env "AZURE_STORAGE_CONN_STRING=$AZURE_STORAGE_CONN_STRING" \
-		             ambrosia-hello bash -c 'yes|./run_helloworld_both.sh' \
-		          || echo "Allowed failure for now."
-      fi
+	   #     docker run --rm --env "AZURE_STORAGE_CONN_STRING=$AZURE_STORAGE_CONN_STRING" \
+		#             ambrosia-hello bash -c 'yes|./run_helloworld_both.sh' \
+		 #         || echo "Allowed failure for now."
+      #fi
       
       echo "Examine Docker image sizes:"
       docker images 
