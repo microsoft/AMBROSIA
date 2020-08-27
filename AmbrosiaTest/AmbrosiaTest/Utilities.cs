@@ -881,7 +881,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            Thread.Sleep(3000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             return processID;
