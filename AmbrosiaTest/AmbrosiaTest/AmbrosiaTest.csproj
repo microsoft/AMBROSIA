@@ -76,6 +76,7 @@
     <Compile Include="BasicEXECalls_Test.cs" />
     <Compile Include="EndToEndStressIntegration_Test.cs" />
     <Compile Include="AMB_UnitTest.cs" />
+    <Compile Include="InProc_Test.cs" />
     <Compile Include="MTF_Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities.cs" />
