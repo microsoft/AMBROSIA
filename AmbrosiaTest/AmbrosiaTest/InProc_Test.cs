@@ -10,31 +10,6 @@ using System.Diagnostics;
 using System.Configuration;
 
 
-
-
-// ** ToDO
-// 1) Get TCP Port Unit Test working
-// 2) Fix the clean up of log files from PTI directory
-// 3) Update Server for inproc option
-// 4) Update unit test to do both client and server in proc
-// 5) Create plan for new tests (one in proc, one not, one port / one pipe, etc)
-// 6) Implement new tests
-// 7) Copy existing tests (not active / active) and modify for in proc
-
-/*
- 1.	The usual way with an external IC. Note that the storage type (logs or files) is determined by the ImmortalCoordinator command line when the IC is started as a second process:
- 
-Server.exe -j=jgjob -s=jgserver -rp=2001 -sp=2000      or
-Server.exe -j=jgjob -s=jgserver -rp=2001 -sp=2000 -d=secondproc
- 
-2.	IC in proc using the new Deploy gesture. Note that there are no longer rp and sp ports since we are using pipes instead of TCP. Also, you SHOULDN’T start an IC process since it is started in proc. Also note the icp flag, which is moved to here since there is no separate ImmortalCoordinator process. Also, this automatically chooses files as the log store, and picks up the log directory from the instance registration parameter (no override allowed right now in Server and Job command lines, but we could add if desired):
- 
-Server.exe -j=jgjob -s=jgserver -nbd -d=inprocdeploy -icp=2500
- 
-3.	IC in proc using a more manual gesture. You DO need to specify an rp and sp here since we are not using pipes with this gesture. This is something I did for O365 to make what they’re doing easier. I would expect everyone else to use approach #2 for in proc:
-Server.exe -j=jgjob -s=jgserver -rp=2001 -sp=2000 -nbd -d=inprocmanual -icp=2500
- */
-
 namespace AmbrosiaTest
 {
     /// <summary>
@@ -73,7 +48,7 @@ namespace AmbrosiaTest
             }
         }
 
-        //** Basic end to end test for the InProc TCP feature with minimal rounds and message size of 1GB ... could make it smaller and it would be faster.
+        //** Basic end to end test for the InProc TCP feature where Client is InProc and Server is Two Proc
         [TestMethod]
         public void AMB_InProc_TCP_ClientOnly_Test()
         {
@@ -144,10 +119,6 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(serverProcessID);
             MyUtils.KillProcess(ImmCoordProcessID2);
 
-            //Verify AMB 
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
-
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
 
@@ -155,10 +126,11 @@ namespace AmbrosiaTest
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
 
             // Verify integrity of Ambrosia logs by replaying
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+            // Unable to verify when client files in different location than server log - TO DO: modify method to do this
+  //          MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
         }
 
-        //** Basic end to end test for the InProc TCP feature with minimal rounds and message size of 1GB ... could make it smaller and it would be faster.
+        //** Simple end to end where Client is InProc Pipe and Server is two proc
         [TestMethod]
         public void AMB_InProc_Pipe_ClientOnly_Test()
         {
@@ -229,18 +201,16 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(serverProcessID);
             MyUtils.KillProcess(ImmCoordProcessID2);
 
-            //Verify AMB 
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
-
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
 
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
 
-            // Verify integrity of Ambrosia logs by replaying
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+            // Verify integrity of Ambrosia logs by replaying 
+            // To verify Server in one location and client in another would take bigger code change
+            // Not that crucial to do ... but TO DO: make it so verify log in two different places.
+            //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
         }
 
 

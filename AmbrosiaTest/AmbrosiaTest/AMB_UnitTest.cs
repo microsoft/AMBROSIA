@@ -486,10 +486,6 @@ namespace AmbrosiaTest
             };
             MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
 
-            //ImmCoord2
-            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
-            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
-
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob,MyUtils.deployModeInProcManual,"1500");
@@ -499,7 +495,7 @@ namespace AmbrosiaTest
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
-            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0, MyUtils.deployModeInProcManual,"2500");
 
             //Delay until client is done - also check Server just to make sure
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 5, false, testName, true); // number of bytes processed
@@ -508,7 +504,6 @@ namespace AmbrosiaTest
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID);
             MyUtils.KillProcess(serverProcessID);
-            MyUtils.KillProcess(ImmCoordProcessID2);
 
             //Verify AMB 
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
@@ -523,6 +518,7 @@ namespace AmbrosiaTest
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
         }
+
 
         //** Basic end to end test for the InProc TCP feature with minimal rounds and message size of 1GB ... could make it smaller and it would be faster.
         [TestMethod]
@@ -571,10 +567,6 @@ namespace AmbrosiaTest
             };
             MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
 
-            //ImmCoord2
-            string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
-            int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
-
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob,MyUtils.deployModeInProc,"1500");
@@ -584,7 +576,7 @@ namespace AmbrosiaTest
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
-            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0, MyUtils.deployModeInProc, "2500");
 
             //Delay until client is done - also check Server just to make sure
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 5, false, testName, true); // number of bytes processed
@@ -593,7 +585,6 @@ namespace AmbrosiaTest
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID);
             MyUtils.KillProcess(serverProcessID);
-            MyUtils.KillProcess(ImmCoordProcessID2);
 
             //Verify AMB 
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
