@@ -305,6 +305,23 @@ namespace AmbrosiaTest
                     Assert.Fail("<CleanupAmbrosiaLogFiles> Unable to delete Log Dir:" + ambrosiaLogDir);
                 }
 
+                // Clean up the InProc files now.  Since InProc, they are relative to PTI
+                string PTIAmbrosiaLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+                if (Directory.Exists(PTIAmbrosiaLogDir))
+                {
+                    Directory.Delete(PTIAmbrosiaLogDir, true);
+                }
+
+                // Give it a second to make sure - had timing issues where wasn't fully deleted by time got here
+                Thread.Sleep(1000);
+
+                // Double check to make sure it is deleted and not locked by something else
+                if (Directory.Exists(PTIAmbrosiaLogDir))
+                {
+                    FailureSupport("");
+                    Assert.Fail("<CleanupAmbrosiaLogFiles> Unable to delete PTI Log Dir:" + PTIAmbrosiaLogDir);
+                }
+
             }
             catch (Exception e)
             {
@@ -505,11 +522,19 @@ namespace AmbrosiaTest
 
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
+            if (Directory.Exists(ambrosiaLogDir) ==false)
+            {
+                // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
+                ambrosiaLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+            }
 
             // used to get log file
-            string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
-            string ambrosiaServerLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "server_" + CurrentVersion;
+            //            string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
+            //            string ambrosiaServerLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "server_" + CurrentVersion;
+            string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
+            string ambrosiaServerLogDir = ambrosiaLogDir + "\\" + testName + "server_" + CurrentVersion;
+
             string startingClientChkPtVersionNumber = "1";
             string clientFirstFile = "";
 
@@ -600,7 +625,7 @@ namespace AmbrosiaTest
             AMB_Settings AMB1 = new AMB_Settings
             {
                 AMB_ServiceName = clientJobName,
-                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_ServiceLogPath = ambrosiaLogDir + "\\",
                 AMB_StartingCheckPointNum = startingClientChkPtVersionNumber,
                 AMB_Version = CurrentVersion.ToString(),
                 AMB_TestingUpgrade = "N",
@@ -614,7 +639,7 @@ namespace AmbrosiaTest
             AMB_Settings AMB2 = new AMB_Settings
             {
                 AMB_ServiceName = serverName,
-                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_ServiceLogPath = ambrosiaLogDir + "\\",
                 AMB_StartingCheckPointNum = startingServerChkPtVersionNumber,
                 AMB_Version = CurrentVersion.ToString(),
                 AMB_TestingUpgrade = "N",
@@ -857,7 +882,7 @@ namespace AmbrosiaTest
         }
 
         // Starts the server.exe from PerformanceTestUninterruptible.  
-        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0)
+        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0, string deployMode = "", string ICPort = "")
         {
 
             // Configure upgrade properly
@@ -872,11 +897,38 @@ namespace AmbrosiaTest
             if (NetFrameworkTestRun)
                 current_framework = NetFramework;
 
-            // Launch the server process with these values
+            // Launch the server process with these values based on deploy mode
             string workingDir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Server.exe";
-            string argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
-                + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c";
+            string argString = "";
+
+            // Determine the arg based on deployMode
+            // Original & default method where need separate ImmCoord call
+            if ((deployMode == "") || (deployMode == deployModeSecondProc))
+            {
+                argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
+                          + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c";
+
+                if (deployMode != "")
+                {
+                    argString = argString + " -d=" + deployModeSecondProc;
+                }
+            }
+
+            // In proc using Pipe - No longer need rp and sp ports since we are using pipes instead of TCP. ImmCoord port is used - more commonly used in proc scenario
+            if (deployMode == deployModeInProc)
+            {
+                argString = "-j=" + perfJobName + " -s=" + perfServerName 
+                          + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
+                          + " -d=" + deployModeInProc + " -icp=" + ICPort;
+            }
+            // In proc using TCP - this is the TCP port call where need rp & sp but still in single proc per job or server
+            if (deployMode == deployModeInProcManual)
+            {
+                argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
+                        + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
+                        + " -d=" + deployModeInProcManual + " -icp=" + ICPort;
+            }
 
             // add upgrade switch if upgradeing
             if (upgradeString != null && upgradeString != "N")
