@@ -1402,6 +1402,15 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocpipeclientonly");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocpipeclientonly");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpserveronly");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocclientpipeservertcp");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocclienttcpserverpipe");
+            Thread.Sleep(2000);
+
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
