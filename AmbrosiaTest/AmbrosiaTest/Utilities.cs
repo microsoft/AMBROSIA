@@ -941,7 +941,11 @@ namespace AmbrosiaTest
                 Assert.Fail("<StartPerfServer> Perf Server was not started.  ProcessID <=0 ");
             }
 
-            // Give it a few seconds to start
+            // Give it a few seconds to start -- give extra time if starting IC as part of this too
+            if (ICPort != "")
+            {
+                Thread.Sleep(2000);
+            }
             Thread.Sleep(3000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
@@ -1026,7 +1030,11 @@ namespace AmbrosiaTest
                 Assert.Fail("<StartPerfClientJob> Perf Client was not started.  ProcessID <=0 ");
             }
 
-            // Give it a few seconds to start
+            // Give it a few seconds to start -- give extra time if starting IC as part of this too
+            if (ICPort != "")
+            {
+                Thread.Sleep(2000);
+            }
             Thread.Sleep(2000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
@@ -1410,6 +1418,14 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocclienttcpserverpipe");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocbasictest");
+            Thread.Sleep(2000);
+//            MyUtils.CleanupAzureTables("inprocbasictest");
+  //          Thread.Sleep(2000);
+    //        MyUtils.CleanupAzureTables("inprocbasictest");
+      //      Thread.Sleep(2000);
+
+
 
 
             // Give it a few second to clean things up a bit more
