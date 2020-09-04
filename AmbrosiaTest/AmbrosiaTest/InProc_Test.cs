@@ -25,8 +25,8 @@ using System.Configuration;
 - Client Side Upgrade
 * DoubleKill Restart Job First
 * Doublekill Restart server first
-* Giant Check point
-* Giant Message
+- Giant Check point
+- Giant Message
 * Kill Job
 * Kill Server
 * Multiple Clients per server
@@ -839,6 +839,84 @@ namespace AmbrosiaTest
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
         }
+
+        //** This test does 5 rounds of messages starting with 64MB and cutting in half each time
+        //** Basically same as the basic test but passing giant message - the difference is in the job.exe call and that is it
+        [TestMethod]
+        public void AMB_InProc_GiantMessage_Test()
+        {
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "inprocgiantmessagetest";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "5368709120";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "67108864", "5", logOutputFileName_ClientJob,MyUtils.deployModeInProc,"1500");
+
+            // Give it a few seconds to start
+            Thread.Sleep(2000);
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0, MyUtils.deployModeInProc, "2500");
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
 
 
         [TestCleanup()]
