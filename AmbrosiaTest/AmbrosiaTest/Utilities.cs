@@ -1033,7 +1033,7 @@ namespace AmbrosiaTest
             // Give it a few seconds to start -- give extra time if starting IC as part of this too
             if (ICPort != "")
             {
-                Thread.Sleep(2000);
+                Thread.Sleep(3000);
             }
             Thread.Sleep(2000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
@@ -1422,8 +1422,8 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocclientsideupgrade");
             Thread.Sleep(2000);
-            //        MyUtils.CleanupAzureTables("inprocbasictest");
-            //      Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocgiantcheckpointtest");
+            Thread.Sleep(2000);
 
 
 
