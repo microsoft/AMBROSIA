@@ -1552,6 +1552,8 @@ namespace AmbrosiaTest
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
+            string killJobMessage = "Migrating or upgrading. Must commit suicide since I'm the primary";
+
 
             Utilities MyUtils = new Utilities();
 
@@ -1605,8 +1607,8 @@ namespace AmbrosiaTest
             string logOutputFileName_Server = testName + "_Server.log";
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
-            // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
+            // Give it 4 seconds to do something before killing it
+            Thread.Sleep(4000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // DO NOT Kill both Job (and ImmCoord) and Server (and ImmCoord)
@@ -1635,6 +1637,9 @@ namespace AmbrosiaTest
             //Delay until client is done - also check Server just to make sure
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted, byteSize, 20, false, testName, true); // Total bytes received
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_Restarted, byteSize, 20, false, testName, true);
+
+            // verify actually killed first one
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord1, killJobMessage, 5, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID_Restarted);
