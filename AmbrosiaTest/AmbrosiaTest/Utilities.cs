@@ -1426,6 +1426,11 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocgiantmessagetest");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocdoublekilljob");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocdoublekillserver");
+            Thread.Sleep(2000);
+
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
