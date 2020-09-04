@@ -1424,9 +1424,8 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocgiantcheckpointtest");
             Thread.Sleep(2000);
-
-
-
+            MyUtils.CleanupAzureTables("inprocgiantmessagetest");
+            Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
