@@ -1420,10 +1420,10 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocbasictest");
             Thread.Sleep(2000);
-//            MyUtils.CleanupAzureTables("inprocbasictest");
-  //          Thread.Sleep(2000);
-    //        MyUtils.CleanupAzureTables("inprocbasictest");
-      //      Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocclientsideupgrade");
+            Thread.Sleep(2000);
+            //        MyUtils.CleanupAzureTables("inprocbasictest");
+            //      Thread.Sleep(2000);
 
 
 
