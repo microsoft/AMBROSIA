@@ -29,7 +29,7 @@ using System.Configuration;
 - Giant Message
 - Kill Job
 - Kill Server
-* Multiple Clients per server
+- Multiple Clients per server
 * Override Options
 * Save Logs to Blob
 * Save Logs to File and Blob
@@ -1291,6 +1291,153 @@ namespace AmbrosiaTest
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
+        //** Multiple clientscenario where many clients connect to a server
+        [TestMethod]
+        public void AMB_InProc_MultipleClientsPerServer_Test()
+        {
+
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "inprocmultipleclientsperserver";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "12884901888";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Server
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2 - Job 1
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName + "0",
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //AMB3 - Job 2
+            string logOutputFileName_AMB3 = testName + "_AMB3.log";
+            AMB_Settings AMB3 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName + "1",
+                AMB_PortAppReceives = "3000",
+                AMB_PortAMBSends = "3001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB3, logOutputFileName_AMB3, AMB_ModeConsts.RegisterInstance);
+
+            //AMB4 - Job 3
+            string logOutputFileName_AMB4 = testName + "_AMB4.log";
+            AMB_Settings AMB4 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName + "2",
+                AMB_PortAppReceives = "4000",
+                AMB_PortAMBSends = "4001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB4, logOutputFileName_AMB4, AMB_ModeConsts.RegisterInstance);
+
+            //AMB5 - job 4
+            string logOutputFileName_AMB5 = testName + "_AMB5.log";
+            AMB_Settings AMB5 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName + "3",
+                AMB_PortAppReceives = "5000",
+                AMB_PortAMBSends = "5001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB5, logOutputFileName_AMB5, AMB_ModeConsts.RegisterInstance);
+
+            // Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server, 4, false,0, MyUtils.deployModeInProc, "1500");
+
+            // Client call
+            // For multiple clients, you have a "root" name and each of the client names are then root name + instance number starting at 0
+            string logOutputFileName_ClientJob0 = testName + "_ClientJob0.log";
+            int clientJobProcessID0 = MyUtils.StartPerfClientJob("2001", "2000", clientJobName + "0", serverName, "65536", "3", logOutputFileName_ClientJob0,MyUtils.deployModeInProc,"2500");
+
+            string logOutputFileName_ClientJob1 = testName + "_ClientJob1.log";
+            int clientJobProcessID1 = MyUtils.StartPerfClientJob("3001", "3000", clientJobName + "1", serverName, "65536", "3", logOutputFileName_ClientJob1, MyUtils.deployModeInProc, "3500");
+
+            string logOutputFileName_ClientJob2 = testName + "_ClientJob2.log";
+            int clientJobProcessID2 = MyUtils.StartPerfClientJob("4001", "4000", clientJobName + "2", serverName, "65536", "3", logOutputFileName_ClientJob2, MyUtils.deployModeInProc, "4500");
+
+            string logOutputFileName_ClientJob3 = testName + "_ClientJob3.log";
+            int clientJobProcessID3 = MyUtils.StartPerfClientJob("5001", "5000", clientJobName + "3", serverName, "65536", "3", logOutputFileName_ClientJob3, MyUtils.deployModeInProc, "5500");
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob0, byteSize, 25, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob1, byteSize, 15, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob2, byteSize, 15, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob3, byteSize, 15, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(serverProcessID);
+
+            MyUtils.KillProcess(clientJobProcessID0);
+            MyUtils.KillProcess(clientJobProcessID1);
+            MyUtils.KillProcess(clientJobProcessID2);
+            MyUtils.KillProcess(clientJobProcessID3);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob0);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob1);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob2);
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob3);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+
+            // Verify log files
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version, "4");
+
         }
 
 
