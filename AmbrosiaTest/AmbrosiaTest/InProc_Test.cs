@@ -30,7 +30,7 @@ using System.Configuration;
 - Kill Job
 - Kill Server
 - Multiple Clients per server
-* Save Logs to Blob
+- Save Logs to Blob
 * Save Logs to File and Blob
 * Upgrade Server After Server
 * Upgrade Server Before Server
