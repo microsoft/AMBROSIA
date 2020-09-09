@@ -1436,7 +1436,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocmultipleclientsperserver");
             Thread.Sleep(2000);
-            //MyUtils.CleanupAzureTables("inprockillservertest");
+            MyUtils.CleanupAzureTables("inprocsavelogtoblob");
             Thread.Sleep(2000);
             //MyUtils.CleanupAzureTables("inprockillservertest");
             Thread.Sleep(2000);
