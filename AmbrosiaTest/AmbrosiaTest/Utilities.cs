@@ -944,7 +944,7 @@ namespace AmbrosiaTest
             // Give it a few seconds to start -- give extra time if starting IC as part of this too
             if (ICPort != "")
             {
-                Thread.Sleep(4000);
+                Thread.Sleep(6000);
             }
             Thread.Sleep(3000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
@@ -1033,7 +1033,7 @@ namespace AmbrosiaTest
             // Give it a few seconds to start -- give extra time if starting IC as part of this too
             if (ICPort != "")
             {
-                Thread.Sleep(4000);
+                Thread.Sleep(6000);
             }
             Thread.Sleep(2000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
@@ -1376,8 +1376,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("asyncactiveactivebasic");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("asyncactiveactivekillall");
-            Thread.Sleep(2000);
+
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
@@ -1473,6 +1472,12 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocclientpipeservertcp");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpkilljobtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpkillservertest");
+            Thread.Sleep(2000);
+            //            MyUtils.CleanupAzureTables("asyncactiveactivekillall");
+            //            Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
