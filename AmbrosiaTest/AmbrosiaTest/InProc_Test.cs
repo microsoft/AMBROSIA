@@ -31,9 +31,9 @@ using System.Configuration;
 - Kill Server
 - Multiple Clients per server
 - Save Logs to Blob
-* Save Logs to File and Blob
-* Upgrade Server After Server
-* Upgrade Server Before Server
+- Save Logs to File and Blob
+- Upgrade Server After Server
+- Upgrade Server Before Server
 
  ** In Proc - TCP  (TO DO) **
 * Kill Job
@@ -42,7 +42,6 @@ using System.Configuration;
 * Save Logs to Blob
 * Upgrade Server
 * Upgrade Client
-* Override options
   
 */
 
@@ -1513,6 +1512,285 @@ namespace AmbrosiaTest
             //** Then safe to say that blob worked. 
         }
 
+
+        //** This saves client info to blob but server info to a file
+        [TestMethod]
+        public void AMB_InProc_SaveLogsToFileAndBlob_Test()
+        {
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "inprocfileandblob";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaBlobLoc = testName + "blobstore\\";  // specify the name of the blob instead of taking default by making blank
+            string ambrosiaFileLoc = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "1073741824";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaBlobLoc,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaFileLoc,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "0"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob,MyUtils.deployModeInProc,"1500");
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0,MyUtils.deployModeInProc,"2500");
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+
+            //** Not sure how to verify if the blob exists ... probably safe assumption that if client and server get the data,
+            //** Then safe to say that blob worked. 
+        }
+
+        //** Upgrade scenario where the server is upgraded server after server is finished  - all done InProc
+        [TestMethod]
+        public void AMB_InProc_UpgradeServerAFTERServerDone_Test()
+        {
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "inprocupgradeafterserverdone";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "4294967296";
+            string newUpgradedPrimary = "becoming upgraded primary";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "9"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "9"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "4", logOutputFileName_ClientJob,MyUtils.deployModeInProc,"1500");
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0,MyUtils.deployModeInProc,"2500");
+
+            // Wait for client job to finish
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 30, false, testName, true); // number of bytes processed
+
+            // kill Server 
+            MyUtils.KillProcess(serverProcessID);
+
+            // Run AMB again with new version # upped by 9 (10)
+            string logOutputFileName_AMB2_Upgraded = testName + "_AMB2_Upgraded.log";
+            AMB_Settings AMB2_Upgraded = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "9",
+                AMB_UpgradeToVersion = "10"
+            };
+            MyUtils.CallAMB(AMB2_Upgraded, logOutputFileName_AMB2_Upgraded, AMB_ModeConsts.RegisterInstance);
+
+            // start server again but with Upgrade = true
+            string logOutputFileName_Server_upgraded = testName + "_Server_upgraded.log";
+            int serverProcessID_upgraded = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_upgraded, 1, true,0,MyUtils.deployModeInProc,"2500");
+
+            //Delay until server upgrade is done
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, byteSize, 30, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID_upgraded);
+
+            // Also verify upgraded server showing new upgraded primary
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, newUpgradedPrimary, 5, false, testName, true);
+
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_upgraded);
+
+            // Verify integrity of Ambrosia logs by replaying
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+        }
+
+
+        //** Upgrade scenario where the server is upgraded server before client is finished - all done InProc
+        [TestMethod]
+        public void AMB_InProc_UpgradeServerBEFOREServerDone_Test()
+        {
+
+            //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
+            string testName = "inprocupgradebeforeserverdone";
+            string clientJobName = testName + "clientjob";
+            string serverName = testName + "server";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string byteSize = "13958643712";
+
+            Utilities MyUtils = new Utilities();
+
+            //AMB1 - Job
+            string logOutputFileName_AMB1 = testName + "_AMB1.log";
+            AMB_Settings AMB1 = new AMB_Settings
+            {
+                AMB_ServiceName = clientJobName,
+                AMB_PortAppReceives = "1000",
+                AMB_PortAMBSends = "1001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "10"
+            };
+            MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
+
+            //AMB2
+            string logOutputFileName_AMB2 = testName + "_AMB2.log";
+            AMB_Settings AMB2 = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "10"
+            };
+            MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob,MyUtils.deployModeInProc,"1500");
+
+            //Server Call
+            string logOutputFileName_Server = testName + "_Server.log";
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0,MyUtils.deployModeInProc,"2500");
+
+            // Give it 5 seconds to do something before killing it
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // kill Server 
+            MyUtils.KillProcess(serverProcessID);
+
+            // Run AMB again with new version # upped by 1 (11)
+            string logOutputFileName_AMB2_Upgraded = testName + "_AMB2_Upgraded.log";
+            AMB_Settings AMB2_Upgraded = new AMB_Settings
+            {
+                AMB_ServiceName = serverName,
+                AMB_PortAppReceives = "2000",
+                AMB_PortAMBSends = "2001",
+                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_CreateService = "A",
+                AMB_PauseAtStart = "N",
+                AMB_PersistLogs = "Y",
+                AMB_NewLogTriggerSize = "1000",
+                AMB_ActiveActive = "N",
+                AMB_Version = "10",
+                AMB_UpgradeToVersion = "11"
+            };
+            MyUtils.CallAMB(AMB2_Upgraded, logOutputFileName_AMB2_Upgraded, AMB_ModeConsts.RegisterInstance);
+
+            // start server again but with Upgrade = true
+            string logOutputFileName_Server_upgraded = testName + "_Server_upgraded.log";
+            int serverProcessID_upgraded = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_upgraded, 1, true,0,MyUtils.deployModeInProc,"2500");
+
+            //Delay until client is done - also check Server just to make sure
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 25, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, byteSize, 15, false, testName, true);
+
+            // Stop things so file is freed up and can be opened in verify
+            MyUtils.KillProcess(clientJobProcessID);
+            MyUtils.KillProcess(serverProcessID_upgraded);
+            // Verify Client
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            // Verify Server
+            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_upgraded);
+
+        }
 
 
 
