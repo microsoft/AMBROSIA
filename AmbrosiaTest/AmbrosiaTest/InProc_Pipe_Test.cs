@@ -241,8 +241,6 @@ namespace AmbrosiaTest
             //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
         }
 
-
-
         //** Basic end to end test starts job and server and runs a bunch of bytes through
         //** Only a few rounds but more extensive then unit tests
         [TestMethod]
