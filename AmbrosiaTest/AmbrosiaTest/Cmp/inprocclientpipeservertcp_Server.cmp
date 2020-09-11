@@ -1,0 +1,14 @@
+ImmortalCoordinator -i=inprocclientpipeservertcpserver -p=2500
+*X* Trying to connect IC and Language Binding
+*X* Trying to connect IC and Language Binding
+*X* Trying to do second connection between IC and Language Binding
+*X* At checkpoint, received 0 messages
+*X* At checkpoint, received 0 messages
+*X* becoming primary
+*X* Press enter to terminate program.
+*X* Server in Entry Point
+*X* At checkpoint, received 969549 messages
+*X* At checkpoint, received 969549 messages
+Received 1024 MB so far
+Bytes received: 1073741824
+DONE
