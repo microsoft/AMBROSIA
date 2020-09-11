@@ -323,6 +323,8 @@ namespace Server
                         {
                             // nothing to call on c, just doing this for calling Dispose.
                             Console.WriteLine("*X* Press enter to terminate program.");
+                            // Doing this wait to make the bash script happy, which automatically move past the Readline.
+                            Thread.Sleep(1000 * 60 * 60 * 24);
                             Console.ReadLine();
                         }
                         break;
@@ -363,6 +365,7 @@ namespace Server
                     Console.ReadLine();
                 }
             }
+            Console.WriteLine("*X* Terminating.");
         }
 
         private static void ParseAndValidateOptions(string[] args)
