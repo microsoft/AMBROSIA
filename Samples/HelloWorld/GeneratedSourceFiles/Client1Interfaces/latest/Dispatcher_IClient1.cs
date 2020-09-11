@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Ambrosia;
 using static Ambrosia.StreamCommunicator;
-using LocalAmbrosiaRuntime;
 
 namespace Client1
 {

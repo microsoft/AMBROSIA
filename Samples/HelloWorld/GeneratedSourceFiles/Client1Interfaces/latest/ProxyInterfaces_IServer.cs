@@ -12,7 +12,8 @@ namespace Server
     /// </summary>
     public interface IServer
     {
-        Task<Int32> ReceiveMessageAsync(System.String p_0);
+        Task AddRespondeeAsync(System.String p_0);
+        Task ReceiveMessageAsync(System.String p_0);
     }
 
     /// <summary>
@@ -22,7 +23,7 @@ namespace Server
     [Ambrosia.InstanceProxy(typeof(IServer))]
     public interface IServerProxy
     {
-        Task<Int32> ReceiveMessageAsync(System.String p_0);
+        void AddRespondeeFork(System.String p_0);
         void ReceiveMessageFork(System.String p_0);
     }
 }

@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netcoreapp3.1</TargetFrameworks>
-    <Platforms>x64</Platforms>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AssemblyName>IClient1</AssemblyName>
     <RootNamespace>IClient1</RootNamespace>
   </PropertyGroup>
