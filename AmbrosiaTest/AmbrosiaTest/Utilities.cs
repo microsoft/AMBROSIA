@@ -1326,13 +1326,13 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("upgradeactiveactiveprimaryonly");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("upgradeclient");
+            Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("multipleclientsperserver");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("giantcheckpointtest");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("overrideoptions");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("clientsideupgrade");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("savelogtoblob");
             Thread.Sleep(2000);
@@ -1411,8 +1411,6 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocbasictest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocclientsideupgrade");
-            Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocgiantcheckpointtest");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocgiantmessagetest");
@@ -1430,6 +1428,8 @@ namespace AmbrosiaTest
             MyUtils.CleanupAzureTables("inprocsavelogtoblob");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocfileandblob");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocupgradeclient");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocupgradeafterserverdone");
             Thread.Sleep(2000);
@@ -1476,8 +1476,14 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inproctcpkillservertest");
             Thread.Sleep(2000);
-            //            MyUtils.CleanupAzureTables("asyncactiveactivekillall");
-            //            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpfileandblob");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpsavelogtoblob");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpupgradeserver");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpupgradeclient");
+            Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);

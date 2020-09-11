@@ -1544,10 +1544,10 @@ namespace AmbrosiaTest
         //** Similar to Double Kill restart but it doesn't actually kill it. It just restarts it and it
         //** Takes on the new restarted process and original process dies.  It is a way to do client upgrade
         [TestMethod]
-        public void AMB_ClientSideUpgrade_Test()
+        public void AMB_UpgradeClient_Test()
         {
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
-            string testName = "clientsideupgrade";
+            string testName = "upgradeclient";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";

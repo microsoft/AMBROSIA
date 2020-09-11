@@ -5,34 +5,6 @@ using System.Windows.Forms; // need this to handle threading issue on sleeps
 using System.Configuration;
 
 
-//**** Tests (TO DO) ***
-/*  TCP / Pipe?
-- Client only pipe  - other two proc
-- Server only pipe  - other two proc
-- Client only TCP   - other two proc
-- Server only TCP  - other two proc
-- Client Pipe / Server TCP 
-- Client TCP / Server Pipe
-- 
-*** InProc - Pipe (TO DO)  **
-- Basic Test
-- Client Side Upgrade
-- DoubleKill Restart Job First
-- Doublekill Restart server first
-- Giant Check point
-- Giant Message
-- Kill Job
-- Kill Server
-- Multiple Clients per server
-- Save Logs to Blob
-- Save Logs to File and Blob
-- Upgrade Server After Server
-- Upgrade Server Before Server
-  
-*/
-
-
-
 namespace AmbrosiaTest
 {
     /// <summary>
@@ -70,8 +42,6 @@ namespace AmbrosiaTest
                 testContextInstance = value;
             }
         }
-
-
 
 
         //** Simple end to end where Client is InProc Pipe and Server is two proc
@@ -319,10 +289,10 @@ namespace AmbrosiaTest
         //** Similar to Double Kill restart but it doesn't actually kill it. It just restarts it and it
         //** takes on the new restarted process and original process dies.  It is a way to do client upgrade
         [TestMethod]
-        public void AMB_InProc_ClientSideUpgrade_Test()
+        public void AMB_InProc_UpgradeClient_Test()
         {
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
-            string testName = "inprocclientsideupgrade";
+            string testName = "inprocupgradeclient";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
