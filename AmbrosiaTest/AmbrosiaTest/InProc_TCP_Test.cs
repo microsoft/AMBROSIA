@@ -552,7 +552,7 @@ namespace AmbrosiaTest
         public void AMB_InProc_TCP_SaveLogsToFileAndBlob_Test()
         {
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
-            string testName = "inproctcpfileandblob";
+            string testName = "inproctcpfileblob";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaBlobLoc = testName + "blobstore\\";  // specify the name of the blob instead of taking default by making blank
@@ -626,7 +626,7 @@ namespace AmbrosiaTest
         public void AMB_InProc_TCP_SaveLogsToBlob_Test()
         {
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
-            string testName = "inproctcpsavelogtoblob";
+            string testName = "inproctcpblob";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaBlobLoc = "";// this is where you specify the name of the blob - blank is default
@@ -744,11 +744,11 @@ namespace AmbrosiaTest
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob, MyUtils.deployModeInProc, "1500");
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob, MyUtils.deployModeInProcManual, "1500");
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
-            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false, 0, MyUtils.deployModeInProc, "2500");
+            int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false, 0, MyUtils.deployModeInProcManual, "2500");
 
             // Give it 5 seconds to do something before killing it
             Thread.Sleep(5000);
@@ -777,7 +777,7 @@ namespace AmbrosiaTest
 
             // start server again but with Upgrade = true
             string logOutputFileName_Server_upgraded = testName + "_Server_upgraded.log";
-            int serverProcessID_upgraded = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_upgraded, 1, true, 0, MyUtils.deployModeInProc, "2500");
+            int serverProcessID_upgraded = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_upgraded, 1, true, 0, MyUtils.deployModeInProcManual, "2500");
 
             //Delay until client is done - also check Server just to make sure
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 25, false, testName, true); // number of bytes processed
