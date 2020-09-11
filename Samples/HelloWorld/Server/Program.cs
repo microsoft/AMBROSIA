@@ -1,6 +1,9 @@
 ﻿using Ambrosia;
+using Client3;
 using Server;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,49 +32,62 @@ namespace Server
             [DataMember]
             int _messagesReceived = 0;
 
+            [DataMember]
+            List<IClient3Proxy> _respondeeList;
+
             public Server()
             {
             }
 
-            public async Task<int> ReceiveMessageAsync(string message)
+            public async Task ReceiveMessageAsync(string message)
             {
                 using (ConsoleColorScope.SetForeground(ConsoleColor.Green))
                 {
                     Console.WriteLine("\n!! SERVER Received message from a client: " + message);
                 }
-
                 _messagesReceived++;
-                return _messagesReceived;
+                foreach (var r in _respondeeList)
+                {
+                    r.ResponseFromServerFork(_messagesReceived);
+                }
+            }
+
+            public async Task AddRespondeeAsync(string respondeeName)
+            {
+                IClient3Proxy newRespondee;
+                try
+                {
+                    newRespondee = GetProxy<IClient3Proxy>(respondeeName);
+                } catch { return; }
+                _respondeeList.Add(newRespondee);
             }
 
             protected override async Task<bool> OnFirstStart()
             {
+                _respondeeList = new List<IClient3Proxy>();
                 return true;
             }
         }
 
         static void Main(string[] args)
         {
-            int receivePort = 2001;
-            int sendPort = 2000;
+            int coordinatorPort = 2500;
             string serviceName = "server";
 
             if (args.Length >= 1)
             {
-                receivePort = int.Parse(args[0]);
-            }
-            if (args.Length >= 2)
-            {
-                sendPort = int.Parse(args[1]);
-            }
-            if (args.Length == 3)
-            {
-                serviceName = args[2];
+                serviceName = args[0];
             }
 
-            using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
+            
+            using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
             {
-                Thread.Sleep(14 * 24 * 3600 * 1000);
+                StartupParamOverrides.OutputStream = coordinatorOutput;
+                GenericLogsInterface.SetToGenericLogs();
+                using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), coordinatorPort))
+                {
+                    Thread.Sleep(14 * 24 * 3600 * 1000);
+                }
             }
         }
     }

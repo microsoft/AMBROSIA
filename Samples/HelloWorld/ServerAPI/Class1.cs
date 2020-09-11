@@ -4,6 +4,7 @@ namespace Server
 {
     public interface IServer
     {
-        int ReceiveMessage(string Message);
+        void AddRespondee(string respondeeName);
+        void ReceiveMessage(string Message);
     }
 }

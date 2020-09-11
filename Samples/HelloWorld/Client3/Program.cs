@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.Threading;
 using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Client3
 {
@@ -28,37 +29,45 @@ namespace Client3
     {
         [DataMember]
         private string _serverName;
+        [DataMember]
+        private string _myName;
 
         [DataMember]
         private IServerProxy _server;
 
-        public Client3(string serverName)
+        public Client3(string serverName,
+                       string myName)
         {
             _serverName = serverName;
+            _myName = myName;
         }
 
         protected override async Task<bool> OnFirstStart()
         {
             _server = GetProxy<IServerProxy>(_serverName);
+            _server.AddRespondeeFork(_myName);
 
             using (ConsoleColorScope.SetForeground(ConsoleColor.Yellow))
             {
-                var t1 = _server.ReceiveMessageAsync("\n!! Client: Hello World 3 Message #1!");
+                _server.ReceiveMessageFork("\n!! Client: Hello World 3 Message #1!");
                 Console.WriteLine("\n!! Client: Sent message #1.");
+            }
+            return true;
+        }
 
-                var res1 = await t1;
-                Console.WriteLine($"\n!! Client: Message #1 completed. Server acknowledges processing {res1} messages.");
-
-                var t2 = _server.ReceiveMessageAsync("\n!! Client: Hello World 3 Message #2!");
-                Console.WriteLine("\n!! Client: Sent message #2.");
-
-                var res2 = await t2;
-                Console.WriteLine($"\n!! Client: Message #2 completed. Server acknowledges processing {res2} messages.");
-
+        public async Task ResponseFromServerAsync(int numMessages)
+        {
+            Console.WriteLine($"\n!! Client: Message #{numMessages} completed. Server acknowledges processing {numMessages} messages.");
+            if (numMessages < 2)
+            {
+                _server.ReceiveMessageFork($"\n!! Client: Hello World 3 Message #{numMessages+1}!");
+                Console.WriteLine($"\n!! Client: Sent message #{numMessages + 1}.");
+            }
+            else
+            {
                 Console.WriteLine("\n!! Client: Shutting down");
                 Program.finishedTokenQ.Enqueue(0);
             }
-            return true;
         }
     }
 
@@ -70,8 +79,7 @@ namespace Client3
         {
             finishedTokenQ = new AsyncQueue<int>();
 
-            int receivePort = 1001;
-            int sendPort = 1000;
+            int coordinatorPort = 1500;
             string clientInstanceName = "client";
             string serverInstanceName = "server";
 
@@ -85,9 +93,14 @@ namespace Client3
                 serverInstanceName = args[1];
             }
 
-            using (AmbrosiaFactory.Deploy<IClient3>(clientInstanceName, new Client3(serverInstanceName), receivePort, sendPort))
+            using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
             {
-                finishedTokenQ.DequeueAsync().Wait();
+                GenericLogsInterface.SetToGenericLogs();
+                StartupParamOverrides.OutputStream = coordinatorOutput;
+                using (AmbrosiaFactory.Deploy<IClient3>(clientInstanceName, new Client3(serverInstanceName, clientInstanceName), coordinatorPort))
+                {
+                    finishedTokenQ.DequeueAsync().Wait();
+                }
             }
         }
     }

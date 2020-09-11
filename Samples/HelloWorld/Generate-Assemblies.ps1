@@ -20,17 +20,17 @@ if ( $env:AMBROSIATOOLS ) {
 Write-Host "Using variant of AmbrosiaCS: $AMBVARIANT"
 
 # Generate the assemblies, assumes an .exe which is created by a .Net Framework build:
-Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$AMBVARIANT\IServer.dll -p=ServerAPI\IServer.csproj -o=ServerInterfaces -f=net46 -f=netcoreapp3.1"
-& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$AMBVARIANT\IServer.dll" -p="ServerAPI\IServer.csproj" -o=ServerInterfaces -f="net46" -f="netcoreapp3.1"
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\Debug\netstandard2.0\IServer.dll -a=IClient3\bin\Debug\netstandard2.0\IClient3.dll -p=ServerAPI\IServer.csproj -p=IClient3\IClient3.csproj -o=ServerInterfaces -f=netstandard2.0"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\Debug\netstandard2.0\IServer.dll" -a="IClient3\bin\Debug\netstandard2.0\IClient3.dll" -p="ServerAPI\IServer.csproj" -p="IClient3\IClient3.csproj" -o=ServerInterfaces -f="netstandard2.0"
 
-Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$AMBVARIANT\IServer.dll -a=IClient1\bin\$AMBVARIANT\IClient1.dll -p=ServerAPI\IServer.csproj -p=IClient1\IClient1.csproj -o=Client1Interfaces -f=net46 -f=netcoreapp3.1"
-& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$AMBVARIANT\IServer.dll" -a="IClient1\bin\$AMBVARIANT\IClient1.dll" -p="ServerAPI\IServer.csproj" -p="IClient1\IClient1.csproj" -o=Client1Interfaces -f="net46" -f="netcoreapp3.1"
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\Debug\netstandard2.0\IServer.dll -a=IClient1\bin\Debug\netstandard2.0\IClient1.dll -p=ServerAPI\IServer.csproj -p=IClient1\IClient1.csproj -o=Client1Interfaces -f=netstandard2.0"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\Debug\netstandard2.0\IServer.dll" -a="IClient1\bin\Debug\netstandard2.0\IClient1.dll" -p="ServerAPI\IServer.csproj" -p="IClient1\IClient1.csproj" -o=Client1Interfaces -f="netstandard2.0"
 
-Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$AMBVARIANT\IServer.dll -a=IClient2\bin\$AMBVARIANT\IClient2.dll -p=ServerAPI\IServer.csproj -p=IClient2\IClient2.csproj -o=Client2Interfaces -f=net46 -f=netcoreapp3.1"
-& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$AMBVARIANT\IServer.dll" -a="IClient2\bin\$AMBVARIANT\IClient2.dll" -p="ServerAPI\IServer.csproj" -p="IClient2\IClient2.csproj" -o=Client2Interfaces -f="net46" -f="netcoreapp3.1"
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\Debug\netstandard2.0\IServer.dll -a=IClient2\bin\Debug\netstandard2.0\IClient2.dll -p=ServerAPI\IServer.csproj -p=IClient2\IClient2.csproj -o=Client2Interfaces -f=netstandard2.0"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\Debug\netstandard2.0\IServer.dll" -a="IClient2\bin\Debug\netstandard2.0\IClient2.dll" -p="ServerAPI\IServer.csproj" -p="IClient2\IClient2.csproj" -o=Client2Interfaces -f="netstandard2.0"
 
-Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\$AMBVARIANT\IServer.dll -a=IClient3\bin\$AMBVARIANT\IClient3.dll -p=ServerAPI\IServer.csproj -p=IClient3\IClient3.csproj -o=Client3Interfaces -f=net46 -f=netcoreapp3.1"
-& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\$AMBVARIANT\IServer.dll" -a="IClient3\bin\$AMBVARIANT\IClient3.dll" -p="ServerAPI\IServer.csproj" -p="IClient3\IClient3.csproj" -o=Client3Interfaces -f="net46" -f="netcoreapp3.1"
+Write-Host "Executing codegen command: $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a=ServerAPI\bin\Debug\netstandard2.0\IServer.dll -a=IClient3\bin\Debug\netstandard2.0\IClient3.dll -p=ServerAPI\IServer.csproj -p=IClient3\IClient3.csproj -o=Client3Interfaces -f=netstandard2.0"
+& $AMBROSIATOOLS\$AMBVARIANT\AmbrosiaCS.exe CodeGen -a="ServerAPI\bin\Debug\netstandard2.0\IServer.dll" -a="IClient3\bin\Debug\netstandard2.0\IClient3.dll" -p="ServerAPI\IServer.csproj" -p="IClient3\IClient3.csproj" -o=Client3Interfaces -f="netstandard2.0"
 
 
 
