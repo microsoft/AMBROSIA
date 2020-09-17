@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Microsoft.Ambrosia.LibCSDebug</id>
-    <version>1.0.16</version>
+    <version>1.0.17</version>
     <title>Microsoft.Ambrosia.LibCS.Debug</title>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
@@ -19,6 +19,7 @@
       <dependency id="System.Threading.Tasks.Dataflow" version="4.9.0" />
       <dependency id="Microsoft.VisualStudio.Threading" version="15.8.168" /> 
       <dependency id="Microsoft.VisualStudio.Validation" version="15.3.58" />     
+      <dependency id="Azure.Storage.Blobs" version="12.4.4" />
     </dependencies>
   </metadata>
   <files>
