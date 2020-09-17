@@ -1,8 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-# TODO: Should merge this with the Linux CI script.
-
 # ------------------------------------------------------------
 # A script to build and test under Windows (Azure DevOps) CI.
 # ------------------------------------------------------------
@@ -29,8 +27,8 @@ cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
 
 # Build Application 2: Hello World Sample
 # ----------------------------------------
-#cd "$AMBROSIA_ROOT"/Samples/HelloWorld
-#./build_dotnetcore.sh || echo "EXPECTED FAILURE - problems with Hello World net461 for now"
+cd "$AMBROSIA_ROOT"/Samples/HelloWorld
+./build_dotnetcore.sh || echo "EXPECTED FAILURE - problems with Hello World net461 for now"
 
 # ----------------------------------------
 echo
@@ -39,7 +37,6 @@ if ! [[ ${AZURE_STORAGE_CONN_STRING:+defined} ]]; then
     echo "AZURE_STORAGE_CONN_STRING not defined, so not attempting runnning system tests."
     exit 0
 fi
-
 
 # Test Application: PTI
 # ----------------------------------------
