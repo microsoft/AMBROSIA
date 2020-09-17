@@ -114,7 +114,7 @@ namespace AmbrosiaTest
                     process.WaitForExit();
 
                 // Give it a second to completely start
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
 
                 //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
                 Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
@@ -1425,9 +1425,9 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocmultipleclientsperserver");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocsavelogtoblob");
+            MyUtils.CleanupAzureTables("inprocblob");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocfileandblob");
+            MyUtils.CleanupAzureTables("inprocfileblob");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inprocupgradeclient");
             Thread.Sleep(2000);
@@ -1476,9 +1476,9 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inproctcpkillservertest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inproctcpfileandblob");
+            MyUtils.CleanupAzureTables("inproctcpfileblob");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inproctcpsavelogtoblob");
+            MyUtils.CleanupAzureTables("inproctcpblob");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("inproctcpupgradeserver");
             Thread.Sleep(2000);
