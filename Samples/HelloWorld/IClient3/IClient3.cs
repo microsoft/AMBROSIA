@@ -2,5 +2,6 @@
 {
     public interface IClient3
     {
+        void ResponseFromServer(int numMessages);
     }
 }

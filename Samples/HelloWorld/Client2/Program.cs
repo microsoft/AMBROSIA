@@ -6,6 +6,7 @@ using Ambrosia;
 using Client2;
 using Server;
 using Microsoft.VisualStudio.Threading;
+using System.IO;
 
 namespace Client2
 {
@@ -27,10 +28,17 @@ namespace Client2
         {
             while (true)
             {
-                Thread.Sleep(2000);
-                Console.Write("Enter a message (hit ENTER to send): ");
+                Console.Write("Enter a message (hit ENTER to send, send an empty line to end): ");
                 string input = Console.ReadLine();
-                thisProxy.ReceiveKeyboardInputFork(input);
+                if (input == "")
+                {
+                    Program.finishedTokenQ.Enqueue(0);
+                    return;
+                }
+                else
+                {
+                    thisProxy.ReceiveKeyboardInputFork(input);
+                }
             }
         }
 
@@ -62,8 +70,7 @@ namespace Client2
         {
             finishedTokenQ = new AsyncQueue<int>();
 
-            int receivePort = 1001;
-            int sendPort = 1000;
+            int coordinatorPort = 1500;
             string clientInstanceName = "client";
             string serverInstanceName = "server";
 
@@ -78,9 +85,11 @@ namespace Client2
             }
 
             Client2 client = new Client2(serverInstanceName);
-            using (AmbrosiaFactory.Deploy<IClient2>(clientInstanceName, client, receivePort, sendPort))
+            using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
             {
-                while (finishedTokenQ.IsEmpty)
+                GenericLogsInterface.SetToGenericLogs();
+                StartupParamOverrides.OutputStream = coordinatorOutput;
+                using (AmbrosiaFactory.Deploy<IClient2>(clientInstanceName, client, coordinatorPort))
                 {
                     finishedTokenQ.DequeueAsync().Wait();
                 }
