@@ -1412,6 +1412,7 @@ namespace AmbrosiaTest
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID);
             MyUtils.KillProcess(serverProcessID_upgraded);
+
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
 
