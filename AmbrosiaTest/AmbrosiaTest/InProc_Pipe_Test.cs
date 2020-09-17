@@ -1072,7 +1072,7 @@ namespace AmbrosiaTest
         public void AMB_InProc_SaveLogsToBlob_Test()
         {
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
-            string testName = "inprocsavelogtoblob";
+            string testName = "inprocblob";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaBlobLoc = "";// this is where you specify the name of the blob - blank is default
@@ -1146,7 +1146,7 @@ namespace AmbrosiaTest
         public void AMB_InProc_SaveLogsToFileAndBlob_Test()
         {
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
-            string testName = "inprocfileandblob";
+            string testName = "inprocfileblob";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaBlobLoc = testName + "blobstore\\";  // specify the name of the blob instead of taking default by making blank
@@ -1412,6 +1412,7 @@ namespace AmbrosiaTest
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID);
             MyUtils.KillProcess(serverProcessID_upgraded);
+
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
 
@@ -1419,6 +1420,7 @@ namespace AmbrosiaTest
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_upgraded);
 
         }
+
 
         [TestCleanup()]
         public void Cleanup()
