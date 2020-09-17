@@ -39,20 +39,25 @@ echo
     
 $DOCKER build -t ${TAG1A} .
 
+echo "****************************************** Build Release ********************************"
 if ! [[ ${DONT_BUILD_RELEASE_IMAGE:+defined} ]]; then
     echo;echo "Building Release Image: $TAG1B"; echo
     $DOCKER build -f Dockerfile.release -t ${TAG1B} .
 fi
 
+echo "****************************************** Build App Image ********************************"
 if ! [[ ${DONT_BUILD_APP_IMAGES:+defined} ]]; then
 
     if ! [[ ${DONT_BUILD_PTI_IMAGE:+defined} ]]; then
+echo "****************************************** FIRST App Image ********************************"
+  
         echo;echo "Building App Image: $TAG2"; echo
 	      cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
-	      $DOCKER build -t ${TAG2} .
+#*#*#*#*#* COMMENTED OUT FOR DEBUG	      $DOCKER build -t ${TAG2} .
 	      cd "$AMBROSIA_ROOT"
     fi
     if ! [[ ${DONT_BUILD_NATIVE_IMAGE:+defined} ]]; then
+echo "****************************************** Second App Image ********************************"
         echo;echo "Building App Image: $TAG3"; echo
 	      cd "$AMBROSIA_ROOT"/InternalImmortals/NativeService
 	      docker build -t ${TAG3} .
@@ -61,7 +66,7 @@ if ! [[ ${DONT_BUILD_APP_IMAGES:+defined} ]]; then
 fi
 
 echo
-echo "Docker images built successfully."
+echo "****************************************** Docker images built successfully. ********************************"
 echo
 echo "Below is an example command bring up the generated image interactively:"
 echo "  $DOCKER run -it --rm --env AZURE_STORAGE_CONN_STRING=... ${TAG2}"

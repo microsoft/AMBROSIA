@@ -63,6 +63,15 @@ namespace AmbrosiaTest
         public string logTypeFiles = "files";
         public string logTypeBlobs = "blobs";
 
+        //*********
+        // DeployMode
+        // This is the mode on whether IC call is part of client and server or on its own (-d paramter in PTI job.exe and server.exe)
+        //*********
+        public string deployModeSecondProc = "secondproc"; // original design where need IC in separate process
+        public string deployModeInProc = "inprocdeploy"; // No longer need rp and sp ports since we are using pipes instead of TCP
+        public string deployModeInProcManual = "inprocmanual";  // this is the TCP port call where need rp & sp but still in single proc per job or server
+
+
         // Returns the Process ID of the process so you then can something with it
         // Currently output to file using ">", but using cmd.exe to do that.
         // If want to run actual file name (instead of via cmd.exe), then need to use stream reader to get output and send to a file 
@@ -105,7 +114,7 @@ namespace AmbrosiaTest
                     process.WaitForExit();
 
                 // Give it a second to completely start
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
 
                 //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
                 Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
@@ -294,6 +303,23 @@ namespace AmbrosiaTest
                 {
                     FailureSupport("");
                     Assert.Fail("<CleanupAmbrosiaLogFiles> Unable to delete Log Dir:" + ambrosiaLogDir);
+                }
+
+                // Clean up the InProc files now.  Since InProc, they are relative to PTI
+                string PTIAmbrosiaLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+                if (Directory.Exists(PTIAmbrosiaLogDir))
+                {
+                    Directory.Delete(PTIAmbrosiaLogDir, true);
+                }
+
+                // Give it a second to make sure - had timing issues where wasn't fully deleted by time got here
+                Thread.Sleep(1000);
+
+                // Double check to make sure it is deleted and not locked by something else
+                if (Directory.Exists(PTIAmbrosiaLogDir))
+                {
+                    FailureSupport("");
+                    Assert.Fail("<CleanupAmbrosiaLogFiles> Unable to delete PTI Log Dir:" + PTIAmbrosiaLogDir);
                 }
 
             }
@@ -496,11 +522,19 @@ namespace AmbrosiaTest
 
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
+            if (Directory.Exists(ambrosiaLogDir) ==false)
+            {
+                // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
+                ambrosiaLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+            }
 
             // used to get log file
-            string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
-            string ambrosiaServerLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "server_" + CurrentVersion;
+            //            string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
+            //            string ambrosiaServerLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "server_" + CurrentVersion;
+            string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
+            string ambrosiaServerLogDir = ambrosiaLogDir + "\\" + testName + "server_" + CurrentVersion;
+
             string startingClientChkPtVersionNumber = "1";
             string clientFirstFile = "";
 
@@ -591,7 +625,7 @@ namespace AmbrosiaTest
             AMB_Settings AMB1 = new AMB_Settings
             {
                 AMB_ServiceName = clientJobName,
-                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_ServiceLogPath = ambrosiaLogDir + "\\",
                 AMB_StartingCheckPointNum = startingClientChkPtVersionNumber,
                 AMB_Version = CurrentVersion.ToString(),
                 AMB_TestingUpgrade = "N",
@@ -605,7 +639,7 @@ namespace AmbrosiaTest
             AMB_Settings AMB2 = new AMB_Settings
             {
                 AMB_ServiceName = serverName,
-                AMB_ServiceLogPath = ambrosiaLogDir,
+                AMB_ServiceLogPath = ambrosiaLogDir + "\\",
                 AMB_StartingCheckPointNum = startingServerChkPtVersionNumber,
                 AMB_Version = CurrentVersion.ToString(),
                 AMB_TestingUpgrade = "N",
@@ -848,7 +882,7 @@ namespace AmbrosiaTest
         }
 
         // Starts the server.exe from PerformanceTestUninterruptible.  
-        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0)
+        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0, string deployMode = "", string ICPort = "")
         {
 
             // Configure upgrade properly
@@ -863,11 +897,38 @@ namespace AmbrosiaTest
             if (NetFrameworkTestRun)
                 current_framework = NetFramework;
 
-            // Launch the server process with these values
+            // Launch the server process with these values based on deploy mode
             string workingDir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Server.exe";
-            string argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
-                + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c";
+            string argString = "";
+
+            // Determine the arg based on deployMode
+            // Original & default method where need separate ImmCoord call
+            if ((deployMode == "") || (deployMode == deployModeSecondProc))
+            {
+                argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
+                          + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c";
+
+                if (deployMode != "")
+                {
+                    argString = argString + " -d=" + deployModeSecondProc;
+                }
+            }
+
+            // In proc using Pipe - No longer need rp and sp ports since we are using pipes instead of TCP. ImmCoord port is used - more commonly used in proc scenario
+            if (deployMode == deployModeInProc)
+            {
+                argString = "-j=" + perfJobName + " -s=" + perfServerName 
+                          + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
+                          + " -d=" + deployModeInProc + " -icp=" + ICPort;
+            }
+            // In proc using TCP - this is the TCP port call where need rp & sp but still in single proc per job or server
+            if (deployMode == deployModeInProcManual)
+            {
+                argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
+                        + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
+                        + " -d=" + deployModeInProcManual + " -icp=" + ICPort;
+            }
 
             // add upgrade switch if upgradeing
             if (upgradeString != null && upgradeString != "N")
@@ -880,8 +941,12 @@ namespace AmbrosiaTest
                 Assert.Fail("<StartPerfServer> Perf Server was not started.  ProcessID <=0 ");
             }
 
-            // Give it a few seconds to start
-            Thread.Sleep(2000);
+            // Give it a few seconds to start -- give extra time if starting IC as part of this too
+            if (ICPort != "")
+            {
+                Thread.Sleep(6000);
+            }
+            Thread.Sleep(3000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             return processID;
@@ -916,8 +981,8 @@ namespace AmbrosiaTest
         }
 
 
-        // Perf Client from PerformanceTestInterruptible --- runs in Async
-        public int StartPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfMessageSize, string perfNumberRounds, string testOutputLogFile)
+        // Perf Client from PerformanceTestInterruptible 
+        public int StartPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfMessageSize, string perfNumberRounds, string testOutputLogFile, string deployMode="", string ICPort="" )
         {
 
             // Set path by using proper framework
@@ -925,11 +990,37 @@ namespace AmbrosiaTest
             if (NetFrameworkTestRun)
                 current_framework = NetFramework;
 
-            // Launch the client job process with these values
+            // Set defaults here and can modify based on deploy mode
             string workingDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Job.exe";
-            string argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
-                + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c";
+            string argString = "";
+
+            // Determine the arg based on deployMode
+            // Original & default method where need separate ImmCoord call
+            if ((deployMode=="") || (deployMode== deployModeSecondProc))
+            {
+                argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
+                    + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c";
+
+                if (deployMode!="")
+                {
+                    argString = argString + " -d=" + deployModeSecondProc;
+                }
+            }
+
+            // In proc using Pipe - No longer need rp and sp ports since we are using pipes instead of TCP. ImmCoord port is used - more commonly used in proc scenario
+            if (deployMode == deployModeInProc)
+            {
+                argString = "-j=" + perfJobName + " -s=" + perfServerName + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c"
+                    + " -d=" + deployModeInProc + " -icp=" + ICPort;
+            }
+            // In proc using TCP - this is the TCP port call where need rp & sp but still in single proc per job or server
+            if (deployMode == deployModeInProcManual)
+            {
+                argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
+                    + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c" + " -d=" + deployModeInProcManual + " -icp=" + ICPort;
+            }
+
 
             // Start process
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
@@ -939,7 +1030,11 @@ namespace AmbrosiaTest
                 Assert.Fail("<StartPerfClientJob> Perf Client was not started.  ProcessID <=0 ");
             }
 
-            // Give it a few seconds to start
+            // Give it a few seconds to start -- give extra time if starting IC as part of this too
+            if (ICPort != "")
+            {
+                Thread.Sleep(6000);
+            }
             Thread.Sleep(2000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
@@ -1157,6 +1252,10 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("unittestactiveactivekillprimary");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("unittestinproctcp");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("unittestinprocpipe");
+            Thread.Sleep(2000);
         }
 
 
@@ -1227,13 +1326,13 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("upgradeactiveactiveprimaryonly");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("upgradeclient");
+            Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("multipleclientsperserver");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("giantcheckpointtest");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("overrideoptions");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("clientsideupgrade");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("savelogtoblob");
             Thread.Sleep(2000);
@@ -1277,7 +1376,113 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("asyncactiveactivebasic");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("asyncactiveactivekillall");
+
+
+            // Give it a few second to clean things up a bit more
+            Thread.Sleep(5000);
+        }
+
+        public void InProcPipeTestCleanup()
+        {
+            Utilities MyUtils = new Utilities();
+
+            // If failures in queue then do not want to do anything (init, run test, clean up) 
+            if (MyUtils.CheckStopQueueFlag())
+            {
+                return;
+            }
+
+            // Kill all ImmortalCoordinators, Job and Server exes
+            MyUtils.KillProcessByName("ImmortalCoordinator");
+            MyUtils.KillProcessByName("Job");
+            MyUtils.KillProcessByName("Server");
+            MyUtils.KillProcessByName("Ambrosia");
+            MyUtils.KillProcessByName("MSBuild");
+            MyUtils.KillProcessByName("dotnet");
+            //MyUtils.KillProcessByName("cmd");  // sometimes processes hang
+
+            // Give it a few second to clean things up a bit more
+            Thread.Sleep(5000);
+
+            // Clean up Azure - this is called after each test so put all test names in for azure tables
+            MyUtils.CleanupAzureTables("inprocpipeclientonly");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocpipeclientonly");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocbasictest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocgiantcheckpointtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocgiantmessagetest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocdoublekilljob");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocdoublekillserver");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprockilljobtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprockillservertest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocmultipleclientsperserver");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocblob");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocfileblob");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocupgradeclient");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocupgradeafterserverdone");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocupgradebeforeserverdone");
+            Thread.Sleep(2000);
+
+            // Give it a few second to clean things up a bit more
+            Thread.Sleep(5000);
+        }
+
+
+        public void InProcTCPTestCleanup()
+        {
+            Utilities MyUtils = new Utilities();
+
+            // If failures in queue then do not want to do anything (init, run test, clean up) 
+            if (MyUtils.CheckStopQueueFlag())
+            {
+                return;
+            }
+
+            // Kill all ImmortalCoordinators, Job and Server exes
+            MyUtils.KillProcessByName("ImmortalCoordinator");
+            MyUtils.KillProcessByName("Job");
+            MyUtils.KillProcessByName("Server");
+            MyUtils.KillProcessByName("Ambrosia");
+            MyUtils.KillProcessByName("MSBuild");
+            MyUtils.KillProcessByName("dotnet");
+            //MyUtils.KillProcessByName("cmd");  // sometimes processes hang
+
+            // Give it a few second to clean things up a bit more
+            Thread.Sleep(5000);
+
+            // Clean up Azure - this is called after each test so put all test names in for azure tables
+            MyUtils.CleanupAzureTables("inproctcpclientonly");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpserveronly");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocclienttcpserverpipe");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inprocclientpipeservertcp");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpkilljobtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpkillservertest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpfileblob");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpblob");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpupgradeserver");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("inproctcpupgradeclient");
             Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more

@@ -1,0 +1,29 @@
+*X* 65536	0.0288983392173579
+Service Received 1024 MB so far
+Reading a checkpoint 2138 bytes
+*X* 32768	0.0650514753951088
+Service Received 2048 MB so far
+*X* 16384	0.0693274063022772
+Service Received 3072 MB so far
+*X* 8192	0.0694748049342007
+Service Received 4096 MB so far
+*X* 4096	0.0694547951382199
+Service Received 5120 MB so far
+*X* 2048	0.0709840565904775
+Service Received 6144 MB so far
+*X* 1024	0.0693809719368053
+Service Received 7168 MB so far
+*X* 512	0.0690027458883696
+Service Received 8192 MB so far
+*X* 256	0.0640402324306935
+Service Received 9216 MB so far
+*X* 128	0.0598831264613841
+Service Received 10240 MB so far
+*X* 64	0.0404083862239374
+Service Received 11264 MB so far
+*X* 32	0.0209215774961487
+Service Received 12288 MB so far
+*X* 16	0.0125384733965781
+Service Received 13312 MB so far
+Bytes received: 13958643712
+DONE

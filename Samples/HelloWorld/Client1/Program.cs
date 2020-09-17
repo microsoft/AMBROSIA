@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.Threading;
 using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Client1
 {
@@ -71,8 +72,7 @@ namespace Client1
         {
             finishedTokenQ = new AsyncQueue<int>();
 
-            int receivePort = 1001;
-            int sendPort = 1000;
+            int coordinatorPort = 1500;
             string clientInstanceName = "client";
             string serverInstanceName = "server";
 
@@ -86,9 +86,14 @@ namespace Client1
                 serverInstanceName = args[1];
             }
 
-            using (AmbrosiaFactory.Deploy<IClient1>(clientInstanceName, new Client1(serverInstanceName), receivePort, sendPort))
+            using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
             {
-                finishedTokenQ.DequeueAsync().Wait();
+                GenericLogsInterface.SetToGenericLogs();
+                StartupParamOverrides.OutputStream = coordinatorOutput;
+                using (AmbrosiaFactory.Deploy<IClient1>(clientInstanceName, new Client1(serverInstanceName), coordinatorPort))
+                {
+                    finishedTokenQ.DequeueAsync().Wait();
+                }
             }
         }
     }

@@ -22,20 +22,13 @@ namespace Server
         {
         }
 
-        async Task<Int32>
-        IServerProxy.ReceiveMessageAsync(System.String p_0)
-        {
-			return await ReceiveMessageAsync(p_0);
-        }
-
-        async Task<Int32>
-        ReceiveMessageAsync(System.String p_0)
+        async Task
+        AddRespondeeAsync(System.String p_0)
         {
             SerializableTaskCompletionSource rpcTask;
             // Make call, wait for reply
             // Compute size of serialized arguments
             var totalArgSize = 0;
-			var p_1 = default(Int32);
 			int arg0Size = 0;
 			byte[] arg0Bytes = null;
 
@@ -45,7 +38,7 @@ arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
 
             totalArgSize += arg0Size;
 
-            var wp = this.StartRPC<Int32>(methodIdentifier: 1 /* method identifier for ReceiveMessage */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
+            var wp = this.StartRPC<object>(methodIdentifier: 1 /* method identifier for AddRespondee */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
 			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
 
             // Serialize arguments
@@ -91,7 +84,110 @@ wp.curLength += arg0Bytes.Length;
             {
                 Immortal.DispatchTaskIdQueue.Data.Enqueue(taskId);
             }	
-			return (Int32) currentResult.Result;
+			return;
+        }
+
+        void IServerProxy.AddRespondeeFork(System.String p_0)
+        {
+            SerializableTaskCompletionSource rpcTask;
+
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+
+            // Argument 0
+			int arg0Size = 0;
+			byte[] arg0Bytes = null;
+
+            arg0Bytes = Ambrosia.BinarySerializer.Serialize<System.String>(p_0);
+arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
+
+            totalArgSize += arg0Size;
+
+            var wp = this.StartRPC<object>(1 /* method identifier for AddRespondee */, totalArgSize, out rpcTask, RpcTypes.RpcType.FireAndForget);
+
+            // Serialize arguments
+
+
+            // Serialize arg0
+            wp.curLength += wp.PageBytes.WriteInt(wp.curLength, arg0Bytes.Length);
+Buffer.BlockCopy(arg0Bytes, 0, wp.PageBytes, wp.curLength, arg0Bytes.Length);
+wp.curLength += arg0Bytes.Length;
+
+
+            this.ReleaseBufferAndSend();
+            return;
+        }
+
+        private object
+        AddRespondee_ReturnValue(byte[] buffer, int cursor)
+        {
+            // buffer will be an empty byte array since the method AddRespondee returns void
+            // so nothing to read, just getting called is the signal to return to the client
+            return this;
+        }
+        async Task
+        ReceiveMessageAsync(System.String p_0)
+        {
+            SerializableTaskCompletionSource rpcTask;
+            // Make call, wait for reply
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+			int arg0Size = 0;
+			byte[] arg0Bytes = null;
+
+            // Argument 0
+            arg0Bytes = Ambrosia.BinarySerializer.Serialize<System.String>(p_0);
+arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
+
+            totalArgSize += arg0Size;
+
+            var wp = this.StartRPC<object>(methodIdentifier: 2 /* method identifier for ReceiveMessage */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
+			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
+
+            // Serialize arguments
+
+
+            // Serialize arg0
+            wp.curLength += wp.PageBytes.WriteInt(wp.curLength, arg0Bytes.Length);
+Buffer.BlockCopy(arg0Bytes, 0, wp.PageBytes, wp.curLength, arg0Bytes.Length);
+wp.curLength += arg0Bytes.Length;
+
+            int taskId;
+			lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                while (!Immortal.DispatchTaskIdQueue.Data.TryDequeue(out taskId)) { }
+            }
+
+            ReleaseBufferAndSend();
+
+			Immortal.StartDispatchLoop();
+
+			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+            var currentResult = await taskToWaitFor;
+
+			while (currentResult.AdditionalInfoType != ResultAdditionalInfoTypes.SetResult)
+            {
+                switch (currentResult.AdditionalInfoType)
+                {
+                    case ResultAdditionalInfoTypes.SaveContext:
+                        await Immortal.SaveTaskContextAsync();
+                        taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+                        break;
+                    case ResultAdditionalInfoTypes.TakeCheckpoint:
+                        var sequenceNumber = await Immortal.TakeTaskCheckpointAsync();
+                        Immortal.StartDispatchLoop();
+                        taskToWaitFor = Immortal.GetTaskToWaitForWithAdditionalInfoAsync(sequenceNumber);
+                        break;
+                }
+
+                currentResult = await taskToWaitFor;
+            }
+
+            lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                Immortal.DispatchTaskIdQueue.Data.Enqueue(taskId);
+            }	
+			return;
         }
 
         void IServerProxy.ReceiveMessageFork(System.String p_0)
@@ -110,7 +206,7 @@ arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
 
             totalArgSize += arg0Size;
 
-            var wp = this.StartRPC<Int32>(1 /* method identifier for ReceiveMessage */, totalArgSize, out rpcTask, RpcTypes.RpcType.FireAndForget);
+            var wp = this.StartRPC<object>(2 /* method identifier for ReceiveMessage */, totalArgSize, out rpcTask, RpcTypes.RpcType.FireAndForget);
 
             // Serialize arguments
 
@@ -125,18 +221,12 @@ wp.curLength += arg0Bytes.Length;
             return;
         }
 
-        private Int32
+        private object
         ReceiveMessage_ReturnValue(byte[] buffer, int cursor)
         {
-            // deserialize return value
-            var returnValue_ValueLength = buffer.ReadBufferedInt(cursor);
-cursor += IntSize(returnValue_ValueLength);
-var returnValue_ValueBuffer = new byte[returnValue_ValueLength];
-Buffer.BlockCopy(buffer, cursor, returnValue_ValueBuffer, 0, returnValue_ValueLength);
-cursor += returnValue_ValueLength;
-var returnValue = Ambrosia.BinarySerializer.Deserialize<System.Int32>(returnValue_ValueBuffer);
-
-            return returnValue;
+            // buffer will be an empty byte array since the method ReceiveMessage returns void
+            // so nothing to read, just getting called is the signal to return to the client
+            return this;
         }
     }
 }
