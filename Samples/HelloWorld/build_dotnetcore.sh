@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+echo "Starting Build"
+
 # Set defaults if these environment vars aren't present:
 FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp3.1}"
 CONF="${AMBROSIA_DOTNET_CONF:-Release}"
