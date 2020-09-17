@@ -358,11 +358,45 @@ namespace Server
             }
             else
             {
-                using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, new Server(_perfJob, _isBidirectional, _numJobs, _memoryUsed), _receivePort, _sendPort))
+                var myServer = new Server(_perfJob, _isBidirectional, _numJobs, _memoryUsed);
+                switch (_ICDeploymentMode)
                 {
-                    // nothing to call on c, just doing this for calling Dispose.
-                    Console.WriteLine("*X* Press enter to terminate program.");
-                    Console.ReadLine();
+                    case ICDeploymentMode.SecondProc:
+                        using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _receivePort, _sendPort))
+                        {
+                            // nothing to call on c, just doing this for calling Dispose.
+                            Console.WriteLine("*X* Press enter to terminate program.");
+                            // Doing this wait to make the bash script happy, which automatically move past the Readline.
+                            Thread.Sleep(1000 * 60 * 60 * 24);
+                            Console.ReadLine();
+                        }
+                        break;
+                    case ICDeploymentMode.InProcDeploy:
+                        GenericLogsInterface.SetToGenericLogs();
+                        using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _icPort))
+                        {
+                            // nothing to call on c, just doing this for calling Dispose.
+                            Console.WriteLine("*X* Press enter to terminate program.");
+                            Console.ReadLine();
+                        }
+                        break;
+                    case ICDeploymentMode.InProcManual:
+                        GenericLogsInterface.SetToGenericLogs();
+                        var myName = _perfServer;
+                        var myPort = _icPort;
+                        var ambrosiaArgs = new string[2];
+                        ambrosiaArgs[0] = "-i=" + myName;
+                        ambrosiaArgs[1] = "-p=" + myPort;
+                        Console.WriteLine("ImmortalCoordinator -i=" + myName + " -p=" + myPort.ToString());
+                        _iCThread = new Thread(() => CRA.Worker.Program.main(ambrosiaArgs)) { IsBackground = true };
+                        _iCThread.Start();
+                        using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _receivePort, _sendPort))
+                        {
+                            // nothing to call on c, just doing this for calling Dispose.
+                            Console.WriteLine("*X* Press enter to terminate program.");
+                            Console.ReadLine();
+                        }
+                        break;
                 }
             }
             Console.WriteLine("*X* Terminating.");
