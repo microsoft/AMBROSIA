@@ -5,6 +5,7 @@ echo "Starting Build"
 
 # Set defaults if these environment vars aren't present:
 FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp3.1}"
+FMWK20="${AMBROSIA_DOTNET_FRAMEWORK:-netstandard2.0}"
 CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
 if ! which AmbrosiaCS 2>/dev/null; then
@@ -21,11 +22,12 @@ fi
 echo
 echo "(STEP 1) Build enough so that we have compiled versions of our RPC interfaces"
 BUILDIT="dotnet publish -o publish -c $CONF -f $FMWK "
+BUILDIT20="dotnet publish -o publish -c $CONF -f $FMWK20 "
 set -x
-$BUILDIT IClient1/IClient1.csproj
-$BUILDIT IClient2/IClient2.csproj
-$BUILDIT IClient3/IClient3.csproj
-$BUILDIT ServerAPI/IServer.csproj
+$BUILDIT20 IClient1/IClient1.csproj
+$BUILDIT20 IClient2/IClient2.csproj
+$BUILDIT20 IClient3/IClient3.csproj
+$BUILDIT20 ServerAPI/IServer.csproj
 set +x
 
 echo
@@ -46,11 +48,11 @@ $BUILDIT GeneratedSourceFiles/Client1Interfaces/latest/Client1Interfaces.csproj
 $BUILDIT GeneratedSourceFiles/Client2Interfaces/latest/Client2Interfaces.csproj
 $BUILDIT GeneratedSourceFiles/Client3Interfaces/latest/Client3Interfaces.csproj
 $BUILDIT GeneratedSourceFiles/ServerInterfaces/latest/ServerInterfaces.csproj
-$BUILDIT Server/Server.csproj
+#$BUILDIT Server/Server.csproj
 $BUILDIT Client1/Client1.csproj
 $BUILDIT Client2/Client2.csproj
 $BUILDIT Client3/Client3.csproj
 set +x
-# $BUILDIT HelloWorld.sln
+#$BUILDIT HelloWorld.sln
 echo
 echo "Hello world built."
