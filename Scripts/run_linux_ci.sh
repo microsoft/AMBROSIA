@@ -80,21 +80,21 @@ case $mode in
 
       # Build Application: Hello World Sample
       # ----------------------------------------
-  	  echo "*********  Hello World Sample ********************"
-      cd "$AMBROSIA_ROOT"/Samples/HelloWorld
-      echo "HelloWorld: Then make sure it builds from scratch:"
-      rm -rf GeneratedSourceFiles
-      git clean -nxd .
-      ./build_dotnetcore.sh
+  	  #echo "*********  Hello World Sample ********************"
+      #cd "$AMBROSIA_ROOT"/Samples/HelloWorld
+      #echo "HelloWorld: Then make sure it builds from scratch:"
+      #rm -rf GeneratedSourceFiles
+      #git clean -nxd .
+      #./build_dotnetcore.sh
       
       # ----------------------------------------
-      check_az_storage_and_bail
+      #check_az_storage_and_bail
       
       # Test Application: Native client hello
       # ----------------------------------------
-   	  echo "*********  Test App: Hello World ********************"
-      cd "$AMBROSIA_ROOT"/Clients/C
-      ./run_hello_world.sh || echo "Allowed failure for now."
+   	  #echo "*********  Test App: Hello World ********************"
+      #cd "$AMBROSIA_ROOT"/Clients/C
+      #./run_hello_world.sh || echo "Allowed failure for now."
 
  
       # Test Application: PTI (last because it's slow)
