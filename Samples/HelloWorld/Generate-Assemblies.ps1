@@ -2,7 +2,7 @@
 if ( $env:AMBVARIANT ) {
     $AMBVARIANT = $env:AMBVARIANT
 } else {
-    $AMBVARIANT="x64\Debug\net46"
+    $AMBVARIANT="x64\Debug\net461"
 }
 
 if ( $env:AMBVARIANTCORERELEASE ) {
