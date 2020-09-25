@@ -45,6 +45,3 @@
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\$configuration$\netstandard2.0\SharedAmbrosiaTools.pdb" target="lib\netstandard2.0" />
   </files>
 </package>
-
-Azure.Storage.Files.Shares 12.2.3 - CS LibCS UnsafeDeregisterInstance
-Trill 2018.3.2.1
