@@ -127,8 +127,8 @@ namespace Ambrosia
             foreach (var entry in dict)
             {
                 var keyEncoding = Encoding.UTF8.GetBytes(entry.Key);
-                StartupParamOverrides.OutputStream.WriteLine("input {0} seq no: {1}", entry.Key, entry.Value.LastProcessedID);
-                StartupParamOverrides.OutputStream.WriteLine("input {0} replayable seq no: {1}", entry.Key, entry.Value.LastProcessedReplayableID);
+                Trace.TraceInformation("input {0} seq no: {1}", entry.Key, entry.Value.LastProcessedID);
+                Trace.TraceInformation("input {0} replayable seq no: {1}", entry.Key, entry.Value.LastProcessedReplayableID);
                 writeToStream.WriteInt(keyEncoding.Length);
                 writeToStream.Write(keyEncoding, 0, keyEncoding.Length);
                 writeToStream.WriteLongFixed(entry.Value.LastProcessedID);
@@ -239,14 +239,14 @@ namespace Ambrosia
                     endIndexOfCurrentRPC = cursor + lengthOfCurrentRPC;
                     if (endIndexOfCurrentRPC > curLength)
                     {
-                        StartupParamOverrides.OutputStream.WriteLine("RPC Exceeded length of Page!!");
+                        Trace.TraceError("RPC Exceeded length of Page!!");
                         throw new Exception("RPC Exceeded length of Page!!");
                     }
 
                     var shouldBeRPCByte = PageBytes[cursor];
                     if (shouldBeRPCByte != AmbrosiaRuntime.RPCByte)
                     {
-                        StartupParamOverrides.OutputStream.WriteLine("UNKNOWN BYTE: {0}!!", shouldBeRPCByte);
+                        Trace.TraceError("UNKNOWN BYTE: {0}!!", shouldBeRPCByte);
                         throw new Exception("Illegal leading byte in message");
                     }
                     cursor++;
@@ -304,14 +304,14 @@ namespace Ambrosia
                     var endIndexOfCurrentRPC = cursor + lengthOfCurrentRPC;
                     if (endIndexOfCurrentRPC > curLength)
                     {
-                        StartupParamOverrides.OutputStream.WriteLine("RPC Exceeded length of Page!!");
+                        Trace.TraceError("RPC Exceeded length of Page!!");
                         throw new Exception("RPC Exceeded length of Page!!");
                     }
 
                     var shouldBeRPCByte = PageBytes[cursor];
                     if (shouldBeRPCByte != AmbrosiaRuntime.RPCByte)
                     {
-                        StartupParamOverrides.OutputStream.WriteLine("UNKNOWN BYTE: {0}!!", shouldBeRPCByte);
+                        Trace.TraceError("UNKNOWN BYTE: {0}!!", shouldBeRPCByte);
                         throw new Exception("Illegal leading byte in message");
                     }
                     cursor++;
@@ -537,7 +537,7 @@ namespace Ambrosia
                             }
                             catch (Exception e)
                             {
-                                StartupParamOverrides.OutputStream.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
+                                Trace.TraceError("Error sending partial page, checking page integrity: {0}", e.Message);
                                 curBuffer.CheckPageIntegrity();
                                 throw e;
                             }
@@ -559,7 +559,8 @@ namespace Ambrosia
                             }
                             catch (Exception e)
                             {
-                                StartupParamOverrides.OutputStream.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
+                                Trace.TraceError("Error sending partial page, checking page integrity: {0}", e.Message);
+//                                StartupParamOverrides.OutputStream.WriteLine("Error sending partial page, checking page integrity: {0}", e.Message);
                                 curBuffer.CheckPageIntegrity();
                                 throw e;
                             }
@@ -1268,7 +1269,7 @@ namespace Ambrosia
                             // Set up the output record for the first time and add it to the dictionary
                             outputConnectionRecord = new OutputConnectionRecord(_myAmbrosia);
                             outputs[kv.Key] = outputConnectionRecord;
-                            StartupParamOverrides.OutputStream.WriteLine("Adding output:{0}", kv.Key);
+                            Trace.TraceInformation("Adding output:{0}", kv.Key);
                         }
                         // Must lock to atomically update due to race with ToControlStreamAsync
                         lock (outputConnectionRecord._remoteTrimLock)
@@ -2135,9 +2136,7 @@ namespace Ambrosia
 
         internal void OnError(int ErrNo, string ErrorMessage)
         {
-            StartupParamOverrides.OutputStream.WriteLine("FATAL ERROR " + ErrNo.ToString() + ": " + ErrorMessage);
-            StartupParamOverrides.OutputStream.Flush();
-            StartupParamOverrides.OutputStream.Flush();
+            Trace.TraceError("FATAL ERROR " + ErrNo.ToString() + ": " + ErrorMessage);
             _coral.KillLocalWorker("");
         }
 
@@ -2554,7 +2553,7 @@ namespace Ambrosia
             }
             catch (Exception e)
             {
-                StartupParamOverrides.OutputStream.WriteLine(e.ToString());
+                Trace.TraceInformation(e.ToString());
             }
         }
 
@@ -2667,7 +2666,7 @@ namespace Ambrosia
                     throw new Exception("Couldn't get checkpoint lock");
                 }
                 state.MyRole = AARole.Checkpointer; // I'm a checkpointing secondary
-                StartupParamOverrides.OutputStream.WriteLine("I'm a checkpointer");
+                Trace.TraceInformation("I'm a checkpointer");
                 var oldCheckpoint = state.LastCommittedCheckpoint;
                 state.LastCommittedCheckpoint = long.Parse(RetrieveServiceInfo(InfoTitle("LastCommittedCheckpoint", state.ShardID)));
                 if (oldCheckpoint != state.LastCommittedCheckpoint)
@@ -2680,7 +2679,7 @@ namespace Ambrosia
             {
                 state.CheckpointWriter = null;
                 state.MyRole = AARole.Secondary; // I'm a secondary
-                StartupParamOverrides.OutputStream.WriteLine("I'm a secondary");
+                Trace.TraceInformation("I'm a secondary");
             }
         }
 
@@ -2731,7 +2730,7 @@ namespace Ambrosia
                     state.Committer.SwitchLogStreams(lastLogFileStream);
                     await state.Committer.WakeupAsync();
                     state.MyRole = AARole.Primary;  // this will stop  and break the loop in the function  replayInput_Sec()
-                    StartupParamOverrides.OutputStream.WriteLine("\n\nNOW I'm Primary\n\n");
+                    Trace.TraceInformation("\n\nNOW I'm Primary\n\n");
                     // if we are an upgrader : Time to release the kill file lock and cleanup. Note that since we have the log lock
                     // everyone is prevented from promotion until we succeed or fail.
                     if (_upgrading && _activeActive)
@@ -3170,7 +3169,7 @@ namespace Ambrosia
         {
             while (true)
             {
-                StartupParamOverrides.OutputStream.WriteLine("Attempting to attach", destination);
+                Trace.TraceInformation("Attempting to attach to {0}", destination);
                 var connectionResult1 = ConnectAsync(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
                 var connectionResult2 = ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
                 var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName).GetAwaiter().GetResult();
@@ -3178,7 +3177,7 @@ namespace Ambrosia
                 if ((connectionResult1 == CRAErrorCode.Success) && (connectionResult2 == CRAErrorCode.Success) &&
                     (connectionResult3 == CRAErrorCode.Success) && (connectionResult4 == CRAErrorCode.Success))
                 {
-                    StartupParamOverrides.OutputStream.WriteLine("Attached to {0}", destination);
+                    Trace.TraceInformation("Attached to {0}", destination);
                     return;
                 }
                 Thread.Sleep(1000);
@@ -3204,7 +3203,7 @@ namespace Ambrosia
 
                 case checkpointByte:
                     _lastReceivedCheckpointSize = StreamCommunicator.ReadBufferedLong(localServiceBuffer.Buffer, sizeBytes + 1);
-                    StartupParamOverrides.OutputStream.WriteLine("Reading a checkpoint {0} bytes", _lastReceivedCheckpointSize);
+                    Trace.TraceInformation("Reading a checkpoint {0} bytes", _lastReceivedCheckpointSize);
                     LastReceivedCheckpoint = localServiceBuffer;
                     // Block this thread until checkpointing is complete
                     while (LastReceivedCheckpoint != null) { Thread.Yield(); };
@@ -3224,7 +3223,7 @@ namespace Ambrosia
                         }
                         else
                         {
-                            StartupParamOverrides.OutputStream.WriteLine("Attaching to {0}", destination);
+                            Trace.TraceInformation("Attaching to {0}", destination);
                             var connectionResult1 = ConnectAsync(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
                             var connectionResult2 = ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
                             var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName).GetAwaiter().GetResult();
@@ -3232,8 +3231,7 @@ namespace Ambrosia
                             if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
                                 (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
                             {
-
-                                StartupParamOverrides.OutputStream.WriteLine("Error attaching " + ServiceName() + " to " + destination);
+                                Trace.TraceError("Error attaching " + ServiceName() + " to " + destination);
                                 // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
                             }
                         }
@@ -3428,11 +3426,11 @@ namespace Ambrosia
                     // Set up the output record for the first time and add it to the dictionary
                     outputConnectionRecord = new OutputConnectionRecord(this);
                     _outputs[destString] = outputConnectionRecord;
-                    StartupParamOverrides.OutputStream.WriteLine("Adding output:{0}", destString);
+                    Trace.TraceInformation("Adding output:{0}", destString);
                 }
                 else
                 {
-                    StartupParamOverrides.OutputStream.WriteLine("restoring output:{0}", destString);
+                    Trace.TraceInformation("restoring output:{0}", destString);
                 }
             }
             try
@@ -3552,11 +3550,11 @@ namespace Ambrosia
                     // Set up the output record for the first time and add it to the dictionary
                     outputConnectionRecord = new OutputConnectionRecord(this);
                     _outputs[destString] = outputConnectionRecord;
-                    StartupParamOverrides.OutputStream.WriteLine("Adding output:{0}", destString);
+                    Trace.TraceInformation("Adding output:{0}", destString);
                 }
                 else
                 {
-                    StartupParamOverrides.OutputStream.WriteLine("restoring output:{0}", destString);
+                    Trace.TraceInformation("restoring output:{0}", destString);
                 }
             }
             // Process remote trim message
@@ -3669,11 +3667,11 @@ namespace Ambrosia
                 // Create input record and add it to the dictionary
                 inputConnectionRecord = new InputConnectionRecord();
                 _inputs[sourceString] = inputConnectionRecord;
-                StartupParamOverrides.OutputStream.WriteLine("Adding input:{0}", sourceString);
+                Trace.TraceInformation("Adding input:{0}", sourceString);
             }
             else
             {
-                StartupParamOverrides.OutputStream.WriteLine("restoring input:{0}", sourceString);
+                Trace.TraceInformation("restoring input:{0}", sourceString);
             }
             inputConnectionRecord.DataConnectionStream = (NetworkStream)readFromStream;
             await SendReplayMessageAsync(readFromStream, inputConnectionRecord.LastProcessedID + 1, inputConnectionRecord.LastProcessedReplayableID + 1, ct);
@@ -3697,11 +3695,11 @@ namespace Ambrosia
                 // Create input record and add it to the dictionary
                 inputConnectionRecord = new InputConnectionRecord();
                 _inputs[sourceString] = inputConnectionRecord;
-                StartupParamOverrides.OutputStream.WriteLine("Adding input:{0}", sourceString);
+                Trace.TraceInformation("Adding input:{0}", sourceString);
             }
             else
             {
-                StartupParamOverrides.OutputStream.WriteLine("restoring input:{0}", sourceString);
+                Trace.TraceInformation("restoring input:{0}", sourceString);
             }
             inputConnectionRecord.ControlConnectionStream = (NetworkStream)readFromStream;
             OutputConnectionRecord outputConnectionRecord;
@@ -4081,12 +4079,12 @@ namespace Ambrosia
             _upgrading = (_currentVersion < _upgradeToVersion);
             if (pauseAtStart == true)
             {
-                StartupParamOverrides.OutputStream.WriteLine("Hit Enter to continue:");
+                Console.WriteLine("Hit Enter to continue:");
                 Console.ReadLine();
             }
             else
             {
-                StartupParamOverrides.OutputStream.WriteLine("Ready ...");
+                Trace.TraceInformation("Ready ...");
             }
             _persistLogs = persistLogs;
             _activeActive = activeActive;
@@ -4120,7 +4118,7 @@ namespace Ambrosia
             _sharded = sharded;
             _coral = ClientLibrary;
 
-            StartupParamOverrides.OutputStream.WriteLine("Logs directory: {0}", _serviceLogPath);
+            Trace.TraceInformation("Logs directory: {0}", _serviceLogPath);
 
             if (createService == null)
             {
