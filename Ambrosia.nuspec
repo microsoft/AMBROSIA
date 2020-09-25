@@ -14,12 +14,20 @@
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <language>en-US</language>
     <dependencies>
+      <dependency id="Azure.Storage.Blobs" version="12.4.4" />     
       <dependency id="Microsoft.CodeAnalysis.Scripting" version="2.7.0" />
+      <dependency id="Microsoft.CRA" version="2020.9.24.1" />
+      <dependency id="Microsoft.VisualStudio.Threading" version="15.8.168" /> 
+      <dependency id="NetStandard.Library" version="2.0.3" /> 
+      <dependency id="Newtonsoft.Json" version="12.0.2" /> 
+      <dependency id="Remote.Linq" version="5.8.2" /> 
+      <dependency id="Remote.Linq.Newtonsoft.Json" version="5.8.2" /> 
+      <dependency id="System.CodeDom" version="4.5.0" />
+      <dependency id="System.Collections.Concurrent" version="4.3.0" />
+      <dependency id="System.Configuration.ConfigurationManager" version="4.5.0" />
       <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" />
       <dependency id="System.Threading.Tasks.Dataflow" version="4.9.0" />
-      <dependency id="Microsoft.VisualStudio.Threading" version="15.8.168" /> 
-      <dependency id="Microsoft.VisualStudio.Validation" version="15.3.58" />     
-      <dependency id="Azure.Storage.Blobs" version="12.4.4" />     
+      <dependency id="System.ValueTuple" version="4.5.0" />
     </dependencies>
   </metadata>
   <files>
@@ -37,3 +45,6 @@
     <file src="Clients\CSharp\AmbrosiaLibCS\bin\$configuration$\netstandard2.0\SharedAmbrosiaTools.pdb" target="lib\netstandard2.0" />
   </files>
 </package>
+
+Azure.Storage.Files.Shares 12.2.3 - CS LibCS UnsafeDeregisterInstance
+Trill 2018.3.2.1

@@ -16,20 +16,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^netcoreapp\d'))">
     <DefineConstants>NETCORE</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CRA" Version="2019.10.21.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="Remote.Linq" Version="5.8.2" />
-    <PackageReference Include="Remote.Linq.Newtonsoft.Json" Version="5.8.2" />
-    <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
-  </ItemGroup>  
+  </PropertyGroup>  
   <ItemGroup>
     <ProjectReference Include="..\GeneratedSourceFiles\PTIAmbrosiaGeneratedAPI\latest\PTIAmbrosiaGeneratedAPI.csproj" />
   </ItemGroup>
