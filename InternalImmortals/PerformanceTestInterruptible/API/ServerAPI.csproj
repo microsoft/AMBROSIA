@@ -12,6 +12,6 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.18" />
+    <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.19" />
   </ItemGroup>
 </Project>
