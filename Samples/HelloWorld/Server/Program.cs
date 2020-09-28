@@ -82,7 +82,6 @@ namespace Server
             
             using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
             {
-                StartupParamOverrides.OutputStream = coordinatorOutput;
                 GenericLogsInterface.SetToGenericLogs();
                 using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), coordinatorPort))
                 {

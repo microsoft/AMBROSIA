@@ -1,6 +1,4 @@
-﻿using Ambrosia;
-
-namespace Server
+﻿namespace Server
 {
     public interface IServer
     {

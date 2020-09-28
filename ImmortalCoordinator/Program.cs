@@ -113,6 +113,7 @@ namespace CRA.Worker
 
         static void Main(string[] args)
         {
+            Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
             main(args);
         }
 

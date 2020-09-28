@@ -172,59 +172,93 @@ namespace Job
         private static ICDeploymentMode _ICDeploymentMode = ICDeploymentMode.SecondProc;
         public static AsyncQueue<int> finishedTokenQ;
         static Thread _iCThread;
+        static FileStream _iCWriter = null;
+        static TextWriterTraceListener _iCListener;
+
+        static void ConsoleListen()
+        {
+            Console.ReadLine();
+            if (_iCWriter != null)
+            {
+                Thread.Sleep(3000);
+                Trace.Flush();
+                _iCListener.Flush();
+                _iCWriter.Flush();
+                _iCWriter.Flush();
+            }
+            System.Environment.Exit(0);
+        }
 
         static void Main(string[] args)
         {
             ParseAndValidateOptions(args);
 
-            finishedTokenQ = new AsyncQueue<int>();
-            
-            // for debugging don't want to auto continue but for test automation want this to auto continue
-            if (!_autoContinue)
+            if (_ICDeploymentMode == ICDeploymentMode.InProcDeploy || _ICDeploymentMode == ICDeploymentMode.InProcManual)
             {
-                Console.WriteLine("Pausing execution of " + _perfJob + ". Press enter to deploy and continue.");
-                Console.ReadLine();
+                GenericLogsInterface.SetToGenericLogs();
+                _iCWriter = new FileStream("ICOutput.txt", FileMode.Create);
+                _iCListener = new TextWriterTraceListener(_iCWriter);
+                Trace.Listeners.Add(_iCListener);
             }
+
+            try
+            {
+                finishedTokenQ = new AsyncQueue<int>();
+
+                // for debugging don't want to auto continue but for test automation want this to auto continue
+                if (!_autoContinue)
+                {
+                    Console.WriteLine("Pausing execution of " + _perfJob + ". Press enter to deploy and continue.");
+                    Console.ReadLine();
+                }
 
 #if DEBUG
-            Console.WriteLine("*X* Connecting to: " + _perfServer + "....");
+                Console.WriteLine("*X* Connecting to: " + _perfServer + "....");
 #endif
-            var myClient = new Job(_perfServer, _maxMessageSize, _numRounds, _descendingSize);
+                var myClient = new Job(_perfServer, _maxMessageSize, _numRounds, _descendingSize);
 
-            switch (_ICDeploymentMode)
-            {
-                case ICDeploymentMode.SecondProc:
-                    using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
-                    {
+                new Thread(() => ConsoleListen()) { IsBackground = true }.Start();
 
-                        finishedTokenQ.DequeueAsync().Wait();
-                    }
-                    break;
-                case ICDeploymentMode.InProcDeploy:
-                    GenericLogsInterface.SetToGenericLogs();
-                    using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _icPort))
-                    {
-
-                        finishedTokenQ.DequeueAsync().Wait();
-                    }
-                    break;
-                case ICDeploymentMode.InProcManual:
-                    GenericLogsInterface.SetToGenericLogs();
-                    var myName = _perfJob;
-                    var myPort = _icPort;
-                    var ambrosiaArgs = new string[2];
-                    ambrosiaArgs[0] = "-i=" + myName;
-                    ambrosiaArgs[1] = "-p=" + myPort;
-                    Console.WriteLine("ImmortalCoordinator -i=" + myName + " -p=" + myPort.ToString());
-                    _iCThread = new Thread(() => CRA.Worker.Program.main(ambrosiaArgs)) { IsBackground = true };
-                    _iCThread.Start();
-                    using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
-                    {
-
-                        finishedTokenQ.DequeueAsync().Wait();
-                    }
-                    break;            
+                switch (_ICDeploymentMode)
+                {
+                    case ICDeploymentMode.SecondProc:
+                        using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
+                        {
+                            finishedTokenQ.DequeueAsync().Wait();
+                        }
+                        break;
+                    case ICDeploymentMode.InProcDeploy:
+                        using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _icPort))
+                        {
+                            finishedTokenQ.DequeueAsync().Wait();
+                        }
+                        break;
+                    case ICDeploymentMode.InProcManual:
+                        var myName = _perfJob;
+                        var myPort = _icPort;
+                        var ambrosiaArgs = new string[2];
+                        ambrosiaArgs[0] = "-i=" + myName;
+                        ambrosiaArgs[1] = "-p=" + myPort;
+                        Console.WriteLine("ImmortalCoordinator -i=" + myName + " -p=" + myPort.ToString());
+                        _iCThread = new Thread(() => CRA.Worker.Program.main(ambrosiaArgs)) { IsBackground = true };
+                        _iCThread.Start();
+                        using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
+                        {
+                            finishedTokenQ.DequeueAsync().Wait();
+                        }
+                        break;
+                }
             }
+            catch { }
+            if (_iCWriter != null)
+            {
+                Thread.Sleep(3000);
+                Trace.Flush();
+                _iCListener.Flush();
+                _iCWriter.Flush();
+                _iCWriter.Flush();
+            }
+            System.Environment.Exit(0);
         }
 
         private static void ParseAndValidateOptions(string[] args)
