@@ -3,7 +3,7 @@
 # Script to update Ambrosia to the new Nuget Release
 #
 # Call: 
-#  .\UpdateAmbrosiaForNugetRelease.ps1 1.0.15 1.0.16
+#  .\UpdateAmbrosiaForNugetRelease.ps1 1.0.18 1.0.19
 #
 # Parameters:
 #	CurrentVersion - Version of the Nuget 
@@ -80,7 +80,7 @@ $CurrentDir = $(get-location);
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\Clients\CSharp\AmbrosiaCS\AmbrosiaCS.csproj' -NoBOMEncoding 'F';
 
 # PerformanceTest
-SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\InternalImmortals\PerformanceTest\GeneratedSourceFiles\PTAmbrosiaGeneratedAPI\latest\PTAmbrosiaGeneratedAPI.csproj' -NoBOMEncoding 'T';
+#SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\InternalImmortals\PerformanceTest\GeneratedSourceFiles\PTAmbrosiaGeneratedAPI\latest\PTAmbrosiaGeneratedAPI.csproj' -NoBOMEncoding 'T';
 
 # PerformanceTestInterruptible
 SwapNugetStringInFile -OldVer $CurrentVersion -NewVer $NewVersion -FileName $CurrentDir'\InternalImmortals\PerformanceTestInterruptible\API\ServerAPI.csproj' -NoBOMEncoding 'F';
