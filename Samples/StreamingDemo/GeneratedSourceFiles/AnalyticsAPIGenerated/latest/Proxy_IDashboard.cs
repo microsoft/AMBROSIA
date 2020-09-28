@@ -23,12 +23,6 @@ namespace DashboardAPI
         }
 
         async Task
-        IDashboardProxy.OnNextAsync(TwitterObservable.AnalyticsResultString p_0)
-        {
-			 await OnNextAsync(p_0);
-        }
-
-        async Task
         OnNextAsync(TwitterObservable.AnalyticsResultString p_0)
         {
             SerializableTaskCompletionSource rpcTask;

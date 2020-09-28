@@ -22,7 +22,6 @@ namespace DashboardAPI
     [Ambrosia.InstanceProxy(typeof(IDashboard))]
     public interface IDashboardProxy
     {
-        Task OnNextAsync(TwitterObservable.AnalyticsResultString p_0);
         void OnNextFork(TwitterObservable.AnalyticsResultString p_0);
     }
 }
