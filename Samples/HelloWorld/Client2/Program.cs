@@ -37,6 +37,7 @@ namespace Client2
                 }
                 else
                 {
+                    Console.WriteLine("Sending keyboard input {0}", input);
                     thisProxy.ReceiveKeyboardInputFork(input);
                 }
             }
@@ -51,7 +52,6 @@ namespace Client2
 
         public async Task ReceiveKeyboardInputAsync(string input)
         {
-            Console.WriteLine("Sending keyboard input {0}", input);
             _server.ReceiveMessageFork(input);
         }
 
@@ -88,7 +88,6 @@ namespace Client2
             using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
             {
                 GenericLogsInterface.SetToGenericLogs();
-                StartupParamOverrides.OutputStream = coordinatorOutput;
                 using (AmbrosiaFactory.Deploy<IClient2>(clientInstanceName, client, coordinatorPort))
                 {
                     finishedTokenQ.DequeueAsync().Wait();

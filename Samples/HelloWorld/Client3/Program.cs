@@ -96,7 +96,6 @@ namespace Client3
             using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
             {
                 GenericLogsInterface.SetToGenericLogs();
-                StartupParamOverrides.OutputStream = coordinatorOutput;
                 using (AmbrosiaFactory.Deploy<IClient3>(clientInstanceName, new Client3(serverInstanceName, clientInstanceName), coordinatorPort))
                 {
                     finishedTokenQ.DequeueAsync().Wait();

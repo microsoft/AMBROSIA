@@ -1,14 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AssemblyName>IServer</AssemblyName>
     <RootNamespace>IServer</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.16" Condition="'$(Configuration)' == 'Release' " />
-    <PackageReference Include="Microsoft.Ambrosia.LibCSDebug" Version="1.0.16" Condition="'$(Configuration)' == 'Debug'" />
-  </ItemGroup>
 
 </Project>

@@ -7,10 +7,6 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.192" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\GeneratedSourceFiles\Client3Interfaces\latest\Client3Interfaces.csproj" />
   </ItemGroup>
 
