@@ -2,7 +2,6 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFrameworks>net461</TargetFrameworks>
-    <Platforms>x64</Platforms>
     <RootNamespace>AnalyticsAPI</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">

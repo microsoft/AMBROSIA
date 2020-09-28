@@ -2,7 +2,6 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFrameworks>net461</TargetFrameworks>
-    <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>TwitterDashboardAPI</RootNamespace>
   </PropertyGroup>
