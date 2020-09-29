@@ -50,6 +50,8 @@ namespace Ambrosia
             GenericLogsInterface.SetToGenericLogs();
             ParseAndValidateOptions(args);
 
+            Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
+
             switch (_runtimeMode)
             {
                 case LocalAmbrosiaRuntimeModes.DebugInstance:

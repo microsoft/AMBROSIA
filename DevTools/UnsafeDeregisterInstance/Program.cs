@@ -1,6 +1,7 @@
 ﻿using CRA.ClientLibrary;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ namespace UnsafeDeregisterService
                 Console.WriteLine("Usage: UnsafeDeregisterInstance InstanceName");
                 return;
             }
+            Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
             var dataProvider = new CRA.DataProvider.Azure.AzureDataProvider(Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING"));
             var client = new CRAClientLibrary(dataProvider);
             var serviceName = args[0];
