@@ -3,13 +3,11 @@ ImmortalCoordinator -i=unittestinproctcpserver -p=2500
 *X* Trying to connect IC and Language Binding
 *X* Trying to do second connection between IC and Language Binding
 *X* At checkpoint, received 0 messages
-Reading a checkpoint 1519 bytes
 *X* At checkpoint, received 0 messages
 *X* becoming primary
 *X* Press enter to terminate program.
 *X* Server in Entry Point
 *X* At checkpoint, received 972895 messages
-Reading a checkpoint 1896 bytes
 *X* At checkpoint, received 972895 messages
 Received 1024 MB so far
 Bytes received: 1073741824
