@@ -1,7 +1,5 @@
-Reading a checkpoint 1751 bytes
 Bytes per RPC	Throughput (GB/sec)
-Reading a checkpoint 2127 bytes
-*X* 1024	0.0500968555070474
+*X* 1024	0.0252311076738605
 Service Received 1024 MB so far
 Bytes received: 1073741824
 DONE
