@@ -1,4 +1,4 @@
-ImmortalCoordinator -i=unittestinproctcpclientjob -p=2500
+*X* ImmortalCoordinator -i=unittestinproctcpserver -p=2500
 *X* At checkpoint, received 0 messages
 *X* At checkpoint, received 0 messages
 *X* becoming primary
