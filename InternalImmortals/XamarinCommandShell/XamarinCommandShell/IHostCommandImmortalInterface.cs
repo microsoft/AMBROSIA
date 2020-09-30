@@ -8,6 +8,8 @@ namespace XamarinCommandShell
     {
         void HostSubmitCommand(string command);
 
+        void HostAddConsoleOutput(string output);
+
         void HostSetCurrentDirectory(string newDirectory);
 
         string HostGetCurrentDirectory();

@@ -11,18 +11,10 @@ namespace XamarinCommandShell
     {
         IDisposable _immortalHandle;
 
-        public App()
-        {
-            AzureBlobsLogsInterface.SetToAzureBlobsLogs();
-            new Thread(new ThreadStart(() => _immortalHandle = AmbrosiaFactory.Deploy<ICommandShellImmortal>("CommandShell", new CommandShellImmortal(), 2500))).Start();
-            while (CommandShellImmortal.myCommandShellImmortal == null) ;
-            InitializeComponent();
-            MainPage = new MainPage();
-        }
-
         public App(IOSCommands inCommands)
         {
-            AzureBlobsLogsInterface.SetToAzureBlobsLogs();
+            GenericLogsInterface.SetToGenericLogs();
+//            AzureBlobsLogsInterface.SetToAzureBlobsLogs();
             new Thread(new ThreadStart(() => _immortalHandle = AmbrosiaFactory.Deploy<ICommandShellImmortal>("CommandShell", new CommandShellImmortal(), 2500))).Start();
             while (CommandShellImmortal.myCommandShellImmortal == null) ;
             InitializeComponent();

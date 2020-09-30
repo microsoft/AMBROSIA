@@ -4073,6 +4073,10 @@ namespace Ambrosia
                        bool sharded
                        )
         {
+            if (LogReaderStaticPicker.curStatic == null || LogWriterStaticPicker.curStatic == null)
+            {
+                OnError(UnexpectedError, "Must specify log storage type");
+            }
             _runningRepro = false;
             _currentVersion = currentVersion;
             _upgradeToVersion = upgradeToVersion;

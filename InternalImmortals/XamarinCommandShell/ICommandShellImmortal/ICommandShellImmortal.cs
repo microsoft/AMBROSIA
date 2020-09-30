@@ -10,5 +10,8 @@ namespace XamarinCommandShell
 
         [ImpulseHandler]
         void SetCurrentDirectory(string newDirectory);
+
+        [ImpulseHandler]
+        void AddConsoleOutput(string outputToAdd);
     }
 }
