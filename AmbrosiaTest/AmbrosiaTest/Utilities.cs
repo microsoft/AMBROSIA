@@ -47,7 +47,7 @@ namespace AmbrosiaTest
 
         //*********
         // NetFrameworkTestRun
-        // when = true, the test will run under the assumption that .Net Framework files in AmbrosiaTest\bin\x64\debug (or release) directory (from net46 directory)
+        // when = true, the test will run under the assumption that .Net Framework files in AmbrosiaTest\bin\x64\debug (or release) directory (from net461 directory)
         // when = false, the test will run under the assumption that .Net Core files in AmbrosiaTest\bin\x64\debug (or release) directory (from netcoreapp3.1 directory)
         // .NET CORE only has DLLs, so no AMB exe so run by using "dotnet"
         // The two strings (NetFramework and NetCoreFramework) are part of the path when calling PTI and PT - called in helper functions
@@ -311,6 +311,28 @@ namespace AmbrosiaTest
                 {
                     Directory.Delete(PTIAmbrosiaLogDir, true);
                 }
+
+                // Clean up the InProc IC output files from Job and Server
+                string InProcICOutputFile = "ICOutput.txt";
+                string CurrentFramework = NetFramework;
+                if (NetFrameworkTestRun == false)
+                {
+                    CurrentFramework = NetCoreFramework;
+                }
+                // job IC output file
+                string PTI_Job_ICLogFile = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ CurrentFramework+"\\"+ InProcICOutputFile;
+                if (File.Exists(PTI_Job_ICLogFile))
+                {
+                    File.Delete(PTI_Job_ICLogFile);
+                }
+                // server IC output file
+                string PTI_Server_ICLogFile = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + CurrentFramework + "\\" + InProcICOutputFile;
+                if (File.Exists(PTI_Server_ICLogFile))
+                {
+                    File.Delete(PTI_Server_ICLogFile);
+                }
+
+
 
                 // Give it a second to make sure - had timing issues where wasn't fully deleted by time got here
                 Thread.Sleep(1000);
@@ -1226,156 +1248,97 @@ namespace AmbrosiaTest
         //** Separate from TestCleanup as want it to be as quick as possible
         public void UnitTestCleanup()
         {
-            Utilities MyUtils = new Utilities();
-
             // If failures in queue then do not want to do anything (init, run test, clean up) 
-            if (MyUtils.CheckStopQueueFlag())
+            if (CheckStopQueueFlag())
             {
                 return;
             }
 
-            // Kill all ImmortalCoordinators, Job and Server exes
-            MyUtils.KillProcessByName("ImmortalCoordinator");
-            MyUtils.KillProcessByName("Job");
-            MyUtils.KillProcessByName("Server");
-            MyUtils.KillProcessByName("Ambrosia");
-            MyUtils.KillProcessByName("MSBuild");
-            //MyUtils.KillProcessByName("cmd");  // sometimes processes hang
-
-            // Give it a few second to clean things up a bit more
-            Thread.Sleep(2000);
+            // Stop all running processes that hung or were left behind
+            StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("unitendtoendtest");
+            CleanupAzureTables("unitendtoendtest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("unitendtoendrestarttest");
+            CleanupAzureTables("unitendtoendrestarttest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("unittestactiveactivekillprimary");
+            CleanupAzureTables("unittestactiveactivekillprimary");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("unittestinproctcp");
+            CleanupAzureTables("unittestinproctcp");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("unittestinprocpipe");
+            CleanupAzureTables("unittestinprocpipe");
             Thread.Sleep(2000);
         }
 
 
         public void TestCleanup()
         {
-            Utilities MyUtils = new Utilities();
 
             // If failures in queue then do not want to do anything (init, run test, clean up) 
-            if (MyUtils.CheckStopQueueFlag())
+            if (CheckStopQueueFlag())
             {
                 return;
             }
 
-            // Kill all ImmortalCoordinators, Job and Server exes
-            MyUtils.KillProcessByName("ImmortalCoordinator");
-            MyUtils.KillProcessByName("Job");
-            MyUtils.KillProcessByName("Server");
-            MyUtils.KillProcessByName("Ambrosia");
-            MyUtils.KillProcessByName("MSBuild");
-            MyUtils.KillProcessByName("dotnet");
-            //MyUtils.KillProcessByName("cmd");  // sometimes processes hang
-
-            // Give it a few second to clean things up a bit more
-            Thread.Sleep(5000);
+            // Stop all running processes that hung or were left behind
+            StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("killjobtest");
+            CleanupAzureTables("killjobtest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("basictest");
+            CleanupAzureTables("basictest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("killservertest");
+            CleanupAzureTables("killservertest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("giantmessagetest");
+            CleanupAzureTables("giantmessagetest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("doublekilljob");
+            CleanupAzureTables("doublekilljob");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("doublekillserver");
+            CleanupAzureTables("doublekillserver");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("mtfnokill");
+            CleanupAzureTables("mtfnokill");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("mtfnokillpersist");
+            CleanupAzureTables("mtfnokillpersist");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("mtfkillpersist");
+            CleanupAzureTables("mtfkillpersist");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("activeactiveaddnotekillprimary");
+            CleanupAzureTables("activeactiveaddnotekillprimary");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("activeactivekillprimary");
+            CleanupAzureTables("activeactivekillprimary");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("activeactivekillcheckpoint");
+            CleanupAzureTables("activeactivekillcheckpoint");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("activeactivekillsecondary");
+            CleanupAzureTables("activeactivekillsecondary");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("activeactivekillsecondaryandcheckpoint");
+            CleanupAzureTables("activeactivekillsecondaryandcheckpoint");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("activeactivekillclientandserver");
+            CleanupAzureTables("activeactivekillclientandserver");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("activeactivekillall");
+            CleanupAzureTables("activeactivekillall");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("startimmcoordlasttest");
+            CleanupAzureTables("startimmcoordlasttest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("actactaddnotekillprimary");
+            CleanupAzureTables("actactaddnotekillprimary");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("upgradeserverafterserverdone");
+            CleanupAzureTables("upgradeserverafterserverdone");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("upgradeserverbeforeserverdone");
+            CleanupAzureTables("upgradeserverbeforeserverdone");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("upgradeserverbeforestarts");
+            CleanupAzureTables("upgradeserverbeforestarts");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("upgradeactiveactiveprimaryonly");
+            CleanupAzureTables("upgradeactiveactiveprimaryonly");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("upgradeclient");
+            CleanupAzureTables("upgradeclient");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("multipleclientsperserver");
+            CleanupAzureTables("multipleclientsperserver");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("giantcheckpointtest");
+            CleanupAzureTables("giantcheckpointtest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("overrideoptions");
+            CleanupAzureTables("overrideoptions");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("savelogtoblob");
+            CleanupAzureTables("savelogtoblob");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("savelogtofileandblob");
-
-
-            // Give it a few second to clean things up a bit more
-            Thread.Sleep(5000);
-        }
-
-        public void AsyncTestCleanup()
-        {
-            Utilities MyUtils = new Utilities();
-
-            // If failures in queue then do not want to do anything (init, run test, clean up) 
-            if (MyUtils.CheckStopQueueFlag())
-            {
-                return;
-            }
-
-            // Kill all ImmortalCoordinators, Job and Server exes
-            MyUtils.KillProcessByName("ImmortalCoordinator");
-            MyUtils.KillProcessByName("Job");
-            MyUtils.KillProcessByName("Server");
-            MyUtils.KillProcessByName("Ambrosia");
-            MyUtils.KillProcessByName("MSBuild");
-            MyUtils.KillProcessByName("dotnet");
-            //MyUtils.KillProcessByName("cmd");  // sometimes processes hang
-
-            // Give it a few second to clean things up a bit more
-            Thread.Sleep(5000);
-
-            // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("asyncbasic");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("asynckilljobtest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("asynckillservertest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("asyncreplaylatest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("asyncactiveactivebasic");
-            Thread.Sleep(2000);
+            CleanupAzureTables("savelogtofileandblob");
 
 
             // Give it a few second to clean things up a bit more
@@ -1384,56 +1347,46 @@ namespace AmbrosiaTest
 
         public void InProcPipeTestCleanup()
         {
-            Utilities MyUtils = new Utilities();
 
             // If failures in queue then do not want to do anything (init, run test, clean up) 
-            if (MyUtils.CheckStopQueueFlag())
+            if (CheckStopQueueFlag())
             {
                 return;
             }
 
-            // Kill all ImmortalCoordinators, Job and Server exes
-            MyUtils.KillProcessByName("ImmortalCoordinator");
-            MyUtils.KillProcessByName("Job");
-            MyUtils.KillProcessByName("Server");
-            MyUtils.KillProcessByName("Ambrosia");
-            MyUtils.KillProcessByName("MSBuild");
-            MyUtils.KillProcessByName("dotnet");
-            //MyUtils.KillProcessByName("cmd");  // sometimes processes hang
-
-            // Give it a few second to clean things up a bit more
-            Thread.Sleep(5000);
+            // Stop all running processes that hung or were left behind
+            StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("inprocpipeclientonly");
+            CleanupAzureTables("inprocpipeclientonly");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocpipeclientonly");
+            CleanupAzureTables("inprocpipeclientonly");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocbasictest");
+            CleanupAzureTables("inprocbasictest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocgiantcheckpointtest");
+            CleanupAzureTables("inprocgiantcheckpointtest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocgiantmessagetest");
+            CleanupAzureTables("inprocgiantmessagetest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocdoublekilljob");
+            CleanupAzureTables("inprocdoublekilljob");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocdoublekillserver");
+            CleanupAzureTables("inprocdoublekillserver");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprockilljobtest");
+            CleanupAzureTables("inprockilljobtest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprockillservertest");
+            CleanupAzureTables("inprockillservertest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocmultipleclientsperserver");
+            CleanupAzureTables("inprocmultipleclientsperserver");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocblob");
+            CleanupAzureTables("inprocblob");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocfileblob");
+            CleanupAzureTables("inprocfileblob");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocupgradeclient");
+            CleanupAzureTables("inprocupgradeclient");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocupgradeafterserverdone");
+            CleanupAzureTables("inprocupgradeafterserverdone");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocupgradebeforeserverdone");
+            CleanupAzureTables("inprocupgradebeforeserverdone");
             Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more
@@ -1443,47 +1396,59 @@ namespace AmbrosiaTest
 
         public void InProcTCPTestCleanup()
         {
-            Utilities MyUtils = new Utilities();
 
             // If failures in queue then do not want to do anything (init, run test, clean up) 
-            if (MyUtils.CheckStopQueueFlag())
+            if (CheckStopQueueFlag())
+            {
+                return;
+            }
+
+            // Stop all running processes that hung or were left behind
+            StopAllAmbrosiaProcesses();
+
+            // Clean up Azure - this is called after each test so put all test names in for azure tables
+            CleanupAzureTables("inproctcpclientonly");
+            Thread.Sleep(2000);
+            CleanupAzureTables("inproctcpserveronly");
+            Thread.Sleep(2000);
+            CleanupAzureTables("inprocclienttcpserverpipe");
+            Thread.Sleep(2000);
+            CleanupAzureTables("inprocclientpipeservertcp");
+            Thread.Sleep(2000);
+            CleanupAzureTables("inproctcpkilljobtest");
+            Thread.Sleep(2000);
+            CleanupAzureTables("inproctcpkillservertest");
+            Thread.Sleep(2000);
+            CleanupAzureTables("inproctcpfileblob");
+            Thread.Sleep(2000);
+            CleanupAzureTables("inproctcpblob");
+            Thread.Sleep(2000);
+            CleanupAzureTables("inproctcpupgradeserver");
+            Thread.Sleep(2000);
+            CleanupAzureTables("inproctcpupgradeclient");
+            Thread.Sleep(2000);
+
+            // Give it a few second to clean things up a bit more
+            Thread.Sleep(5000);
+        }
+
+        public void StopAllAmbrosiaProcesses()
+        {
+
+            // If failures in queue then do not want to do anything (init, run test, clean up) 
+            if (CheckStopQueueFlag())
             {
                 return;
             }
 
             // Kill all ImmortalCoordinators, Job and Server exes
-            MyUtils.KillProcessByName("ImmortalCoordinator");
-            MyUtils.KillProcessByName("Job");
-            MyUtils.KillProcessByName("Server");
-            MyUtils.KillProcessByName("Ambrosia");
-            MyUtils.KillProcessByName("MSBuild");
-            MyUtils.KillProcessByName("dotnet");
-            //MyUtils.KillProcessByName("cmd");  // sometimes processes hang
-
-            // Give it a few second to clean things up a bit more
-            Thread.Sleep(5000);
-
-            // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("inproctcpclientonly");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inproctcpserveronly");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocclienttcpserverpipe");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inprocclientpipeservertcp");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inproctcpkilljobtest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inproctcpkillservertest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inproctcpfileblob");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inproctcpblob");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inproctcpupgradeserver");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("inproctcpupgradeclient");
-            Thread.Sleep(2000);
+            KillProcessByName("Job");
+            KillProcessByName("Server");
+            KillProcessByName("ImmortalCoordinator");
+            KillProcessByName("Ambrosia");
+            KillProcessByName("MSBuild");
+            KillProcessByName("dotnet");
+            //KillProcessByName("cmd");  // sometimes processes hang
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
@@ -1493,23 +1458,25 @@ namespace AmbrosiaTest
         public void TestInitialize()
         {
 
-            Utilities MyUtils = new Utilities();
 
             // If failures in queue then do not want to do anything (init, run test, clean up) 
-            if (MyUtils.CheckStopQueueFlag())
+            if (CheckStopQueueFlag())
             {
                 Assert.Fail("Queue Stopped due to previous test failure. This test not run.");
                 return;
             }
 
             // Verify environment
-            MyUtils.VerifyTestEnvironment();
+            VerifyTestEnvironment();
 
             // Make sure azure tables etc are cleaned up - there is a lag when cleaning up Azure so could cause issues with test
             //            Cleanup();
 
+            // Make sure nothing running from previous test
+            StopAllAmbrosiaProcesses();
+
             // make sure log files cleaned up
-            MyUtils.CleanupAmbrosiaLogFiles();
+            CleanupAmbrosiaLogFiles();
 
             // Give it a few seconds to truly init everything - on 8 min test - 3 seconds is no biggie
             Thread.Sleep(3000);
