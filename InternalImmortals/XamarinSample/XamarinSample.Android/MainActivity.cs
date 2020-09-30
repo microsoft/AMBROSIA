@@ -14,6 +14,7 @@ namespace XamarinSample.Droid
     {
         protected override void OnCreate(Bundle savedInstanceState)
         {
+            System.Environment.SetEnvironmentVariable("AZURE_STORAGE_CONN_STRING", "DefaultEndpointsProtocol=https;AccountName=quillexperiments;AccountKey=I6nwg+r9SBKCpRh8PWFHICE58wHCwMNpzMGheiAtBCecAHplS1484ivcZaStQQSUHrAp/7CltCkflzpB+CC5Og==");
             TabLayoutResource = Resource.Layout.Tabbar;
             ToolbarResource = Resource.Layout.Toolbar;
 

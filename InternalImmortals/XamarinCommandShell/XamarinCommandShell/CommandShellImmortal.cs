@@ -43,6 +43,11 @@ namespace XamarinCommandShell
             _outputHistory += command + "\n";
         }
 
+        public async Task AddConsoleOutputAsync(string outputToAdd)
+        {
+            _outputHistory += outputToAdd;
+        }
+
         public async Task SetCurrentDirectoryAsync(string newDirectory)
         {
             _currentDirectory = newDirectory;
@@ -65,6 +70,10 @@ namespace XamarinCommandShell
         public string HostGetConsoleOutput()
         {
             return _outputHistory;
+        }
+        public void HostAddConsoleOutput(string outputToAdd)
+        {
+            thisProxy.AddConsoleOutputFork(outputToAdd);
         }
     }
 }
