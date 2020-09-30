@@ -239,7 +239,7 @@ namespace Job
                         var ambrosiaArgs = new string[2];
                         ambrosiaArgs[0] = "-i=" + myName;
                         ambrosiaArgs[1] = "-p=" + myPort;
-                        Console.WriteLine("ImmortalCoordinator -i=" + myName + " -p=" + myPort.ToString());
+                        Console.WriteLine("*X* ImmortalCoordinator -i=" + myName + " -p=" + myPort.ToString());
                         _iCThread = new Thread(() => CRA.Worker.Program.main(ambrosiaArgs)) { IsBackground = true };
                         _iCThread.Start();
                         using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
