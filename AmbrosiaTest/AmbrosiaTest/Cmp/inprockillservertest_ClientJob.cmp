@@ -1,8 +1,7 @@
 Bytes per RPC	Throughput (GB/sec)
 *X* 65536	0.0202977421808515
 Service Received 1024 MB so far
-Reading a checkpoint 2138 bytes
-*X* 32768	0.0650514753951088
+*X* 32768	0.0369283467913277
 Service Received 2048 MB so far
 *X* 16384	0.0693274063022772
 Service Received 3072 MB so far

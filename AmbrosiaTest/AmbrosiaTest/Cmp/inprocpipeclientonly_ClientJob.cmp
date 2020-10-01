@@ -1,6 +1,5 @@
-ImmortalCoordinator -i=unittestinproctcpclientjob -p=1500
-Reading a checkpoint 2135 bytes
-*X* 1024	0.0720345985058007
+Bytes per RPC	Throughput (GB/sec)
+*X* 1024	0.0283369937881201
 Service Received 1024 MB so far
 Bytes received: 1073741824
 DONE
