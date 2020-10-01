@@ -313,26 +313,27 @@ namespace AmbrosiaTest
                 }
 
                 // Clean up the InProc IC output files from Job and Server
-                string InProcICOutputFile = "ICOutput.txt";
+                string InProcICOutputFile = "ICOutput*.txt";
                 string CurrentFramework = NetFramework;
                 if (NetFrameworkTestRun == false)
                 {
                     CurrentFramework = NetCoreFramework;
                 }
+
                 // job IC output file
-                string PTI_Job_ICLogFile = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ CurrentFramework+"\\"+ InProcICOutputFile;
-                if (File.Exists(PTI_Job_ICLogFile))
+                string PTI_Job_Dir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ CurrentFramework;
+                var jobdir = new DirectoryInfo(PTI_Job_Dir);
+                foreach (var file in jobdir.EnumerateFiles(InProcICOutputFile))
                 {
-                    File.Delete(PTI_Job_ICLogFile);
+                    file.Delete();
                 }
                 // server IC output file
-                string PTI_Server_ICLogFile = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + CurrentFramework + "\\" + InProcICOutputFile;
-                if (File.Exists(PTI_Server_ICLogFile))
+                string PTI_Server_Dir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + CurrentFramework;
+                var serverdir = new DirectoryInfo(PTI_Server_Dir);
+                foreach (var file in serverdir.EnumerateFiles(InProcICOutputFile))
                 {
-                    File.Delete(PTI_Server_ICLogFile);
+                    file.Delete();
                 }
-
-
 
                 // Give it a second to make sure - had timing issues where wasn't fully deleted by time got here
                 Thread.Sleep(1000);
