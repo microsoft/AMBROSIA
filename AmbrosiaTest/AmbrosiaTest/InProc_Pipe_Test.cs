@@ -297,7 +297,7 @@ namespace AmbrosiaTest
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-            string killJobMessage = "Migrating or upgrading. Must commit suicide since I'm the primary";
+           // string killJobMessage = "Migrating or upgrading. Must commit suicide since I'm the primary";
 
             Utilities MyUtils = new Utilities();
 
@@ -368,9 +368,6 @@ namespace AmbrosiaTest
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted, byteSize, 20, false, testName, true); // Total bytes received
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_Restarted, byteSize, 20, false, testName, true);
 
-            // verify actually killed first one - this output from CRA but will show up in Job on this 
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, killJobMessage, 5, false, testName, true);
-
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID_Restarted);
             MyUtils.KillProcess(serverProcessID_Restarted);
@@ -382,6 +379,9 @@ namespace AmbrosiaTest
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
+
+            // check message - comes from Imm Coord so won't show in Job for InProc
+            //pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, killJobMessage, 5, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
