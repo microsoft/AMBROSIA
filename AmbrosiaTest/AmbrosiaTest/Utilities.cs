@@ -1389,6 +1389,8 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("inprocupgradebeforeserverdone");
             Thread.Sleep(2000);
+            CleanupAzureTables("inprocpipeserveronly");
+            Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
