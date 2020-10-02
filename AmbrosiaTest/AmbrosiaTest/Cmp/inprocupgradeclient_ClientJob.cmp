@@ -1,5 +1,1 @@
 Bytes per RPC	Throughput (GB/sec)
-*X* 65536	0.0417283677961038
-Service Received 1024 MB so far
-FATAL ERROR 0: Migrating or upgrading. Must commit suicide since I'm the primary
-KILLING WORKER: 
