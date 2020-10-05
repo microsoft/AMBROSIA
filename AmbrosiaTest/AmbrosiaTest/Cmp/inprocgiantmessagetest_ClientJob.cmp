@@ -1,4 +1,5 @@
-*X* 67108864	0.269758953110822
+Bytes per RPC	Throughput (GB/sec)
+*X* 67108864	0.357014242761902
 Service Received 1024 MB so far
 *X* 33554432	0.0309030953714642
 Service Received 2048 MB so far

@@ -1,4 +1,4 @@
-ImmortalCoordinator -i=inproctcpserveronlyserver -p=2500
+*X* ImmortalCoordinator -i=unittestinproctcpserver -p=2500
 *X* Trying to connect IC and Language Binding
 *X* At checkpoint, received 0 messages
 *X* At checkpoint, received 0 messages

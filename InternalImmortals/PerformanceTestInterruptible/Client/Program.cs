@@ -196,7 +196,7 @@ namespace Job
             if (_ICDeploymentMode == ICDeploymentMode.InProcDeploy || _ICDeploymentMode == ICDeploymentMode.InProcManual)
             {
                 GenericLogsInterface.SetToGenericLogs();
-                _iCWriter = new FileStream("ICOutput.txt", FileMode.Create);
+                _iCWriter = new FileStream("ICOutput_"+_perfJob.ToString()+"_"+_icPort.ToString()+".txt", FileMode.Create);
                 _iCListener = new TextWriterTraceListener(_iCWriter);
                 Trace.Listeners.Add(_iCListener);
             }
