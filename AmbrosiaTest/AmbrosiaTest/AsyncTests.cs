@@ -857,8 +857,8 @@ namespace AmbrosiaTest
         public void Cleanup()
         {
             // Kill all ImmortalCoordinators, Job and Server exes
-            Utilities MyUtils = new Utilities();
-            MyUtils.AsyncTestCleanup();
+  //          Utilities MyUtils = new Utilities();
+//            MyUtils.AsyncTestCleanup();
         }
 
 

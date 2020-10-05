@@ -1,0 +1,28 @@
+*X* Trying to connect IC and Language Binding
+*X* Trying to do second connection between IC and Language Binding
+*X* At checkpoint, received 0 messages
+*X* At checkpoint, received 0 messages
+*X* becoming primary
+*X* Press enter to terminate program.
+*X* Server in Entry Point
+*X* At checkpoint, received 15333 messages
+*X* At checkpoint, received 15333 messages
+Received 1024 MB so far
+*X* I'm healthy after 3000 checks at time:10/2/2020 1:32:07 PM
+Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.
+   at System.Net.Sockets.NetworkStream.EndRead(IAsyncResult asyncResult)
+   at System.Threading.Tasks.TaskFactory`1.FromAsyncTrimPromise`1.Complete(TInstance thisRef, Func`3 endMethod, IAsyncResult asyncResult, Boolean requiresSynchronization)
+--- End of stack trace from previous location where exception was thrown ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at Ambrosia.StreamCommunicator.<ReadAllRequiredBytesAsync>d__26.MoveNext()
+--- End of stack trace from previous location where exception was thrown ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+   at Ambrosia.StreamCommunicator.<ReadIntFixedAsync>d__5.MoveNext()
+--- End of stack trace from previous location where exception was thrown ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at Ambrosia.Immortal.<Dispatch>d__34.MoveNext()
+--- End of stack trace from previous location where exception was thrown ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+   at Ambrosia.Immortal.<>c__DisplayClass33_0.<<DispatchWrapper>b__0>d.MoveNext()

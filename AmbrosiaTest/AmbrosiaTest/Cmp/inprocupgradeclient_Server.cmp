@@ -6,5 +6,3 @@
 *X* At checkpoint, received 15273 messages
 *X* At checkpoint, received 15273 messages
 Received 1024 MB so far
-FATAL ERROR 0: Migrating or upgrading. Must commit suicide since I'm the primary
-KILLING WORKER: 

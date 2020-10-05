@@ -1,7 +1,9 @@
+*X* ImmortalCoordinator -i=inproctcpblobclientjob -p=1500
 *X* Trying to connect IC and Language Binding
 *X* Trying to connect IC and Language Binding
 *X* Trying to do second connection between IC and Language Binding
-*X* 1024	0.0720040913876792
+Bytes per RPC	Throughput (GB/sec)
+*X* 1024	0.0317841729553825
 Service Received 1024 MB so far
 Bytes received: 1073741824
 DONE
