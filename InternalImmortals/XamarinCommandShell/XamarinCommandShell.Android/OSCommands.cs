@@ -16,6 +16,7 @@ namespace XamarinCommandShell.Droid
     class OSCommands : IOSCommands
     {
         public void ExecuteCommand(string command,
+                                   string workingDirectory,
                                    TextWriter commandOutputWriter)
 
         {

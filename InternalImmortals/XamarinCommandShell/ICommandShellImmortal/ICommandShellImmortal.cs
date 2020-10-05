@@ -9,7 +9,10 @@ namespace XamarinCommandShell
         void SubmitCommand(string command);
 
         [ImpulseHandler]
-        void SetCurrentDirectory(string newDirectory);
+        void SetRootDirectory(string newDirectory);
+
+        [ImpulseHandler]
+        void SetRelativeDirectory(string newDirectory);
 
         [ImpulseHandler]
         void AddConsoleOutput(string outputToAdd);

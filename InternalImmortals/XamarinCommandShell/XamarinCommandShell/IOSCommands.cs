@@ -8,6 +8,7 @@ namespace XamarinCommandShell
     public interface IOSCommands
     {
         void ExecuteCommand(string command,
+                            string workingDirectory,
                             TextWriter commandOutputWriter);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Xamarin.Forms;
 
 namespace XamarinCommandShell
 {
@@ -10,9 +11,13 @@ namespace XamarinCommandShell
 
         void HostAddConsoleOutput(string output);
 
-        void HostSetCurrentDirectory(string newDirectory);
+        void HostSetRootDirectory(string newDirectory);
 
-        string HostGetCurrentDirectory();
+        string HostGetRootDirectory();
+
+        void HostSetRelativeDirectory(string newDirectory);
+
+        string HostGetRelativeDirectory();
 
         string HostGetConsoleOutput();
     }

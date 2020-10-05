@@ -1,26 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Ambrosia;
-using Xamarin.Forms;
 
 namespace XamarinCommandShell
 {
     [DataContract]
     public class CommandShellImmortal : Immortal<ICommandShellImmortalProxy>, ICommandShellImmortal, IHostCommandImmortalInterface
     {
+        // Protected state
         [DataMember]
         List<string> _commandHistory = null;
-        [DataMember]
-        string _outputHistory = "";
-        [DataMember]
-        string _currentDirectory = "";
 
-        //        Editor _outputWindowContents;
+        [DataMember]
+        string _rootDirectory = "";
 
-        volatile static public IHostCommandImmortalInterface myCommandShellImmortal = null;
+        [DataMember]
+        string _relativeDirectory = "";
+
+        [DataMember]
+        string _outputHistory;
 
         public CommandShellImmortal()
         {
@@ -29,18 +35,27 @@ namespace XamarinCommandShell
         protected override async Task<bool> OnFirstStart()
         {
             _commandHistory = new List<string>();
+            _outputHistory = "";
+            // Can let the UI use this now that the Immortal has been properly initialized
+            myCommandShellImmortal = this;
             return true;
         }
 
         protected override void BecomingPrimary()
         {
-            myCommandShellImmortal = this;
+            if (_outputHistory != null)
+            {
+                // The immortal was properly initialized already. Go ahead and let the UI use it.
+                myCommandShellImmortal = this;
+            }
         }
 
         public async Task SubmitCommandAsync(string command)
         {
             _commandHistory.Add(command);
-            _outputHistory += command + "\n";
+            _outputHistory += "\n_______________________________________________________________________________________________________________________________________________________\n" +
+                              ">" + _relativeDirectory + command +
+                              "\n_______________________________________________________________________________________________________________________________________________________\n";
         }
 
         public async Task AddConsoleOutputAsync(string outputToAdd)
@@ -48,24 +63,40 @@ namespace XamarinCommandShell
             _outputHistory += outputToAdd;
         }
 
-        public async Task SetCurrentDirectoryAsync(string newDirectory)
+        public async Task SetRootDirectoryAsync(string newDirectory)
         {
-            _currentDirectory = newDirectory;
+            _rootDirectory = newDirectory;
         }
+
+        public async Task SetRelativeDirectoryAsync(string newRelativeDirectory)
+        {
+            _relativeDirectory = newRelativeDirectory;
+        }
+
+        volatile static public IHostCommandImmortalInterface myCommandShellImmortal = null;
 
         public void HostSubmitCommand(string command)
         {
             thisProxy.SubmitCommandFork(command);
         }
 
-        public void HostSetCurrentDirectory(string newDirectory)
+        public void HostSetRootDirectory(string newDirectory)
         {
-            thisProxy.SetCurrentDirectoryFork(newDirectory);
+            thisProxy.SetRootDirectoryFork(newDirectory);
         }
 
-        public string HostGetCurrentDirectory()
+        public void HostSetRelativeDirectory(string newRelativeDirectory)
         {
-            return _currentDirectory;
+            thisProxy.SetRelativeDirectoryFork(newRelativeDirectory);
+        }
+
+        public string HostGetRootDirectory()
+        {
+            return _rootDirectory;
+        }
+        public string HostGetRelativeDirectory()
+        {
+            return _relativeDirectory;
         }
         public string HostGetConsoleOutput()
         {
