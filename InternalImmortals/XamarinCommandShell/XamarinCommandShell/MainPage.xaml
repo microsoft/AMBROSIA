@@ -8,6 +8,10 @@
                x:Name="homeDirectory"
                Completed="homeDirectory_Completed" />
 
+        <Entry Placeholder ="&lt;Relative Directory&gt;"
+               x:Name="relativeDirectory"
+               Completed="relativeDirectory_Completed" />
+
         <ScrollView x:Name="outputScroller">
             <Label  Text=""
                 x:Name="consoleOutput"/>

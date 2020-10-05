@@ -13,7 +13,8 @@ namespace XamarinCommandShell
     public interface ICommandShellImmortal
     {
         Task SubmitCommandAsync(System.String p_0);
-        Task SetCurrentDirectoryAsync(System.String p_0);
+        Task SetRootDirectoryAsync(System.String p_0);
+        Task SetRelativeDirectoryAsync(System.String p_0);
         Task AddConsoleOutputAsync(System.String p_0);
     }
 
@@ -25,7 +26,8 @@ namespace XamarinCommandShell
     public interface ICommandShellImmortalProxy
     {
         void SubmitCommandFork(System.String p_0);
-        void SetCurrentDirectoryFork(System.String p_0);
+        void SetRootDirectoryFork(System.String p_0);
+        void SetRelativeDirectoryFork(System.String p_0);
         void AddConsoleOutputFork(System.String p_0);
     }
 }

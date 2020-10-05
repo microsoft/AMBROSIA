@@ -78,7 +78,7 @@ var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
                     }
                     break;
                 case 2:
-                    // SetCurrentDirectoryAsync
+                    // SetRootDirectoryAsync
                     {
                         // deserialize arguments
 
@@ -99,7 +99,7 @@ var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
 
 						try 
 						{
-								await this.instance.SetCurrentDirectoryAsync(p_0);
+								await this.instance.SetRootDirectoryAsync(p_0);
 						}
 						catch (Exception ex)
 						{
@@ -117,6 +117,45 @@ var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
                     }
                     break;
                 case 3:
+                    // SetRelativeDirectoryAsync
+                    {
+                        // deserialize arguments
+
+            // arg0: System.String
+            var p_0_ValueLength = buffer.ReadBufferedInt(cursor);
+cursor += IntSize(p_0_ValueLength);
+var p_0_ValueBuffer = new byte[p_0_ValueLength];
+Buffer.BlockCopy(buffer, cursor, p_0_ValueBuffer, 0, p_0_ValueLength);
+cursor += p_0_ValueLength;
+var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
+
+                        // call the method
+						byte[] argExBytes = null;
+						int argExSize = 0;
+						Exception currEx = null;
+						int arg1Size = 0;
+						byte[] arg1Bytes = null;
+
+						try 
+						{
+								await this.instance.SetRelativeDirectoryAsync(p_0);
+						}
+						catch (Exception ex)
+						{
+							currEx = ex;
+						}
+
+                        if (!rpcType.IsFireAndForget())
+                        {
+                            // serialize result and send it back (there isn't one)
+                            arg1Size = 0;
+                            var wp = this.StartRPC_ReturnValue(senderOfRPC, sequenceNumber, currEx == null ? arg1Size : argExSize, currEx == null ? ReturnValueTypes.EmptyReturnValue : ReturnValueTypes.Exception);
+
+                            this.ReleaseBufferAndSend();
+                        }
+                    }
+                    break;
+                case 4:
                     // AddConsoleOutputAsync
                     {
                         // deserialize arguments

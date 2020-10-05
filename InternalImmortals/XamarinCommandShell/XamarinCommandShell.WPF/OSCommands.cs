@@ -11,11 +11,13 @@ namespace XamarinCommandShell.WPF
     class OSCommands : IOSCommands
     {
         public void ExecuteCommand(string command,
+                                   string workingDirectory,
                                    TextWriter commandOutputWriter)
 
         {
             var commandProcess = new Process();
             commandProcess.StartInfo.FileName = "cmd.exe";
+            commandProcess.StartInfo.WorkingDirectory = workingDirectory;
             commandProcess.StartInfo.Arguments = "/C " + command;
             //commandProcess.StartInfo.RedirectStandardInput = true;
             //            commandProcess.StartInfo.RedirectStandardOutput = true;

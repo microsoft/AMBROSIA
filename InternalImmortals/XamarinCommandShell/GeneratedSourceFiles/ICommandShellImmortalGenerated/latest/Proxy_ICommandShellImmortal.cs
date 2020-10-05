@@ -131,7 +131,7 @@ wp.curLength += arg0Bytes.Length;
             return this;
         }
         async Task
-        SetCurrentDirectoryAsync(System.String p_0)
+        SetRootDirectoryAsync(System.String p_0)
         {
             SerializableTaskCompletionSource rpcTask;
             // Make call, wait for reply
@@ -146,7 +146,7 @@ arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
 
             totalArgSize += arg0Size;
 
-            var wp = this.StartRPC<object>(methodIdentifier: 2 /* method identifier for SetCurrentDirectory */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
+            var wp = this.StartRPC<object>(methodIdentifier: 2 /* method identifier for SetRootDirectory */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
 			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
 
             // Serialize arguments
@@ -195,7 +195,7 @@ wp.curLength += arg0Bytes.Length;
 			return;
         }
 
-        void ICommandShellImmortalProxy.SetCurrentDirectoryFork(System.String p_0)
+        void ICommandShellImmortalProxy.SetRootDirectoryFork(System.String p_0)
         {
 			if (!Immortal.IsPrimary)
 			{
@@ -216,7 +216,7 @@ arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
 
             totalArgSize += arg0Size;
 
-            var wp = this.StartRPC<object>(2 /* method identifier for SetCurrentDirectory */, totalArgSize, out rpcTask, RpcTypes.RpcType.Impulse);
+            var wp = this.StartRPC<object>(2 /* method identifier for SetRootDirectory */, totalArgSize, out rpcTask, RpcTypes.RpcType.Impulse);
 
             // Serialize arguments
 
@@ -232,9 +232,117 @@ wp.curLength += arg0Bytes.Length;
         }
 
         private object
-        SetCurrentDirectory_ReturnValue(byte[] buffer, int cursor)
+        SetRootDirectory_ReturnValue(byte[] buffer, int cursor)
         {
-            // buffer will be an empty byte array since the method SetCurrentDirectory returns void
+            // buffer will be an empty byte array since the method SetRootDirectory returns void
+            // so nothing to read, just getting called is the signal to return to the client
+            return this;
+        }
+        async Task
+        SetRelativeDirectoryAsync(System.String p_0)
+        {
+            SerializableTaskCompletionSource rpcTask;
+            // Make call, wait for reply
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+			int arg0Size = 0;
+			byte[] arg0Bytes = null;
+
+            // Argument 0
+            arg0Bytes = Ambrosia.BinarySerializer.Serialize<System.String>(p_0);
+arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
+
+            totalArgSize += arg0Size;
+
+            var wp = this.StartRPC<object>(methodIdentifier: 3 /* method identifier for SetRelativeDirectory */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
+			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
+
+            // Serialize arguments
+
+
+            // Serialize arg0
+            wp.curLength += wp.PageBytes.WriteInt(wp.curLength, arg0Bytes.Length);
+Buffer.BlockCopy(arg0Bytes, 0, wp.PageBytes, wp.curLength, arg0Bytes.Length);
+wp.curLength += arg0Bytes.Length;
+
+            int taskId;
+			lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                while (!Immortal.DispatchTaskIdQueue.Data.TryDequeue(out taskId)) { }
+            }
+
+            ReleaseBufferAndSend();
+
+			Immortal.StartDispatchLoop();
+
+			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+            var currentResult = await taskToWaitFor;
+
+			while (currentResult.AdditionalInfoType != ResultAdditionalInfoTypes.SetResult)
+            {
+                switch (currentResult.AdditionalInfoType)
+                {
+                    case ResultAdditionalInfoTypes.SaveContext:
+                        await Immortal.SaveTaskContextAsync();
+                        taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+                        break;
+                    case ResultAdditionalInfoTypes.TakeCheckpoint:
+                        var sequenceNumber = await Immortal.TakeTaskCheckpointAsync();
+                        Immortal.StartDispatchLoop();
+                        taskToWaitFor = Immortal.GetTaskToWaitForWithAdditionalInfoAsync(sequenceNumber);
+                        break;
+                }
+
+                currentResult = await taskToWaitFor;
+            }
+
+            lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                Immortal.DispatchTaskIdQueue.Data.Enqueue(taskId);
+            }	
+			return;
+        }
+
+        void ICommandShellImmortalProxy.SetRelativeDirectoryFork(System.String p_0)
+        {
+			if (!Immortal.IsPrimary)
+			{
+                throw new Exception("Unable to send an Impulse RPC while not being primary.");
+			}
+
+            SerializableTaskCompletionSource rpcTask;
+
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+
+            // Argument 0
+			int arg0Size = 0;
+			byte[] arg0Bytes = null;
+
+            arg0Bytes = Ambrosia.BinarySerializer.Serialize<System.String>(p_0);
+arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
+
+            totalArgSize += arg0Size;
+
+            var wp = this.StartRPC<object>(3 /* method identifier for SetRelativeDirectory */, totalArgSize, out rpcTask, RpcTypes.RpcType.Impulse);
+
+            // Serialize arguments
+
+
+            // Serialize arg0
+            wp.curLength += wp.PageBytes.WriteInt(wp.curLength, arg0Bytes.Length);
+Buffer.BlockCopy(arg0Bytes, 0, wp.PageBytes, wp.curLength, arg0Bytes.Length);
+wp.curLength += arg0Bytes.Length;
+
+
+            this.ReleaseBufferAndSend();
+            return;
+        }
+
+        private object
+        SetRelativeDirectory_ReturnValue(byte[] buffer, int cursor)
+        {
+            // buffer will be an empty byte array since the method SetRelativeDirectory returns void
             // so nothing to read, just getting called is the signal to return to the client
             return this;
         }
@@ -254,7 +362,7 @@ arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
 
             totalArgSize += arg0Size;
 
-            var wp = this.StartRPC<object>(methodIdentifier: 3 /* method identifier for AddConsoleOutput */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
+            var wp = this.StartRPC<object>(methodIdentifier: 4 /* method identifier for AddConsoleOutput */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
 			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
 
             // Serialize arguments
@@ -324,7 +432,7 @@ arg0Size = IntSize(arg0Bytes.Length) + arg0Bytes.Length;
 
             totalArgSize += arg0Size;
 
-            var wp = this.StartRPC<object>(3 /* method identifier for AddConsoleOutput */, totalArgSize, out rpcTask, RpcTypes.RpcType.Impulse);
+            var wp = this.StartRPC<object>(4 /* method identifier for AddConsoleOutput */, totalArgSize, out rpcTask, RpcTypes.RpcType.Impulse);
 
             // Serialize arguments
 

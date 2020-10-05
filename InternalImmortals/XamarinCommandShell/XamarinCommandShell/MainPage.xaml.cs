@@ -8,45 +8,39 @@ using Xamarin.Forms;
 using Ambrosia;
 using System.Threading;
 using System.IO;
+using Microsoft.VisualStudio.Threading;
 
 namespace XamarinCommandShell
 {
     public partial class MainPage : ContentPage
     {
-        public class CommandImmortalLinkedScrolledLabelWriter : TextWriter
+        public class TextOutputAccumulator : TextWriter
         {
-            // The control where we will write text.
-            private Label _myConsoleLabel;
-            private ScrollView _myConsoleScroller;
-            private IHostCommandImmortalInterface _myCommandImmortal;
+            private MainPage _myMainPage;
 
-            public CommandImmortalLinkedScrolledLabelWriter(Label inConsoleLabel,
-                                                            IHostCommandImmortalInterface myImmortal,
-                                                            ScrollView myConsoleScroller)
+            public TextOutputAccumulator(MainPage myMainPage)
             {
-                _myConsoleLabel = inConsoleLabel;
-                _myConsoleScroller = myConsoleScroller;
-                _myCommandImmortal = myImmortal;
+                _myMainPage = myMainPage;
             }
 
             public override void Write(char value)
             {
-                _myCommandImmortal.HostAddConsoleOutput(value.ToString());
-                _myConsoleLabel.Dispatcher.BeginInvokeOnMainThread(() =>
-                    {
-                        _myConsoleLabel.Text += value;
-                        _myConsoleScroller.Dispatcher.BeginInvokeOnMainThread(() => { _myConsoleScroller.ScrollToAsync(0, _myConsoleLabel.Bounds.Bottom, false); });
-                    });
+                lock (_myMainPage._myAccumulatedOutput)
+                {
+                    _myMainPage._myAccumulatedOutput += value;
+                }
             }
 
             public override void Write(string value)
             {
-                _myCommandImmortal.HostAddConsoleOutput(value);
-                _myConsoleLabel.Dispatcher.BeginInvokeOnMainThread(() => 
-                    { 
-                        _myConsoleLabel.Text += value;
-                        _myConsoleScroller.Dispatcher.BeginInvokeOnMainThread(() => { _myConsoleScroller.ScrollToAsync(0, _myConsoleLabel.Bounds.Bottom, false); });
-                    });
+                lock (_myMainPage._myAccumulatedOutput)
+                {
+                    _myMainPage._myAccumulatedOutput += value;                    
+                }
+                if (_myMainPage._refreshQueue.IsEmpty)
+                {
+                    _myMainPage._refreshQueue.Enqueue(true);
+                }
             }
 
             public override Encoding Encoding
@@ -56,27 +50,62 @@ namespace XamarinCommandShell
         }
 
         IOSCommands _commandExecuter;
-        CommandImmortalLinkedScrolledLabelWriter _commandOutputWriter;
+        TextOutputAccumulator _commandOutputWriter;
+
+        internal String _myAccumulatedOutput;
+        internal AsyncQueue<bool> _refreshQueue;
+
+        async Task CheckRefreshQueueAsync()
+        {
+            while (true)
+            {
+                await _refreshQueue.DequeueAsync();
+                lock (_myAccumulatedOutput)
+                {
+                    consoleOutput.Dispatcher.BeginInvokeOnMainThread(() =>
+                    {
+                        CommandShellImmortal.myCommandShellImmortal.HostAddConsoleOutput(_myAccumulatedOutput);
+                        consoleOutput.Text += _myAccumulatedOutput;
+                        _myAccumulatedOutput = "";
+                        outputScroller.Dispatcher.BeginInvokeOnMainThread(() => { outputScroller.ScrollToAsync(0, consoleOutput.Bounds.Bottom, true); });
+                    });
+                }
+            }
+        }
 
         public MainPage(IOSCommands inCommands)
         {
             _commandExecuter = inCommands;
             InitializeComponent();
-            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { homeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostGetCurrentDirectory(); });
-            _commandOutputWriter = new CommandImmortalLinkedScrolledLabelWriter(consoleOutput, CommandShellImmortal.myCommandShellImmortal, outputScroller);
-            consoleOutput.Dispatcher.BeginInvokeOnMainThread(() => { consoleOutput.Text += CommandShellImmortal.myCommandShellImmortal.HostGetConsoleOutput(); });
+            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { homeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostGetRootDirectory(); });
+            _myAccumulatedOutput = "";
+            consoleOutput.Text = CommandShellImmortal.myCommandShellImmortal.HostGetConsoleOutput();
+             _commandOutputWriter = new TextOutputAccumulator(this);
+            _refreshQueue = new AsyncQueue<bool>();
+            CheckRefreshQueueAsync();
         }
 
         void Command_Completed(object sender, EventArgs e)
         {
-            consoleOutput.Dispatcher.BeginInvokeOnMainThread(() => { consoleOutput.Text += ((Entry)sender).Text + "\n"; });
-            _commandExecuter.ExecuteCommand(homeDirectory.Text + ((Entry)sender).Text, _commandOutputWriter);
-            CommandShellImmortal.myCommandShellImmortal.HostSubmitCommand(((Entry)sender).Text);
+            CommandShellImmortal.myCommandShellImmortal.HostSubmitCommand(relativeDirectory.Text + ((Entry)sender).Text);
+            consoleOutput.Dispatcher.BeginInvokeOnMainThread(() =>
+            {
+                consoleOutput.Text += "\n_______________________________________________________________________________________________________________________________________________________\n" +
+                                      relativeDirectory.Text + ">" + ((Entry)sender).Text +
+                                      "\n_______________________________________________________________________________________________________________________________________________________\n";
+                command.Text = "";
+                outputScroller.Dispatcher.BeginInvokeOnMainThread(() => { outputScroller.ScrollToAsync(0, consoleOutput.Bounds.Bottom, true); });
+            });
+            _commandExecuter.ExecuteCommand(((Entry)sender).Text, homeDirectory.Text + relativeDirectory.Text, _commandOutputWriter);
+        }
+
+        void relativeDirectory_Completed(object sender, EventArgs e)
+        {
         }
 
         void homeDirectory_Completed(object sender, EventArgs e)
         {
-            CommandShellImmortal.myCommandShellImmortal.HostSetCurrentDirectory(((Entry)sender).Text);
+            CommandShellImmortal.myCommandShellImmortal.HostSetRootDirectory(((Entry)sender).Text);
         }
     }
 }
