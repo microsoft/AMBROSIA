@@ -146,8 +146,8 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID2);
 
             //Verify AMB 
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
 
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
@@ -250,8 +250,8 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID2_Restarted);
 
             //Verify AMB 
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
 
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
@@ -506,8 +506,8 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(serverProcessID);
 
             //Verify AMB 
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
 
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
@@ -587,8 +587,8 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(serverProcessID);
 
             //Verify AMB 
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
 
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
