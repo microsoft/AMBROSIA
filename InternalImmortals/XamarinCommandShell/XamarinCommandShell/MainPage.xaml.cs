@@ -35,7 +35,7 @@ namespace XamarinCommandShell
             {
                 lock (_myMainPage._myAccumulatedOutput)
                 {
-                    _myMainPage._myAccumulatedOutput += value;                    
+                    _myMainPage._myAccumulatedOutput += value;
                 }
                 if (_myMainPage._refreshQueue.IsEmpty)
                 {
@@ -67,7 +67,7 @@ namespace XamarinCommandShell
                         CommandShellImmortal.myCommandShellImmortal.HostAddConsoleOutput(_myAccumulatedOutput);
                         consoleOutput.Text += _myAccumulatedOutput;
                         _myAccumulatedOutput = "";
-                        outputScroller.Dispatcher.BeginInvokeOnMainThread(() => { outputScroller.ScrollToAsync(0, consoleOutput.Bounds.Bottom, true); });
+                        outputScroller.Dispatcher.BeginInvokeOnMainThread(() => { outputScroller.ScrollToAsync(0, consoleOutput.Bounds.Bottom, false); });
                     });
                 }
             }
@@ -78,29 +78,65 @@ namespace XamarinCommandShell
             _commandExecuter = inCommands;
             InitializeComponent();
             homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { homeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostGetRootDirectory(); });
+            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { relativeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostGetRelativeDirectory(); });
             _myAccumulatedOutput = "";
             consoleOutput.Text = CommandShellImmortal.myCommandShellImmortal.HostGetConsoleOutput();
-             _commandOutputWriter = new TextOutputAccumulator(this);
+            _commandOutputWriter = new TextOutputAccumulator(this);
             _refreshQueue = new AsyncQueue<bool>();
             CheckRefreshQueueAsync();
+           
         }
 
         void Command_Completed(object sender, EventArgs e)
         {
-            CommandShellImmortal.myCommandShellImmortal.HostSubmitCommand(relativeDirectory.Text + ((Entry)sender).Text);
-            consoleOutput.Dispatcher.BeginInvokeOnMainThread(() =>
+            var splitCommand = ((Entry)sender).Text.Split(' ');
+            if (splitCommand[0].ToLower() == "cd")
             {
-                consoleOutput.Text += "\n_______________________________________________________________________________________________________________________________________________________\n" +
-                                      relativeDirectory.Text + ">" + ((Entry)sender).Text +
-                                      "\n_______________________________________________________________________________________________________________________________________________________\n";
+                // We are changing the current directory
+                string newRelativeDirectory;
+                if (splitCommand[1] == "..")
+                {
+                    var splitPath = relativeDirectory.Text.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+                    newRelativeDirectory = "";
+                    for (int i = 0; i < splitPath.Length - 1; i++)
+                    {
+                        newRelativeDirectory += splitPath[i] + "\\";
+                    }
+                }
+                else if (splitCommand[1].StartsWith("\\"))
+                {
+                    newRelativeDirectory = splitCommand[1];
+                }
+                else
+                {
+                    newRelativeDirectory = relativeDirectory.Text + splitCommand[1];
+                }
+                if (!newRelativeDirectory.EndsWith("\\"))
+                {
+                    newRelativeDirectory += '\\';
+                }
+                relativeDirectory.Text = newRelativeDirectory;
+                CommandShellImmortal.myCommandShellImmortal.HostSetRelativeDirectory(newRelativeDirectory);
                 command.Text = "";
-                outputScroller.Dispatcher.BeginInvokeOnMainThread(() => { outputScroller.ScrollToAsync(0, consoleOutput.Bounds.Bottom, true); });
-            });
-            _commandExecuter.ExecuteCommand(((Entry)sender).Text, homeDirectory.Text + relativeDirectory.Text, _commandOutputWriter);
+            }
+            else
+            {
+                CommandShellImmortal.myCommandShellImmortal.HostSubmitCommand(relativeDirectory.Text + ((Entry)sender).Text);
+                consoleOutput.Dispatcher.BeginInvokeOnMainThread(() =>
+                {
+                    consoleOutput.Text += "\n_______________________________________________________________________________________________________________________________________________________\n" +
+                                          relativeDirectory.Text + ">" + ((Entry)sender).Text +
+                                          "\n_______________________________________________________________________________________________________________________________________________________\n";
+                    command.Text = "";
+                    outputScroller.Dispatcher.BeginInvokeOnMainThread(() => { outputScroller.ScrollToAsync(0, consoleOutput.Bounds.Bottom, false); });
+                });
+                _commandExecuter.ExecuteCommand(((Entry)sender).Text, homeDirectory.Text + relativeDirectory.Text, _commandOutputWriter);
+            }
         }
 
         void relativeDirectory_Completed(object sender, EventArgs e)
         {
+            CommandShellImmortal.myCommandShellImmortal.HostSetRelativeDirectory(((Entry)sender).Text);
         }
 
         void homeDirectory_Completed(object sender, EventArgs e)
