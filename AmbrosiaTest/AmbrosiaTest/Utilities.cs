@@ -126,8 +126,6 @@ namespace AmbrosiaTest
                     if (processesforapp.Length == 0)
                     {
                         FailureSupport(fileToExecute);
-                        Process[] DG_TEST = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
-
                         Assert.Fail("<LaunchProcess> Failure! Process " + fileToExecute + " failed to start.");
                         return 0;
                     }
