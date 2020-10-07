@@ -116,30 +116,38 @@ namespace AmbrosiaTest
                 // Give it a second to completely start
                 Thread.Sleep(2000);
 
-                //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
-                Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
-                if (processesforapp.Length == 0)
-                {
-                    FailureSupport(fileToExecute);
-                    Assert.Fail("<LaunchProcess> Failure! Process " + fileToExecute + " failed to start.");
-                    return 0;
-                }
+                int processID = 999;
 
-                int processID = processesforapp[0].Id;
-                var processStart = processesforapp[0].StartTime;
-
-                // make sure to get most recent one as that is safe to know that is one we just created
-                for (int i = 1; i <= processesforapp.Length - 1; i++)
+                if (startInfo.Arguments.Contains("dotnet Ambrosia.dll") == false)
                 {
-                    if (processStart < processesforapp[i].StartTime)
+                    //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
+                    Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
+
+                    if (processesforapp.Length == 0)
                     {
-                        processStart = processesforapp[i].StartTime;
-                        processID = processesforapp[i].Id;
-                    }
-                }
+                        FailureSupport(fileToExecute);
+                        Process[] DG_TEST = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
 
-                // Kill the process id for the cmd that launched the window so it isn't lingering
-                KillProcess(process.Id);
+                        Assert.Fail("<LaunchProcess> Failure! Process " + fileToExecute + " failed to start.");
+                        return 0;
+                    }
+
+                    processID = processesforapp[0].Id;
+                    var processStart = processesforapp[0].StartTime;
+
+                    // make sure to get most recent one as that is safe to know that is one we just created
+                    for (int i = 1; i <= processesforapp.Length - 1; i++)
+                    {
+                        if (processStart < processesforapp[i].StartTime)
+                        {
+                            processStart = processesforapp[i].StartTime;
+                            processID = processesforapp[i].Id;
+                        }
+                    }
+
+                    // Kill the process id for the cmd that launched the window so it isn't lingering
+                    KillProcess(process.Id);
+                }
 
                 return processID;
 
