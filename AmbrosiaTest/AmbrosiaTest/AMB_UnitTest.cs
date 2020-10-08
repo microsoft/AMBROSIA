@@ -145,9 +145,13 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID1);
             MyUtils.KillProcess(ImmCoordProcessID2);
 
-            //Verify AMB 
-            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            // .netcore has slightly different cmp file - not crucial to try to have separate files
+            if (MyUtils.NetFrameworkTestRun)
+            {
+                //Verify AMB 
+                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            }
 
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
@@ -249,9 +253,13 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID1);
             MyUtils.KillProcess(ImmCoordProcessID2_Restarted);
 
-            //Verify AMB 
-            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            // .netcore has slightly different cmp file - not crucial to try to have separate files
+            if (MyUtils.NetFrameworkTestRun)
+            {
+                //Verify AMB 
+                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            }
 
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
@@ -505,12 +513,17 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(clientJobProcessID);
             MyUtils.KillProcess(serverProcessID);
 
-            //Verify AMB 
-            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            // .netcore has slightly different cmp file - not crucial to try to have separate files
+            if (MyUtils.NetFrameworkTestRun)
+            {
+                //Verify AMB 
+                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
 
-            // Verify Client
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+                // Verify Client - NetCore CLR bug causes extra info in the output for this so do not check for core run
+                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
+
+            }
 
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
@@ -586,9 +599,12 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(clientJobProcessID);
             MyUtils.KillProcess(serverProcessID);
 
-            //Verify AMB 
-            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
-            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            // .netcore has slightly different cmp file - not crucial to try to have separate files
+            if (MyUtils.NetFrameworkTestRun)
+            {
+                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB1);
+                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
+            }
 
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
