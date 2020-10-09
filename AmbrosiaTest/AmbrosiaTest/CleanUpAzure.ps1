@@ -64,28 +64,30 @@ Write-host
 $ctx = New-AzStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $storageKey
 $container = "ambrosialogs"
 
-# Delete the table created by the Ambrosia
-Write-host "------------- Delete Ambrosia created tables filtered on $ObjectName -------------"
-Get-AzStorageTable $ObjectName -Context $ctx | Remove-AzStorageTable -Context $ctx -Force
-
 # Clean up the data in the CRA (Immortal Coordinator) tables
-Write-host "------------- Delete items in Azure table: craconnectiontable filtered on $ObjectName -------------"
-$tableName = "craconnectiontable"
-$storageTable = Get-AzStorageTable -Name $tableName -Context $ctx 
-Get-AzTableRow -table $storageTable.CloudTable | Where-Object -Property “PartitionKey” -CLike $ObjectName | Remove-AzTableRow -table $storageTable.CloudTable
-Write-host 
-
 Write-host "------------- Delete items in Azure table: craendpointtable filtered on $ObjectName -------------"
 $tableName = "craendpointtable"
 $storageTable = Get-AzStorageTable -Name $tableName -Context $ctx 
 Get-AzTableRow -table $storageTable.CloudTable | Where-Object -Property “PartitionKey” -CLike $ObjectName | Remove-AzTableRow -table $storageTable.CloudTable
 Write-host 
 
+
+Write-host "------------- Delete items in Azure table: craconnectiontable filtered on $ObjectName -------------"
+$tableName = "craconnectiontable"
+$storageTable = Get-AzStorageTable -Name $tableName -Context $ctx 
+Get-AzTableRow -table $storageTable.CloudTable | Where-Object -Property “PartitionKey” -CLike $ObjectName | Remove-AzTableRow -table $storageTable.CloudTable
+Write-host 
+
+
 Write-host "------------- Delete items in Azure table: cravertextable filtered on $ObjectName -------------"
 $tableName = "cravertextable"
 $storageTable = Get-AzStorageTable  -Name $tableName -Context $ctx 
 Get-AzTableRow -table $storageTable.CloudTable | Where-Object -Property “PartitionKey” -CLike $ObjectName | Remove-AzTableRow -table $storageTable.CloudTable
 Write-host 
+
+# Delete the tables created by the Ambrosia
+Write-host "------------- Delete Ambrosia created tables filtered on $ObjectName -------------"
+Get-AzStorageTable $ObjectName* -Context $ctx | Remove-AzStorageTable -Context $ctx -Force
 
 Write-host "------------- Delete Azure Blobs in Azure table: ambrosialogs filtered on $ObjectName -------------"
 $blobs = Get-AzStorageBlob -Container $container -Context $ctx | Where-Object Name -Like $ObjectName*
