@@ -1335,7 +1335,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("upgradeactiveactiveprimaryonly");
             Thread.Sleep(2000);
-            CleanupAzureTables("upgradeclient");
+            CleanupAzureTables("migrateclient");
             Thread.Sleep(2000);
             CleanupAzureTables("multipleclientsperserver");
             Thread.Sleep(2000);
@@ -1389,7 +1389,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("inprocfileblob");
             Thread.Sleep(2000);
-            CleanupAzureTables("inprocupgradeclient");
+            CleanupAzureTables("inprocmigrateclient");
             Thread.Sleep(2000);
             CleanupAzureTables("inprocupgradeafterserverdone");
             Thread.Sleep(2000);
@@ -1434,7 +1434,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("inproctcpupgradeserver");
             Thread.Sleep(2000);
-            CleanupAzureTables("inproctcpupgradeclient");
+            CleanupAzureTables("inproctcpmigrateclient");
             Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more
