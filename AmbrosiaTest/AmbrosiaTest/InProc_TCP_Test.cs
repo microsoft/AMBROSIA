@@ -718,7 +718,7 @@ namespace AmbrosiaTest
             //** Then safe to say that blob worked. 
         }
 
-        //** Upgrade scenario where the server is upgraded server before client is finished - all done InProc TCP
+        //** Upgrade scenario where the server is upgraded to diff server before client is finished - all done InProc TCP
         [TestMethod]
         public void AMB_InProc_TCP_UpgradeServer_Test()
         {
@@ -823,12 +823,12 @@ namespace AmbrosiaTest
 
 
         //** Similar to Double Kill restart but it doesn't actually kill it. It just restarts it and it
-        //** takes on the new restarted process and original process dies.  It is a way to do client upgrade
+        //** takes on the new restarted process and original process dies.  It is a way to do client migration
         [TestMethod]
-        public void AMB_InProc_TCP_UpgradeClient_Test()
+        public void AMB_InProc_TCP_MigrateClient_Test()
         {
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
-            string testName = "inproctcpupgradeclient";
+            string testName = "inproctcpmigrateclient";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";

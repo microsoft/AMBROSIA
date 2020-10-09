@@ -1574,18 +1574,17 @@ namespace AmbrosiaTest
         }
 
         //** Similar to Double Kill restart but it doesn't actually kill it. It just restarts it and it
-        //** Takes on the new restarted process and original process dies.  It is a way to do client upgrade
+        //** Takes on the new restarted process and original process dies.  It is a way to do client migration
         [TestMethod]
-        public void AMB_UpgradeClient_Test()
+        public void AMB_MigrateClient_Test()
         {
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
-            string testName = "upgradeclient";
+            string testName = "migrateclient";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
             string killJobMessage = "Migrating or upgrading. Must commit suicide since I'm the primary";
-
 
             Utilities MyUtils = new Utilities();
 
