@@ -784,13 +784,13 @@ namespace AmbrosiaTest
             };
             MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
 
-            //Client Job Call
-            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
-            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob, MyUtils.deployModeInProc, "1500");
-
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false, 0, MyUtils.deployModeInProc, "2500");
+
+            //Client Job Call
+            string logOutputFileName_ClientJob = testName + "_ClientJob.log";
+            int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob, MyUtils.deployModeInProc, "1500");
 
             // Give it 5 seconds to do something before killing it
             Thread.Sleep(5000);
@@ -813,6 +813,14 @@ namespace AmbrosiaTest
             // Restart Job Process Again
             string logOutputFileName_ClientJob_Restarted_Again = testName + "_ClientJob_Restarted_Again.log";
             int clientJobProcessID_Restarted_Again = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted_Again,MyUtils.deployModeInProc,"1500");
+
+
+            //#*#*#*#
+            //Server Call
+            string logOutputFileName_Server2 = testName + "_Server2.log";
+            int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false, 0, MyUtils.deployModeInProc, "2500");
+            //*#*#*#*
+
 
             //Delay until client is done - also check Server just to make sure
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted_Again, byteSize, 25, false, testName, true); // Total bytes received
