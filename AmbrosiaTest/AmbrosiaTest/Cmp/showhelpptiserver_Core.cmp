@@ -1,19 +1,21 @@
 Job name is required.
 Server name is required.
-Send port is required.
-Receive port is required.
 
 Usage: dotnet Server.dll [OPTIONS]
 Options:
-  -j, --jobName=VALUE        The service name of the job [REQUIRED].
-  -s, --serverName=VALUE     The service name of the server [REQUIRED].
-      --rp, --receivePort=VALUE
-                             The service receive from port [REQUIRED].
-      --sp, --sendPort=VALUE The service send to port. [REQUIRED]
-      --nbd, --notBidirectional
-                             Disable bidirectional communication.
-  -n, --numOfJobs=VALUE      The number of jobs.
-  -u, --upgrading            Is upgrading.
-  -m, --memoryUsed=VALUE     Memory used.
-  -c, --autoContinue         Is continued automatically at start
-  -h, --help                 show this message and exit
+  -j, --jobName=VALUE              The service name of the job [REQUIRED].
+  -s, --serverName=VALUE           The service name of the server [REQUIRED].
+  -rp, --receivePort=VALUE         The service receive from port [REQUIRED].
+  -sp, --sendPort=VALUE            The service send to port. [REQUIRED]
+  -nbd, --notBidirectional         Disable bidirectional communication.
+  -icp, --ICPort=VALUE             The IC port, if the IC should be run in proc.
+                                      Note that if this is specified, the
+                                     command line ports override stored
+                                     registration settings
+  -n, --numOfJobs=VALUE            The number of jobs.
+  -u, --upgrading                  Is upgrading.
+  -m, --memoryUsed=VALUE           Memory used.
+  -c, --autoContinue               Is continued automatically at start
+  -d, --ICDeploymentMode=VALUE     IC deployment mode specification (SecondProc(
+                                     Default)/InProcDeploy/InProcManual)
+  -h, --help                       show this message and exit

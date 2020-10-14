@@ -126,8 +126,6 @@ namespace AmbrosiaTest
                     if (processesforapp.Length == 0)
                     {
                         FailureSupport(fileToExecute);
-                        Process[] DG_TEST = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
-
                         Assert.Fail("<LaunchProcess> Failure! Process " + fileToExecute + " failed to start.");
                         return 0;
                     }
@@ -328,20 +326,27 @@ namespace AmbrosiaTest
                     CurrentFramework = NetCoreFramework;
                 }
 
-                // job IC output file
+                // job IC output file and any blob log files
                 string PTI_Job_Dir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ CurrentFramework;
                 var jobdir = new DirectoryInfo(PTI_Job_Dir);
                 foreach (var file in jobdir.EnumerateFiles(InProcICOutputFile))
                 {
                     file.Delete();
                 }
-                // server IC output file
+
+                // Delete the folders from inproc
+                DeleteDirectoryUsingWildCard(PTI_Job_Dir, "job_");
+
+                // server IC output file and any blob log files 
                 string PTI_Server_Dir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + CurrentFramework;
                 var serverdir = new DirectoryInfo(PTI_Server_Dir);
                 foreach (var file in serverdir.EnumerateFiles(InProcICOutputFile))
                 {
                     file.Delete();
                 }
+                // Delete the folders from inproc 
+                DeleteDirectoryUsingWildCard(PTI_Server_Dir, "server_");
+
 
                 // Give it a second to make sure - had timing issues where wasn't fully deleted by time got here
                 Thread.Sleep(1000);
@@ -358,6 +363,30 @@ namespace AmbrosiaTest
             {
                 FailureSupport("");
                 Assert.Fail("<CleanupAmbrosiaLogFiles> Unable to clean up log files. Error:" + e.Message);
+            }
+        }
+
+        // Helper function for cleaning up log files where don't know full name of folder to delete
+        public void DeleteDirectoryUsingWildCard(string rootpath, string substringtomatch)
+        {
+            try
+            {
+                List<string> dirs = new List<string>(Directory.EnumerateDirectories(rootpath));
+
+                foreach (var dir in dirs)
+                {
+                    string currentDir = dir;
+                    if (dir.Contains(substringtomatch))
+                    {
+                        Directory.Delete(dir, true);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                // If log clean up fails ... probably not enough to stop the test but log it
+                string logInfo = "<DeleteDirectoryUsingWildCard> Exception:" + e.Message;
+                LogDebugInfo(logInfo);
             }
         }
 
@@ -1337,7 +1366,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("upgradeactiveactiveprimaryonly");
             Thread.Sleep(2000);
-            CleanupAzureTables("upgradeclient");
+            CleanupAzureTables("migrateclient");
             Thread.Sleep(2000);
             CleanupAzureTables("multipleclientsperserver");
             Thread.Sleep(2000);
@@ -1391,7 +1420,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("inprocfileblob");
             Thread.Sleep(2000);
-            CleanupAzureTables("inprocupgradeclient");
+            CleanupAzureTables("inprocmigrateclient");
             Thread.Sleep(2000);
             CleanupAzureTables("inprocupgradeafterserverdone");
             Thread.Sleep(2000);
@@ -1436,7 +1465,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("inproctcpupgradeserver");
             Thread.Sleep(2000);
-            CleanupAzureTables("inproctcpupgradeclient");
+            CleanupAzureTables("inproctcpmigrateclient");
             Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more
