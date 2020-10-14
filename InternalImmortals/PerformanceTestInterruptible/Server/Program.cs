@@ -429,7 +429,7 @@ namespace Server
                     }
                 }
             }
-            catch { }
+            catch (Exception e) { Console.WriteLine(e.Message); }
             Console.WriteLine("*X* Terminating.");
             System.Environment.Exit(0);
         }
