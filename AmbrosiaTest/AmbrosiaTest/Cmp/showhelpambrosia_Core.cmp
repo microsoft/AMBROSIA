@@ -14,7 +14,7 @@ Options:
   -cv, --currentVersion=VALUE      The current version #.
   -uv, --upgradeVersion=VALUE      The upgrade version #.
   -h, --help                       show this message and exit
-Usage: Ambrosia.exe AddReplica [OPTIONS]
+Usage: dotnet Ambrosia.dll AddReplica [OPTIONS]
 Options:
   -r, --replicaNum=VALUE           The replica # [REQUIRED].
   -i, --instanceName=VALUE         The instance name [REQUIRED].
@@ -30,7 +30,7 @@ Options:
   -cv, --currentVersion=VALUE      The current version #.
   -uv, --upgradeVersion=VALUE      The upgrade version #.
   -h, --help                       show this message and exit
-Usage: Ambrosia.exe DebugInstance [OPTIONS]
+Usage: dotnet Ambrosia.dll DebugInstance [OPTIONS]
 Options:
   -i, --instanceName=VALUE         The instance name [REQUIRED].
   -rp, --receivePort=VALUE         The service receive from port [REQUIRED].
