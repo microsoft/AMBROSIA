@@ -814,14 +814,6 @@ namespace AmbrosiaTest
             string logOutputFileName_ClientJob_Restarted_Again = testName + "_ClientJob_Restarted_Again.log";
             int clientJobProcessID_Restarted_Again = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted_Again,MyUtils.deployModeInProc,"1500");
 
-
-            //#*#*#*#
-            //Server Call
-            string logOutputFileName_Server2 = testName + "_Server2.log";
-            int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false, 0, MyUtils.deployModeInProc, "2500");
-            //*#*#*#*
-
-
             //Delay until client is done - also check Server just to make sure
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted_Again, byteSize, 25, false, testName, true); // Total bytes received
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
