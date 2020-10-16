@@ -5,10 +5,9 @@
 *X* becoming primary
 *X* Press enter to terminate program.
 *X* Server in Entry Point
-*X* At checkpoint, received 15333 messages
-*X* At checkpoint, received 15333 messages
-Received 1024 MB so far
-*X* I'm healthy after 3000 checks at time:10/2/2020 1:32:07 PM
+*X* At checkpoint, received 15327 messages
+*X* At checkpoint, received 15327 messages
+*X* I'm healthy after 3000 checks at time:10/16/2020 9:04:20 AM
 Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.
    at System.Net.Sockets.NetworkStream.EndRead(IAsyncResult asyncResult)
    at System.Threading.Tasks.TaskFactory`1.FromAsyncTrimPromise`1.Complete(TInstance thisRef, Func`3 endMethod, IAsyncResult asyncResult, Boolean requiresSynchronization)
