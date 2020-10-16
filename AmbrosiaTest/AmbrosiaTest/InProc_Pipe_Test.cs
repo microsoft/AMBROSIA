@@ -343,8 +343,8 @@ namespace AmbrosiaTest
             string logOutputFileName_Server = testName + "_Server.log";
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0,MyUtils.deployModeInProc, "2500");
 
-            // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
+            // Give it 4 seconds to do something before killing it
+            Thread.Sleep(4000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // DO NOT Kill both Job and Server 
