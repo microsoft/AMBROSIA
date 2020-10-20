@@ -1643,8 +1643,7 @@ namespace AmbrosiaTest
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // DO NOT Kill both Job (and ImmCoord) and Server (and ImmCoord)
-            // This is main part of test - get it to have Job and Server take over and run
-            // Orig Job and Server stop then
+            // This is main part of test - start Job and Server so it takes over and then Orig Job and Server stop then
 //            MyUtils.KillProcess(clientJobProcessID);
   //          MyUtils.KillProcess(serverProcessID);
     //        MyUtils.KillProcess(ImmCoordProcessID1);
@@ -1657,7 +1656,7 @@ namespace AmbrosiaTest
             int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted);
 
             // just give a rest 
-            Thread.Sleep(2000);
+            Thread.Sleep(4000);
 
             // Restart Server / ImmCoord2
             string logOutputFileName_ImmCoord2_Restarted = testName + "_ImmCoord2_Restarted.log";

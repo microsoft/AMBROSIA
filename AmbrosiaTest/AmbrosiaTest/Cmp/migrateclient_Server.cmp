@@ -7,7 +7,8 @@
 *X* Server in Entry Point
 *X* At checkpoint, received 15327 messages
 *X* At checkpoint, received 15327 messages
-*X* I'm healthy after 3000 checks at time:10/16/2020 9:04:20 AM
+*X* I'm healthy after 3000 checks at time:10/20/2020 1:33:14 PM
+Received 1024 MB so far
 Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.
    at System.Net.Sockets.NetworkStream.EndRead(IAsyncResult asyncResult)
    at System.Threading.Tasks.TaskFactory`1.FromAsyncTrimPromise`1.Complete(TInstance thisRef, Func`3 endMethod, IAsyncResult asyncResult, Boolean requiresSynchronization)
