@@ -1130,6 +1130,64 @@ namespace AmbrosiaTest
         }
 
 
+        // Build Type Script app into a .js file
+        public void BuildTSApp(string FileToBuild, string testOutputLogFile)
+        {
+
+            // Launch the client job process with these values
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJavascriptDirectory"] + "\\TestApp";
+            string fileNameExe = "tsc.cmd";
+            string argString = FileToBuild;
+
+            int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
+            if (processID <= 0)
+            {
+                FailureSupport("");
+                Assert.Fail("<BuildTSApp> tsc.exe was not started.  ProcessID <=0 ");
+            }
+
+            // Verify .js file exists
+            string expectedjsfile = FileToBuild.Substring(0, FileToBuild.Length - 3);
+            expectedjsfile = expectedjsfile + ".js";
+            if (File.Exists(expectedjsfile) ==false)
+            {
+                FailureSupport("");
+                Assert.Fail("<BuildTSApp> "+ expectedjsfile + " was not built from the TS file:"+ FileToBuild);
+            }
+
+
+            // Give it a few seconds to start
+            Thread.Sleep(6000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            //return processID;
+        }
+
+
+        // Java Script app
+        public int StartJSTestApp(string testOutputLogFile)
+        {
+
+            // Launch the client job process with these values
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJavascriptDirectory"]+"\\TestApp\\out";
+            string fileNameExe = "node.exe";
+            string argString = "TestApp.js";
+
+            int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
+            if (processID <= 0)
+            {
+                FailureSupport("");
+                Assert.Fail("<StartJSTestApp> JS TestApp was not started.  ProcessID <=0 ");
+            }
+
+            // Give it a few seconds to start
+            Thread.Sleep(6000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            return processID;
+        }
+
+
         public void LogDebugInfo(string logEntry)
         {
             string timeStamp = DateTime.Now.ToString();
@@ -1495,9 +1553,8 @@ namespace AmbrosiaTest
         }
 
 
-        public void TestInitialize()
+        public void TestInitialize(bool JSInit=false)
         {
-
 
             // If failures in queue then do not want to do anything (init, run test, clean up) 
             if (CheckStopQueueFlag())
@@ -1517,6 +1574,9 @@ namespace AmbrosiaTest
 
             // make sure log files cleaned up
             CleanupAmbrosiaLogFiles();
+
+            // Build the JS app first from a JS file
+//*#*#*#*            BuildTSApp("TestApp.ts", "JS_BuildTestApp.log");
 
             // Give it a few seconds to truly init everything - on 8 min test - 3 seconds is no biggie
             Thread.Sleep(3000);
