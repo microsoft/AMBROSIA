@@ -82,10 +82,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="JS_Tests.cs" />
     <Compile Include="Utilities.cs" />
+    <Compile Include="JS_Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">
       <SubType>Designer</SubType>
+    </None>
+    <None Include="BuildJSTestApp.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="CleanUpAzure.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
