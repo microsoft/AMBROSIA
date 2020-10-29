@@ -11,13 +11,21 @@ namespace AmbrosiaTest
     public class JS_Tests
     {
         //************* Init Code *****************
-        // NOTE: Need this bit of code at the top of every "[TestClass]" (per .cs test file) to get context \ details of the current test running
+        // NOTE: Build the javascript test app once at beginning of the class.
+        [ClassInitialize()]
+        public static void Class_Initialize(TestContext tc)
+        {
+            // Build the JS app first from a JS file
+            JS_Utilities JSUtils = new JS_Utilities();
+            JSUtils.BuildJSTestApp();
+        }
+
         // NOTE: Make sure all names be "Azure Safe". No capital letters and no underscore.
         [TestInitialize()]
         public void Initialize()
         {
             Utilities MyUtils = new Utilities();
-            MyUtils.TestInitialize();  //*#*# Maybe add optional param to show java script so need to build first
+            MyUtils.TestInitialize();  
         }
         //************* Init Code *****************
 
@@ -32,10 +40,14 @@ namespace AmbrosiaTest
             string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
 
             string logOutputFileName_TestApp = testName + "_TestApp.log";
 
-            int JSTestAppID = MyUtils.StartJSTestApp(logOutputFileName_TestApp);
+            int JSTestAppID = JSUtils.StartJSTestApp(logOutputFileName_TestApp);
+
+
+            string DG = "Done!";
 
         }
     }
