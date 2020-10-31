@@ -78,6 +78,7 @@
     <Compile Include="AMB_UnitTest.cs" />
     <Compile Include="InProc_Pipe_Test.cs" />
     <Compile Include="InProc_TCP_Test.cs" />
+    <Compile Include="JS_CodeGen_Tests.cs" />
     <Compile Include="MTF_Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="JS_Tests.cs" />
@@ -127,6 +128,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Cmp\" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\PI.ts" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
