@@ -18,7 +18,7 @@ namespace AmbrosiaTest
         {
             // Build the JS app first from a JS file
             JS_Utilities JSUtils = new JS_Utilities();
-//*#*#*#*#            JSUtils.BuildJSTestApp();
+            //*#*#*#*#            JSUtils.BuildJSTestApp();
         }
 
         // NOTE: Make sure all names be "Azure Safe". No capital letters and no underscore.
@@ -31,16 +31,51 @@ namespace AmbrosiaTest
         //************* Init Code *****************
 
         [TestMethod]
-        public void JS_CodeGen_UnitTest()
+        public void JS_CodeGen_Misc_PI_Test()
         {
-            Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "PI.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName);
-
-            string DG = "Done!";
-
         }
+
+
+        [TestMethod]
+        public void JS_CodeGen_Misc_AST_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "ASTTest.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+
+        [TestMethod]
+        public void JS_CodeGen_Types_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_Types.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CodeGen_AmbrosiaTag_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_AmbrosiaTag.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+
     }
 }

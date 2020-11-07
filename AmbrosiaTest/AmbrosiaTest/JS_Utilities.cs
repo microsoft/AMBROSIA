@@ -14,23 +14,30 @@ namespace AmbrosiaTest
     public class JS_Utilities
     {
         // Message at the bottom of the output file to show everything passed
-        public string CodeGenSuccessMessage = "Code file generation SUCCEEDED: 2 of 2 files generated; 0 TypeScript errors, 0 merge conflicts";
+        public string ConsumerCodeGenSuccessMessage = "Consumer code file generation SUCCEEDED: 1 of 1 files generated; 0 TypeScript errors, 0 merge conflicts";
+        public string PublisherCodeGenSuccessMessage = "Publisher code file generation SUCCEEDED: 1 of 1 files generated; 0 TypeScript errors, 0 merge conflicts";
+        public string CodeGenNoTypeScriptErrorsMessage = "Success: No TypeScript errors found in ";
 
         // Runs a TS file through the JS LB and verifies code gen works correctly
         public void Test_CodeGen_TSFile(string TestFile)
         {
             try
             {
+                // Test Name is just the file without the extension
+                string TestName = TestFile.Substring(0, TestFile.Length - 3);
+
                 Utilities MyUtils = new Utilities();
+                string ConSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName+"_Generated_Consumer.g.ts";
+                string PubSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName+"_Generated_Publisher.g.ts";
 
                 // Launch the client job process with these values
                 string testfileDir = @"../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/";
                 string testappdir = ConfigurationManager.AppSettings["AmbrosiaJavascriptDirectory"] + "\\TestApp";
                 string sourcefile = testfileDir+TestFile;
-                string generatedfile = "TestFile_Generated";
+                string generatedfile = TestName + "_Generated";
                 string fileNameExe = "node.exe";
-                string argString = "out\\TestApp.js sourceFile="+ sourcefile + " codeGenKind=All mergeType=None generatedFileName="+ generatedfile;
-                string testOutputLogFile = TestFile.Substring(0,TestFile.Length-3) + "_CodeGen_Out.log";
+                string argString = "out\\TestApp.js sourceFile=" + sourcefile + " mergeType=None generatedFileName=" + generatedfile;
+                string testOutputLogFile = TestName + "_CodeGen_Out.log";
 
                 int processID = MyUtils.LaunchProcess(testappdir, fileNameExe, argString, false, testOutputLogFile);
                 if (processID <= 0)
@@ -39,12 +46,17 @@ namespace AmbrosiaTest
                     Assert.Fail("<StartJSTestApp> JS TestApp was not started.  ProcessID <=0 ");
                 }
 
-                // Give it a few seconds to start
-                Thread.Sleep(2000);
-                Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+                // Wait to see if success comes shows up in log file for total and for consumer and publisher
+                bool pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConsumerCodeGenSuccessMessage, 1, false, TestFile, true);
+                pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PublisherCodeGenSuccessMessage, 1, false, TestFile, true);
+                pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConSuccessString, 1, false, TestFile, true);
+                pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PubSuccessString, 1, false, TestFile, true);
 
-                // Wait to see if success comes shows up in log file
-                bool pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, CodeGenSuccessMessage, 2, false, TestFile, true);
+                // Verify the generated files with cmp files 
+                string GenConsumerFile = TestName + "_Generated_Consumer.g.ts";
+                string GenPublisherFile = TestName + "_Generated_Publisher.g.ts";
+                MyUtils.VerifyTestOutputFileToCmpFile(GenConsumerFile, true);
+                MyUtils.VerifyTestOutputFileToCmpFile(GenPublisherFile, true);
 
 
             }
