@@ -1,11 +1,11 @@
-export namespace Test
+export module Test
 {
-
     /**
-     * Some new test. 
+     * Some new  test. 
      * @ambrosia publish=true @param person Datails of a person.
      * 
      */
+    // Private stuff!
     export function NewTest(person: { age: number }): { age: number }
     {
         return (person);
@@ -38,9 +38,15 @@ export namespace Test
     /** The 'TestInner' namespace. */
     export namespace TestInner
     {
+        export async function onFirstStart(): Promise<void>
+        {
+        }
+
         /** 
-         * Returns the current day of the wek.
-         * @ambrosia publish=true
+         * Returns the current day of the week.
+         * @ambrosia publish=false
+         * @param dow The day of the week.
+         * Foobar!
          */
         export function Today(dow: DayOfWeek): DayOfWeek
         {

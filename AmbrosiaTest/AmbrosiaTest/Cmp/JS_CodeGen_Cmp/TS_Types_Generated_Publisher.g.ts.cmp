@@ -106,10 +106,6 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
     {
         switch (message.type)
         {
-            case Messages.DispatchedMessageType.InitialMessage:
-                // TODO: Add your handler here
-                break;
-
             case Messages.DispatchedMessageType.RPC:
                 let rpc: Messages.IncomingRPC = message as Messages.IncomingRPC;
 
@@ -146,6 +142,16 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                                     let firstName: string = IC.getPostMethodArg(rpc, "firstName?");
                                     let lastName: string = IC.getPostMethodArg(rpc, "lastName?");
                                     IC.postResult<PTM.Test.Names>(rpc, PTM.Test.makeName(firstName, lastName));
+                                    break;
+                                
+                                case "return_number":
+                                    let strvalue: string = IC.getPostMethodArg(rpc, "strvalue");
+                                    IC.postResult<number>(rpc, PTM.Test.return_number(strvalue));
+                                    break;
+                                
+                                case "returnstring":
+                                    let numvalue: number = IC.getPostMethodArg(rpc, "numvalue");
+                                    IC.postResult<string>(rpc, PTM.Test.returnstring(numvalue));
                                     break;
                                 
                                 default:
@@ -185,10 +191,41 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                         Meta.publishPostMethod("getMedia", 1, ["mediaName: string"], "PrintMedia");
                         Meta.publishPostMethod("warnUser", 1, [], "void");
                         Meta.publishPostMethod("makeName", 1, ["firstName?: string", "lastName?: string"], "Names");
+                        Meta.publishPostMethod("return_number", 1, ["strvalue: string"], "number");
+                        Meta.publishPostMethod("returnstring", 1, ["numvalue: number"], "string");
+                        // TODO: Add an exported function 'onICStarting(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
+                    case Messages.AppEventType.ICStarted:
+                        // TODO: Add an exported function 'onICStarted(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.ICStopped:
+                        // TODO: Add an exported function 'onICStopped(exitCode: number): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.ICReadyForSelfCallRpc:
+                        // TODO: Add an exported function 'onICReadyForSelfCallRpc(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+    
                     case Messages.AppEventType.RecoveryComplete:
-                        // TODO: Normal app processing can begin
+                        // TODO: Add an exported function 'onRecoveryComplete(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.UpgradeStateAndCode:
+                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.IncomingCheckpointStreamSize:
+                        // TODO: Add an exported function 'onIncomingCheckpointStreamSize(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+                    
+                    case Messages.AppEventType.FirstStart:
+                        // TODO: Add an exported function 'onFirstStart(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.BecomingPrimary:
+                        // TODO: Add an exported function 'onBecomingPrimary(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
                 }
                 break;
