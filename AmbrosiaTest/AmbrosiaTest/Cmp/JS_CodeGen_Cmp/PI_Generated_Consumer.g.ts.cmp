@@ -111,23 +111,6 @@ export namespace Test
         }
 
         /**
-         * Returns the current day of the wek.
-         */
-        export async function TodayAsync(dow: DayOfWeek): Promise<DayOfWeek>
-        {
-            let postResult: DayOfWeek = await IC.postAsync(DESTINATION_INSTANCE_NAME, "Today", 1, null, POST_TIMEOUT_IN_MS, IC.arg("dow", dow));
-            return (postResult);
-        }
-
-        /**
-         * Returns the current day of the wek.
-         */
-        export function Today(resultHandler: IC.PostResultHandler<DayOfWeek>, dow: DayOfWeek): void
-        {
-            IC.post(DESTINATION_INSTANCE_NAME, "Today", 1, resultHandler, POST_TIMEOUT_IN_MS, IC.arg("dow", dow));
-        }
-
-        /**
          * Returns pi computed to the specified number of digits.
          */
         export async function ComputePIAsync(digits?: Digits): Promise<number>

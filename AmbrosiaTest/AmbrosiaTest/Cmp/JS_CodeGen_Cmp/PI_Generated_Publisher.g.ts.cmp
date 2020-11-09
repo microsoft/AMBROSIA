@@ -106,10 +106,6 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
     {
         switch (message.type)
         {
-            case Messages.DispatchedMessageType.InitialMessage:
-                // TODO: Add your handler here
-                break;
-
             case Messages.DispatchedMessageType.RPC:
                 let rpc: Messages.IncomingRPC = message as Messages.IncomingRPC;
 
@@ -126,11 +122,6 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                                 case "NewTest":
                                     let person: { age: number } = IC.getPostMethodArg(rpc, "person");
                                     IC.postResult<{ age: number }>(rpc, PTM.Test.NewTest(person));
-                                    break;
-                                
-                                case "Today":
-                                    let dow: PTM.Test.DayOfWeek = IC.getPostMethodArg(rpc, "dow");
-                                    IC.postResult<PTM.Test.DayOfWeek>(rpc, PTM.Test.TestInner.Today(dow));
                                     break;
                                 
                                 case "ComputePI":
@@ -174,13 +165,41 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                         Meta.publishType("Digit2", "{ count: number }");
                         Meta.publishType("Digit3", "{ count: number }");
                         Meta.publishPostMethod("NewTest", 1, ["person: { age: number }"], "{ age: number }");
-                        Meta.publishPostMethod("Today", 1, ["dow: DayOfWeek"], "DayOfWeek");
                         Meta.publishPostMethod("ComputePI", 1, ["digits?: Digits"], "number");
                         Meta.publishMethod(1, "DoIt", ["dow: DayOfWeek"]);
+                        // TODO: Add an exported function 'onICStarting(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
+                    case Messages.AppEventType.ICStarted:
+                        // TODO: Add an exported function 'onICStarted(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.ICStopped:
+                        // TODO: Add an exported function 'onICStopped(exitCode: number): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.ICReadyForSelfCallRpc:
+                        // TODO: Add an exported function 'onICReadyForSelfCallRpc(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+    
                     case Messages.AppEventType.RecoveryComplete:
-                        // TODO: Normal app processing can begin
+                        // TODO: Add an exported function 'onRecoveryComplete(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.UpgradeStateAndCode:
+                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.IncomingCheckpointStreamSize:
+                        // TODO: Add an exported function 'onIncomingCheckpointStreamSize(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        break;
+                    
+                    case Messages.AppEventType.FirstStart:
+                        await PTM.Test.TestInner.onFirstStart();
+                        break;
+
+                    case Messages.AppEventType.BecomingPrimary:
+                        // TODO: Add an exported function 'onBecomingPrimary(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
                         break;
                 }
                 break;

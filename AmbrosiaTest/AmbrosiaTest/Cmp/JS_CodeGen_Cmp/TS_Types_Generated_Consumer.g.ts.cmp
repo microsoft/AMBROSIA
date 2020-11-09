@@ -71,14 +71,14 @@ export namespace Test
             IC.arg("notSure?", notSure));
     }
 
-    /********* Function using Numeric Enum */
+    /********* Function using / returning Numeric Enum */
     export async function getMediaAsync(mediaName: string): Promise<PrintMedia>
     {
         let postResult: PrintMedia = await IC.postAsync(DESTINATION_INSTANCE_NAME, "getMedia", 1, null, POST_TIMEOUT_IN_MS, IC.arg("mediaName", mediaName));
         return (postResult);
     }
 
-    /********* Function using Numeric Enum */
+    /********* Function using / returning Numeric Enum */
     export function getMedia(resultHandler: IC.PostResultHandler<PrintMedia>, mediaName: string): void
     {
         IC.post(DESTINATION_INSTANCE_NAME, "getMedia", 1, resultHandler, POST_TIMEOUT_IN_MS, IC.arg("mediaName", mediaName));
@@ -112,5 +112,31 @@ export namespace Test
         IC.post(DESTINATION_INSTANCE_NAME, "makeName", 1, resultHandler, POST_TIMEOUT_IN_MS, 
             IC.arg("firstName?", firstName), 
             IC.arg("lastName?", lastName));
+    }
+
+    /********* Function returning number */
+    export async function return_numberAsync(strvalue: string): Promise<number>
+    {
+        let postResult: number = await IC.postAsync(DESTINATION_INSTANCE_NAME, "return_number", 1, null, POST_TIMEOUT_IN_MS, IC.arg("strvalue", strvalue));
+        return (postResult);
+    }
+
+    /********* Function returning number */
+    export function return_number(resultHandler: IC.PostResultHandler<number>, strvalue: string): void
+    {
+        IC.post(DESTINATION_INSTANCE_NAME, "return_number", 1, resultHandler, POST_TIMEOUT_IN_MS, IC.arg("strvalue", strvalue));
+    }
+
+    /********* Function returning string */
+    export async function returnstringAsync(numvalue: number): Promise<string>
+    {
+        let postResult: string = await IC.postAsync(DESTINATION_INSTANCE_NAME, "returnstring", 1, null, POST_TIMEOUT_IN_MS, IC.arg("numvalue", numvalue));
+        return (postResult);
+    }
+
+    /********* Function returning string */
+    export function returnstring(resultHandler: IC.PostResultHandler<string>, numvalue: number): void
+    {
+        IC.post(DESTINATION_INSTANCE_NAME, "returnstring", 1, resultHandler, POST_TIMEOUT_IN_MS, IC.arg("numvalue", numvalue));
     }
 }

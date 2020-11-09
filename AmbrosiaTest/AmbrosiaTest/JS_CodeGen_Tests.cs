@@ -76,6 +76,17 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName);
         }
 
+        [TestMethod]
+        public void JS_CodeGen_EventHandler_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_EventHandlers.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
 
     }
 }
