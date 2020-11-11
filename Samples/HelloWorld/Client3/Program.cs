@@ -5,6 +5,7 @@ using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.IO;
+using System.Diagnostics;
 
 namespace Client3
 {
@@ -95,6 +96,8 @@ namespace Client3
 
             using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
             {
+                var iCListener = new TextWriterTraceListener(coordinatorOutput);
+                Trace.Listeners.Add(iCListener);
                 GenericLogsInterface.SetToGenericLogs();
                 using (AmbrosiaFactory.Deploy<IClient3>(clientInstanceName, new Client3(serverInstanceName, clientInstanceName), coordinatorPort))
                 {

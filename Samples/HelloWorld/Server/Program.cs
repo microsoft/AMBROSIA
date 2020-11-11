@@ -3,6 +3,7 @@ using Client3;
 using Server;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -54,11 +55,7 @@ namespace Server
 
             public async Task AddRespondeeAsync(string respondeeName)
             {
-                IClient3Proxy newRespondee;
-                try
-                {
-                    newRespondee = GetProxy<IClient3Proxy>(respondeeName);
-                } catch { return; }
+                var newRespondee = GetProxy<IClient3Proxy>(respondeeName);
                 _respondeeList.Add(newRespondee);
             }
 
@@ -78,14 +75,29 @@ namespace Server
             {
                 serviceName = args[0];
             }
-
-            
+            var twoProc = false;
+            if (args.Length >= 2)
+            {
+                twoProc = true;
+            }            
             using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
             {
+                var iCListener = new TextWriterTraceListener(coordinatorOutput);
+                Trace.Listeners.Add(iCListener);
                 GenericLogsInterface.SetToGenericLogs();
-                using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), coordinatorPort))
+                if (!twoProc)
                 {
-                    Thread.Sleep(14 * 24 * 3600 * 1000);
+                    using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), coordinatorPort))
+                    {
+                        Thread.Sleep(14 * 24 * 3600 * 1000);
+                    }
+                }
+                else
+                {
+                    using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), 2001, 2000))
+                    {
+                        Thread.Sleep(14 * 24 * 3600 * 1000);
+                    }
                 }
             }
         }
