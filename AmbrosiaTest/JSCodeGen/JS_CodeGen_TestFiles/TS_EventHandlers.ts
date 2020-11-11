@@ -14,15 +14,12 @@ export namespace Test
         console.log(`Fake Event Handler due to name case so just seen as typical function`);
     }
 
-    /** An event handler 
-     * @ambrosia publish=true 
-     */
     export function onRecoveryComplete(/** Bar! */): /** Foo! */ void
     {
         console.log(`On Recovery`);
     }
  
-    /** @ambrosia publish=true */
+    ///** @ambrosia publish=true */   Putting an Ambrosia tag on Event Handler will cause error
     export function onBecomingPrimary(): void
     {
         console.log(`Becoming primary`);
@@ -30,19 +27,17 @@ export namespace Test
 }
 
 // have some outside namespace
-    /** @ambrosia publish=true */
+
     export function onICStopped(exitCode: number): void
     {
         console.log(`The IC stopped with exit code ${exitCode}`);
     }
 
-    /** @ambrosia publish=true */
     export function onICStarted(): void
     {
         console.log(`The IC Started`);
     }
 
-    /** @ambrosia publish=true */
     export function onICStarting(): void
     {
         console.log(`The IC is starting`);
@@ -53,7 +48,6 @@ export namespace Test
         console.log(`The IC Ready`);
     }
     
-    /** @ambrosia publish=true */
     export function onUpgradeStateAndCode(): void
     {
         console.log(`The onUpGrade`);

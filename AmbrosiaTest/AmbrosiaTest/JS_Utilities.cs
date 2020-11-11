@@ -31,12 +31,12 @@ namespace AmbrosiaTest
                 string PubSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName+"_Generated_Publisher.g.ts";
 
                 // Launch the client job process with these values
-                string testfileDir = @"../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/";
-                string testappdir = ConfigurationManager.AppSettings["AmbrosiaJavascriptDirectory"] + "\\TestApp";
+                string testfileDir = @"../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/";
+                string testappdir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
                 string sourcefile = testfileDir+TestFile;
                 string generatedfile = TestName + "_Generated";
                 string fileNameExe = "node.exe";
-                string argString = "out\\TestApp.js sourceFile=" + sourcefile + " mergeType=None generatedFileName=" + generatedfile;
+                string argString = "out\\TestCodeGen.js sourceFile=" + sourcefile + " mergeType=None generatedFileName=" + generatedfile;
                 string testOutputLogFile = TestName + "_CodeGen_Out.log";
 
                 int processID = MyUtils.LaunchProcess(testappdir, fileNameExe, argString, false, testOutputLogFile);
@@ -81,7 +81,7 @@ namespace AmbrosiaTest
 
                 // For some reason, the powershell script does NOT work if called from bin/x64/debug directory. Setting working directory to origin fixes it
                 string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest\AmbrosiaTest";
-                string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJavascriptDirectory"] + "\\TestApp";
+                string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
                 string fileName = "pwsh.exe";
                 string parameters = "-file BuildJSTestApp.ps1 " + scriptDir;
                 bool waitForExit = true;
@@ -115,7 +115,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJavascriptDirectory"] + "\\TestApp";
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
             string fileNameExe = "node.exe";
             string argString = "out\\TestApp.js";
 
@@ -147,7 +147,7 @@ namespace AmbrosiaTest
             }
 
             // Stop all running processes that hung or were left behind
-            MyUtils.StopAllAmbrosiaProcesses();
+            //MyUtils.StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             // *#*#*#* TO DO *#*#*#*
