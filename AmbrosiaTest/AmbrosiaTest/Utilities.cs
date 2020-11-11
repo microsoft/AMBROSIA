@@ -516,7 +516,7 @@ namespace AmbrosiaTest
             if (JSTest)
             {
                 // Test Log Output
-                testLogDir = ConfigurationManager.AppSettings["AmbrosiaJavascriptDirectory"]+"\\TestApp";
+                testLogDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
                 logOutputDirFileName = testLogDir +"\\"+ testOutputLogFile;  
                 cmpLogDir = ConfigurationManager.AppSettings["TestCMPDirectory"] + "\\JS_CodeGen_Cmp";
                 cmpDirFile = cmpLogDir + "\\" + testOutputLogFile +".cmp";
