@@ -7,9 +7,11 @@ In Ambrosia, high availability is achieved by running multiple copies of an inst
 
 In this walkthrough, we make the server in HelloWorld highly available by running three copies, one of which becomes the primary, and two of which become secondaries. We kill the primary server and observe one of the secondaries becoming primary. This may be repeated to ping-pong the primary responsiblity around. 
 
-This walkthrough assumes that readers have already read [HOWTO-WINDOWS.md](./HOWTO-WINDOWS.md) and [HelloWorldExplained.md](./HelloWorldExplained.md).
+This walkthrough assumes that readers have already read [HOWTO-WINDOWS-TwoProc.md](./HOWTO-WINDOWS-TwoProc.md) and [HelloWorldExplained.md](./HelloWorldExplained.md).
 
-We begin in a manner very similar to what is described in [HOWTO-WINDOWS.md](./HOWTO-WINDOWS.md), defining our instances. This time, though, we also logically define replicas for those instances which we will run later:
+Note that, for now, active/active requires 2 process deployments for each immortal. An integrated IC style of running active/active is coming in a future release. 
+
+We begin in a manner very similar to what is described in [HOWTO-WINDOWS-TwoProc.md.md](./HOWTO-WINDOWS-TwoProc.md.md), defining our instances. This time, though, we also logically define replicas for those instances which we will run later:
 
 ```bat
 cd %AMBROSIATOOLS%\x64\Release\netcoreapp3.1\
@@ -54,21 +56,21 @@ To run the HelloWorld server:
 
 ```bat
 cd Server\bin\x64\Debug\netcoreapp3.1
-dotnet Server.dll
+dotnet Server.dll server true
 ```
 
 To run the HelloWorld server first replica:
 
 ```bat
 cd Server\bin\x64\Debug\netcoreapp3.1
-dotnet Server.dll 3001 3000
+dotnet Server.dll server true 3001 3000
 ```
 
 To run the HelloWorld server second replica:
 
 ```bat
 cd Server\bin\x64\Debug\netcoreapp3.1
-dotnet Server.dll 4001 4000
+dotnet Server.dll server true 4001 4000
 ```
 
 To run the HelloWorld client:

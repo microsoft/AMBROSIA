@@ -5,21 +5,21 @@ One of Ambrosia's most compelling features is its ability to debug applications 
 
 Note that debugging is an offline activity, which does not use service metadata, or even the internet. Debugging is performed in a completely isolated manner for an individual instance, and will not have any effect on a running deployment of that instance, or any instances which communicate with the debugged instance.
 
-To make use of this capability, application debuggers need an instance log, and associated instance executables. Note that these instance executables don't need to be identical to the original executables, but must recover from the same state, and handle the API of the original instance. As a result, alternate debug versions of the instance may be substututed for the original, or even a slightly modified version with bug fixes or additional console output.
+To make use of this capability, application debuggers need an instance log, and associated instance executables. Note that these instance executables don't need to be identical to the original executables, but must recover from the same state, and handle the API of the original instance. As a result, alternate debug versions of the instance may be substituted for the original, or even a slightly modified version with bug fixes or additional console output.
 
-This walkthough assumes that readers have already read [HOWTO-WINDOWS.md](./HOWTO-WINDOWS.md) and [HelloWorldExplained.md](./HelloWorldExplained.md). We also assume familiarity with debugging in Visual Studio.
+This walkthough assumes that readers have already read [HOWTO-WINDOWS-TwoProc.md](./HOWTO-WINDOWS-TwoProc.md) and [HelloWorldExplained.md](./HelloWorldExplained.md). We also assume familiarity with debugging in Visual Studio. Note that, for the moment, time-travel is only available when immortals are run in a two process style. Support for integrated IC time travel debugging is coming in a future release.
 
-In this walkthrough, we first run Client1 and Server to completion, following the instructions in [HOWTO-WINDOWS.md](./HOWTO-WINDOWS.md). This means hitting enter for Client1. To make things more straightforward, exit server and client (and their associated ImmortalCoordinators) by hitting CTRL-C. 
+In this walkthrough, we first run Client1 and Server to completion, following the instructions in [HOWTO-WINDOWS-OneProc.md](./HOWTO-WINDOWS-OneProc.md). This means hitting enter for Client1. To make things more straightforward, exit server and client (and their associated ImmortalCoordinators) by hitting CTRL-C. 
 
 Note that the logs directory was C:\logs\, and observe the log file directories for both client and server, the instance names of our two instances. Go into the server directory. Note the existence of servercheckpt1 and serverlog1. Whenever a new checkpoint is performed, either because the log has grown too large, or because we have recovered after a failure, additional checkpoint and log files are created. Recovery happens from the latest valid checkpoint, and the collection of logs beginning with the number of the recovered checkpoint. In this case, we took an initial checkpoint right after server was started, and generated a log, which contains all method calls to server. Since we didn't hit the log file limit (1GB by default), the whole log is contained in serverlog1.
 
-Like running instances for real, debugging an instance involves running two processes. One, as before, is the actual service code, produced as before, but a debug version. Go ahead and run this in the same manner as before:
+Like running instances for real with a separate IC, debugging an instance involves running two processes. One, as before, is the actual service code, produced as before, but a debug version. For the moment, time travel debugging can only be run in separate IC mode. A future release will enable this for integrated IC modes as well. Go ahead and run this in the same manner as before:
 
 ```bat
 
 cd Server\bin\x64\Debug\netcoreapp3.1
 
-dotnet Server.dll
+dotnet Server.dll server true
 
 ```
 
