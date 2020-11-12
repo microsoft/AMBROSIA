@@ -1,4 +1,4 @@
-Ôªø
+
 Client Protocol for AMBROSIA network participants
 =================================================
 
@@ -76,7 +76,7 @@ Each log record has a 24 byte header, followed by the actual record contents. Th
  * Bytes [0-3]: The committer ID for the service, this should be constant for all records for the lifetime of the service, format IntFixed.
  * Bytes [4-7]: The size of the whole log record, in bytes, including the header. The format is IntFixed.
  * Bytes [8-15]: The check bytes to check the integrity of the log record. The format is LongFixed.
- * Bytes [16-23]: The log record sequence ID. Excluding records labeled with sequence ID ‚Äú-1‚Äù, these should be in order. The format is LongFixed.
+ * Bytes [16-23]: The log record sequence ID. Excluding records labeled with sequence ID ì-1î, these should be in order. The format is LongFixed.
 
 The rest of the record is a sequence of messages, packed tightly, each with the following format:
 
@@ -88,34 +88,36 @@ The rest of the record is a sequence of messages, packed tightly, each with the 
 All information sent to the reliability coordinator is in the form of a sequence of messages with the format specified above.
 Message types and associated data which may be sent to or received by services:
 
+ * 15 - `becomingPrimary` (Received) : No data
+
  * 14 - `TrimTo`: Only used in IC to IC communication. The IC will never send this message type to the LB.
 
  * 13 - `CountReplayableRPCBatchByte` (Recieved): Similar to `RPCBatch`, but the data also includes a count (ZigZagInt)
    of non-Impulse (replayable) messages after the count of RPC messages.
 
- * 12 ‚Äì `UpgradeService` (Received): No data
+ * 12 ñ `UpgradeService` (Received): No data
 
- * 11 ‚Äì `TakeBecomingPrimaryCheckpoint` (Received): No data
+ * 11 ñ `TakeBecomingPrimaryCheckpoint` (Received): No data
 
- * 10 ‚Äì `UpgradeTakeCheckpoint` (Received): No data
+ * 10 ñ `UpgradeTakeCheckpoint` (Received): No data
 
- * 9 ‚Äì `InitialMessage` (Sent/Received): Data can be any arbitrary bytes. The `InitialMessage` message will simply be echoed back
+ * 9 ñ `InitialMessage` (Sent/Received): Data can be any arbitrary bytes. The `InitialMessage` message will simply be echoed back
    to the service which can use it to bootstrap service start behavior. In the C# language binding, the data is a complete incoming RPC
    message that will be the very first RPC message it receives. 
 
- * 8 ‚Äì `Checkpoint` (Sent/Received): The data is a single 64 bit number (ZigZagLong).
+ * 8 ñ `Checkpoint` (Sent/Received): The data is a single 64 bit number (ZigZagLong).
    This message is immediately followed (no additional header) by checkpoint itself, 
    which is a binary blob.
    The reason that checkpoints are not sent in the message payload directly is
    so that they can have a 64-bit instead of 32-bit length, in order to support
    large checkpoints.
 
- * 5 ‚Äì `RPCBatch` (Sent/Received): Data is a count (ZigZagInt) of the number of RPC messages in the batch, followed by the corresponding RPC messages.
+ * 5 ñ `RPCBatch` (Sent/Received): Data is a count (ZigZagInt) of the number of RPC messages in the batch, followed by the corresponding RPC messages.
    When sent by the LB, this message is essentially a performance hint to the IC that enables optimized processing of the RPCs, even for as few as 2 RPCs.
 
- * 2 ‚Äì `TakeCheckpoint` (Received): No data
+ * 2 ñ `TakeCheckpoint` (Received): No data
 
- * 1 ‚Äì `AttachTo` (Sent): Data is the destination instance name in UTF-8. The name must match the name used when the instance was logically created (registered).
+ * 1 ñ `AttachTo` (Sent): Data is the destination instance name in UTF-8. The name must match the name used when the instance was logically created (registered).
        The `AttachTo` message must be sent (once) for each outgoing RPC destination, excluding the local instance, prior to sending an RPC.
 
  * 0 - Incoming `RPC` (Received):
@@ -146,12 +148,24 @@ If starting up for the first time:
  * Send a `Checkpoint` message
  * Normal processing
 
-If recovering but not upgrading, or starting as a non-upgrading secondary, or running a repro or what-if test:
+If recovering but not upgrading a non-active/active immortal:
 
  * Receive a `Checkpoint` message
  * Receive logged replay messages
  * Receive `TakeBecomingPrimaryCheckpoint` message
  * Send a `Checkpoint` message
+ * Normal processing
+
+If recovering but not upgrading, and running a repro or what-if test:
+
+ * Receive a `Checkpoint` message
+ * Receive logged replay messages
+
+If recovering but not upgrading, in active-active:
+
+ * Receive a `Checkpoint` message
+ * Receive logged replay messages
+ * Receive `becomingPrimary` message
  * Normal processing
 
 If recovering and upgrading, or starting as an upgrading secondary:

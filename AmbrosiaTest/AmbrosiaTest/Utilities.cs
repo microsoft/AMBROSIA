@@ -497,9 +497,11 @@ namespace AmbrosiaTest
         // This takes the log file and compares it to the associated .CMP file
         // NOTE: Has a feature if a line in cmp file has *X* then that line will not be used in comparison - useful for dates or debug messages
         //
+        // Optional parameter is for Javascript LB tests. There are different locations for Log files and CMP files for JS LB tests
+        //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyTestOutputFileToCmpFile(string testOutputLogFile)
+        public void VerifyTestOutputFileToCmpFile(string testOutputLogFile, bool JSTest = false)
         {
 
             // Give it a second to get all ready to be verified - helps timing issues
@@ -509,6 +511,16 @@ namespace AmbrosiaTest
             string logOutputDirFileName = testLogDir + "\\" + testOutputLogFile;
             string cmpLogDir = ConfigurationManager.AppSettings["TestCMPDirectory"];
             string cmpDirFile = cmpLogDir + "\\" + testOutputLogFile.Replace(".log", ".cmp");
+
+            // Javascript tests 
+            if (JSTest)
+            {
+                // Test Log Output
+                testLogDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
+                logOutputDirFileName = testLogDir +"\\"+ testOutputLogFile;  
+                cmpLogDir = ConfigurationManager.AppSettings["TestCMPDirectory"] + "\\JS_CodeGen_Cmp";
+                cmpDirFile = cmpLogDir + "\\" + testOutputLogFile +".cmp";
+            }
 
             // Put files into memory so can filter out ignore lines etc
             List<string> logFileList = new List<string>();
@@ -990,7 +1002,7 @@ namespace AmbrosiaTest
                         + " -d=" + deployModeInProcManual + " -icp=" + ICPort;
             }
 
-            // add upgrade switch if upgradeing
+            // add upgrade switch if upgrading
             if (upgradeString != null && upgradeString != "N")
                 argString = argString + " -u";
 
@@ -1128,6 +1140,7 @@ namespace AmbrosiaTest
 
             return processID;
         }
+
 
 
         public void LogDebugInfo(string logEntry)
@@ -1489,6 +1502,8 @@ namespace AmbrosiaTest
             KillProcessByName("MSBuild");
             KillProcessByName("dotnet");
             //KillProcessByName("cmd");  // sometimes processes hang
+            KillProcessByName("node");
+
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
@@ -1497,7 +1512,6 @@ namespace AmbrosiaTest
 
         public void TestInitialize()
         {
-
 
             // If failures in queue then do not want to do anything (init, run test, clean up) 
             if (CheckStopQueueFlag())
