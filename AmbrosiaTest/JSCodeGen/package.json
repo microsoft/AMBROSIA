@@ -1,0 +1,13 @@
+{
+  "name": "jscode-gen",
+  "version": "0.0.0",
+  "description": "JSCodeGen",
+  "main": "app.js",
+  "author": {
+    "name": ""
+  },
+  "dependencies": {
+    "ambrosia-node": "file:ambrosia-node-0.0.73.tgz",
+    "typescript": "^4.0.5"
+  }
+}

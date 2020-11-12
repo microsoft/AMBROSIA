@@ -1,0 +1,142 @@
+// Generated consumer-side API for the 'server' Ambrosia Node instance.
+// Note: This file was generated
+// Note: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
+import Ambrosia = require("ambrosia-node");
+import IC = Ambrosia.IC;
+
+let DESTINATION_INSTANCE_NAME: string = "server";
+let POST_TIMEOUT_IN_MS: number = 8000; // -1 = Infinite
+
+export namespace Test
+{
+    /*********** Enum type (numeric enum - strings as number) as return */
+    export enum PrintMedia { Newspaper = 1, Newsletter = 2, Magazine = 3, Book = 4 }
+
+    /********** Enum type (Reverse Mapped enum - can access the value of a member and also a member name from its value) */
+    export enum PrintMediaReverse { NewspaperReverse = 1, NewsletterReverse = 2, MagazineReverse = 3, BookReverse = 4 }
+
+    /*************** Complex Type */
+    export class Name
+    {
+        first: string;
+        last: string;
+        priorNames: Names[];
+
+        constructor(first: string, last: string, priorNames: Names[])
+        {
+            this.first = first;
+            this.last = last;
+            this.priorNames = priorNames;
+        }
+    }
+
+    /************** Example of a type that references another type *************.
+     */
+    export type Names = Name[];
+
+    /************** Example of a nested complex type.*************
+     */
+    export class Nested
+    {
+        abc: { a: Uint8Array, b: { c: Names } };
+
+        constructor(abc: { a: Uint8Array, b: { c: Names } })
+        {
+            this.abc = abc;
+        }
+    }
+
+    /************* Primitives - bool, string, number, array */
+    export async function BasicTypesAsync(isFalse: boolean, height: number, mystring?: string, mystring2?: string, my_array?: number[], notSure?: any): Promise<void>
+    {
+        let postResult: void = await IC.postAsync(DESTINATION_INSTANCE_NAME, "BasicTypes", 1, null, POST_TIMEOUT_IN_MS, 
+            IC.arg("isFalse", isFalse), 
+            IC.arg("height", height), 
+            IC.arg("mystring?", mystring), 
+            IC.arg("mystring2?", mystring2), 
+            IC.arg("my_array?", my_array), 
+            IC.arg("notSure?", notSure));
+        return (postResult);
+    }
+
+    /************* Primitives - bool, string, number, array */
+    export function BasicTypes(resultHandler: IC.PostResultHandler<void>, isFalse: boolean, height: number, mystring?: string, mystring2?: string, my_array?: number[], notSure?: any): void
+    {
+        IC.post(DESTINATION_INSTANCE_NAME, "BasicTypes", 1, resultHandler, POST_TIMEOUT_IN_MS, 
+            IC.arg("isFalse", isFalse), 
+            IC.arg("height", height), 
+            IC.arg("mystring?", mystring), 
+            IC.arg("mystring2?", mystring2), 
+            IC.arg("my_array?", my_array), 
+            IC.arg("notSure?", notSure));
+    }
+
+    /********* Function using / returning Numeric Enum */
+    export async function getMediaAsync(mediaName: string): Promise<PrintMedia>
+    {
+        let postResult: PrintMedia = await IC.postAsync(DESTINATION_INSTANCE_NAME, "getMedia", 1, null, POST_TIMEOUT_IN_MS, IC.arg("mediaName", mediaName));
+        return (postResult);
+    }
+
+    /********* Function using / returning Numeric Enum */
+    export function getMedia(resultHandler: IC.PostResultHandler<PrintMedia>, mediaName: string): void
+    {
+        IC.post(DESTINATION_INSTANCE_NAME, "getMedia", 1, resultHandler, POST_TIMEOUT_IN_MS, IC.arg("mediaName", mediaName));
+    }
+
+    /************* Void type */
+    export async function warnUserAsync(): Promise<void>
+    {
+        let postResult: void = await IC.postAsync(DESTINATION_INSTANCE_NAME, "warnUser", 1, null, POST_TIMEOUT_IN_MS);
+        return (postResult);
+    }
+
+    /************* Void type */
+    export function warnUser(resultHandler: IC.PostResultHandler<void>): void
+    {
+        IC.post(DESTINATION_INSTANCE_NAME, "warnUser", 1, resultHandler, POST_TIMEOUT_IN_MS);
+    }
+
+    /************** Example of a [post] method that uses custom types. */
+    export async function makeNameAsync(firstName?: string, lastName?: string): Promise<Names>
+    {
+        let postResult: Names = await IC.postAsync(DESTINATION_INSTANCE_NAME, "makeName", 1, null, POST_TIMEOUT_IN_MS, 
+            IC.arg("firstName?", firstName), 
+            IC.arg("lastName?", lastName));
+        return (postResult);
+    }
+
+    /************** Example of a [post] method that uses custom types. */
+    export function makeName(resultHandler: IC.PostResultHandler<Names>, firstName?: string, lastName?: string): void
+    {
+        IC.post(DESTINATION_INSTANCE_NAME, "makeName", 1, resultHandler, POST_TIMEOUT_IN_MS, 
+            IC.arg("firstName?", firstName), 
+            IC.arg("lastName?", lastName));
+    }
+
+    /********* Function returning number */
+    export async function return_numberAsync(strvalue: string): Promise<number>
+    {
+        let postResult: number = await IC.postAsync(DESTINATION_INSTANCE_NAME, "return_number", 1, null, POST_TIMEOUT_IN_MS, IC.arg("strvalue", strvalue));
+        return (postResult);
+    }
+
+    /********* Function returning number */
+    export function return_number(resultHandler: IC.PostResultHandler<number>, strvalue: string): void
+    {
+        IC.post(DESTINATION_INSTANCE_NAME, "return_number", 1, resultHandler, POST_TIMEOUT_IN_MS, IC.arg("strvalue", strvalue));
+    }
+
+    /********* Function returning string */
+    export async function returnstringAsync(numvalue: number): Promise<string>
+    {
+        let postResult: string = await IC.postAsync(DESTINATION_INSTANCE_NAME, "returnstring", 1, null, POST_TIMEOUT_IN_MS, IC.arg("numvalue", numvalue));
+        return (postResult);
+    }
+
+    /********* Function returning string */
+    export function returnstring(resultHandler: IC.PostResultHandler<string>, numvalue: number): void
+    {
+        IC.post(DESTINATION_INSTANCE_NAME, "returnstring", 1, resultHandler, POST_TIMEOUT_IN_MS, IC.arg("numvalue", numvalue));
+    }
+}
