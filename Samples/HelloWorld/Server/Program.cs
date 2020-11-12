@@ -69,6 +69,8 @@ namespace Server
         static void Main(string[] args)
         {
             int coordinatorPort = 2500;
+            int receivePort = 2001;
+            int sendPort = 2000;
             string serviceName = "server";
 
             if (args.Length >= 1)
@@ -79,25 +81,34 @@ namespace Server
             if (args.Length >= 2)
             {
                 twoProc = true;
-            }            
-            using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
+            }
+            if (args.Length >= 3)
             {
-                var iCListener = new TextWriterTraceListener(coordinatorOutput);
-                Trace.Listeners.Add(iCListener);
-                GenericLogsInterface.SetToGenericLogs();
-                if (!twoProc)
+                receivePort = int.Parse(args[2]);
+            }
+            if (args.Length >= 4)
+            {
+                sendPort = int.Parse(args[3]);
+            }
+
+            GenericLogsInterface.SetToGenericLogs();
+            if (!twoProc)
+            {
+                using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
                 {
+                    var iCListener = new TextWriterTraceListener(coordinatorOutput);
+                    Trace.Listeners.Add(iCListener);
                     using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), coordinatorPort))
                     {
                         Thread.Sleep(14 * 24 * 3600 * 1000);
                     }
                 }
-                else
+            }
+            else
+            {
+                using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
                 {
-                    using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), 2001, 2000))
-                    {
-                        Thread.Sleep(14 * 24 * 3600 * 1000);
-                    }
+                    Thread.Sleep(14 * 24 * 3600 * 1000);
                 }
             }
         }
