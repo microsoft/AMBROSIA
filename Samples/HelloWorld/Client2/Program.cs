@@ -7,6 +7,7 @@ using Client2;
 using Server;
 using Microsoft.VisualStudio.Threading;
 using System.IO;
+using System.Diagnostics;
 
 namespace Client2
 {
@@ -87,6 +88,8 @@ namespace Client2
             Client2 client = new Client2(serverInstanceName);
             using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
             {
+                var iCListener = new TextWriterTraceListener(coordinatorOutput);
+                Trace.Listeners.Add(iCListener);
                 GenericLogsInterface.SetToGenericLogs();
                 using (AmbrosiaFactory.Deploy<IClient2>(clientInstanceName, client, coordinatorPort))
                 {

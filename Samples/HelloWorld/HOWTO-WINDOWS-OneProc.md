@@ -1,18 +1,18 @@
-# How to run the HelloWorld Sample (on Windows with .NET Core)
+# How to run the HelloWorld Sample (Integrated IC on Windows with .NET Core)
 
-This sample shows two immortals communicating, a client and a server. You can build and run it locally to get a quick idea of how Ambrosia operates. The solution contains three alternate versions of the client (Client1, Client2 and Client3), only one of which is used at a time.  Client1 demonstrates basic communication, Client2 demonstrates nondeterministic input using an impulse handler and Client3 demonstrates using asynchronous calls.
+This sample shows two immortals communicating, a client and a server. You can build and run it locally to get a quick idea of how Ambrosia operates. The solution contains three alternate versions of the client (Client1, Client2 and Client3), only one of which is used at a time.  Client1 demonstrates basic communication, Client2 demonstrates nondeterministic input using an impulse handler and Client3 demonstrates how 2 way commmunication is done.
 
 ## Quick Build
 
 The sample uses the AmbrosiaLibCS NuGet package to import the necessary Ambrosia binaries. These packages are picked up automatically from the public NuGet feed, so there are no extra steps required to import them.
 
-- Build `HelloWorld.sln` in Visual Studio, using configuration `Debug` and platform `x64`.
+- Build `HelloWorld.sln` in Visual Studio, using configuration `Debug` and platform `Any CPU`.
 
 As part of a full build, Ambrosia generates code for the interface proxies. To make this sample easy to run, we have already included the generated code, so you don't have to run code generation just to build and run the HelloWorld sample. However, if you want to experiment with it or make any changes to the interfaces, you can run code generation yourself as described in the section "Full Build w/ Code Generation" below.
 
 ### Getting the Ambrosia tool binaries
 
-To run HelloWorld you'll also need the Ambrosia tools that are distributed in compressed folder. To get these,
+To run HelloWorld you'll also need the Ambrosia tools that are distributed in a compressed folder. To get these,
 
 - Download the compressed folder `Ambrosia-win-x64.zip` from [Releases](https://github.com/microsoft/AMBROSIA/releases)
 - Unpack it somewhere on your disk; for example, `C:\Ambrosia-win-x64\`
@@ -24,12 +24,8 @@ For the purpose of this tutorial, we'll assume the following parameters:
 
 - Log directory: `C:\logs\`
 - Client instance name: `client`
-- Client ImmortalCoordinator receive port: `1000`
-- Client ImmortalCoordinator send port: `1001`
 - Client ImmortalCoordinator CRA port: `1500`
 - Server instance name: `server`
-- Server ImmortalCoordinator receive port: `2000`
-- Server ImmortalCoordinator send port: `2001`
 - Server ImmortalCoordinator CRA port: `2500`
 
 ### Storage Connection String
@@ -53,51 +49,38 @@ When each of these completes successfully, you will see the following message, o
 The CRA instance appears to be down. Restart it and this vertex will be instantiated automatically.
 ```
 
-This message indicates that other instances can connect to them and even perform method calls reliably, although the methods won't actually execute until the instances are started.
+This message indicates that other instances can connect to them and even perform method calls reliably, although the methods won't actually execute until the instances are started. 
+
+Note that the values specified in the rp and sp flags are not used in integrated IC mode, but are still needed for separate IC mode. We are considering eliminating the requirement for these parameter values in a future release. 
 
 ### Running the application
 
-To run the HelloWorld application, you will need to run four command-line
-processes, each in a separate console window: the HelloWorld client Immortal, the
-HelloWorld server Immortal, and two ImmortalCoordinator processes, one for
-each Immortal.
+To run the HelloWorld application, you will need to run two command-line
+processes, each in a separate console window: the HelloWorld client Immortal, and the
+HelloWorld server Immortal.
 
-To run the server ImmortalCoordinator, in the first console window:
-
- ```bat
- cd %AMBROSIATOOLS%\x64\Release\netcoreapp3.1
- dotnet ImmortalCoordinator.dll --instanceName=server --port=2500
-```
-
-To run the client ImmortalCoordinator, in the second console window:
-
-```bat
-cd %AMBROSIATOOLS%\x64\Release\netcoreapp3.1
-dotnet ImmortalCoordinator.dll --instanceName=client --port=1500
-```
-
-To run the HelloWorld server, in the third console window:
+To run the HelloWorld server, in the first console window:
 
 ```bat
 cd Server\bin\x64\Debug\netcoreapp3.1
 dotnet Server.dll
 ```
 
-To run the HelloWorld client, in the fourth console window:
+To run the HelloWorld client, in the second console window:
 
 ```bat
 cd Client1\bin\x64\Debug\netcoreapp3.1
 dotnet Client1.dll
 ```
 
-After starting all four processes, you should see your client and server
+After starting both processes, you should see your client and server
 communicate with each other! Specifically:
 
-- The console of the server process prints `Received message from a client: Hello World 1!`
-- The console of the client process prints `Press any key to continue`
-- (Now press a key in the client process console window)
-- The console of the server process prints `Received message from a client: Hello World 2!`
-- The console of the server process prints `Received message from a client: Hello World 3!`
+- The console of the server process prints `SERVER Received message from a client: Hello World 1!`
+- The console of the client process prints `Client: Sent message 1` and `Press enter to continue`
+- (Now press enter in the client process console window)
+- The console of the server process prints `SERVER Received message from a client: Client: Hello World 2!`
+- The console of the server process prints `SERVER Received message from a client: Client: Hello World 3!`
 
 ### Clearing state and re-running
 
