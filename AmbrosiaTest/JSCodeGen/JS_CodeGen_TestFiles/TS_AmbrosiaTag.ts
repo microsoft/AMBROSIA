@@ -5,10 +5,7 @@
 export namespace Test
 {
 
-    // *** Causes error 
-    // 1) No tag at all in the whole file 
-    // 2) Newline after tag 
-  
+ 
      /** @ambrosia publish=true */
     export function OneLineNoComment()
     {
@@ -23,17 +20,6 @@ export namespace Test
     {
             console.log("Multi Line before tag");
     }
-
-
-    //*** NewLine after Tag is not valid scenario - causes an error 
-    /** @ambrosia publish=true  
-     * Comment on next line.
-     */
-    //export function MultiLineCommentAfterTag()
-    //{
-            //console.log("Multi Line after tag");
-    //}
-
 
     /** Multi Line with Comment before Tag */
     /** but still before tag -- since separate comment, these will not show in .g.ts*/
@@ -85,8 +71,6 @@ export namespace Test
     {
             console.log("NotJSDOcTag");
     }
-
-
 
 }
  
