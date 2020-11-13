@@ -7,7 +7,10 @@ This sample shows two immortals communicating, a client and a server. You can bu
 To run it yourself, refer to the version of the tutorial that matches
 your tooling environment:
 
- * [HOWTO-WINDOWS.md](./HOWTO-WINDOWS.md): Build and run using
+ * [HOWTO-WINDOWS-OneProc.md](./HOWTO-WINDOWS-OneProc.md): Build and run with an integrated IC using
+   Windows-native tooling, e.g. Visual Studio and `cmd.exe`.
+
+ * [HOWTO-WINDOWS-TwoProc.md](./HOWTO-WINDOWS-TwoProc.md): Build and run with a separate IC using 
    Windows-native tooling, e.g. Visual Studio and `cmd.exe`.
 
  * [HOWTO-BASH.md](./HOWTO-BASH.md): Build and run on your local
