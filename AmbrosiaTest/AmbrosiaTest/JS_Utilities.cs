@@ -16,10 +16,12 @@ namespace AmbrosiaTest
         // Message at the bottom of the output file to show everything passed
         public string ConsumerCodeGenSuccessMessage = "Consumer code file generation SUCCEEDED: 1 of 1 files generated; 0 TypeScript errors, 0 merge conflicts";
         public string PublisherCodeGenSuccessMessage = "Publisher code file generation SUCCEEDED: 1 of 1 files generated; 0 TypeScript errors, 0 merge conflicts";
+        public string ConsumerCodeGenFailMessage = "Consumer code file generation FAILED: 0 of 1 files generated";
+        public string PublisherCodeGenFailMessage = "Publisher code file generation FAILED: 0 of 1 files generated";
         public string CodeGenNoTypeScriptErrorsMessage = "Success: No TypeScript errors found in ";
 
         // Runs a TS file through the JS LB and verifies code gen works correctly
-        public void Test_CodeGen_TSFile(string TestFile)
+        public void Test_CodeGen_TSFile(string TestFile, bool NegTest = false, string ExtraConErrorMessage = "", string ExtraPubErrorMessage = "")
         {
             try
             {
@@ -29,6 +31,7 @@ namespace AmbrosiaTest
                 Utilities MyUtils = new Utilities();
                 string ConSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName+"_Generated_Consumer.g.ts";
                 string PubSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName+"_Generated_Publisher.g.ts";
+
 
                 // Launch the client job process with these values
                 string testfileDir = @"../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/";
@@ -46,18 +49,29 @@ namespace AmbrosiaTest
                     Assert.Fail("<StartJSTestApp> JS TestApp was not started.  ProcessID <=0 ");
                 }
 
-                // Wait to see if success comes shows up in log file for total and for consumer and publisher
-                bool pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConsumerCodeGenSuccessMessage, 1, false, TestFile, true);
-                pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PublisherCodeGenSuccessMessage, 1, false, TestFile, true);
-                pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConSuccessString, 1, false, TestFile, true);
-                pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PubSuccessString, 1, false, TestFile, true);
+                // Verify things differently if it is a negative test
+                if (NegTest)
+                {
+                    bool pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConsumerCodeGenFailMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PublisherCodeGenFailMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraConErrorMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraPubErrorMessage, 1, false, TestFile, true);
 
-                // Verify the generated files with cmp files 
-                string GenConsumerFile = TestName + "_Generated_Consumer.g.ts";
-                string GenPublisherFile = TestName + "_Generated_Publisher.g.ts";
-                MyUtils.VerifyTestOutputFileToCmpFile(GenConsumerFile, true);
-                MyUtils.VerifyTestOutputFileToCmpFile(GenPublisherFile, true);
+                }
+                else
+                {
+                    // Wait to see if success comes shows up in log file for total and for consumer and publisher
+                    bool pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConsumerCodeGenSuccessMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PublisherCodeGenSuccessMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConSuccessString, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PubSuccessString, 1, false, TestFile, true);
 
+                    // Verify the generated files with cmp files 
+                    string GenConsumerFile = TestName + "_Generated_Consumer.g.ts";
+                    string GenPublisherFile = TestName + "_Generated_Publisher.g.ts";
+                    MyUtils.VerifyTestOutputFileToCmpFile(GenConsumerFile, true);
+                    MyUtils.VerifyTestOutputFileToCmpFile(GenPublisherFile, true);
+                }
 
             }
             catch (Exception e)

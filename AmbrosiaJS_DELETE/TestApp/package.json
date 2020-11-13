@@ -1,0 +1,21 @@
+{
+  "name": "testapp",
+  "version": "1.0.0",
+  "description": "AmbrosiaJS Node.js Test App.",
+  "main": ".out/TestApp/TestApp.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "RichardH",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://msrfranklin.visualstudio.com/_git/Franklin"
+  },
+  "dependencies": {
+    "ambrosia-node": "file:../Ambrosia-Node/ambrosia-node-0.0.73.tgz"
+  },
+  "devDependencies": {
+    "typescript": "^3.9.7"
+  }
+}

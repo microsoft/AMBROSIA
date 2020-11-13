@@ -1,7 +1,6 @@
-// Generated publisher-side framework for the 'server' Ambrosia Node instance.
-// Note: This file was generated
-// Note: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
-import * as PTM from "../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI"; // PTM = "Published Types and Methods"
+// [TOKEN:Name=Header,StartingIndent=0]
+// import Ambrosia = require("./src/Ambrosia"); // TODO: This is for development ONLY: Use the import below for the "release" version [DEV-ONLY COMMENT]
+// @ts-ignore (for TS:2308 "Cannot find module 'ambrosia-node' or its corresponding type declarations.") [DEV-ONLY COMMENT]
 import Ambrosia = require("ambrosia-node"); 
 import Utils = Ambrosia.Utils;
 import IC = Ambrosia.IC;
@@ -9,18 +8,7 @@ import Messages = Ambrosia.Messages;
 import Meta = Ambrosia.Meta;
 import Streams = Ambrosia.Streams;
 
-class AppState extends Ambrosia.AmbrosiaAppState
-{
-    // TODO: Define your application state here
-
-    constructor()
-    {
-        super();
-        // TODO: Initialize your application state here
-    }
-}
-
-export let _appState: AppState = new AppState();
+// [TOKEN:Name=AppState,StartingIndent=0]
 
 /** Returns an OutgoingCheckpoint object used to serialize app state to a checkpoint. */
 export function checkpointProducer(): Streams.OutgoingCheckpoint
@@ -29,6 +17,7 @@ export function checkpointProducer(): Streams.OutgoingCheckpoint
     {
         Utils.log(`checkpointProducer: ${error ? `Failed (reason: ${error.message})` : "Checkpoint saved"}`)
     }
+    // @ts-ignore (for TS:2304 "Cannot find name '_appState'") [DEV-ONLY COMMENT]
     return (Streams.simpleCheckpointProducer(Utils.jsonStringify(_appState), onCheckpointSent));
 }
 
@@ -39,6 +28,7 @@ export function checkpointConsumer(): Streams.IncomingCheckpoint
     {
         if (!error)
         {
+            // @ts-ignore (for TS:2304 "Cannot find name '_appState'") [DEV-ONLY COMMENT]
             _appState = Utils.jsonParse(jsonAppState);
         }
         Utils.log(`checkpointConsumer: ${error ? `Failed (reason: ${error.message})` : "Checkpoint loaded"}`);
@@ -119,16 +109,7 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                     
                             switch (methodName)
                             {
-                                case "NewTest":
-                                    let person: { age: number } = IC.getPostMethodArg(rpc, "person");
-                                    IC.postResult<{ age: number }>(rpc, PTM.Test.NewTest(person));
-                                    break;
-                                
-                                case "ComputePI":
-                                    let digits: PTM.Test.Digits = IC.getPostMethodArg(rpc, "digits?");
-                                    IC.postResult<number>(rpc, await PTM.Test.TestInner.ComputePI(digits));
-                                    break;
-                                
+                                // [TOKEN:Name=PostMethodHandlers,StartingIndent=32]
                                 default:
                                     let errorMsg: string = `Post method '${methodName}' is not implemented`;
                                     Utils.log(`(${errorMsg})`, loggingPrefix)
@@ -143,11 +124,7 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                         }
                         break;
 
-                    case 1:
-                        let dow: PTM.Test.DayOfWeek = rpc.jsonParams["dow"];
-                        PTM.Test.DoIt(dow);
-                        break;
-                    
+                    // [TOKEN:Name=NonPostMethodHandlers,StartingIndent=20]
                     default:
                         Utils.log(`(No method is associated with methodID ${rpc.methodID})`, loggingPrefix)
                         break;
@@ -160,48 +137,41 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                 switch (appEvent.eventType)
                 {
                     case Messages.AppEventType.ICStarting:
-                        Meta.publishType("DayOfWeek", "number");
-                        Meta.publishType("Digits", "{ count: number }");
-                        Meta.publishType("Digit2", "{ count: number }");
-                        Meta.publishType("Digit3", "{ count: number }");
-                        Meta.publishPostMethod("NewTest", 1, ["person: { age: number }"], "{ age: number }");
-                        Meta.publishPostMethod("ComputePI", 1, ["digits?: Digits"], "number");
-                        Meta.publishMethod(1, "DoIt", ["dow: DayOfWeek"]);
-                        // TODO: Add an exported function 'onICStarting(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // [TOKEN:Name=PublishTypes,StartingIndent=24]
+                        // [TOKEN:Name=PublishMethods,StartingIndent=24]
+                        // [TOKEN:Name=ICStartingEventHandler,StartingIndent=24]
                         break;
 
                     case Messages.AppEventType.ICStarted:
-                        // TODO: Add an exported function 'onICStarted(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // [TOKEN:Name=ICStartedEventHandler,StartingIndent=24]
                         break;
 
                     case Messages.AppEventType.ICStopped:
-                        // TODO: Add an exported function 'onICStopped(exitCode: number): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // [TOKEN:Name=ICStoppedEventHandler,StartingIndent=24]
                         break;
 
                     case Messages.AppEventType.ICReadyForSelfCallRpc:
-                        // TODO: Add an exported function 'onICReadyForSelfCallRpc(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // [TOKEN:Name=ICReadyForSelfCallRpcEventHandler,StartingIndent=24]
                         break;
     
                     case Messages.AppEventType.RecoveryComplete:
-                        // TODO: Add an exported function 'onRecoveryComplete(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // [TOKEN:Name=RecoveryCompleteEventHandler,StartingIndent=24]
                         break;
 
                     case Messages.AppEventType.UpgradeStateAndCode:
-                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
-                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts in order to reference the 'Messages' namespace.
-                        //       Also, your handler should call IC.upgrade() [to upgrade code] and _appState.upgrade() [to upgrade state].
+                        // [TOKEN:Name=UpgradeStateAndCodeEventHandler,StartingIndent=24]
                         break;
 
                     case Messages.AppEventType.IncomingCheckpointStreamSize:
-                        // TODO: Add an exported function 'onIncomingCheckpointStreamSize(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // [TOKEN:Name=IncomingCheckpointStreamSizeEventHandler,StartingIndent=24]
                         break;
                     
                     case Messages.AppEventType.FirstStart:
-                        await PTM.Test.TestInner.onFirstStart();
+                        // [TOKEN:Name=FirstStartEventHandler,StartingIndent=24]
                         break;
 
                     case Messages.AppEventType.BecomingPrimary:
-                        // TODO: Add an exported function 'onBecomingPrimary(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // [TOKEN:Name=BecomingPrimaryEventHandler,StartingIndent=24]
                         break;
                 }
                 break;
@@ -214,3 +184,4 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
         Utils.log(error);
     }
 }
+// [TOKEN:Name=MethodImplementations,StartingIndent=0]

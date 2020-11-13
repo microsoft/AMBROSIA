@@ -1,7 +1,7 @@
 // Generated publisher-side framework for the 'server' Ambrosia Node instance.
 // Note: This file was generated
 // Note: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
-import * as PTM from "../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI"; // PTM = "Published Types and Methods"
+import * as PTM from "./../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI"; // PTM = "Published Types and Methods"
 import Ambrosia = require("ambrosia-node"); 
 import Utils = Ambrosia.Utils;
 import IC = Ambrosia.IC;
@@ -167,33 +167,31 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                         Meta.publishPostMethod("NewTest", 1, ["person: { age: number }"], "{ age: number }");
                         Meta.publishPostMethod("ComputePI", 1, ["digits?: Digits"], "number");
                         Meta.publishMethod(1, "DoIt", ["dow: DayOfWeek"]);
-                        // TODO: Add an exported function 'onICStarting(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICStarting(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStarted:
-                        // TODO: Add an exported function 'onICStarted(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICStarted(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStopped:
-                        // TODO: Add an exported function 'onICStopped(exitCode: number): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICStopped(exitCode: number): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICReadyForSelfCallRpc:
-                        // TODO: Add an exported function 'onICReadyForSelfCallRpc(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICReadyForSelfCallRpc(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
                         break;
     
                     case Messages.AppEventType.RecoveryComplete:
-                        // TODO: Add an exported function 'onRecoveryComplete(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onRecoveryComplete(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.UpgradeStateAndCode:
-                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
-                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts in order to reference the 'Messages' namespace.
-                        //       Also, your handler should call IC.upgrade() [to upgrade code] and _appState.upgrade() [to upgrade state].
+                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.IncomingCheckpointStreamSize:
-                        // TODO: Add an exported function 'onIncomingCheckpointStreamSize(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onIncomingCheckpointStreamSize(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
                         break;
                     
                     case Messages.AppEventType.FirstStart:
@@ -201,7 +199,7 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                         break;
 
                     case Messages.AppEventType.BecomingPrimary:
-                        // TODO: Add an exported function 'onBecomingPrimary(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onBecomingPrimary(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
                         break;
                 }
                 break;

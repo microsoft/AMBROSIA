@@ -1,7 +1,7 @@
 // Generated publisher-side framework for the 'server' Ambrosia Node instance.
 // Note: This file was generated
 // Note: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
-import * as PTM from "../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI"; // PTM = "Published Types and Methods"
+import * as PTM from "./../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types"; // PTM = "Published Types and Methods"
 import Ambrosia = require("ambrosia-node"); 
 import Utils = Ambrosia.Utils;
 import IC = Ambrosia.IC;
@@ -119,14 +119,39 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                     
                             switch (methodName)
                             {
-                                case "NewTest":
-                                    let person: { age: number } = IC.getPostMethodArg(rpc, "person");
-                                    IC.postResult<{ age: number }>(rpc, PTM.Test.NewTest(person));
+                                case "BasicTypes":
+                                    let isFalse: boolean = IC.getPostMethodArg(rpc, "isFalse");
+                                    let height: number = IC.getPostMethodArg(rpc, "height");
+                                    let mystring: string = IC.getPostMethodArg(rpc, "mystring?");
+                                    let mystring2: string = IC.getPostMethodArg(rpc, "mystring2?");
+                                    let my_array: number[] = IC.getPostMethodArg(rpc, "my_array?");
+                                    let notSure: any = IC.getPostMethodArg(rpc, "notSure?");
+                                    IC.postResult<void>(rpc, PTM.Test.BasicTypes(isFalse, height, mystring, mystring2, my_array, notSure));
                                     break;
                                 
-                                case "ComputePI":
-                                    let digits: PTM.Test.Digits = IC.getPostMethodArg(rpc, "digits?");
-                                    IC.postResult<number>(rpc, await PTM.Test.TestInner.ComputePI(digits));
+                                case "getMedia":
+                                    let mediaName: string = IC.getPostMethodArg(rpc, "mediaName");
+                                    IC.postResult<PTM.Test.PrintMedia>(rpc, PTM.Test.getMedia(mediaName));
+                                    break;
+                                
+                                case "warnUser":
+                                    IC.postResult<void>(rpc, PTM.Test.warnUser());
+                                    break;
+                                
+                                case "makeName":
+                                    let firstName: string = IC.getPostMethodArg(rpc, "firstName?");
+                                    let lastName: string = IC.getPostMethodArg(rpc, "lastName?");
+                                    IC.postResult<PTM.Test.Names>(rpc, PTM.Test.makeName(firstName, lastName));
+                                    break;
+                                
+                                case "return_number":
+                                    let strvalue: string = IC.getPostMethodArg(rpc, "strvalue");
+                                    IC.postResult<number>(rpc, PTM.Test.return_number(strvalue));
+                                    break;
+                                
+                                case "returnstring":
+                                    let numvalue: number = IC.getPostMethodArg(rpc, "numvalue");
+                                    IC.postResult<string>(rpc, PTM.Test.returnstring(numvalue));
                                     break;
                                 
                                 default:
@@ -143,10 +168,7 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                         }
                         break;
 
-                    case 1:
-                        let dow: PTM.Test.DayOfWeek = rpc.jsonParams["dow"];
-                        PTM.Test.DoIt(dow);
-                        break;
+                    // Code-gen: Fork/Impulse method handlers will go here
                     
                     default:
                         Utils.log(`(No method is associated with methodID ${rpc.methodID})`, loggingPrefix)
@@ -160,48 +182,50 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                 switch (appEvent.eventType)
                 {
                     case Messages.AppEventType.ICStarting:
-                        Meta.publishType("DayOfWeek", "number");
-                        Meta.publishType("Digits", "{ count: number }");
-                        Meta.publishType("Digit2", "{ count: number }");
-                        Meta.publishType("Digit3", "{ count: number }");
-                        Meta.publishPostMethod("NewTest", 1, ["person: { age: number }"], "{ age: number }");
-                        Meta.publishPostMethod("ComputePI", 1, ["digits?: Digits"], "number");
-                        Meta.publishMethod(1, "DoIt", ["dow: DayOfWeek"]);
-                        // TODO: Add an exported function 'onICStarting(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        Meta.publishType("PrintMedia", "number");
+                        Meta.publishType("PrintMediaReverse", "number");
+                        Meta.publishType("Name", "{ first: string, last: string, priorNames: Names[] }");
+                        Meta.publishType("Names", "Name[]");
+                        Meta.publishType("Nested", "{ abc: { a: Uint8Array, b: { c: Names } } }");
+                        Meta.publishPostMethod("BasicTypes", 1, ["isFalse: boolean", "height: number", "mystring?: string", "mystring2?: string", "my_array?: number[]", "notSure?: any"], "void");
+                        Meta.publishPostMethod("getMedia", 1, ["mediaName: string"], "PrintMedia");
+                        Meta.publishPostMethod("warnUser", 1, [], "void");
+                        Meta.publishPostMethod("makeName", 1, ["firstName?: string", "lastName?: string"], "Names");
+                        Meta.publishPostMethod("return_number", 1, ["strvalue: string"], "number");
+                        Meta.publishPostMethod("returnstring", 1, ["numvalue: number"], "string");
+                        // TODO: Add an exported function 'onICStarting(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStarted:
-                        // TODO: Add an exported function 'onICStarted(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICStarted(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStopped:
-                        // TODO: Add an exported function 'onICStopped(exitCode: number): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICStopped(exitCode: number): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICReadyForSelfCallRpc:
-                        // TODO: Add an exported function 'onICReadyForSelfCallRpc(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICReadyForSelfCallRpc(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
     
                     case Messages.AppEventType.RecoveryComplete:
-                        // TODO: Add an exported function 'onRecoveryComplete(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onRecoveryComplete(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.UpgradeStateAndCode:
-                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
-                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts in order to reference the 'Messages' namespace.
-                        //       Also, your handler should call IC.upgrade() [to upgrade code] and _appState.upgrade() [to upgrade state].
+                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.IncomingCheckpointStreamSize:
-                        // TODO: Add an exported function 'onIncomingCheckpointStreamSize(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onIncomingCheckpointStreamSize(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
                     
                     case Messages.AppEventType.FirstStart:
-                        await PTM.Test.TestInner.onFirstStart();
+                        // TODO: Add an exported function 'onFirstStart(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.BecomingPrimary:
-                        // TODO: Add an exported function 'onBecomingPrimary(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onBecomingPrimary(): void' to ../../AmbrosiaTest/AmbrosiaTest/JS_CodeGen_TestFiles/TS_Types.ts then (after the next code-gen) a call to it will be generated here
                         break;
                 }
                 break;

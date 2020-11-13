@@ -20,6 +20,8 @@ export namespace Test
         console.log(notSure);
     }
 
+    //**** String Enums are not supported scenario */
+
     /***********  Enum type (numeric enum - strings as number) as return    *************
     * @ambrosia publish=true 
     */
@@ -38,30 +40,6 @@ export namespace Test
             return PrintMedia.Magazine;
         }
      }
-
-    /**********  Enum type (string enum - initialize strings with strings and not as number) *************
-    * @ambrosia publish=true 
-    */
-    //*****  Known Issue - Enums cannot contain expressions or computed values, only assigned (or omitted) integer values. 
-    //export enum PrintMediaString {
-        //NewspaperStringEnum = "NEWSPAPER",
-        //NewsletterStringEnum = "NEWSLETTER",
-        //MagazineStringEnum = "MAGAZINE",
-        //BookStringEnum = "BOOK"
-   //}
-   //    PrintMediaString.NewspaperStringEnum; //returns NEWSPAPER
-   //    PrintMediaString['Magazine'];//returns MAGAZINE
-
-
-    /**********  Enum type (Heterogenus enum - both string and number) *************
-    //*****  Known Issue - Enums cannot contain expressions or computed values, only assigned (or omitted) integer values. 
-    * @ambrosia publish=true 
-    */
-    //export enum Status { 
-        //Active = 'ACTIVE', 
-        //Deactivate = 1, 
-        //Pending
-    //}
 
     /**********  Enum type (Reverse Mapped enum - can access the value of a member and also a member name from its value) *************
     * @ambrosia publish=true 
@@ -153,8 +131,6 @@ export namespace Test
            return '99';
        }
    }  
-
-
 
 }
  

@@ -1,0 +1,24 @@
+{
+    "$schema": "./ambrosiaConfig-schema.json",
+    "instanceName": "server",
+    "useRegistrationSettings": false,
+    "icCraPort": 2500,
+    "icReceivePort": 2000,
+    "icSendPort": 2001,
+    "icLogFolder": "C:/logs/",
+    "icBinFolder": "C:/Ambrosia-win/x64/Release",
+    "useNetCore": false,
+    "debugStartCheckpoint": 0,
+    "appVersion": 0,
+    "lbOptions": 
+    {
+        "deleteLogs": true, 
+        "deleteRemoteCRAConnections": false,
+        "outputLogDestination": "ConsoleAndFile",
+        "outputLogFolder": "./outputLogs",
+        "outputLoggingLevel": "Normal",
+        "allowDisplayOfRpcParams": true,
+        "allowPostMethodTimeouts": true,
+        "enableTypeScriptStackTraces": true
+    }
+}

@@ -1,0 +1,9 @@
+/lib
+/node_modules
+/buildArchive
+/*.tgz
+/outputLogs
+/icRuntimeConfig.json
+/*.cpuprofile
+/PublisherFramework.g.ts
+/ConsumerInterface.g.ts

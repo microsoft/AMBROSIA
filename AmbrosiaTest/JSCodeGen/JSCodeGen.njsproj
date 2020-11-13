@@ -1,0 +1,53 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <Name>JSCodeGen</Name>
+    <RootNamespace>JSCodeGen</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>61917a12-2be6-4465-bb76-b467295b972d</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>
+    </StartupFile>
+    <StartWebBrowser>False</StartWebBrowser>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
+    <StartWebBrowser>false</StartWebBrowser>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="package.json" />
+    <Content Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="JS_CodeGen_TestFiles\" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\ASTTest.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\PI.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_AmbrosiaTagNewline.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_AmbrosiaTag.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_EventHandlers.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_TagMethod.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_TagInterface.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_StringEnum.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_GenericType.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_NoTaggedItems.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_Types.ts" />
+    <TypeScriptCompile Include="TestCodeGen.ts" />
+  </ItemGroup>
+  <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
+</Project>
