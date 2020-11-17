@@ -15,6 +15,10 @@ export namespace Test
     /********** Enum type (Reverse Mapped enum - can access the value of a member and also a member name from its value) */
     export enum PrintMediaReverse { NewspaperReverse = 1, NewsletterReverse = 2, MagazineReverse = 3, BookReverse = 4 }
 
+    export enum MyEnumAA { aa = -1, bb = -123, cc = 123, dd = 0 }
+
+    export enum MyEnumBBB { aaa = -1, bbb = 0 }
+
     /*************** Complex Type */
     export class Name
     {
