@@ -132,5 +132,19 @@ export namespace Test
        }
    }  
 
+    /********* Function with missing types  ****
+     * Function with missing type information
+     * @ambrosia publish=true 
+     */
+    export function fnWithMissingType(p1, p2: number): void {
+    }
+
+    /** 
+     * Type with missing type information
+     * @ambrosia publish=true 
+     */
+    export type typeWithMissingType = { p1, p2: number };
+
+
 }
  

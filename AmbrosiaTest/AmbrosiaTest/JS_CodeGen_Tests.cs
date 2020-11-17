@@ -31,7 +31,7 @@ namespace AmbrosiaTest
         //************* Init Code *****************
 
         [TestMethod]
-        public void JS_CodeGen_Misc_PI_Test()
+        public void JS_CG_Misc_PI_Test()
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -43,7 +43,7 @@ namespace AmbrosiaTest
 
 
         [TestMethod]
-        public void JS_CodeGen_Misc_AST_Test()
+        public void JS_CG_Misc_AST_Test()
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -55,7 +55,7 @@ namespace AmbrosiaTest
 
 
         [TestMethod]
-        public void JS_CodeGen_Types_Test()
+        public void JS_CG_Types_Test()
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -66,7 +66,7 @@ namespace AmbrosiaTest
         }
 
         [TestMethod]
-        public void JS_CodeGen_AmbrosiaTag_Test()
+        public void JS_CG_AmbrosiaTag_Test()
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -77,7 +77,7 @@ namespace AmbrosiaTest
         }
 
         [TestMethod]
-        public void JS_CodeGen_EventHandler_Test()
+        public void JS_CG_EventHandler_Test()
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -86,6 +86,24 @@ namespace AmbrosiaTest
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName);
         }
+
+
+
+        [TestMethod]
+        public void JS_CG_EventHandlerWarnings_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_EventHandlerWarnings.ts";
+
+            // Warning message in Event Handlers - not really consumer vs publisher so overloading use here
+            string ConsumerWarning = "Warning: Skipping Ambrosia AppEvent handler function 'onRecoveryComplete'";
+            string PublisherWarning = "Warning: Skipping Ambrosia AppEvent handler function 'onBecomingPrimary'";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, false, ConsumerWarning, PublisherWarning);
+        }
+
 
     }
 }

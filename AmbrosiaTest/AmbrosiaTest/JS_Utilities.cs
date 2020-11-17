@@ -31,10 +31,14 @@ namespace AmbrosiaTest
                 Utilities MyUtils = new Utilities();
                 string ConSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName+"_Generated_Consumer.g.ts";
                 string PubSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName+"_Generated_Publisher.g.ts";
-
+                bool pass = true;  // not actually used in this test but it is a generic utility fctn return
 
                 // Launch the client job process with these values
                 string testfileDir = @"../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/";
+                if (NegTest)
+                {
+                    testfileDir = @"../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/NegativeTests/";
+                }
                 string testappdir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
                 string sourcefile = testfileDir+TestFile;
                 string generatedfile = TestName + "_Generated";
@@ -52,16 +56,14 @@ namespace AmbrosiaTest
                 // Verify things differently if it is a negative test
                 if (NegTest)
                 {
-                    bool pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConsumerCodeGenFailMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConsumerCodeGenFailMessage, 1, false, TestFile, true);
                     pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PublisherCodeGenFailMessage, 1, false, TestFile, true);
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraConErrorMessage, 1, false, TestFile, true);
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraPubErrorMessage, 1, false, TestFile, true);
 
                 }
                 else
                 {
                     // Wait to see if success comes shows up in log file for total and for consumer and publisher
-                    bool pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConsumerCodeGenSuccessMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConsumerCodeGenSuccessMessage, 1, false, TestFile, true);
                     pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PublisherCodeGenSuccessMessage, 1, false, TestFile, true);
                     pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConSuccessString, 1, false, TestFile, true);
                     pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PubSuccessString, 1, false, TestFile, true);
@@ -71,6 +73,17 @@ namespace AmbrosiaTest
                     string GenPublisherFile = TestName + "_Generated_Publisher.g.ts";
                     MyUtils.VerifyTestOutputFileToCmpFile(GenConsumerFile, true);
                     MyUtils.VerifyTestOutputFileToCmpFile(GenPublisherFile, true);
+                }
+
+                // Can use these to verify extra messages in the log file
+                if (ExtraConErrorMessage != "")
+                {
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraConErrorMessage, 1, false, TestFile, true);
+                }
+                if (ExtraPubErrorMessage != "")
+                {
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraPubErrorMessage, 1, false, TestFile, true);
+
                 }
 
             }

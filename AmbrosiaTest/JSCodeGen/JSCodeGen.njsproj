@@ -30,22 +30,40 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="package.json" />
-    <Content Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="JS_CodeGen_TestFiles\" />
+    <Folder Include="JS_CodeGen_TestFiles\NegativeTests\" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\ASTTest.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_AmbrosiaTagNewline.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_OverloadedFunction.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_GenericType.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_MethodIDOnType.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_MethodIDNeg.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NestedFunction.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NoTaggedItems.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_MethodIDInt.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_VersionInt.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_RunTimeBool.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_QuoteAttributeValue.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_CommasBetweenAttrib.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NamespaceModule.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_PublishClass.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnknownAttribute.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TwoAmbrTags.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnionType.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TupleType.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_OptionalProperties.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_PublishMethodBeforeTypes.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StringEnum.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TagInterface.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TagMethod.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\PI.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_AmbrosiaTagNewline.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_AmbrosiaTag.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_EventHandlerWarnings.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_EventHandlers.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_TagMethod.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_TagInterface.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_StringEnum.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_GenericType.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_NoTaggedItems.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_Types.ts" />
     <TypeScriptCompile Include="TestCodeGen.ts" />
   </ItemGroup>

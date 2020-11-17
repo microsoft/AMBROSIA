@@ -92,4 +92,21 @@ export namespace Test
     {
         IC.post(DESTINATION_INSTANCE_NAME, "JSDOcTag", 1, resultHandler, POST_TIMEOUT_IN_MS);
     }
+
+    /**
+     * The ambrosia tag must be on the implementation of an overloaded function
+     */
+    export async function fnOverloadAsync(name?: string): Promise<void>
+    {
+        let postResult: void = await IC.postAsync(DESTINATION_INSTANCE_NAME, "fnOverload", 1, null, POST_TIMEOUT_IN_MS, IC.arg("name?", name));
+        return (postResult);
+    }
+
+    /**
+     * The ambrosia tag must be on the implementation of an overloaded function
+     */
+    export function fnOverload(resultHandler: IC.PostResultHandler<void>, name?: string): void
+    {
+        IC.post(DESTINATION_INSTANCE_NAME, "fnOverload", 1, resultHandler, POST_TIMEOUT_IN_MS, IC.arg("name?", name));
+    }
 }

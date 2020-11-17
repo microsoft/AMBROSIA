@@ -46,6 +46,21 @@ export namespace Test
         }
     }
 
+    /**
+     * Type with missing type information
+     */
+    export class typeWithMissingType
+    {
+        p1: any;
+        p2: number;
+
+        constructor(p1: any, p2: number)
+        {
+            this.p1 = p1;
+            this.p2 = p2;
+        }
+    }
+
     /************* Primitives - bool, string, number, array */
     export async function BasicTypesAsync(isFalse: boolean, height: number, mystring?: string, mystring2?: string, my_array?: number[], notSure?: any): Promise<void>
     {
@@ -138,5 +153,26 @@ export namespace Test
     export function returnstring(resultHandler: IC.PostResultHandler<string>, numvalue: number): void
     {
         IC.post(DESTINATION_INSTANCE_NAME, "returnstring", 1, resultHandler, POST_TIMEOUT_IN_MS, IC.arg("numvalue", numvalue));
+    }
+
+    /********* Function with missing types ****
+     * Function with missing type information
+     */
+    export async function fnWithMissingTypeAsync(p1: any, p2: number): Promise<void>
+    {
+        let postResult: void = await IC.postAsync(DESTINATION_INSTANCE_NAME, "fnWithMissingType", 1, null, POST_TIMEOUT_IN_MS, 
+            IC.arg("p1", p1), 
+            IC.arg("p2", p2));
+        return (postResult);
+    }
+
+    /********* Function with missing types ****
+     * Function with missing type information
+     */
+    export function fnWithMissingType(resultHandler: IC.PostResultHandler<void>, p1: any, p2: number): void
+    {
+        IC.post(DESTINATION_INSTANCE_NAME, "fnWithMissingType", 1, resultHandler, POST_TIMEOUT_IN_MS, 
+            IC.arg("p1", p1), 
+            IC.arg("p2", p2));
     }
 }
