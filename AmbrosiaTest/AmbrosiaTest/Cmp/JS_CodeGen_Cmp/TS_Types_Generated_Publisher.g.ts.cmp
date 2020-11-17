@@ -190,6 +190,8 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                     case Messages.AppEventType.ICStarting:
                         Meta.publishType("PrintMedia", "number");
                         Meta.publishType("PrintMediaReverse", "number");
+                        Meta.publishType("MyEnumAA", "number");
+                        Meta.publishType("MyEnumBBB", "number");
                         Meta.publishType("Name", "{ first: string, last: string, priorNames: Names[] }");
                         Meta.publishType("Names", "Name[]");
                         Meta.publishType("Nested", "{ abc: { a: Uint8Array, b: { c: Names } } }");

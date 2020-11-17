@@ -55,6 +55,22 @@ export namespace Test
     PrintMediaReverse["MagazineReverse"];// returns  3
     PrintMediaReverse[3];         // returns  MagazineReverse
 
+    
+    /** @ambrosia publish=true */
+    export enum MyEnumAA {
+        aa = -1,
+        bb = -123,
+        cc = 123,
+        dd = 0
+    }
+
+    /** @ambrosia publish=true */
+    export enum MyEnumBBB {
+        aaa = -1,
+        bbb
+    }
+
+
 
     /*************  Void type *************
     * @ambrosia publish=true 
