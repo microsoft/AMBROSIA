@@ -157,6 +157,33 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
         }
 
+        [TestMethod]
+        public void JS_CG_Neg_NoFunctionComplexTypes()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_NoFunctionComplexType.ts";
+            string ConsumerErrorMsg = "Error: Unable to publish type alias 'myComplexType'";
+            string PublisherErrorMsg = "as a type (reason: The published type 'myComplexType' [property 'fn'] has an invalid type ('()=>void'); function types are not supported)";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+        }
+
+
+        [TestMethod]
+        public void JS_CG_Neg_NoFunctionTypes()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_NoFunctionType.ts";
+            string ConsumerErrorMsg = "Error: Unable to publish type alias 'fnType'";
+            string PublisherErrorMsg = "as a type (reason: The published type 'fnType' has an invalid type ('(p1:number)=>string'); function types are not supported)";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+        }
+
 
         [TestMethod]
         public void JS_CG_Neg_OptionalProp()
@@ -198,15 +225,14 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
         }
 
-
         [TestMethod]
-        public void JS_CG_Neg_PublishMethodType()
+        public void JS_CG_Neg_PublishMethodRef()
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testfileName = "TS_PublishMethodBeforeTypes.ts";
-            string ConsumerErrorMsg = "Error: Unable to publish function 'showNames'";
-            string PublisherErrorMsg = "as a post method (reason: The parameter 'names' of method 'showNames' has an invalid type ('NameList'); check the syntax or casing or, if this is a custom type, check that it has been published";
+            string testfileName = "TS_PublishMethodBeforeRef.ts";
+            string ConsumerErrorMsg = "Error: Unable to publish function 'fn'";
+            string PublisherErrorMsg = "as a post method (reason: The following types must be published before any method can be published: Name)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
@@ -287,7 +313,7 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_TupleType.ts";
             string ConsumerErrorMsg = "Error: Unable to publish type alias 'MyTupleType'";
-            string PublisherErrorMsg = "as a type (reason: Tuple types are not supported)";
+            string PublisherErrorMsg = "as a type (reason: The published type 'MyTupleType' has an invalid type ('[string,number]'); tuple types are not supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
@@ -314,8 +340,8 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_UnionType.ts";
             string ConsumerErrorMsg = "Error: Unable to publish type alias 'MyUnionType'";
-            string PublisherErrorMsg = "as a type (reason: Union types are not supported)";
-
+            string PublisherErrorMsg = "as a type (reason: The published type 'MyUnionType' has an invalid type ('string|number'); union types are not supported)";
+                                        
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
         }
