@@ -9,9 +9,8 @@ import Meta = Ambrosia.Meta;
 main();
 
  
-/***** TO DO (from RH email)
-* TS Format - test file where functions are all over the place in terms of formatting - Input TS format: Comments (before/after/inline/multi-line/JSDoc), newlines, white space
-* Code gen options: file type, merge type, other flags (basically, all the parameter of Meta.emitTypeScriptFileFromSource())
+/***** TO DO 
+*  Code gen options: file type, merge type, other flags (basically, all the parameter of Meta.emitTypeScriptFileFromSource())
 * TS namespaces: nested, co-mingled with non-namespace scoped entities, faithfully carried over to the generated ConsumerInterface.g.ts.
 * While emitTypeScriptFileFromSource() should be the subject of the majority of testing [because I expected it will be the most used technique], it would also be good to test emitTypeScriptFile() too. This can be accomplished by calling Meta.publishFromSource() beforehand, which will enable you to leverage your earlier investment in input .ts files
 */
