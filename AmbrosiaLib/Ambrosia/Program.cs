@@ -4092,7 +4092,14 @@ namespace Ambrosia
             }
             _persistLogs = persistLogs;
             _activeActive = activeActive;
-            _newLogTriggerSize = logTriggerSizeMB * 1000000;
+            if (StartupParamOverrides.LogTriggerSizeMB != -1)
+            {
+                _newLogTriggerSize = StartupParamOverrides.LogTriggerSizeMB * 1048576;
+            }
+            else
+            {
+                _newLogTriggerSize = logTriggerSizeMB * 1048576;
+            }
             if (StartupParamOverrides.ICLogLocation == null)
             {
                 _serviceLogPath = serviceLogPath;

@@ -13,6 +13,7 @@ namespace Ambrosia
 {
     public static class StartupParamOverrides
     {
+        public static long LogTriggerSizeMB = -1;
         public static int receivePort = -1;
         public static int sendPort = -1;
         public static string ICReceivePipeName;
