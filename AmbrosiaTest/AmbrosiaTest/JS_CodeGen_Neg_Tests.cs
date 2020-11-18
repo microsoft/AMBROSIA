@@ -347,6 +347,20 @@ namespace AmbrosiaTest
         }
 
         [TestMethod]
+        public void JS_CG_Neg_UnionTypeCommented()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_UnionTypeCommented.ts";
+            string ConsumerErrorMsg = "Error: Unable to publish function 'myComplexReturnFunction'";
+            string PublisherErrorMsg = "as a post method (reason: The return type of method 'myComplexReturnFunction' [property 'r2'] has an invalid type ('number|string'); union types are not supported)";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+        }
+
+
+        [TestMethod]
         public void JS_CG_Neg_UnknownAttribute()
         {
             JS_Utilities JSUtils = new JS_Utilities();
