@@ -13,26 +13,21 @@
             "description": "The name this Ambrosia Immortal instance will be referred to by all instances (including itself).",
             "default": "myInstance"
         },
-        "useRegistrationSettings": {
-            "type": "boolean",
-            "description": "Whether to use the registered Immortal Coordinator (IC) settings (icReceivePort, icSendPort, icLogFolder) instead of providing them explicitly in ambrosiaConfig.json. Local values (if provided) will override registered values.",
-            "default": false
-        },
         "icCraPort": {
             "type": "number",
             "description": "The port number that the Common Runtime for Applications (CRA) layer uses."
         },
         "icReceivePort": {
             "type": "number",
-            "description": "The port number that the Immortal Coordinator (IC) receives on. MUST match the value used during 'RegisterInstance'."
+            "description": "The port number that the Immortal Coordinator (IC) receives on. If not provided, it will be read from the registration."
         },
         "icSendPort": {
             "type": "number",
-            "description": "The port number that the Immortal Coordinator (IC) sends on. MUST match the value used during 'RegisterInstance'."
+            "description": "The port number that the Immortal Coordinator (IC) sends on. If not provided, it will be read from the registration."
         },
         "icLogFolder": {
             "type": "string",
-            "description": "The folder where the Immortal Coordinator (IC) will persist its logs. MUST match the value used during 'RegisterInstance'."
+            "description": "The folder where the Immortal Coordinator (IC) will persist its logs. If not provided, it will be read from the registration."
         },
         "icBinFolder": {
             "type": "string",
@@ -45,11 +40,20 @@
         },
         "debugStartCheckpoint": {
             "type": "number",
-            "description": "The checkpoint number to start 'time-travel debugging' from."
+            "description": "The checkpoint number to start \"time-travel debugging\" from."
+        },
+        "debugTestUpgrade": {
+            "type": "boolean",
+            "description": "Whether to perform a test upgrade (for debugging/testing purposes). Defaults to false.",
+            "default": false
+        },
+        "logTriggerSizeInMB": {
+            "type": "number",
+            "description": "The size (in MB) the log must reach before the IC will take a checkpoint and start a new log."
         },
         "appVersion": {
             "type": "number",
-            "description": "The version (code and state) of this Immortal instance."
+            "description": "The nominal version of this Immortal instance. Used to identify the log sub-folder name (ie. &lt;icInstanceName>_&lt;appVersion>) that will be logged to (or read from, if debugStartCheckpoint is specified)."
         },
         "lbOptions": {
             "type": "object",
