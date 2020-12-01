@@ -267,3 +267,4 @@ CodeGenDependencies
 **/publish/*
 /BuildAmbrosiaAfterNugetChange.ps1
 /AmbrosiaBak
+/AmbrosiaTest/JSCodeGen/out
