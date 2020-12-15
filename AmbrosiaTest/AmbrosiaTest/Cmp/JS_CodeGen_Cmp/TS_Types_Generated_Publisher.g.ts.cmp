@@ -1,7 +1,7 @@
 // Generated publisher-side framework for the 'server' Ambrosia Node instance.
 // Note: This file was generated
 // Note: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
-import * as PTM from "../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types"; // PTM = "Published Types and Methods", but this file can also include app-state and app-event handlers
+import * as PTM from "./JS_CodeGen_TestFiles/TS_Types"; // PTM = "Published Types and Methods", but this file can also include app-state and app-event handlers
 import Ambrosia = require("ambrosia-node"); 
 import Utils = Ambrosia.Utils;
 import IC = Ambrosia.IC;
@@ -9,7 +9,7 @@ import Messages = Ambrosia.Messages;
 import Meta = Ambrosia.Meta;
 import Streams = Ambrosia.Streams;
 
-// TODO: It's recommended that you copy this class and _appState variable to your input file (../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts)
+// TODO: It's recommended that you copy this class and _appState variable to your input file (./JS_CodeGen_TestFiles/TS_Types.ts)
 class AppState extends Ambrosia.AmbrosiaAppState
 {
     // TODO: Define your application state here
@@ -45,16 +45,6 @@ export function checkpointConsumer(): Streams.IncomingCheckpoint
         Utils.log(`checkpointConsumer: ${error ? `Failed (reason: ${error.message})` : "Checkpoint loaded"}`);
     }
     return (Streams.simpleCheckpointConsumer(onCheckpointReceived));
-}
-
-/** Handler for errors from the IC process. */
-export function onICError(source: string, error: Error, isFatalError: boolean = true): void
-{
-    Utils.logWithColor(Utils.ConsoleForegroundColors.Red, `${error.stack}`, `[IC:${source}]`);
-    if (isFatalError)
-    {
-        IC.stop();
-    }
 }
 
 /** This method responds to incoming Ambrosia messages (mainly RPCs, but also the InitialMessage and AppEvents). */
@@ -204,41 +194,41 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                         Meta.publishPostMethod("return_number", 1, ["strvalue: string"], "number");
                         Meta.publishPostMethod("returnstring", 1, ["numvalue: number"], "string");
                         Meta.publishPostMethod("fnWithMissingType", 1, ["p1: any", "p2: number"], "void");
-                        // TODO: Add an exported function 'onICStarting(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICStarting(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStarted:
-                        // TODO: Add an exported function 'onICStarted(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICStarted(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStopped:
-                        // TODO: Add an exported function 'onICStopped(exitCode: number): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICStopped(exitCode: number): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICReadyForSelfCallRpc:
-                        // TODO: Add an exported function 'onICReadyForSelfCallRpc(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onICReadyForSelfCallRpc(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         break;
     
                     case Messages.AppEventType.RecoveryComplete:
-                        // TODO: Add an exported function 'onRecoveryComplete(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onRecoveryComplete(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.UpgradeStateAndCode:
-                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts in order to reference the 'Messages' namespace.
                         //       Also, your handler should call IC.upgrade() [to upgrade code] and _appState.upgrade() [to upgrade state].
                         break;
 
                     case Messages.AppEventType.IncomingCheckpointStreamSize:
-                        // TODO: Add an exported function 'onIncomingCheckpointStreamSize(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onIncomingCheckpointStreamSize(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         break;
                     
                     case Messages.AppEventType.FirstStart:
-                        // TODO: Add an exported function 'onFirstStart(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onFirstStart(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.BecomingPrimary:
-                        // TODO: Add an exported function 'onBecomingPrimary(): void' to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onBecomingPrimary(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         break;
                 }
                 break;

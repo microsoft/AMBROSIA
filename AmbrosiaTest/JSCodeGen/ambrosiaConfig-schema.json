@@ -29,9 +29,19 @@
             "type": "string",
             "description": "The folder where the Immortal Coordinator (IC) will persist its logs. If not provided, it will be read from the registration."
         },
+        "icLogStorageType" : {
+            "type": "string",
+            "enum": [ "Files", "Blobs" ],
+            "description": "The storage type that the Immortal Coordinator (IC) logs will be persisted in. Defaults to 'Files'",
+            "default": "Files"
+        },
         "icBinFolder": {
             "type": "string",
             "description": "The folder where the Immortal Coordinator (IC) binaries exist. If not specified, the 'AMBROSIATOOLS' environment variable will be used."
+        },
+        "icIPv4Address" : {
+            "type": "string",
+            "description": "An override IPv4 address for the Immortal Coordinator (IC) to use instead of the local IPv4 address."
         },
         "useNetCore": {
             "type": "boolean",
@@ -51,9 +61,25 @@
             "type": "number",
             "description": "The size (in MB) the log must reach before the IC will take a checkpoint and start a new log."
         },
+        "isActiveActive": {
+            "type": "boolean",
+            "description": "Whether this [primary] instance will run in an active-active configuration. If specified, overrides the registered value."
+        },
+        "replicaNumber": {
+            "type": "number",
+            "description": "The replica (secondary) ID this instance will use in an active-active configuration. MUST match the value used when registering the replica with 'AddReplica'."
+        },
         "appVersion": {
             "type": "number",
             "description": "The nominal version of this Immortal instance. Used to identify the log sub-folder name (ie. &lt;icInstanceName>_&lt;appVersion>) that will be logged to (or read from, if debugStartCheckpoint is specified)."
+        },
+        "secureNetworkAssemblyName" : {
+            "type": "string",
+            "description": "The name of the .NET assembly used to establish a secure network channel between ICs."
+        },
+        "secureNetworkClassName" : {
+            "type": "string",
+            "description": "The name of the .NET class (that implements ISecureStreamConnectionDescriptor) in 'secureNetworkAssemblyName'."
         },
         "lbOptions": {
             "type": "object",
@@ -81,13 +107,13 @@
                 },
                 "outputLoggingLevel": {
                     "type": "string",
-                    "anyOf": [ { "enum": [ "Minimal", "Normal", "Verbose"] } ],
+                    "enum": [ "Minimal", "Normal", "Verbose" ],
                     "default": "Normal",
                     "description": "The level of detail to include in the language-binding output log. Defaults to 'Normal'."
                 },
                 "outputLogDestination": {
                     "type": "string",
-                    "anyOf": [ { "enum": [ "Console", "File", "ConsoleAndFile"] } ],
+                    "enum": [ "Console", "File", "ConsoleAndFile" ],
                     "description": "Destination(s) where the language-binding will log output. Defaults to 'Console'. While logging to the console is useful during development/debugging, for production set it to 'File' (for performance).",
                     "default": "Console"
                 },

@@ -29,6 +29,7 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="ambrosiaConfig.json" />
     <Content Include="package.json" />
   </ItemGroup>
   <ItemGroup>
