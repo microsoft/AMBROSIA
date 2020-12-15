@@ -150,8 +150,8 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_NoTaggedItems.ts";
-            string ConsumerErrorMsg = "Error: The input source file (TS_NoTaggedItems.ts) does not publish any entities (functions, type aliases and enums annotated with an '@ambrosia' JSDoc tag)";
-            string PublisherErrorMsg = "Error: The input source file (TS_NoTaggedItems.ts) does not publish any entities (functions, type aliases and enums annotated with an '@ambrosia' JSDoc tag)";
+            string ConsumerErrorMsg = "Error: The input source file (TS_NoTaggedItems.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+            string PublisherErrorMsg = "Error: The input source file (TS_NoTaggedItems.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
@@ -285,8 +285,8 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_TagInterface.ts";
-            string ConsumerErrorMsg = "Error: The input source file (TS_TagInterface.ts) does not publish any entities (functions, type aliases and enums annotated with an '@ambrosia' JSDoc tag)";
-            string PublisherErrorMsg = "Error: The input source file (TS_TagInterface.ts) does not publish any entities (functions, type aliases and enums annotated with an '@ambrosia' JSDoc tag)";
+            string ConsumerErrorMsg = "Error: The input source file (TS_TagInterface.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+            string PublisherErrorMsg = "Error: The input source file (TS_TagInterface.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
@@ -299,8 +299,8 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_TagMethod.ts";
-            string ConsumerErrorMsg = "Error: The input source file (TS_TagMethod.ts) does not publish any entities (functions, type aliases and enums annotated with an '@ambrosia' JSDoc tag)";
-            string PublisherErrorMsg = "Error: The input source file (TS_TagMethod.ts) does not publish any entities (functions, type aliases and enums annotated with an '@ambrosia' JSDoc tag)";
+            string ConsumerErrorMsg = "Error: The input source file (TS_TagMethod.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+            string PublisherErrorMsg = "Error: The input source file (TS_TagMethod.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);

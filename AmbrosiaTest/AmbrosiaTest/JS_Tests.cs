@@ -33,6 +33,9 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_UnitTest()
         {
+
+            Assert.Fail("Not implemented yet. In Progress! ");
+
             string testName = "jsunittest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
