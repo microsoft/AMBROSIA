@@ -73,7 +73,7 @@ export namespace Test
     /**
      * Example of a [non-post] method
      */
-    export function DoItFork(p1: Name[][]): void
+    export function DoIt_Fork(p1: Name[][]): void
     {
         IC.callFork(DESTINATION_INSTANCE_NAME, 123, { p1: p1 });
     }
@@ -81,8 +81,24 @@ export namespace Test
     /**
      * Example of a [non-post] method
      */
-    export function DoItImpulse(p1: Name[][]): void
+    export function DoIt_Impulse(p1: Name[][]): void
     {
         IC.callImpulse(DESTINATION_INSTANCE_NAME, 123, { p1: p1 });
+    }
+
+    /**
+     * Example of a [non-post] method
+     */
+    export function DoIt_EnqueueFork(p1: Name[][]): void
+    {
+        IC.queueFork(DESTINATION_INSTANCE_NAME, 123, { p1: p1 });
+    }
+
+    /**
+     * Example of a [non-post] method
+     */
+    export function DoIt_EnqueueImpulse(p1: Name[][]): void
+    {
+        IC.queueImpulse(DESTINATION_INSTANCE_NAME, 123, { p1: p1 });
     }
 }
