@@ -85,14 +85,24 @@ export namespace Test
         IC.post(DESTINATION_INSTANCE_NAME, "NewTest", 1, resultHandler, POST_TIMEOUT_IN_MS, IC.arg("person", person));
     }
 
-    export function DoItFork(dow: DayOfWeek): void
+    export function DoIt_Fork(dow: DayOfWeek): void
     {
         IC.callFork(DESTINATION_INSTANCE_NAME, 1, { dow: dow });
     }
 
-    export function DoItImpulse(dow: DayOfWeek): void
+    export function DoIt_Impulse(dow: DayOfWeek): void
     {
         IC.callImpulse(DESTINATION_INSTANCE_NAME, 1, { dow: dow });
+    }
+
+    export function DoIt_EnqueueFork(dow: DayOfWeek): void
+    {
+        IC.queueFork(DESTINATION_INSTANCE_NAME, 1, { dow: dow });
+    }
+
+    export function DoIt_EnqueueImpulse(dow: DayOfWeek): void
+    {
+        IC.queueImpulse(DESTINATION_INSTANCE_NAME, 1, { dow: dow });
     }
 
     export namespace TestInner

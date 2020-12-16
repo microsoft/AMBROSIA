@@ -9,7 +9,7 @@ import Messages = Ambrosia.Messages;
 import Meta = Ambrosia.Meta;
 import Streams = Ambrosia.Streams;
 
-// TODO: It's recommended that you copy this class and _appState variable to your input file (./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts)
+// TODO: It's recommended that you move this class and _appState variable to your input file (./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts) in an exported namespace/module
 class AppState extends Ambrosia.AmbrosiaAppState
 {
     // TODO: Define your application state here
