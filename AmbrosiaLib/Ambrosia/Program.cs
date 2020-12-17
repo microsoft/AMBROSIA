@@ -18,6 +18,7 @@ using CRA.ClientLibrary;
 using System.Diagnostics;
 using System.Xml.Serialization;
 using System.IO.Pipes;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Ambrosia
 {
@@ -374,6 +375,7 @@ namespace Ambrosia
             _curBufPages = 0;
             _owningOutputRecord = owningOutputRecord;
             _trimLock = 0;
+            _page2SeqID = new LinkedList<(long, long)>();
         }
 
         internal void Serialize(ILogWriter writeToStream)
@@ -530,7 +532,8 @@ namespace Ambrosia
                     }
                 }
 
-                if (safeSeqNo < nextSeqNo + numReplayableMessagesToSend)
+                var maxSeqNo = nextSeqNo + numReplayableMessagesToSend - 1;
+                if (maxSeqNo > safeSeqNo)
                 {
                     break;
                 }
@@ -1229,7 +1232,6 @@ namespace Ambrosia
             bool _persistLogs;
             int _committerID;
             internal long _nextWriteID;
-            long _durablePageID;
             AmbrosiaRuntime _myAmbrosia;
 
             public Committer(Stream workStream,
@@ -1349,17 +1351,32 @@ namespace Ambrosia
             {
                 try
                 {
+                    var taskQueue = new Queue<Task>();
+
+                    _workStream.Write(firstBufToCommit, 0, 4);
+                    _workStream.WriteIntFixed(length1 + length2);
+                    _workStream.Write(firstBufToCommit, 8, 16);
+
+                    taskQueue.Enqueue(_workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize));
+                    taskQueue.Enqueue(_workStream.WriteAsync(secondBufToCommit, 0, length2));
+
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
                         _logStream.Write(firstBufToCommit, 0, 4);
                         _logStream.WriteIntFixed(length1 + length2);
                         _logStream.Write(firstBufToCommit, 8, 16);
-                        await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
-                        await _logStream.WriteAsync(secondBufToCommit, 0, length2);
-                        await writeFullWaterMarksAsync(uncommittedWatermarks);
-                        await writeSimpleWaterMarksAsync(trimWatermarks);
-                        await _logStream.FlushAsync();
+
+                        taskQueue.Enqueue(_logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize));
+                        taskQueue.Enqueue(_logStream.WriteAsync(secondBufToCommit, 0, length2));
+                        taskQueue.Enqueue(writeFullWaterMarksAsync(uncommittedWatermarks));
+                        taskQueue.Enqueue(writeSimpleWaterMarksAsync(trimWatermarks));
+                        taskQueue.Enqueue(_logStream.FlushAsync());
+                    }
+
+                    foreach (var task in taskQueue)
+                    {
+                        await task;
                     }
 
                     var prevPageID = Interlocked.Exchange(ref _myAmbrosia._committedPageID, pageID);
@@ -1367,11 +1384,7 @@ namespace Ambrosia
 
                     SendBufferedOutputs(pageID, outputs);
                     SendInputWatermarks(uncommittedWatermarks, outputs);
-                    _workStream.Write(firstBufToCommit, 0, 4);
-                    _workStream.WriteIntFixed(length1 + length2);
-                    _workStream.Write(firstBufToCommit, 8, 16);
-                    await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
-                    await _workStream.WriteAsync(secondBufToCommit, 0, length2);
+
                     // Return the second byte array to the FlexReader pool
                     FlexReadBuffer.ReturnBuffer(secondBufToCommit);
                     var flushtask = _workStream.FlushAsync();
@@ -1421,22 +1434,39 @@ namespace Ambrosia
             {
                 try
                 {
+                    var taskQueue = new Queue<Task>();
+
+                    taskQueue.Enqueue(_workStream.WriteAsync(buf, 0, length));
+                    
+                    
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
+                        taskQueue.Enqueue(_logStream.WriteAsync(buf, 0, length));
+                        taskQueue.Enqueue(writeFullWaterMarksAsync(uncommittedWatermarks));
+                        taskQueue.Enqueue(writeSimpleWaterMarksAsync(trimWatermarks));
+                        taskQueue.Enqueue(_logStream.FlushAsync());
+                        /*
                         await _logStream.WriteAsync(buf, 0, length);
                         await writeFullWaterMarksAsync(uncommittedWatermarks);
                         await writeSimpleWaterMarksAsync(trimWatermarks);
                         await _logStream.FlushAsync();
+                        */
                     }
+
+                    foreach (var task in taskQueue)
+                    {
+                        await task;
+                    }
+
+                    var flushTask = _workStream.FlushAsync();
 
                     var prevPageID = Interlocked.Exchange(ref _myAmbrosia._committedPageID, pageID);
                     Debug.Assert(prevPageID + 1 == pageID);
 
                     SendBufferedOutputs(pageID, outputs);
                     SendInputWatermarks(uncommittedWatermarks, outputs);
-                    await _workStream.WriteAsync(buf, 0, length);
-                    var flushtask = _workStream.FlushAsync();
+
                     _uncommittedWatermarksBak = uncommittedWatermarks;
                     _uncommittedWatermarksBak.Clear();
                     _trimWatermarksBak = trimWatermarks;
@@ -2184,8 +2214,8 @@ namespace Ambrosia
         bool _activeActive;
 
         // Track LB progress for async recoverability.
-        long _processingPageID;
-        public long _committedPageID;
+        long _processingPageID = -1;
+        public long _committedPageID = -1;
 
         internal enum AARole { Primary, Secondary, Checkpointer };
         AARole _myRole;
