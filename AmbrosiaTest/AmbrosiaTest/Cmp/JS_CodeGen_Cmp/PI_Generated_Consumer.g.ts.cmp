@@ -1,6 +1,7 @@
 // Generated consumer-side API for the 'server' Ambrosia Node instance.
+// Publisher: Darren Gehring [darrenge@microsoft.com].
 // Note: This file was generated
-// Note: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
+// Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
 import Ambrosia = require("ambrosia-node");
 import IC = Ambrosia.IC;
 
@@ -68,7 +69,6 @@ export namespace Test
 
     /**
      * Some new test.
-     * @param person Datails of a person.
      */
     export async function NewTestAsync(person: { age: number }): Promise<{ age: number }>
     {
@@ -78,7 +78,6 @@ export namespace Test
 
     /**
      * Some new test.
-     * @param person Datails of a person.
      */
     export function NewTest(resultHandler: IC.PostResultHandler<{ age: number }>, person: { age: number }): void
     {

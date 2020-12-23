@@ -87,6 +87,27 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName);
         }
 
+        [TestMethod]
+        public void JS_CG_CustomSerialParam_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_CustomSerialParam.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_CustomSerialParamNoRaw_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_CustomSerialParamNoRawParam.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
 
 
         [TestMethod]
@@ -103,6 +124,8 @@ namespace AmbrosiaTest
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, false, ConsumerWarning, PublisherWarning);
         }
+
+
 
         //**** Misc valid tests that are just a "catch all" if don't know where to put teest
         [TestMethod]

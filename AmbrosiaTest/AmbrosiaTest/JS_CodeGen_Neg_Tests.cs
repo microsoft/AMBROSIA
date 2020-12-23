@@ -20,7 +20,8 @@ namespace AmbrosiaTest
         {
             // Build the JS app first from a JS file
             JS_Utilities JSUtils = new JS_Utilities();
-//*#*#*# COMMENT OUT FOR NOW - EASIER WITH TEST WRITING ETCJSUtils.BuildJSTestApp();        
+            //*#*#*# COMMENT OUT FOR NOW - EASIER WITH TEST WRITING ETC  JSUtils.BuildJSTestApp();        
+            //JSUtils.BuildJSTestApp();
         }
 
             [TestInitialize()]
@@ -386,6 +387,18 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
         }
 
+        [TestMethod]
+        public void JS_CG_Neg_SingleUInt8Array()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_SingleUInt8Array.ts";
+            string ConsumerErrorMsg = "Unable to publish function 'takesCustomSerializedParams'";
+            string PublisherErrorMsg = "Uint8Array parameter; Post methods do NOT support custom (raw byte) parameter serialization - all parameters are always serialized to JSON)";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+        }
 
 
     }

@@ -1,6 +1,6 @@
 // Generated publisher-side framework for the 'server' Ambrosia Node instance.
 // Note: This file was generated
-// Note: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
+// Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
 import * as PTM from "./JS_CodeGen_TestFiles/TS_AmbrosiaTag"; // PTM = "Published Types and Methods", but this file can also include app-state and app-event handlers
 import Ambrosia = require("ambrosia-node"); 
 import Utils = Ambrosia.Utils;
