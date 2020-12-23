@@ -1,7 +1,7 @@
 // Generated publisher-side framework for the 'server' Ambrosia Node instance.
 // Note: This file was generated
 // Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
-import * as PTM from "./JS_CodeGen_TestFiles/TS_EventHandlers"; // PTM = "Published Types and Methods", but this file can also include app-state and app-event handlers
+import * as PTM from "./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam"; // PTM = "Published Types and Methods", but this file can also include app-state and app-event handlers
 import Ambrosia = require("ambrosia-node"); 
 import Utils = Ambrosia.Utils;
 import IC = Ambrosia.IC;
@@ -9,7 +9,7 @@ import Messages = Ambrosia.Messages;
 import Meta = Ambrosia.Meta;
 import Streams = Ambrosia.Streams;
 
-// TODO: It's recommended that you move this class and _appState variable to your input file (./JS_CodeGen_TestFiles/TS_EventHandlers.ts) in an exported namespace/module
+// TODO: It's recommended that you move this class and _appState variable to your input file (./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts) in an exported namespace/module
 class AppState extends Ambrosia.AmbrosiaAppState
 {
     // TODO: Define your application state here
@@ -110,9 +110,7 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                     
                             switch (methodName)
                             {
-                                case "onbecomingprimary":
-                                    IC.postResult<void>(rpc, PTM.Test.onbecomingprimary());
-                                    break;
+                                // Code-gen: Post method handlers will go here
                                 
                                 default:
                                     let errorMsg: string = `Post method '${methodName}' is not implemented`;
@@ -128,7 +126,10 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                         }
                         break;
 
-                    // Code-gen: Fork/Impulse method handlers will go here
+                    case 2:
+                        let rawParams: Uint8Array = rpc.rawParams;
+                        PTM.Test.takesCustomSerializedParams(rawParams);
+                        break;
                     
                     default:
                         Utils.log(`(No method is associated with methodID ${rpc.methodID})`, loggingPrefix)
@@ -143,43 +144,42 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
                 {
                     case Messages.AppEventType.ICStarting:
                         // Code-gen: Published types will go here
-                        Meta.publishPostMethod("onbecomingprimary", 1, [], "void");
-                        PTM.onICStarting();
+                        Meta.publishMethod(2, "takesCustomSerializedParams", ["rawParams: Uint8Array"]);
+                        // TODO: Add an exported function 'onICStarting(): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStarted:
-                        PTM.onICStarted();
+                        // TODO: Add an exported function 'onICStarted(): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStopped:
-                        const exitCode: number = appEvent.args[0] as number;
-                        PTM.onICStopped(exitCode);
+                        // TODO: Add an exported function 'onICStopped(exitCode: number): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICReadyForSelfCallRpc:
-                        PTM.onICReadyForSelfCallRpc();
+                        // TODO: Add an exported function 'onICReadyForSelfCallRpc(): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts, then (after the next code-gen) a call to it will be generated here
                         break;
     
                     case Messages.AppEventType.RecoveryComplete:
-                        PTM.Test.onRecoveryComplete();
+                        // TODO: Add an exported function 'onRecoveryComplete(): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.UpgradeStateAndCode:
-                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/TS_EventHandlers.ts, then (after the next code-gen) a call to it will be generated here
-                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_EventHandlers.ts in order to reference the 'Messages' namespace.
+                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts, then (after the next code-gen) a call to it will be generated here
+                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts in order to reference the 'Messages' namespace.
                         //       Also, your handler should call IC.upgrade() [to upgrade code] and _appState.upgrade() [to upgrade state].
                         break;
 
                     case Messages.AppEventType.IncomingCheckpointStreamSize:
-                        PTM.onIncomingCheckpointStreamSize();
+                        // TODO: Add an exported function 'onIncomingCheckpointStreamSize(): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts, then (after the next code-gen) a call to it will be generated here
                         break;
                     
                     case Messages.AppEventType.FirstStart:
-                        // TODO: Add an exported function 'onFirstStart(): void' to ./JS_CodeGen_TestFiles/TS_EventHandlers.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported function 'onFirstStart(): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.BecomingPrimary:
-                        PTM.Test.onBecomingPrimary();
+                        // TODO: Add an exported function 'onBecomingPrimary(): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts, then (after the next code-gen) a call to it will be generated here
                         break;
                 }
                 break;

@@ -18,7 +18,7 @@ namespace AmbrosiaTest
         public string PublisherCodeGenSuccessMessage = "Publisher code file generation SUCCEEDED: 1 of 1 files generated; 0 TypeScript errors, 0 merge conflicts";
         public string ConsumerCodeGenFailMessage = "Consumer code file generation FAILED: 0 of 1 files generated";
         public string PublisherCodeGenFailMessage = "Publisher code file generation FAILED: 0 of 1 files generated";
-        public string CodeGenNoTypeScriptErrorsMessage = "Success: No TypeScript errors found in ";
+        public string CodeGenNoTypeScriptErrorsMessage = "Success: No TypeScript errors found in generated file ";
 
         // Runs a TS file through the JS LB and verifies code gen works correctly
         public void Test_CodeGen_TSFile(string TestFile, bool NegTest = false, string ExtraConErrorMessage = "", string ExtraPubErrorMessage = "")
@@ -85,7 +85,6 @@ namespace AmbrosiaTest
                     pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraPubErrorMessage, 1, false, TestFile, true);
 
                 }
-
             }
             catch (Exception e)
             {
@@ -104,10 +103,11 @@ namespace AmbrosiaTest
         {
             try
             {
-                Utilities MyUtils = new Utilities();
+
+                  Utilities MyUtils = new Utilities();
 
                 // For some reason, the powershell script does NOT work if called from bin/x64/debug directory. Setting working directory to origin fixes it
-                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest\AmbrosiaTest";
+                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest";
                 string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
                 string fileName = "pwsh.exe";
                 string parameters = "-file BuildJSTestApp.ps1 " + scriptDir;
