@@ -6,7 +6,7 @@ Each application has an AMBROSIA reliability coordinator assigned to it.
 The coordinator is located within the same physical machine/container, and 
 must survive or fail with the application process. This process separation
 is designed to minimize assumptions about the application and maximize 
-language-agnosticity. 
+language-agnosticity. The combination of an application and its associated IC forms an "immortal".
 The coordinator (also known as an Immortal Coordinator) communicates
 via TCP/IP over 2 local sockets with the application through a language-specific
 binding. This document covers how a language binding should communicate with
@@ -24,11 +24,11 @@ failure of individual machines.
 Below we use the following terminology:
 
  * Committer ID - an arbitrary (32 bit) identifier for a communication endpoint
-   (a service) in the network of running "immortals".  This is typically
+   (an app or service) in the network of running "immortals".  This is typically
    generated automatically the first time each application process starts.
    It is distinct from the destination *name*.
 
- * Destination name - the string identifying a communication endpoint, often
+ * Destination name - the string identifying a communication endpoint (typically the service/app name), often
    human readable.
 
  * Sequence ID - the (monotonically increasing) number of a log entry. Note that
@@ -40,7 +40,7 @@ Below we use the following terminology:
    timeouts or disconnections.
 
  * "Fire and Forget" RPCs - launch a remote computation, but provide no
-   information back to the caller.  Note that even an async/await RPC with
+   information back to the caller.  Note that even an async/await RPC with a
    "void" return value indicates more to the caller (namely, that the remote
    computation has completed).
 
@@ -60,7 +60,7 @@ following serialized datatypes.
  * IntFixed  - a 32-bit little endian number 
  * LongFixed - a 64-bit little endian number 
 
-The variable-length integers are in the same format used by, e.g.,
+The variable-length integers are in the same format used by, for example,
 [Protobufs](https://developers.google.com/protocol-buffers/docs/encoding).
 
 
@@ -73,7 +73,7 @@ Message Formats
 All information received from the reliability coordinator is in the form of a sequence of log records.
 Each log record has a 24 byte header, followed by the actual record contents. The header is as follows:
 
- * Bytes [0-3]: The committer ID for the service, this should be constant for all records for the lifetime of the service, format IntFixed.
+ * Bytes [0-3]: The committer ID for the service, this should be constant for all records for the lifetime of the service. The format is IntFixed.
  * Bytes [4-7]: The size of the whole log record, in bytes, including the header. The format is IntFixed.
  * Bytes [8-15]: The check bytes to check the integrity of the log record. The format is LongFixed.
  * Bytes [16-23]: The log record sequence ID. Excluding records labeled with sequence ID “-1”, these should be in order. The format is LongFixed.
@@ -86,7 +86,7 @@ The rest of the record is a sequence of messages, packed tightly, each with the 
 
 
 All information sent to the reliability coordinator is in the form of a sequence of messages with the format specified above.
-Message types and associated data which may be sent to or received by services:
+Message types and associated data which may be sent to or received by services/apps:
 
  * 15 - `BecomingPrimary` (Received) : No data
 
@@ -106,7 +106,7 @@ Message types and associated data which may be sent to or received by services:
    message that will be the very first RPC message it receives. 
 
  * 8 – `Checkpoint` (Sent/Received): The data is a single 64 bit number (ZigZagLong).
-   This message is immediately followed (no additional header) by checkpoint itself, 
+   This message is immediately followed (no additional header) by the checkpoint itself, 
    which is a binary blob.
    The reason that checkpoints are not sent in the message payload directly is
    so that they can have a 64-bit instead of 32-bit length, in order to support
@@ -130,11 +130,10 @@ Message types and associated data which may be sent to or received by services:
 
  * 0 - Outgoing `RPC` (Sent):
 
-   - First is a variable length int (ZigZagInt) which is the length of the destination service.  For a self call, this should be set to 0 and the following field omitted.
-   - Next are the actual bytes (in UTF-8) for the name of the destination service.
+   - First is a variable length int (ZigZagInt) which is the length of the destination service/app name.  For a self call, this should be set to 0 and the following field omitted.
+   - Next are the actual bytes (in UTF-8) for the name of the destination service/app.
    - Next follow all four fields listed above under "Incoming RPC".
-
-That is, an Outgoing RPC is just an incoming RPC with two extra fields on the front.
+     That is, an Outgoing RPC is just an incoming RPC with two extra fields on the front.
 
 
 Communication Protocols
@@ -240,7 +239,7 @@ made to send an Impulse before the instance has become the primary (it's a viola
 The LB must also notify the host service (app) when it has become the primary – for example, so that the service 
 doesn't try to send the aforementioned Impulse before it's valid to do so.
 
-There are 3 different messages that tell the LB it is becoming the primary, with each occurring under difference circumstances:
+There are 3 different messages that tell the LB it is becoming the primary, with each occurring under different circumstances:
 * `TakeBecomingPrimaryCheckpoint` – The instance is becoming the primary and **should** take a checkpoint (ie. this is the first start of the primary).
 * `BecomingPrimary` – The instance is becoming the primary but **should not** take a checkpoint (ie. this is a non-first start of the primary).
 * `UpgradeTakeCheckpoint` – The instance is a primary that is being upgraded and **should** take a checkpoint. Note that only a newly registered secondary
