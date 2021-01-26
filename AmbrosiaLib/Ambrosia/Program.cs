@@ -478,13 +478,13 @@ namespace Ambrosia
 
         internal async Task<BuffersCursor> SendAsync(Stream outputStream,
                                                      BuffersCursor placeToStart,
-                                                     bool reconnecting)
+                                                     bool reconnecting,
+                                                     bool do_wait = false)
         {
             // If the cursor is invalid because of trimming or reconnecting, create it again
             if (placeToStart.PagePos == -1)
             {
-                return await ReplayFromAsync(outputStream, _owningOutputRecord.LastSeqSentToReceiver + 1, reconnecting);
-
+                return await ReplayFromAsync(outputStream, _owningOutputRecord.LastSeqSentToReceiver + 1, reconnecting, do_wait);
             }
             var nextSeqNo = _owningOutputRecord.LastSeqSentToReceiver + 1;
             var bufferEnumerator = placeToStart.PageEnumerator;
@@ -499,6 +499,11 @@ namespace Ambrosia
                 var curBuffer = bufferEnumerator.Current;
                 var pageLength = curBuffer.curLength;
                 var morePages = (curBuffer != _bufferQ.Last());
+                if (do_wait && !morePages)
+                {
+                    break;
+                }
+
                 int numReplayableMessagesToSend;
                 if (posToStart == 0)
                 {
@@ -576,6 +581,12 @@ namespace Ambrosia
                         await outputStream.FlushAsync();
                     }
                 }
+
+                if (do_wait)
+                {
+                    await Task.Delay(1);
+                }
+
                 AcquireTrimLock(2);
                 _owningOutputRecord.LastSeqSentToReceiver += numRPCs;
 
@@ -631,7 +642,8 @@ namespace Ambrosia
 
         internal async Task<BuffersCursor> ReplayFromAsync(Stream outputStream,
                                                            long firstSeqNo,
-                                                           bool reconnecting)
+                                                           bool reconnecting,
+                                                           bool do_wait = false)
         {
             /*            if (reconnecting)
                         {
@@ -707,7 +719,7 @@ namespace Ambrosia
                         }
 
                     }
-                    return await SendAsync(outputStream, new BuffersCursor(bufferEnumerator, bufferPos, skipEvents), false);
+                    return await SendAsync(outputStream, new BuffersCursor(bufferEnumerator, bufferPos, skipEvents), false, do_wait);
                 }
             }
             // There's no output to replay
@@ -3506,8 +3518,18 @@ namespace Ambrosia
                         // StartupParamOverrides.OutputStream.WriteLine("send to {0}", outputConnectionRecord.LastSeqNoFromLocalService);
                         outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                         var placeAtCall = outputConnectionRecord.LastSeqSentToReceiver;
-                        outputConnectionRecord.placeInOutput =
+
+                        if (destString == "")
+                        {
+                            outputConnectionRecord.placeInOutput =
                                 await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput, reconnecting);
+                        }
+                        else
+                        {
+                            outputConnectionRecord.placeInOutput =
+                                await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput, reconnecting, true);
+                        }
+
                         reconnecting = false;
                         outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
                         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Code to manually trim for performance testing
