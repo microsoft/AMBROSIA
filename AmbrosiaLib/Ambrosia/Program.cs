@@ -599,14 +599,17 @@ namespace Ambrosia
                     return _owningOutputRecord.placeInOutput;
                 }
 
-                // bufferEnumerator is still good. Continue
-                Debug.Assert((nextSeqNo == curBuffer.LowestSeqNo + relSeqPos) && (nextSeqNo >= curBuffer.LowestSeqNo) && ((nextSeqNo + numRPCs - 1) <= curBuffer.HighestSeqNo));
+                Debug.Assert((bufferEnumerator.Current != curBuffer) || ((nextSeqNo == curBuffer.LowestSeqNo + relSeqPos) && (nextSeqNo >= curBuffer.LowestSeqNo) && ((nextSeqNo + numRPCs - 1) <= curBuffer.HighestSeqNo)));
                 nextSeqNo += numRPCs;
+
                 if (morePages)
                 {
-                    // More pages to output
                     posToStart = 0;
                     relSeqPos = 0;
+                    if (bufferEnumerator.Current == curBuffer)
+                    {
+                        bufferEnumerator.MoveNext();
+                    }
                 }
                 else
                 {
@@ -618,7 +621,7 @@ namespace Ambrosia
                 }
                 AcquireAppendLock(2);
             }
-            while (bufferEnumerator.MoveNext());
+            while (true);
             placeToStart.PageEnumerator = bufferEnumerator;
             placeToStart.PagePos = posToStart;
             placeToStart.RelSeqPos = relSeqPos;
