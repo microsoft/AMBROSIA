@@ -39,7 +39,7 @@ namespace AmbrosiaTest
         }
 
         [TestMethod]
-        public void JS_NodeUnitTest()
+        public void JS_NodeUnitTests()
         {
 
             Utilities MyUtils = new Utilities();
@@ -47,7 +47,7 @@ namespace AmbrosiaTest
 
             string testName = "jsnodeunittest";
             string finishedString = "UNIT TESTS COMPLETE";
-            string successString = "SUMMARY: 43 passed (100%), 0 failed (0%)";
+            string successString = "SUMMARY: 44 passed (100%), 0 failed (0%)";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
 
             // Launched all the unit tests for JS Node (npm run unittests)
