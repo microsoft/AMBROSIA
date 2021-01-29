@@ -135,9 +135,41 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, false, ConsumerWarning, PublisherWarning);
         }
 
+        [TestMethod]
+        public void JS_CG_GenTypeConcrete_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_GenType1.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_GenTypeConcrete2_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_GenType2.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_LiteralObjArray_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_LitObjArray.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
 
 
-        //**** Misc valid tests that are just a "catch all" if don't know where to put teest
+        //**** Misc valid tests that are just a "catch all" if don't know where to put test
         [TestMethod]
         public void JS_CG_Misc_Test()
         {

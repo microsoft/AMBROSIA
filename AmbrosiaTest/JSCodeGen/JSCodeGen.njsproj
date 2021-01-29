@@ -65,6 +65,9 @@
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TagInterface.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TagMethod.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\PI.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_LitObjArray.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_GenType2.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_GenType1.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_MiscTests.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_AmbrosiaTag.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_EventHandlerWarnings.ts" />
