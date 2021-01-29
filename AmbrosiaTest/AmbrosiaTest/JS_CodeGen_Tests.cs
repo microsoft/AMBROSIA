@@ -30,6 +30,16 @@ namespace AmbrosiaTest
         }
         //************* Init Code *****************
 
+        [TestCleanup()]
+        public void Cleanup()
+        {
+            // Kill all exes associated with tests
+            JS_Utilities JSUtils = new JS_Utilities();
+            JSUtils.JS_TestCleanup();
+        }
+
+
+
         [TestMethod]
         public void JS_CG_Misc_PI_Test()
         {

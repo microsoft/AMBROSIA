@@ -93,9 +93,33 @@ namespace AmbrosiaTest
         }
 
 
+        // Run JS Node Unit Tests
+        public int StartJSNodeUnitTests(string testOutputLogFile)
+        {
+
+            Utilities MyUtils = new Utilities();
+
+            // Launch the client job process with these values
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSDirectory"] + "\\Ambrosia-Node";
+            string fileNameExe = "pwsh.exe";
+            string argString = "-c npm run unittests";
+
+            int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
+            if (processID <= 0)
+            {
+                MyUtils.FailureSupport("");
+                Assert.Fail("<StartJSNodeUnitTests> npm unittests were not started.  ProcessID <=0 ");
+            }
+
+            // Give it a few seconds to start
+            Thread.Sleep(2000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            return processID;
+        }
 
 
-
+        // *### These will be for the JS PTI calls 
         // Build JS Test App - easiest to call external powershell script.
         // ** TO DO - maybe make this a generic "build .TS file" or something like that
         // ** For now - this is only .ts that is required to be built
@@ -174,12 +198,7 @@ namespace AmbrosiaTest
             }
 
             // Stop all running processes that hung or were left behind
-            //MyUtils.StopAllAmbrosiaProcesses();
-
-            // Clean up Azure - this is called after each test so put all test names in for azure tables
-            // *#*#*#* TO DO *#*#*#*
-            //CleanupAzureTables("unitendtoendtest");
-
+            MyUtils.StopAllAmbrosiaProcesses();
 
             Thread.Sleep(2000);
         }
