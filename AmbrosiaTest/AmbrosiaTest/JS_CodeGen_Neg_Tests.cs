@@ -42,8 +42,8 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_AmbrosiaTagNewline.ts";
-            string ConsumerErrorMsg = "Error: A newline character is not allowed in the attributes of an @ambrosia tag";
-            string PublisherErrorMsg = "Error: A newline character is not allowed in the attributes of an @ambrosia tag";
+            string ConsumerErrorMsg = "Error: A newline is not allowed in the attributes of an @ambrosia tag";
+            string PublisherErrorMsg = "Error: A newline is not allowed in the attributes of an @ambrosia tag";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
