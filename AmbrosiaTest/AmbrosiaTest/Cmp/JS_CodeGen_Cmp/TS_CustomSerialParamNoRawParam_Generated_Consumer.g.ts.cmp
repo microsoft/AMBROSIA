@@ -4,6 +4,7 @@
 // Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
 import Ambrosia = require("ambrosia-node");
 import IC = Ambrosia.IC;
+import Utils = Ambrosia.Utils;
 
 let DESTINATION_INSTANCE_NAME: string = "server";
 let POST_TIMEOUT_IN_MS: number = 8000; // -1 = Infinite
