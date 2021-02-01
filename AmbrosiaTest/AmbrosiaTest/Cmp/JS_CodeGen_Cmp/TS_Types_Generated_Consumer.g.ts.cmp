@@ -203,7 +203,7 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "getMedia":
-                const getMedia_Result: PrintMedia = result;
+                const getMedia_Result: Test.PrintMedia = result;
                 // TODO: Handle the result, optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
@@ -213,7 +213,7 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "makeName":
-                const makeName_Result: Names = result;
+                const makeName_Result: Test.Names = result;
                 // TODO: Handle the result, optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;

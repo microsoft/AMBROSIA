@@ -233,7 +233,7 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_PublishMethodBeforeRef.ts";
             string ConsumerErrorMsg = "Error: Unable to publish function 'fn'";
-            string PublisherErrorMsg = "as a post method (reason: The following types must be published before any method can be published: Name)";
+            string PublisherErrorMsg = "as a post method (reason: The following types must be published before any method can be published: 'Name' found in published type 'MyType')";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
