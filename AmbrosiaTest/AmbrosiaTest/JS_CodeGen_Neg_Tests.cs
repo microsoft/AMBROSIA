@@ -50,6 +50,19 @@ namespace AmbrosiaTest
         }
 
         [TestMethod]
+        public void JS_CG_Neg_AsyncFcthn()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_AsyncFctn.ts";
+            string ConsumerErrorMsg = "as a post method (reason: async functions are not supported)";
+            string PublisherErrorMsg = "Error: Unable to publish type alias 'Digits'";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+        }
+
+        [TestMethod]
         public void JS_CG_Neg_CommaAttrib()
         {
             JS_Utilities JSUtils = new JS_Utilities();
