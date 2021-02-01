@@ -39,19 +39,6 @@ namespace AmbrosiaTest
         }
 
 
-
-        [TestMethod]
-        public void JS_CG_Misc_PI_Test()
-        {
-            JS_Utilities JSUtils = new JS_Utilities();
-
-            string testfileName = "PI.ts";
-
-            // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName);
-        }
-
-
         [TestMethod]
         public void JS_CG_Misc_AST_Test()
         {
