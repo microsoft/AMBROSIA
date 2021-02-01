@@ -6,7 +6,7 @@ export module Test
      * 
      */
     // Private stuff!
-    export function NewTest(person: { age: number }): { age: number }
+    export function PI_NewTest(person: { age: number }): { age: number }
     {
         return (person);
     }

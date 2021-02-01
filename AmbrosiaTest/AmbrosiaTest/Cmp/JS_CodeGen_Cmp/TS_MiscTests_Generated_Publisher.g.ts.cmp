@@ -53,7 +53,7 @@ export function messageDispatcher(message: Messages.DispatchedMessage): void
     // WARNING! Rules for Message Handling:
     //
     // Rule 1: Messages must be handled - to completion - in the order received. For application (RPC) messages only, if there are messages that are known to
-    //         be commutative then this rule can be relaxed – but only for RPC messages. 
+    //         be commutative then this rule can be relaxed - but only for RPC messages. 
     // Reason: Using Ambrosia requires applications to have deterministic execution. Further, system messages (like TakeCheckpoint) from the IC rely on being 
     //         handled in the order they are sent to the app. This means being extremely careful about using non-synchronous code (like awaitable operations
     //         or callbacks) inside message handlers: the safest path is to always only use synchronous code.
@@ -68,9 +68,9 @@ export function messageDispatcher(message: Messages.DispatchedMessage): void
     // Reason: Because a message handler always has to run to completion (see Rule #1), if it runs for too long it can monopolize the system leading to performance issues.
     //         Further, this becomes a very costly message to have to replay during recovery. So instead, when an message handler needs to send a large sequence (series)
     //         of independent messages, it should be designed to be restartable so that the sequence can pick up where it left off (rather than starting over) when resuming
-    //         execution (ie. after loading a checkpoint that occurred during the long-running – but incomplete – sequence). To avoid a single message handler having to send
+    //         execution (ie. after loading a checkpoint that occurred during the long-running - but incomplete - sequence). To avoid a single message handler having to send
     //         the entire sequence, large sequences should be sent in smaller batches using either explicit batches (IC.enqueueFork + IC.flushQueue) or implicit batches 
-    //         (IC.callFork / IC.post) inside a setImmediate() callback. This asynchrony is necessary to allow I/O with the IC to interleave, and is one of the few allowable 
+    //         (IC.callFork / IC.postFork) inside a setImmediate() callback. This asynchrony is necessary to allow I/O with the IC to interleave, and is one of the few allowable 
     //         exceptions to the "always only use asynchronous code" dictate in Rule #1. Restartability is achieved by sending a 'sequence continuation' message at the end of
     //         each batch, which describes the remaining work to be done. Because the handler for the 'sequence continuation' message only ever sends the next batch plus the
     //         'sequence continuation' message, it can run to completion quickly, which both keeps the system responsive (by allowing interleaving I/O) while also complying 
