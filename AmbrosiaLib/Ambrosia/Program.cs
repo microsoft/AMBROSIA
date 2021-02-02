@@ -4155,8 +4155,8 @@ namespace Ambrosia
                                     long checkpointToLoad,
                                     int version,
                                     bool testUpgrade,
-                                    int serviceReceiveFromPort,
-                                    int serviceSendToPort)
+                                    int serviceReceiveFromPort = 0,
+                                    int serviceSendToPort = 0)
         {
             _localServiceReceiveFromPort = serviceReceiveFromPort;
             _localServiceSendToPort = serviceSendToPort;

@@ -61,10 +61,10 @@ namespace Ambrosia
             throw new InvalidOperationException("Local IP Address Not Found!");
         }
 
-        static void startIC(string _instanceName, 
-                            int port, 
-                            int replicaNumber, 
-                            string secureNetworkClassName, 
+        static void startIC(string _instanceName,
+                            int port,
+                            int replicaNumber,
+                            string secureNetworkClassName,
                             string secureNetworkAssemblyName)
         {
             StartupParamOverrides.sendPort = 0;
@@ -128,6 +128,32 @@ namespace Ambrosia
             worker.SideloadVertex(new AmbrosiaRuntime(), "ambrosia");
 
             worker.Start();
+        }
+
+        /// <summary>
+        /// Gesture that deploys a (non-upgradeable) service WITH its IC running in the same process, for TTD. The result is a service that implements the API defined
+        /// in <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The interface that defines the API of the deployed service.</typeparam>
+        /// <param name="serviceName"></param>
+        /// <param name="instance">The instance to deploy. It must implement <typeparamref name="T"/>.</param>
+        /// <param name="serviceLogPath">The path used to get to the logs.</param>
+        /// <param name="checkpointToLoad">The number of the checkpoint to start TTD from</param>
+        /// <param name="currentVersion">The version number used to start TTD from</param>
+        /// <returns></returns>
+        public static IDisposable Deploy<T>(string serviceName,
+                                            Immortal instance,
+                                            string serviceLogPath,
+                                            long checkpointToLoad = 1,
+                                            int currentVersion = 0)
+        {
+            _iCThread = new Thread(() => {
+                var myRuntime = new AmbrosiaRuntime();
+                myRuntime.InitializeRepro(serviceName, serviceLogPath, checkpointToLoad, currentVersion,
+                    false);
+            }) { IsBackground = true };
+            _iCThread.Start();
+            return Deploy<T>(serviceName, instance, 0, 0);
         }
 
         /// <summary>
@@ -231,6 +257,34 @@ namespace Ambrosia
             where Z2 : Immortal, T2 // *and* Z2 has a ctor that takes a Immortal as a parameter
         {
             _iCThread = new Thread(() => startIC(serviceName, iCPort, replicaNumber, secureNetworkClassName, secureNetworkAssemblyName)) { IsBackground = true };
+            _iCThread.Start();
+            return Deploy<T, T2, Z2>(serviceName, instance, 0, 0);
+        }
+
+
+        /// Gesture that deploys an upgradeable service WITH its IC running in the same process, for TTD. The result is a service that implements the API defined
+        /// in <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The interface that defines the API of the deployed service.</typeparam>
+        /// <param name="serviceName"></param>
+        /// <param name="instance">The instance to deploy. It must implement <typeparamref name="T"/>.</param>
+        /// <param name="serviceLogPath">The path used to get to the logs.</param>
+        /// <param name="checkpointToLoad">The number of the checkpoint to start TTD from</param>
+        /// <param name="currentVersion">The version number used to start TTD from</param>
+        public static IDisposable Deploy<T, T2, Z2>(string serviceName,
+                                                    Immortal instance,
+                                                    string serviceLogPath,
+                                                    long checkpointToLoad = 1,
+                                                    int currentVersion = 0)
+            where T2 : T
+            where Z2 : Immortal, T2 // *and* Z2 has a ctor that takes a Immortal as a parameter
+        {
+            _iCThread = new Thread(() => {
+                var myRuntime = new AmbrosiaRuntime();
+                myRuntime.InitializeRepro(serviceName, serviceLogPath, checkpointToLoad, currentVersion,
+                    true);
+            })
+            { IsBackground = true };
             _iCThread.Start();
             return Deploy<T, T2, Z2>(serviceName, instance, 0, 0);
         }
