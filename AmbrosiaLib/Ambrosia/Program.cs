@@ -579,54 +579,65 @@ namespace Ambrosia
                 AcquireTrimLock(2);
                 _owningOutputRecord.LastSeqSentToReceiver += numRPCs;
 
-                // Must handle cases where trim came in during the actual send and reset or pushed the iterator
-                if ((_owningOutputRecord.placeInOutput != null) &&
-                    ((_owningOutputRecord.placeInOutput.PageEnumerator != bufferEnumerator) ||
-                    _owningOutputRecord.placeInOutput.PagePos == -1))
-                {
-                    // Trim replaced the enumerator. Must reset
-                    if (morePages)
-                    {
-                        // Not done outputting. Try again
-                        if (_owningOutputRecord._sendsEnqueued == 0)
-                        {
-                            Interlocked.Increment(ref _owningOutputRecord._sendsEnqueued);
-                            _owningOutputRecord.DataWorkQ.Enqueue(-1);
-                        }
-                    }
+                Debug.Assert(_owningOutputRecord.placeInOutput.PageEnumerator == bufferEnumerator); // Used to check this, but this should always be true.
 
+                var placeInOutputHasBeenSet = _owningOutputRecord.placeInOutput != null;
+                var trimResetIterator = placeInOutputHasBeenSet &&
+                    (_owningOutputRecord.placeInOutput.PagePos == -1);
+
+                var trimPushedIterator = !trimResetIterator && (bufferEnumerator.Current != curBuffer);
+
+                // Must handle cases where trim came in during the actual send and reset the iterator
+                if (trimResetIterator)
+                {
+                    Debug.Assert(!morePages);
                     // Done outputting. Just return the enumerator replacement
                     return _owningOutputRecord.placeInOutput;
                 }
-
-                Debug.Assert((bufferEnumerator.Current != curBuffer) || ((nextSeqNo == curBuffer.LowestSeqNo + relSeqPos) && (nextSeqNo >= curBuffer.LowestSeqNo) && ((nextSeqNo + numRPCs - 1) <= curBuffer.HighestSeqNo)));
-                nextSeqNo += numRPCs;
-
-                if (morePages)
-                {
-                    posToStart = 0;
-                    relSeqPos = 0;
-                    if (bufferEnumerator.Current == curBuffer)
-                    {
-                        bufferEnumerator.MoveNext();
-                    }
-                }
                 else
                 {
-                    // Future output may be put on this page
-                    posToStart = pageLength;
-                    relSeqPos += numRPCs;
-                    needToUnlockAtEnd = false;
-                    break;
+                    Debug.Assert((bufferEnumerator.Current != curBuffer) || ((nextSeqNo == curBuffer.LowestSeqNo + relSeqPos) && (nextSeqNo >= curBuffer.LowestSeqNo) && ((nextSeqNo + numRPCs - 1) <= curBuffer.HighestSeqNo)));
+                    nextSeqNo += numRPCs;
+
+                    if (trimPushedIterator)
+                    {
+                        if (morePages)
+                        {
+                            posToStart = 0;
+                            relSeqPos = 0;
+                            AcquireAppendLock(2);
+                        }
+                        else
+                        {
+                            needToUnlockAtEnd = false;
+                            break;
+                        }
+                    }
+                    else // trim didn't alter the iterator at all
+                    {
+                        if (morePages)
+                        {
+                            posToStart = 0;
+                            relSeqPos = 0;
+                            AcquireAppendLock(2);
+                            var moveNextResult = bufferEnumerator.MoveNext();
+                            Debug.Assert(moveNextResult);
+                        }
+                        else
+                        {
+                            placeToStart.PagePos = pageLength;
+                            placeToStart.RelSeqPos = relSeqPos + numRPCs;
+                            needToUnlockAtEnd = false;
+                            break;
+                        }
+                    }
                 }
-                AcquireAppendLock(2);
             }
             while (true);
             placeToStart.PageEnumerator = bufferEnumerator;
-            placeToStart.PagePos = posToStart;
-            placeToStart.RelSeqPos = relSeqPos;
             if (needToUnlockAtEnd)
             {
+                Debug.Assert(false); // Is this ever actually hit?
                 ReleaseAppendLock();
             }
             return placeToStart;
@@ -813,6 +824,7 @@ namespace Ambrosia
                         if (placeToStart.PageEnumerator.MoveNext())
                         {
                             placeToStart.PagePos = 0;
+                            placeToStart.RelSeqPos = 0;
                         }
                         else
                         {
