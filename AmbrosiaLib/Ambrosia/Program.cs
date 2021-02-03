@@ -18,6 +18,7 @@ using CRA.ClientLibrary;
 using System.Diagnostics;
 using System.Xml.Serialization;
 using System.IO.Pipes;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Ambrosia
 {
@@ -477,13 +478,12 @@ namespace Ambrosia
         }
 
         internal async Task<BuffersCursor> SendAsync(Stream outputStream,
-                                                     BuffersCursor placeToStart,
-                                                     bool reconnecting)
+                                                     BuffersCursor placeToStart)
         {
             // If the cursor is invalid because of trimming or reconnecting, create it again
             if (placeToStart.PagePos == -1)
             {
-                return await ReplayFromAsync(outputStream, _owningOutputRecord.LastSeqSentToReceiver + 1, reconnecting);
+                return await ReplayFromAsync(outputStream, _owningOutputRecord.LastSeqSentToReceiver + 1);
 
             }
             var nextSeqNo = _owningOutputRecord.LastSeqSentToReceiver + 1;
@@ -579,11 +579,9 @@ namespace Ambrosia
                 AcquireTrimLock(2);
                 _owningOutputRecord.LastSeqSentToReceiver += numRPCs;
 
-                Debug.Assert(_owningOutputRecord.placeInOutput.PageEnumerator == bufferEnumerator); // Used to check this, but this should always be true. If not, may not be due to reconnection!!!!!!!!!!!!!!! If this is ever not true, should just return
+                Debug.Assert((_owningOutputRecord.placeInOutput != null) && (_owningOutputRecord.placeInOutput.PageEnumerator != null)); // Used to check these, but they should always be true now that there are no recursive SendAsync calls.
 
-                var placeInOutputHasBeenSet = _owningOutputRecord.placeInOutput != null;
-                var trimResetIterator = placeInOutputHasBeenSet &&
-                    (_owningOutputRecord.placeInOutput.PagePos == -1);
+                var trimResetIterator = _owningOutputRecord.placeInOutput.PagePos == -1;
 
                 var trimPushedIterator = !trimResetIterator && (bufferEnumerator.Current != curBuffer);
 
@@ -644,42 +642,8 @@ namespace Ambrosia
         }
 
         internal async Task<BuffersCursor> ReplayFromAsync(Stream outputStream,
-                                                           long firstSeqNo,
-                                                           bool reconnecting)
+                                                           long firstSeqNo)
         {
-            /*            if (reconnecting)
-                        {
-                            var bufferE = _bufferQ.GetEnumerator();
-                            while (bufferE.MoveNext())
-                            {
-                                var curBuffer = bufferE.Current;
-                                Debug.Assert(curBuffer.LowestSeqNo <= firstSeqNo);
-                                int skipEvents = 0;
-                                if (curBuffer.HighestSeqNo >= firstSeqNo)
-                                {
-                                    // We need to send some or all of this buffer
-                                    skipEvents = (int)(Math.Max(0, firstSeqNo - curBuffer.LowestSeqNo));
-                                }
-                                else
-                                {
-                                    skipEvents = 0;
-                                }
-                                int bufferPos = 0;
-                                AcquireAppendLock(2);
-                                curBuffer.UnsentReplayableMessages = curBuffer.TotalReplayableMessages;
-                                for (int i = 0; i < skipEvents; i++)
-                                {
-                                    int eventSize = curBuffer.PageBytes.ReadBufferedInt(bufferPos);
-                                    var methodID = curBuffer.PageBytes.ReadBufferedInt(bufferPos + StreamCommunicator.IntSize(eventSize) + 2);
-                                    if (curBuffer.PageBytes[bufferPos + StreamCommunicator.IntSize(eventSize) + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
-                                    {
-                                        curBuffer.UnsentReplayableMessages--;
-                                    }
-                                    bufferPos += eventSize + StreamCommunicator.IntSize(eventSize);
-                                }
-                                ReleaseAppendLock();
-                            }
-                        }*/
             var bufferEnumerator = _bufferQ.GetEnumerator();
             // Scan through pages from head to tail looking for events to output
             while (bufferEnumerator.MoveNext())
@@ -721,7 +685,13 @@ namespace Ambrosia
                         }
 
                     }
-                    return await SendAsync(outputStream, new BuffersCursor(bufferEnumerator, bufferPos, skipEvents), false);
+                    // Make sure there is a send enqueued in the work Q.
+                    if (_owningOutputRecord._sendsEnqueued == 0)
+                    {
+                        _owningOutputRecord.DataWorkQ.Enqueue(-1);
+                        Interlocked.Increment(ref _owningOutputRecord._sendsEnqueued);
+                    }
+                    return new BuffersCursor(bufferEnumerator, bufferPos, skipEvents);
                 }
             }
             // There's no output to replay
@@ -3507,7 +3477,6 @@ namespace Ambrosia
                 // message has to be the first for replay.
                 while (Interlocked.Read(ref outputConnectionRecord.LastSeqNoFromLocalService) <
                        Interlocked.Read(ref outputConnectionRecord.LastSeqSentToReceiver)) { await Task.Yield(); };
-                bool reconnecting = true;
                 while (true)
                 {
                     var nextEntry = await outputConnectionRecord.DataWorkQ.DequeueAsync(ct);
@@ -3522,8 +3491,7 @@ namespace Ambrosia
                         outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                         var placeAtCall = outputConnectionRecord.LastSeqSentToReceiver;
                         outputConnectionRecord.placeInOutput =
-                                await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput, reconnecting);
-                        reconnecting = false;
+                                await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput);
                         outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
                         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Code to manually trim for performance testing
                         //                    outputConnectionRecord.TrimTo = placeToTrimTo;
