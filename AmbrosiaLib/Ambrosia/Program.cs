@@ -634,7 +634,7 @@ namespace Ambrosia
                 }
             }
             while (true);
-            placeToStart.PageEnumerator = bufferEnumerator;
+            Debug.Assert(placeToStart.PageEnumerator == bufferEnumerator); // Used to set this rather than compare, but they should never be different
             if (needToUnlockAtEnd)
             {
                 Debug.Assert(false); // Is this ever actually hit?
