@@ -579,7 +579,7 @@ namespace Ambrosia
                 AcquireTrimLock(2);
                 _owningOutputRecord.LastSeqSentToReceiver += numRPCs;
 
-                Debug.Assert(_owningOutputRecord.placeInOutput.PageEnumerator == bufferEnumerator); // Used to check this, but this should always be true.
+                Debug.Assert(_owningOutputRecord.placeInOutput.PageEnumerator == bufferEnumerator); // Used to check this, but this should always be true. If not, may not be due to reconnection!!!!!!!!!!!!!!!
 
                 var placeInOutputHasBeenSet = _owningOutputRecord.placeInOutput != null;
                 var trimResetIterator = placeInOutputHasBeenSet &&
@@ -634,7 +634,7 @@ namespace Ambrosia
                 }
             }
             while (true);
-            Debug.Assert(placeToStart.PageEnumerator == bufferEnumerator); // Used to set this rather than compare, but they should never be different
+            Debug.Assert(placeToStart.PageEnumerator == bufferEnumerator); // Used to set this rather than compare, but they should never be different. May be different due to reconnection!!!!!!!!!!!!!!!
             if (needToUnlockAtEnd)
             {
                 Debug.Assert(false); // Is this ever actually hit?
