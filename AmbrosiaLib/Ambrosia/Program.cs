@@ -683,13 +683,13 @@ namespace Ambrosia
                             int eventSize = curBuffer.PageBytes.ReadBufferedInt(bufferPos);
                             bufferPos += eventSize + StreamCommunicator.IntSize(eventSize);
                         }
-
                     }
                     // Make sure there is a send enqueued in the work Q.
-                    if (_owningOutputRecord._sendsEnqueued == 0)
+                    long sendEnqueued = Interlocked.Read(ref _owningOutputRecord._sendsEnqueued);
+                    if (sendEnqueued == 0)
                     {
-                        _owningOutputRecord.DataWorkQ.Enqueue(-1);
                         Interlocked.Increment(ref _owningOutputRecord._sendsEnqueued);
+                        _owningOutputRecord.DataWorkQ.Enqueue(-1);
                     }
                     return new BuffersCursor(bufferEnumerator, bufferPos, skipEvents);
                 }
@@ -3380,10 +3380,11 @@ namespace Ambrosia
                     RpcBuffer.ResetBuffer();
 
                     // Make sure there is a send enqueued in the work Q.
-                    if (_shuffleOutputRecord._sendsEnqueued == 0)
+                    long sendEnqueued = Interlocked.Read(ref _shuffleOutputRecord._sendsEnqueued);
+                    if (sendEnqueued == 0)
                     {
-                        _shuffleOutputRecord.DataWorkQ.Enqueue(-1);
                         Interlocked.Increment(ref _shuffleOutputRecord._sendsEnqueued);
+                        _shuffleOutputRecord.DataWorkQ.Enqueue(-1);
                     }
                 }
                 else
@@ -3466,9 +3467,9 @@ namespace Ambrosia
                 outputConnectionRecord.LastSeqSentToReceiver = commitSeqNo - 1;
 
                 // Enqueue a replay send
-                if (outputConnectionRecord._sendsEnqueued == 0)
+                long sendEnqueued = Interlocked.Read(ref outputConnectionRecord._sendsEnqueued);
+                if (sendEnqueued == 0)
                 {
-
                     Interlocked.Increment(ref outputConnectionRecord._sendsEnqueued);
                     outputConnectionRecord.DataWorkQ.Enqueue(-1);
                 }
@@ -3483,6 +3484,7 @@ namespace Ambrosia
                     if (nextEntry == -1)
                     {
                         // This is a send output
+                        Debug.Assert(outputConnectionRecord._sendsEnqueued > 0);
                         Interlocked.Decrement(ref outputConnectionRecord._sendsEnqueued);
 
                         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Code to manually trim for performance testing
