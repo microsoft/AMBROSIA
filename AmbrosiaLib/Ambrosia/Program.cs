@@ -640,7 +640,7 @@ namespace Ambrosia
             Debug.Assert(placeToStart.PageEnumerator == bufferEnumerator); // Used to set this rather than compare, but they should never be different. May be different due to reconnection!!!!!!!!!!!!!!! If they are different due to reconnection or something, don't know why we'd want to make them the same
             if (needToUnlockAtEnd)
             {
-                Debug.Assert(false); // Is this ever actually hit?
+                Debug.Assert(false); // Is this ever actually hit? If not, we should eventually get rid of needToUnlockAtEnd and this whole if.
                 ReleaseAppendLock();
             }
             return placeToStart;
