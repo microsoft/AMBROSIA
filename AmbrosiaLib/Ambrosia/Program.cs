@@ -18,7 +18,7 @@ using CRA.ClientLibrary;
 using System.Diagnostics;
 using System.Xml.Serialization;
 using System.IO.Pipes;
-using System.Reflection.Metadata.Ecma335;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Ambrosia
 {
@@ -482,13 +482,12 @@ namespace Ambrosia
         }
 
         internal async Task<BuffersCursor> SendAsync(Stream outputStream,
-                                                     BuffersCursor placeToStart,
-                                                     bool reconnecting)
+                                                     BuffersCursor placeToStart)
         {
             // If the cursor is invalid because of trimming or reconnecting, create it again
             if (placeToStart.PagePos == -1)
             {
-                return await ReplayFromAsync(outputStream, _owningOutputRecord.LastSeqSentToReceiver + 1, reconnecting);
+                return await ReplayFromAsync(outputStream, _owningOutputRecord.LastSeqSentToReceiver + 1);
 
             }
 
@@ -607,93 +606,71 @@ namespace Ambrosia
                 AcquireTrimLock(2);
                 _owningOutputRecord.LastSeqSentToReceiver += numRPCs;
 
-                // Must handle cases where trim came in during the actual send and reset or pushed the iterator
-                if ((_owningOutputRecord.placeInOutput != null) &&
-                    ((_owningOutputRecord.placeInOutput.PageEnumerator != bufferEnumerator) ||
-                    _owningOutputRecord.placeInOutput.PagePos == -1))
-                {
-                    // Trim replaced the enumerator. Must reset
-                    if (morePages)
-                    {
-                        // Not done outputting. Try again
-                        if (_owningOutputRecord._sendsEnqueued == 0)
-                        {
-                            Interlocked.Increment(ref _owningOutputRecord._sendsEnqueued);
-                            _owningOutputRecord.DataWorkQ.Enqueue(-1);
-                        }
-                    }
+                Debug.Assert((_owningOutputRecord.placeInOutput != null) && (_owningOutputRecord.placeInOutput.PageEnumerator != null)); // Used to check these, but they should always be true now that there are no recursive SendAsync calls.
 
+                var trimResetIterator = _owningOutputRecord.placeInOutput.PagePos == -1;
+
+                var trimPushedIterator = !trimResetIterator && (bufferEnumerator.Current != curBuffer);
+
+                // Must handle cases where trim came in during the actual send and reset the iterator
+                if (trimResetIterator)
+                {
+                    Debug.Assert(!morePages);
                     // Done outputting. Just return the enumerator replacement
                     return _owningOutputRecord.placeInOutput;
                 }
-
-                // bufferEnumerator is still good. Continue
-                Debug.Assert((nextSeqNo == curBuffer.LowestSeqNo + relSeqPos) && (nextSeqNo >= curBuffer.LowestSeqNo) && ((nextSeqNo + numRPCs - 1) <= curBuffer.HighestSeqNo));
-                nextSeqNo += numRPCs;
-                if (morePages)
-                {
-                    // More pages to output
-                    posToStart = 0;
-                    relSeqPos = 0;
-                }
                 else
                 {
-                    // Future output may be put on this page
-                    posToStart = pageLength;
-                    relSeqPos += numRPCs;
-                    needToUnlockAtEnd = false;
-                    break;
+                    Debug.Assert((bufferEnumerator.Current != curBuffer) || ((nextSeqNo == curBuffer.LowestSeqNo + relSeqPos) && (nextSeqNo >= curBuffer.LowestSeqNo) && ((nextSeqNo + numRPCs - 1) <= curBuffer.HighestSeqNo)));
+                    nextSeqNo += numRPCs;
+
+                    if (trimPushedIterator)
+                    {
+                        if (morePages)
+                        {
+                            posToStart = 0;
+                            relSeqPos = 0;
+                            AcquireAppendLock(2);
+                        }
+                        else
+                        {
+                            needToUnlockAtEnd = false;
+                            break;
+                        }
+                    }
+                    else // trim didn't alter the iterator at all
+                    {
+                        if (morePages)
+                        {
+                            posToStart = 0;
+                            relSeqPos = 0;
+                            AcquireAppendLock(2);
+                            var moveNextResult = bufferEnumerator.MoveNext();
+                            Debug.Assert(moveNextResult);
+                        }
+                        else
+                        {
+                            placeToStart.PagePos = pageLength;
+                            placeToStart.RelSeqPos = relSeqPos + numRPCs;
+                            needToUnlockAtEnd = false;
+                            break;
+                        }
+                    }
                 }
-                AcquireAppendLock(2);
             }
-            while (bufferEnumerator.MoveNext());
-            placeToStart.PageEnumerator = bufferEnumerator;
-            placeToStart.PagePos = posToStart;
-            placeToStart.RelSeqPos = relSeqPos;
+            while (true);
+            Debug.Assert(placeToStart.PageEnumerator == bufferEnumerator); // Used to set this rather than compare, but they should never be different. May be different due to reconnection!!!!!!!!!!!!!!! If they are different due to reconnection or something, don't know why we'd want to make them the same
             if (needToUnlockAtEnd)
             {
+                Debug.Assert(false); // Is this ever actually hit?
                 ReleaseAppendLock();
             }
             return placeToStart;
         }
 
         internal async Task<BuffersCursor> ReplayFromAsync(Stream outputStream,
-                                                           long firstSeqNo,
-                                                           bool reconnecting)
+                                                           long firstSeqNo)
         {
-            /*            if (reconnecting)
-                        {
-                            var bufferE = _bufferQ.GetEnumerator();
-                            while (bufferE.MoveNext())
-                            {
-                                var curBuffer = bufferE.Current;
-                                Debug.Assert(curBuffer.LowestSeqNo <= firstSeqNo);
-                                int skipEvents = 0;
-                                if (curBuffer.HighestSeqNo >= firstSeqNo)
-                                {
-                                    // We need to send some or all of this buffer
-                                    skipEvents = (int)(Math.Max(0, firstSeqNo - curBuffer.LowestSeqNo));
-                                }
-                                else
-                                {
-                                    skipEvents = 0;
-                                }
-                                int bufferPos = 0;
-                                AcquireAppendLock(2);
-                                curBuffer.UnsentReplayableMessages = curBuffer.TotalReplayableMessages;
-                                for (int i = 0; i < skipEvents; i++)
-                                {
-                                    int eventSize = curBuffer.PageBytes.ReadBufferedInt(bufferPos);
-                                    var methodID = curBuffer.PageBytes.ReadBufferedInt(bufferPos + StreamCommunicator.IntSize(eventSize) + 2);
-                                    if (curBuffer.PageBytes[bufferPos + StreamCommunicator.IntSize(eventSize) + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
-                                    {
-                                        curBuffer.UnsentReplayableMessages--;
-                                    }
-                                    bufferPos += eventSize + StreamCommunicator.IntSize(eventSize);
-                                }
-                                ReleaseAppendLock();
-                            }
-                        }*/
             var bufferEnumerator = _bufferQ.GetEnumerator();
             // Scan through pages from head to tail looking for events to output
             while (bufferEnumerator.MoveNext())
@@ -733,9 +710,15 @@ namespace Ambrosia
                             int eventSize = curBuffer.PageBytes.ReadBufferedInt(bufferPos);
                             bufferPos += eventSize + StreamCommunicator.IntSize(eventSize);
                         }
-
                     }
-                    return await SendAsync(outputStream, new BuffersCursor(bufferEnumerator, bufferPos, skipEvents), false);
+                    // Make sure there is a send enqueued in the work Q.
+                    long sendEnqueued = Interlocked.Read(ref _owningOutputRecord._sendsEnqueued);
+                    if (sendEnqueued == 0)
+                    {
+                        Interlocked.Increment(ref _owningOutputRecord._sendsEnqueued);
+                        _owningOutputRecord.DataWorkQ.Enqueue(-1);
+                    }
+                    return new BuffersCursor(bufferEnumerator, bufferPos, skipEvents);
                 }
             }
             // There's no output to replay
@@ -852,6 +835,7 @@ namespace Ambrosia
                         if (placeToStart.PageEnumerator.MoveNext())
                         {
                             placeToStart.PagePos = 0;
+                            placeToStart.RelSeqPos = 0;
                         }
                         else
                         {
@@ -3507,10 +3491,12 @@ namespace Ambrosia
                     RpcBuffer.ResetBuffer();
 
                     // Make sure there is a send enqueued in the work Q.
-                    if (_committedPageID <= associatedPageID && _shuffleOutputRecord._sendsEnqueued == 0)
+                    long sendEnqueued = Interlocked.Read(ref _shuffleOutputRecord._sendsEnqueued);
+                    long committedPageID = Interlocked.Read(ref _committedPageID);
+                    if (committedPageID <= associatedPageID && sendEnqueued == 0)
                     {
-                        _shuffleOutputRecord.DataWorkQ.Enqueue(-1);
                         Interlocked.Increment(ref _shuffleOutputRecord._sendsEnqueued);
+                        _shuffleOutputRecord.DataWorkQ.Enqueue(-1);
                     }
                 }
                 else
@@ -3593,9 +3579,9 @@ namespace Ambrosia
                 outputConnectionRecord.LastSeqSentToReceiver = commitSeqNo - 1;
 
                 // Enqueue a replay send
-                if (outputConnectionRecord._sendsEnqueued == 0)
+                long sendEnqueued = Interlocked.Read(ref outputConnectionRecord._sendsEnqueued);
+                if (sendEnqueued == 0)
                 {
-
                     Interlocked.Increment(ref outputConnectionRecord._sendsEnqueued);
                     outputConnectionRecord.DataWorkQ.Enqueue(-1);
                 }
@@ -3604,13 +3590,13 @@ namespace Ambrosia
                 // message has to be the first for replay.
                 while (Interlocked.Read(ref outputConnectionRecord.LastSeqNoFromLocalService) <
                        Interlocked.Read(ref outputConnectionRecord.LastSeqSentToReceiver)) { await Task.Yield(); };
-                bool reconnecting = true;
                 while (true)
                 {
                     var nextEntry = await outputConnectionRecord.DataWorkQ.DequeueAsync(ct);
                     if (nextEntry == -1)
                     {
                         // This is a send output
+                        Debug.Assert(outputConnectionRecord._sendsEnqueued > 0);
                         Interlocked.Decrement(ref outputConnectionRecord._sendsEnqueued);
 
                         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Code to manually trim for performance testing
@@ -3619,8 +3605,7 @@ namespace Ambrosia
                         outputConnectionRecord.BufferedOutput.AcquireTrimLock(2);
                         var placeAtCall = outputConnectionRecord.LastSeqSentToReceiver;
                         outputConnectionRecord.placeInOutput =
-                                await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput, reconnecting);
-                        reconnecting = false;
+                                await outputConnectionRecord.BufferedOutput.SendAsync(writeToStream, outputConnectionRecord.placeInOutput);
                         outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
                         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Code to manually trim for performance testing
                         //                    outputConnectionRecord.TrimTo = placeToTrimTo;
@@ -4213,7 +4198,14 @@ namespace Ambrosia
             }
             _persistLogs = persistLogs;
             _activeActive = activeActive;
-            _newLogTriggerSize = logTriggerSizeMB * 1000000;
+            if (StartupParamOverrides.LogTriggerSizeMB != -1)
+            {
+                _newLogTriggerSize = StartupParamOverrides.LogTriggerSizeMB * 1048576;
+            }
+            else
+            {
+                _newLogTriggerSize = logTriggerSizeMB * 1048576;
+            }
             if (StartupParamOverrides.ICLogLocation == null)
             {
                 _serviceLogPath = serviceLogPath;
@@ -4269,8 +4261,8 @@ namespace Ambrosia
                                     long checkpointToLoad,
                                     int version,
                                     bool testUpgrade,
-                                    int serviceReceiveFromPort,
-                                    int serviceSendToPort)
+                                    int serviceReceiveFromPort = 0,
+                                    int serviceSendToPort = 0)
         {
             _localServiceReceiveFromPort = serviceReceiveFromPort;
             _localServiceSendToPort = serviceSendToPort;

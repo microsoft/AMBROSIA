@@ -285,11 +285,14 @@ namespace Server
     {
         SecondProc,
         InProcDeploy,
-        InProcManual
+        InProcManual,
+        InProcTimeTravel
     }
 
     class ServerBootstrapper
     {
+        private static string _serviceLogPath = Path.Combine(Path.GetPathRoot(Path.GetFullPath(".")), "AmbrosiaLogs") + Path.DirectorySeparatorChar;
+        private static long _checkpointToLoad = 1;
         private static int _receivePort = -1;
         private static int _sendPort = -1;
         private static int _icPort = -1;
@@ -309,7 +312,7 @@ namespace Server
         {
             ParseAndValidateOptions(args);
 
-            if (_ICDeploymentMode == ICDeploymentMode.InProcDeploy || _ICDeploymentMode == ICDeploymentMode.InProcManual)
+            if (_ICDeploymentMode == ICDeploymentMode.InProcDeploy || _ICDeploymentMode == ICDeploymentMode.InProcManual || _ICDeploymentMode == ICDeploymentMode.InProcTimeTravel)
             {
                 GenericLogsInterface.SetToGenericLogs();
                 _iCWriter = new FileStream("ICOutput_" + _perfServer.ToString() + "_" + _icPort.ToString() + ".txt", FileMode.Create);
@@ -343,6 +346,19 @@ namespace Server
                             break;
                         case ICDeploymentMode.InProcDeploy:
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _icPort))
+                            {
+                                // nothing to call on c, just doing this for calling Dispose.
+                                Console.WriteLine("*X* Press enter to terminate program.");
+                                Console.ReadLine();
+                                Thread.Sleep(3000);
+                                Trace.Flush();
+                                _iCListener.Flush();
+                                _iCWriter.Flush();
+                                _iCWriter.Flush();
+                            }
+                            break;
+                        case ICDeploymentMode.InProcTimeTravel:
+                            using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad))
                             {
                                 // nothing to call on c, just doing this for calling Dispose.
                                 Console.WriteLine("*X* Press enter to terminate program.");
@@ -405,6 +421,19 @@ namespace Server
                                 _iCWriter.Flush();
                             }
                             break;
+                        case ICDeploymentMode.InProcTimeTravel:
+                            using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad))
+                            {
+                                // nothing to call on c, just doing this for calling Dispose.
+                                Console.WriteLine("*X* Press enter to terminate program.");
+                                Console.ReadLine();
+                                Thread.Sleep(3000);
+                                Trace.Flush();
+                                _iCListener.Flush();
+                                _iCWriter.Flush();
+                                _iCWriter.Flush();
+                            }
+                            break;
                         case ICDeploymentMode.InProcManual:
                             var myName = _perfServer;
                             var myPort = _icPort;
@@ -454,7 +483,9 @@ namespace Server
                 { "u|upgrading", "Is upgrading.", u => _isUpgrading = true },
                 { "m|memoryUsed=", "Memory used.", m => _memoryUsed = long.Parse(m) },
                 { "c|autoContinue", "Is continued automatically at start", c => _autoContinue = true },
-                { "d|ICDeploymentMode=", "IC deployment mode specification (SecondProc(Default)/InProcDeploy/InProcManual)", d => _ICDeploymentMode = (ICDeploymentMode) Enum.Parse(typeof(ICDeploymentMode), d, true)},
+                { "d|ICDeploymentMode=", "IC deployment mode specification (SecondProc(Default)/InProcDeploy/InProcManual/InProcTimeTravel)", d => _ICDeploymentMode = (ICDeploymentMode) Enum.Parse(typeof(ICDeploymentMode), d, true)},
+                { "l|log=", "If TTD, the service log path.", l => _serviceLogPath = l },
+                { "ch|checkpoint=", "If TTD, the checkpoint # to load.", c => _checkpointToLoad = long.Parse(c) },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 

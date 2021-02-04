@@ -155,11 +155,14 @@ namespace Job
     {
         SecondProc,
         InProcDeploy,
-        InProcManual
+        InProcManual,
+        InProcTimeTravel
     }
 
     class ClientBootstrapper
     {
+        private static string _serviceLogPath = Path.Combine(Path.GetPathRoot(Path.GetFullPath(".")), "AmbrosiaLogs") + Path.DirectorySeparatorChar;
+        private static long _checkpointToLoad = 1;
         private static int _receivePort = -1;
         private static int _sendPort = -1;
         private static int _icPort = -1;
@@ -193,7 +196,7 @@ namespace Job
         {
             ParseAndValidateOptions(args);
 
-            if (_ICDeploymentMode == ICDeploymentMode.InProcDeploy || _ICDeploymentMode == ICDeploymentMode.InProcManual)
+            if (_ICDeploymentMode == ICDeploymentMode.InProcDeploy || _ICDeploymentMode == ICDeploymentMode.InProcManual || _ICDeploymentMode == ICDeploymentMode.InProcTimeTravel)
             {
                 GenericLogsInterface.SetToGenericLogs();
                 _iCWriter = new FileStream("ICOutput_"+_perfJob.ToString()+"_"+_icPort.ToString()+".txt", FileMode.Create);
@@ -233,6 +236,12 @@ namespace Job
                             finishedTokenQ.DequeueAsync().Wait();
                         }
                         break;
+                    case ICDeploymentMode.InProcTimeTravel:
+                        using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _serviceLogPath, _checkpointToLoad))
+                        {
+                            finishedTokenQ.DequeueAsync().Wait();
+                        }
+                        break;
                     case ICDeploymentMode.InProcManual:
                         var myName = _perfJob;
                         var myPort = _icPort;
@@ -249,7 +258,7 @@ namespace Job
                         break;
                 }
             }
-            catch { }
+            catch { /* Swallowing errors to make Darren's testing framework happy. */ }
             if (_iCWriter != null)
             {
                 Thread.Sleep(3000);
@@ -280,7 +289,9 @@ namespace Job
                 { "n|numOfRounds=", "The number of rounds.", n => _numRounds = int.Parse(n) },
                 { "nds|noDescendingSize", "Disable message descending size.", nds => _descendingSize = false },
                 { "c|autoContinue", "Is continued automatically at start", c => _autoContinue = true },
-                { "d|ICDeploymentMode=", "IC deployment mode specification (SecondProc(Default)/InProcDeploy/InProcManual)", d => _ICDeploymentMode = (ICDeploymentMode) Enum.Parse(typeof(ICDeploymentMode), d, true)},
+                { "d|ICDeploymentMode=", "IC deployment mode specification (SecondProc(Default)/InProcDeploy/InProcManual/InProcTimeTravel)", d => _ICDeploymentMode = (ICDeploymentMode) Enum.Parse(typeof(ICDeploymentMode), d, true)},
+                { "l|log=", "If TTD, the service log path.", l => _serviceLogPath = l },
+                { "ch|checkpoint=", "If TTD, the checkpoint # to load.", c => _checkpointToLoad = long.Parse(c) },
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 
