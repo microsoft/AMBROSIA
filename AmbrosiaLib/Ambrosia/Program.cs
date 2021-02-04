@@ -599,10 +599,10 @@ namespace Ambrosia
 
                     if (trimPushedIterator)
                     {
+                        Debug.Assert(placeToStart.PagePos == 0 && placeToStart.RelSeqPos == 0);
+
                         if (morePages)
                         {
-                            posToStart = 0;
-                            relSeqPos = 0;
                             AcquireAppendLock(2);
                         }
                         else
@@ -615,8 +615,8 @@ namespace Ambrosia
                     {
                         if (morePages)
                         {
-                            posToStart = 0;
-                            relSeqPos = 0;
+                            placeToStart.PagePos = 0;
+                            placeToStart.RelSeqPos = 0;
                             AcquireAppendLock(2);
                             var moveNextResult = bufferEnumerator.MoveNext();
                             Debug.Assert(moveNextResult);
@@ -630,6 +630,11 @@ namespace Ambrosia
                         }
                     }
                 }
+
+                nextSeqNo = _owningOutputRecord.LastSeqSentToReceiver + 1;
+                bufferEnumerator = placeToStart.PageEnumerator;
+                posToStart = placeToStart.PagePos;
+                relSeqPos = placeToStart.RelSeqPos;
             }
             while (true);
             Debug.Assert(placeToStart.PageEnumerator == bufferEnumerator); // Used to set this rather than compare, but they should never be different. May be different due to reconnection!!!!!!!!!!!!!!! If they are different due to reconnection or something, don't know why we'd want to make them the same
