@@ -493,14 +493,34 @@ namespace Ambrosia
 
             var nextSeqNo = _owningOutputRecord.LastSeqSentToReceiver + 1;
             var bufferEnumerator = placeToStart.PageEnumerator;
-            var posToStart = placeToStart.PagePos;
-            var relSeqPos = placeToStart.RelSeqPos;
+            // var posToStart = placeToStart.PagePos;
+            // var relSeqPos = placeToStart.RelSeqPos;
 
             // We are guaranteed to have an enumerator and starting point. Must send output.
             AcquireAppendLock(2);
+
+            // Ensure that the buffer's contents are committed.
+            var committedPageID = _owningRuntime._committedPageID;
+            long safeSeqNo = -1;
+            foreach (var kvp in _page2SeqID)
+            {
+                if (kvp.Item1 <= committedPageID)
+                {
+                    safeSeqNo = kvp.Item2;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+
             bool needToUnlockAtEnd = true;
             do
             {
+                var posToStart = placeToStart.PagePos;
+                var relSeqPos = placeToStart.RelSeqPos;
+
                 var curBuffer = bufferEnumerator.Current;
                 var pageLength = curBuffer.curLength;
                 var morePages = (curBuffer != _bufferQ.Last());
@@ -516,24 +536,12 @@ namespace Ambrosia
                     numReplayableMessagesToSend = (int)curBuffer.UnsentReplayableMessages;
                 }
 
-                // Ensure that the buffer's contents are committed.
-                var committedPageID = _owningRuntime._committedPageID;
-                long safeSeqNo = -1;
-                foreach (var kvp in _page2SeqID)
-                {
-                    if (kvp.Item1 <= committedPageID)
-                    {
-                        safeSeqNo = kvp.Item2;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
+                
                 var maxSeqNo = nextSeqNo + numReplayableMessagesToSend - 1;
                 if (maxSeqNo > safeSeqNo)
                 {
+                    ReleaseAppendLock();
+                    needToUnlockAtEnd = false;
                     break;
                 }
 
@@ -626,10 +634,10 @@ namespace Ambrosia
 
                     if (trimPushedIterator)
                     {
+                        Debug.Assert(placeToStart.PagePos == 0 && placeToStart.RelSeqPos == 0);                       
+
                         if (morePages)
                         {
-                            posToStart = 0;
-                            relSeqPos = 0;
                             AcquireAppendLock(2);
                         }
                         else
@@ -642,8 +650,8 @@ namespace Ambrosia
                     {
                         if (morePages)
                         {
-                            posToStart = 0;
-                            relSeqPos = 0;
+                            placeToStart.PagePos = 0;
+                            placeToStart.RelSeqPos = 0;
                             AcquireAppendLock(2);
                             var moveNextResult = bufferEnumerator.MoveNext();
                             Debug.Assert(moveNextResult);
@@ -665,6 +673,24 @@ namespace Ambrosia
                 Debug.Assert(false); // Is this ever actually hit?
                 ReleaseAppendLock();
             }
+
+            AcquireAppendLock(2);
+            var dequeues = 0;
+            foreach (var kvp in _page2SeqID)
+            {
+                if (kvp.Item2 <= _owningOutputRecord.LastSeqSentToReceiver)
+                {
+                    dequeues += 1;
+                }
+            }
+
+            while (dequeues > 0)
+            {
+                _page2SeqID.RemoveFirst();
+                dequeues -= 1;
+            }
+            ReleaseAppendLock();
+
             return placeToStart;
         }
 
@@ -1286,7 +1312,8 @@ namespace Ambrosia
                 foreach(var kv in outputs)
                 {
                     var outconnection = kv.Value;
-                    if (outconnection._sendsEnqueued == 0)
+                    var sendEnqueued = Interlocked.Read(ref outconnection._sendsEnqueued);
+                    if (sendEnqueued == 0)
                     {
                         Interlocked.Increment(ref outconnection._sendsEnqueued);
                         outconnection.DataWorkQ.Enqueue(-1);
@@ -1335,14 +1362,12 @@ namespace Ambrosia
             {
                 try
                 {
-                    var taskQueue = new Queue<Task>();
-
                     _workStream.Write(firstBufToCommit, 0, 4);
                     _workStream.WriteIntFixed(length1 + length2);
                     _workStream.Write(firstBufToCommit, 8, 16);
 
-                    taskQueue.Enqueue(_workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize));
-                    taskQueue.Enqueue(_workStream.WriteAsync(secondBufToCommit, 0, length2));
+                    await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
+                    await _workStream.WriteAsync(secondBufToCommit, 0, length2);
 
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
@@ -1351,16 +1376,11 @@ namespace Ambrosia
                         _logStream.WriteIntFixed(length1 + length2);
                         _logStream.Write(firstBufToCommit, 8, 16);
 
-                        taskQueue.Enqueue(_logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize));
-                        taskQueue.Enqueue(_logStream.WriteAsync(secondBufToCommit, 0, length2));
-                        taskQueue.Enqueue(writeFullWaterMarksAsync(uncommittedWatermarks));
-                        taskQueue.Enqueue(writeSimpleWaterMarksAsync(trimWatermarks));
-                        taskQueue.Enqueue(_logStream.FlushAsync());
-                    }
-
-                    foreach (var task in taskQueue)
-                    {
-                        await task;
+                        await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
+                        await _logStream.WriteAsync(secondBufToCommit, 0, length2);
+                        await writeFullWaterMarksAsync(uncommittedWatermarks);
+                        await writeSimpleWaterMarksAsync(trimWatermarks);
+                        await _logStream.FlushAsync();
                     }
 
                     var prevPageID = Interlocked.Exchange(ref _myAmbrosia._committedPageID, pageID);
@@ -1418,29 +1438,15 @@ namespace Ambrosia
             {
                 try
                 {
-                    var taskQueue = new Queue<Task>();
-
-                    taskQueue.Enqueue(_workStream.WriteAsync(buf, 0, length));
-                    
+                    await _workStream.WriteAsync(buf, 0, length);
                     
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
-                    {
-                        taskQueue.Enqueue(_logStream.WriteAsync(buf, 0, length));
-                        taskQueue.Enqueue(writeFullWaterMarksAsync(uncommittedWatermarks));
-                        taskQueue.Enqueue(writeSimpleWaterMarksAsync(trimWatermarks));
-                        taskQueue.Enqueue(_logStream.FlushAsync());
-                        /*
+                    {                   
                         await _logStream.WriteAsync(buf, 0, length);
                         await writeFullWaterMarksAsync(uncommittedWatermarks);
                         await writeSimpleWaterMarksAsync(trimWatermarks);
                         await _logStream.FlushAsync();
-                        */
-                    }
-
-                    foreach (var task in taskQueue)
-                    {
-                        await task;
                     }
 
                     var flushTask = _workStream.FlushAsync();
@@ -3492,8 +3498,8 @@ namespace Ambrosia
 
                     // Make sure there is a send enqueued in the work Q.
                     long sendEnqueued = Interlocked.Read(ref _shuffleOutputRecord._sendsEnqueued);
-                    long committedPageID = Interlocked.Read(ref _committedPageID);
-                    if (committedPageID <= associatedPageID && sendEnqueued == 0)
+                    // long committedPageID = Interlocked.Read(ref _committedPageID);
+                    if (sendEnqueued == 0)
                     {
                         Interlocked.Increment(ref _shuffleOutputRecord._sendsEnqueued);
                         _shuffleOutputRecord.DataWorkQ.Enqueue(-1);
