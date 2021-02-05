@@ -14,7 +14,7 @@
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.18" />
+    <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="1.0.20" />
     <PackageReference Include="Trill">
       <Version>2018.3.2.1</Version>
     </PackageReference>
