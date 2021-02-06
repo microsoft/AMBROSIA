@@ -13,5 +13,6 @@ Options:
   -rp, --receivePort=VALUE         The service receive from port override.
   -sp, --sendPort=VALUE            The service send to port override.
   -l, --log=VALUE                  The service log path override.
+  -lts, --logTriggerSize=VALUE     Log trigger size (in MBs).
   -lst, --logStorageType=VALUE     Can be set to files or blobs. Defaults to
                                      files
