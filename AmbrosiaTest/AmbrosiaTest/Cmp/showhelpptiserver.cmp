@@ -17,5 +17,8 @@ Options:
   -m, --memoryUsed=VALUE           Memory used.
   -c, --autoContinue               Is continued automatically at start
   -d, --ICDeploymentMode=VALUE     IC deployment mode specification (SecondProc(
-                                     Default)/InProcDeploy/InProcManual)
+                                     Default)/InProcDeploy/InProcManual/
+                                     InProcTimeTravel)
+  -l, --log=VALUE                  If TTD, the service log path.
+  -ch, --checkpoint=VALUE          If TTD, the checkpoint # to load.
   -h, --help                       show this message and exit
