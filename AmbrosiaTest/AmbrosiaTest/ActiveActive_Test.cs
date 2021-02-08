@@ -927,7 +927,7 @@ namespace AmbrosiaTest
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_Restarted, byteSize, 40, false, testName, true);  // Total Bytes received needs to be accurate
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server2, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server3, byteSize, 15, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob1_Restarted, byteSize, 15, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob1_Restarted, byteSize, 20, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob2, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob3, byteSize, 15, false, testName, true);
 
