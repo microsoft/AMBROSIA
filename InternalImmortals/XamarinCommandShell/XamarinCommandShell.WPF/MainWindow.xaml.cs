@@ -26,6 +26,8 @@ namespace XamarinCommandShell.WPF
         {
             InitializeComponent();
             Forms.Init();
+
+            // Instantiate the Windows specific part of the code and pass it along to the main app
             LoadApplication(new XamarinCommandShell.App(new OSCommands()));
         }
     }

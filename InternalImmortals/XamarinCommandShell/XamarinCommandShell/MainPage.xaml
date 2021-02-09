@@ -16,9 +16,26 @@
             <Label  Text=""
                 x:Name="consoleOutput"/>
         </ScrollView>
-        <Entry Placeholder ="&lt;Enter Command&gt;"
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="20"/>
+            </Grid.ColumnDefinitions>
+
+            <Entry Placeholder ="&lt;Enter Command&gt;"
                x:Name="command"
                Completed="Command_Completed" />
+
+            <StackLayout Grid.Column="1" >
+                <Button x:Name="btnPreviousCmd" Text="^" Clicked="btnPreviousCmd_Clicked"></Button>
+                <Button x:Name="btnNextCmd" Text="v" Clicked="btnNextCmd_Clicked"></Button>
+            </StackLayout>
+        </Grid>
     </StackLayout>
 
 </ContentPage>
