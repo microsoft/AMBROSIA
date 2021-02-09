@@ -119,7 +119,7 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
 
     if (errorMsg)
     {
-        Utils.log(`Post method '${methodName}' from ${sender} IC failed (reason: ${errorMsg})`);
+        Utils.log(`Error: ${errorMsg}`);
     }
     else
     {

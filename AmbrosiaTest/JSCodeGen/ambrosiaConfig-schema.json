@@ -129,12 +129,12 @@
                 },
                 "allowPostMethodTimeouts": {
                     "type": "boolean",
-                    "description": "Set this to false to disable the timeout feature of Post methods. Defaults to true.",
+                    "description": "Set this to false to disable the timeout feature of post methods. Defaults to true.",
                     "default": true
                 },
                 "allowPostMethodErrorStacks": {
                     "type": "boolean",
-                    "description": "Set this to true to enable sending a full stack trace in a Post method error result. Defaults to false.",
+                    "description": "Set this to true to enable sending a full stack trace in a post method error result. Defaults to false.",
                     "default": false
                 },
                 "enableTypeScriptStackTraces": {

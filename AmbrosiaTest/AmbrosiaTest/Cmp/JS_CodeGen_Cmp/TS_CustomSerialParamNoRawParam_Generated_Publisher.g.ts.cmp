@@ -9,19 +9,22 @@ import Messages = Ambrosia.Messages;
 import Meta = Ambrosia.Meta;
 import Streams = Ambrosia.Streams;
 
-// TODO: It's recommended that you move this class and _appState variable to your input file (./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts) in an exported namespace/module
-class AppState extends Ambrosia.AmbrosiaAppState
+// TODO: It's recommended that you move this namespace to your input file (./JS_CodeGen_TestFiles/TS_CustomSerialParamNoRawParam.ts) then re-run code-gen
+export namespace State
 {
-    // TODO: Define your application state here
-
-    constructor()
+    export class AppState extends Ambrosia.AmbrosiaAppState
     {
-        super();
-        // TODO: Initialize your application state here
-    }
-}
+        // TODO: Define your application state here
 
-export let _appState: AppState = new AppState();
+        constructor(restoredAppState?: AppState)
+        {
+            super(restoredAppState);
+            // TODO: Initialize your application state here
+        }
+    }
+
+    export let _appState: AppState = null; // Assign this using the return value of IC.start()
+}
 
 /** Returns an OutgoingCheckpoint object used to serialize app state to a checkpoint. */
 export function checkpointProducer(): Streams.OutgoingCheckpoint
@@ -30,7 +33,7 @@ export function checkpointProducer(): Streams.OutgoingCheckpoint
     {
         Utils.log(`checkpointProducer: ${error ? `Failed (reason: ${error.message})` : "Checkpoint saved"}`)
     }
-    return (Streams.simpleCheckpointProducer(_appState, onCheckpointSent));
+    return (Streams.simpleCheckpointProducer(State._appState, onCheckpointSent));
 }
 
 /** Returns an IncomingCheckpoint object used to receive a checkpoint of app state. */
@@ -40,11 +43,11 @@ export function checkpointConsumer(): Streams.IncomingCheckpoint
     {
         if (!error)
         {
-            _appState = appState as any;
+            State._appState = appState as State.AppState;
         }
         Utils.log(`checkpointConsumer: ${error ? `Failed (reason: ${error.message})` : "Checkpoint loaded"}`);
     }
-    return (Streams.simpleCheckpointConsumer(onCheckpointReceived));
+    return (Streams.simpleCheckpointConsumer<State.AppState>(State.AppState, onCheckpointReceived));
 }
 
 /** This method responds to incoming Ambrosia messages (RPCs and AppEvents). */
