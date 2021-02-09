@@ -77,10 +77,10 @@ namespace XamarinCommandShell
         {
             _commandExecuter = inCommands;
             InitializeComponent();
-            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { homeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostGetRootDirectory(); });
-            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { relativeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostGetRelativeDirectory(); });
+            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { homeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostRootDirectory; });
+            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { relativeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostRelativeDirectory; });
             _myAccumulatedOutput = "";
-            consoleOutput.Text = CommandShellImmortal.myCommandShellImmortal.HostGetConsoleOutput();
+            consoleOutput.Text = CommandShellImmortal.myCommandShellImmortal.HostConsoleOutput;
             _commandOutputWriter = new TextOutputAccumulator(this);
             _refreshQueue = new AsyncQueue<bool>();
             CheckRefreshQueueAsync();
@@ -89,6 +89,8 @@ namespace XamarinCommandShell
 
         void Command_Completed(object sender, EventArgs e)
         {
+            CommandShellImmortal.myCommandShellImmortal.HostSubmitCommand(((Entry)sender).Text);
+
             var splitCommand = ((Entry)sender).Text.Split(' ');
             if (splitCommand[0].ToLower() == "cd")
             {
@@ -121,7 +123,6 @@ namespace XamarinCommandShell
             }
             else
             {
-                CommandShellImmortal.myCommandShellImmortal.HostSubmitCommand(relativeDirectory.Text + ((Entry)sender).Text);
                 consoleOutput.Dispatcher.BeginInvokeOnMainThread(() =>
                 {
                     consoleOutput.Text += "\n_______________________________________________________________________________________________________________________________________________________\n" +
@@ -142,6 +143,16 @@ namespace XamarinCommandShell
         void homeDirectory_Completed(object sender, EventArgs e)
         {
             CommandShellImmortal.myCommandShellImmortal.HostSetRootDirectory(((Entry)sender).Text);
+        }
+
+        private void btnPreviousCmd_Clicked(object sender, EventArgs e)
+        {
+             command.Text = CommandShellImmortal.myCommandShellImmortal.HostPreviousCommand;
+        }
+
+        private void btnNextCmd_Clicked(object sender, EventArgs e)
+        {
+            command.Text = CommandShellImmortal.myCommandShellImmortal.HostNextCommand;
         }
     }
 }
