@@ -49,7 +49,10 @@ namespace XamarinCommandShell
             }
         }
 
+        // OS specific code for executing commands
         IOSCommands _commandExecuter;
+
+        // Manages batched writing to the Xamarin output scroller for good Xamarin performance
         TextOutputAccumulator _commandOutputWriter;
 
         internal String _myAccumulatedOutput;
@@ -64,6 +67,7 @@ namespace XamarinCommandShell
                 {
                     consoleOutput.Dispatcher.BeginInvokeOnMainThread(() =>
                     {
+                        // Add the output to the recoverable state
                         CommandShellImmortal.myCommandShellImmortal.HostAddConsoleOutput(_myAccumulatedOutput);
                         consoleOutput.Text += _myAccumulatedOutput;
                         _myAccumulatedOutput = "";
@@ -77,18 +81,21 @@ namespace XamarinCommandShell
         {
             _commandExecuter = inCommands;
             InitializeComponent();
+            // Initialize the on-screen homeDirectory to the potentially recovered contents
             homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { homeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostRootDirectory; });
+            // Initialize the on-screen relativeDirectory to the potentially recovered contents
             homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { relativeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostRelativeDirectory; });
             _myAccumulatedOutput = "";
+            // Initialize the on-screen contents to the potentially recovered contents
             consoleOutput.Text = CommandShellImmortal.myCommandShellImmortal.HostConsoleOutput;
             _commandOutputWriter = new TextOutputAccumulator(this);
             _refreshQueue = new AsyncQueue<bool>();
-            CheckRefreshQueueAsync();
-           
+            CheckRefreshQueueAsync();           
         }
 
         void Command_Completed(object sender, EventArgs e)
         {
+            // Submit the command to the recoverable state
             CommandShellImmortal.myCommandShellImmortal.HostSubmitCommand(((Entry)sender).Text);
 
             var splitCommand = ((Entry)sender).Text.Split(' ');
@@ -118,6 +125,7 @@ namespace XamarinCommandShell
                     newRelativeDirectory += '\\';
                 }
                 relativeDirectory.Text = newRelativeDirectory;
+                // Make the new relative directory recoverable
                 CommandShellImmortal.myCommandShellImmortal.HostSetRelativeDirectory(newRelativeDirectory);
                 command.Text = "";
             }
@@ -137,21 +145,25 @@ namespace XamarinCommandShell
 
         void relativeDirectory_Completed(object sender, EventArgs e)
         {
+            // Set the relative directory in the recoverable part of the state
             CommandShellImmortal.myCommandShellImmortal.HostSetRelativeDirectory(((Entry)sender).Text);
         }
 
         void homeDirectory_Completed(object sender, EventArgs e)
         {
+            // Set the root directory in the recoverable part of the state
             CommandShellImmortal.myCommandShellImmortal.HostSetRootDirectory(((Entry)sender).Text);
         }
 
         private void btnPreviousCmd_Clicked(object sender, EventArgs e)
         {
+            // Get the previous command from the recoverable state
              command.Text = CommandShellImmortal.myCommandShellImmortal.HostPreviousCommand;
         }
 
         private void btnNextCmd_Clicked(object sender, EventArgs e)
         {
+            // Get the next command from the recoverable state
             command.Text = CommandShellImmortal.myCommandShellImmortal.HostNextCommand;
         }
     }
