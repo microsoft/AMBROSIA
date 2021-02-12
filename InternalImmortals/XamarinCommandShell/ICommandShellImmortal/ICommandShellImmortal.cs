@@ -30,9 +30,21 @@ namespace XamarinCommandShell
         void SetRelativeDirectory(string newDirectory);
 
         /// <summary>
-        /// AddConsoleOutput is the impulse used to add 
+        /// AddConsoleOutput is the impulse used to add  console output
         /// </summary>
         [ImpulseHandler]
         void AddConsoleOutput(string outputToAdd);
+
+        /// <summary>
+        /// IncCurrentCommand is the impulse used to increment the command counter
+        /// </summary>
+        [ImpulseHandler]
+        void IncCurrentCommand();
+
+        /// <summary>
+        /// DecCurrentCommand is the impulse used to decrement the command counter
+        /// </summary>
+        [ImpulseHandler]
+        void DecCurrentCommand();
     }
 }

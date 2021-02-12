@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 
 namespace XamarinCommandShell
@@ -41,26 +42,31 @@ namespace XamarinCommandShell
         /// <summary>
         /// Gets the root directory for the CommandShellImmortal
         /// </summary>
-        string HostRootDirectory { get; }
+        string HostRootDirectory();
 
         /// <summary>
         /// Gets the relative directory for the CommandShellImmortal
         /// </summary>
-        string HostRelativeDirectory { get; }
+        string HostRelativeDirectory();
 
         /// <summary>
         /// Gets the console output for the CommandShellImmortal
         /// </summary>
-        string HostConsoleOutput { get; }
+        string HostConsoleOutput();
+
+        /// <summary>
+        /// Gets the current command for the CommandShellImmortal from the command history
+        /// </summary>
+        string HostCurrentCommand();
 
         /// <summary>
         /// Gets the previous command for the CommandShellImmortal from the command history
         /// </summary>
-        string HostPreviousCommand { get; }
+        Task<string> HostPreviousCommandAsync();
 
         /// <summary>
         /// Gets the next command for the CommandShellImmortal from the command history
         /// </summary>
-        string HostNextCommand { get; }
+        Task<string> HostNextCommandAsync();
     }
 }

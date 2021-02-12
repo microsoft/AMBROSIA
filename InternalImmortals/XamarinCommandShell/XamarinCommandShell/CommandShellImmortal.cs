@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Ambrosia;
+using Microsoft.VisualStudio.Threading;
 
 namespace XamarinCommandShell
 {
@@ -51,8 +52,7 @@ namespace XamarinCommandShell
         /// _currentCommandHistoryIndex is the index of the currently scrolled command in the _commandHistory member.
         /// </summary>
         [DataMember]
-        int _currentCommandHistoryIndex = -1;
-
+        int _currentCommandHistoryIndex = 0;
 
         /// <summary>
         /// Physical constructor
@@ -65,6 +65,11 @@ namespace XamarinCommandShell
         // access to it once it's ready.
         volatile static public IHostCommandImmortalInterface myCommandShellImmortal = null;
 
+        [DataMember]
+        bool _initialized = false;
+
+        AsyncQueue<bool> _currentCommandHistoryIndexUpdated = null;
+
         /// <summary>
         /// OnFirstStart is the logical constructor for CommandShellImmortal, which means that if we 
         /// recover from an initial state, we first re-execute this code as part of recovery.
@@ -72,10 +77,18 @@ namespace XamarinCommandShell
         protected override async Task<bool> OnFirstStart()
         {
             _commandHistory = new List<string>();
-            // Can let the UI use this now that the Immortal has been properly initialized
-            myCommandShellImmortal = this;
+            if (_doneRecovery)
+            {
+                _currentCommandHistoryIndexUpdated = new AsyncQueue<bool>();
+                // Can let the UI use this now that the Immortal has been properly recovered and initialized
+                myCommandShellImmortal = this;
+            }
+            _initialized = true;
             return true;
         }
+
+        // This variable isn't a DataMember since we want it reset each time we recover.
+        bool _doneRecovery = false;
 
         /// <summary>
         /// BecomingPrimary is called after replay, as part of exiting recovery. Note that if recovery happens
@@ -83,20 +96,13 @@ namespace XamarinCommandShell
         /// </summary>
         protected override void BecomingPrimary()
         {
-
-            if (_outputHistory != null)
+            if (_initialized)
             {
-                /*
-                // Initialize the local index in the command history
-                _currentCommandHistoryIndex = -1;
-                if (_commandHistory.Count > 0)
-                {
-                    _currentCommandHistoryIndex = _commandHistory.Count;
-                }*/
-
-                // The immortal was properly initialized already. Go ahead and let the UI use it.
+                _currentCommandHistoryIndexUpdated = new AsyncQueue<bool>();
+                // Can let the UI use this now that the Immortal has been properly recovered and initialized
                 myCommandShellImmortal = this;
             }
+            _doneRecovery = true;
         }
 
         /// <summary>
@@ -110,7 +116,7 @@ namespace XamarinCommandShell
             _outputHistory += "\n_______________________________________________________________________________________________________________________________________________________\n" +
                               ">" + _relativeDirectory + command +
                               "\n_______________________________________________________________________________________________________________________________________________________\n";
-            
+
             // Reinitialize the index in the command history when a new command has been entered
             _currentCommandHistoryIndex = _commandHistory.Count;
         }
@@ -137,6 +143,38 @@ namespace XamarinCommandShell
         public async Task SetRelativeDirectoryAsync(string newRelativeDirectory)
         {
             _relativeDirectory = newRelativeDirectory;
+        }
+
+        /// <summary>
+        /// Impulse which increments the current command
+        /// </summary>
+        public async Task IncCurrentCommandAsync()
+        {
+            if (_currentCommandHistoryIndex < _commandHistory.Count)
+            {
+                _currentCommandHistoryIndex++;
+            }
+            if (_currentCommandHistoryIndexUpdated != null)
+            {
+                // Must signal a waiting task that the update is done
+                _currentCommandHistoryIndexUpdated.Enqueue(true);
+            }
+        }
+
+        /// <summary>
+        /// Impulse which decrements the current command
+        /// </summary>
+        public async Task DecCurrentCommandAsync()
+        {
+            if (_currentCommandHistoryIndex > 0)
+            {
+                _currentCommandHistoryIndex--;
+            }
+            if (_currentCommandHistoryIndexUpdated != null)
+            {
+                // Must signal a waiting task that the update is done
+                _currentCommandHistoryIndexUpdated.Enqueue(true);
+            }
         }
 
         // The rest of the methods are the implementation of IHostCommandImmortalInterface, which is the interface that
@@ -179,68 +217,68 @@ namespace XamarinCommandShell
         }
 
         /// <summary>
-        /// Host command (callable througth IHostCommandImmortalInterface), which returns 
-        /// </summary>
-        public string HostRootDirectory
-        {
-            get => _rootDirectory;
-        }
-
-        /// <summary>
-        /// Host command (callable througth IHostCommandImmortalInterface), which calls the appropriate impulse 
-        /// </summary>
-        public string HostRelativeDirectory
-        {
-            get => _relativeDirectory;
-        }
-
-        /// <summary>
-        /// Property which returns the console output. Note that returning this is safe, since the state of the
+        /// Returns the root directory. Note that returning this is safe, since the state of the
         /// immortal can't be changed with the return value.
         /// </summary>
-        public string HostConsoleOutput
+        public string HostRootDirectory()
         {
-            get => _outputHistory;
+            return _rootDirectory;
         }
 
         /// <summary>
-        /// Property which returns the previous command. Note that returning this is safe, since the state of the
+        /// Returns the relative directory. Note that returning this is safe, since the state of the
         /// immortal can't be changed with the return value.
         /// </summary>
-        public string HostPreviousCommand
+        public string HostRelativeDirectory()
         {
-            get
+            return _relativeDirectory;
+        }
+
+        /// <summary>
+        /// Returns the console output. Note that returning this is safe, since the state of the
+        /// immortal can't be changed with the return value.
+        /// </summary>
+        public string HostConsoleOutput()
+        {
+            return _outputHistory;
+        }
+
+        /// <summary>
+        /// Returns the current command. Note that returning this is safe, since the state of the
+        /// immortal can't be changed with the return value.
+        /// </summary>
+        public string HostCurrentCommand()
+        {
+            if (_currentCommandHistoryIndex == _commandHistory.Count)
             {
-                string returnedCommand = "";
-
-                if (_commandHistory.Count > 0)
-                {
-                    if (_currentCommandHistoryIndex > 0) _currentCommandHistoryIndex--;
-                    returnedCommand = _commandHistory[_currentCommandHistoryIndex];
-                }
-
-                return returnedCommand;
+                return "";
+            }
+            else
+            {
+                return _commandHistory[_currentCommandHistoryIndex];
             }
         }
 
         /// <summary>
-        /// Property which returns the next command. Note that returning this is safe, since the state of the
+        /// Returns the previous command. Note that returning this is safe, since the state of the
         /// immortal can't be changed with the return value.
         /// </summary>
-        public string HostNextCommand
+        public async Task<string> HostPreviousCommandAsync()
         {
-            get
-            {
-                string returnedCommand = "";
+            thisProxy.DecCurrentCommandFork();
+            await _currentCommandHistoryIndexUpdated.DequeueAsync();
+            return HostCurrentCommand();
+        }
 
-                if (_commandHistory.Count > 0)
-                {
-                    if (_currentCommandHistoryIndex < _commandHistory.Count - 1) _currentCommandHistoryIndex++;
-                    returnedCommand = _commandHistory[_currentCommandHistoryIndex];
-                }
-
-                return returnedCommand;
-            }
+        /// <summary>
+        /// Returns the next command. Note that returning this is safe, since the state of the
+        /// immortal can't be changed with the return value.
+        /// </summary>
+        public async Task<string> HostNextCommandAsync()
+        {
+            thisProxy.IncCurrentCommandFork();
+            await _currentCommandHistoryIndexUpdated.DequeueAsync();
+            return HostCurrentCommand();
         }
     }
 }

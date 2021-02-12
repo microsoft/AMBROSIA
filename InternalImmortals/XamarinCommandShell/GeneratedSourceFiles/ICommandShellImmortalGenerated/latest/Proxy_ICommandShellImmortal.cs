@@ -454,5 +454,165 @@ wp.curLength += arg0Bytes.Length;
             // so nothing to read, just getting called is the signal to return to the client
             return this;
         }
+        async Task
+        IncCurrentCommandAsync()
+        {
+            SerializableTaskCompletionSource rpcTask;
+            // Make call, wait for reply
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+
+            var wp = this.StartRPC<object>(methodIdentifier: 5 /* method identifier for IncCurrentCommand */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
+			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
+
+            // Serialize arguments
+
+            int taskId;
+			lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                while (!Immortal.DispatchTaskIdQueue.Data.TryDequeue(out taskId)) { }
+            }
+
+            ReleaseBufferAndSend();
+
+			Immortal.StartDispatchLoop();
+
+			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+            var currentResult = await taskToWaitFor;
+
+			while (currentResult.AdditionalInfoType != ResultAdditionalInfoTypes.SetResult)
+            {
+                switch (currentResult.AdditionalInfoType)
+                {
+                    case ResultAdditionalInfoTypes.SaveContext:
+                        await Immortal.SaveTaskContextAsync();
+                        taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+                        break;
+                    case ResultAdditionalInfoTypes.TakeCheckpoint:
+                        var sequenceNumber = await Immortal.TakeTaskCheckpointAsync();
+                        Immortal.StartDispatchLoop();
+                        taskToWaitFor = Immortal.GetTaskToWaitForWithAdditionalInfoAsync(sequenceNumber);
+                        break;
+                }
+
+                currentResult = await taskToWaitFor;
+            }
+
+            lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                Immortal.DispatchTaskIdQueue.Data.Enqueue(taskId);
+            }	
+			return;
+        }
+
+        void ICommandShellImmortalProxy.IncCurrentCommandFork()
+        {
+			if (!Immortal.IsPrimary)
+			{
+                throw new Exception("Unable to send an Impulse RPC while not being primary.");
+			}
+
+            SerializableTaskCompletionSource rpcTask;
+
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+
+
+            var wp = this.StartRPC<object>(5 /* method identifier for IncCurrentCommand */, totalArgSize, out rpcTask, RpcTypes.RpcType.Impulse);
+
+            // Serialize arguments
+
+
+            this.ReleaseBufferAndSend();
+            return;
+        }
+
+        private object
+        IncCurrentCommand_ReturnValue(byte[] buffer, int cursor)
+        {
+            // buffer will be an empty byte array since the method IncCurrentCommand returns void
+            // so nothing to read, just getting called is the signal to return to the client
+            return this;
+        }
+        async Task
+        DecCurrentCommandAsync()
+        {
+            SerializableTaskCompletionSource rpcTask;
+            // Make call, wait for reply
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+
+            var wp = this.StartRPC<object>(methodIdentifier: 6 /* method identifier for DecCurrentCommand */, lengthOfSerializedArguments: totalArgSize, taskToWaitFor: out rpcTask);
+			var asyncContext = new AsyncContext { SequenceNumber = Immortal.CurrentSequenceNumber };
+
+            // Serialize arguments
+
+            int taskId;
+			lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                while (!Immortal.DispatchTaskIdQueue.Data.TryDequeue(out taskId)) { }
+            }
+
+            ReleaseBufferAndSend();
+
+			Immortal.StartDispatchLoop();
+
+			var taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+            var currentResult = await taskToWaitFor;
+
+			while (currentResult.AdditionalInfoType != ResultAdditionalInfoTypes.SetResult)
+            {
+                switch (currentResult.AdditionalInfoType)
+                {
+                    case ResultAdditionalInfoTypes.SaveContext:
+                        await Immortal.SaveTaskContextAsync();
+                        taskToWaitFor = Immortal.CallCache.Data[asyncContext.SequenceNumber].GetAwaitableTaskWithAdditionalInfoAsync();
+                        break;
+                    case ResultAdditionalInfoTypes.TakeCheckpoint:
+                        var sequenceNumber = await Immortal.TakeTaskCheckpointAsync();
+                        Immortal.StartDispatchLoop();
+                        taskToWaitFor = Immortal.GetTaskToWaitForWithAdditionalInfoAsync(sequenceNumber);
+                        break;
+                }
+
+                currentResult = await taskToWaitFor;
+            }
+
+            lock (Immortal.DispatchTaskIdQueueLock)
+            {
+                Immortal.DispatchTaskIdQueue.Data.Enqueue(taskId);
+            }	
+			return;
+        }
+
+        void ICommandShellImmortalProxy.DecCurrentCommandFork()
+        {
+			if (!Immortal.IsPrimary)
+			{
+                throw new Exception("Unable to send an Impulse RPC while not being primary.");
+			}
+
+            SerializableTaskCompletionSource rpcTask;
+
+            // Compute size of serialized arguments
+            var totalArgSize = 0;
+
+
+            var wp = this.StartRPC<object>(6 /* method identifier for DecCurrentCommand */, totalArgSize, out rpcTask, RpcTypes.RpcType.Impulse);
+
+            // Serialize arguments
+
+
+            this.ReleaseBufferAndSend();
+            return;
+        }
+
+        private object
+        DecCurrentCommand_ReturnValue(byte[] buffer, int cursor)
+        {
+            // buffer will be an empty byte array since the method DecCurrentCommand returns void
+            // so nothing to read, just getting called is the signal to return to the client
+            return this;
+        }
     }
 }
