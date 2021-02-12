@@ -24,9 +24,7 @@ namespace AmbrosiaTest
         public void Initialize()
         {
             Utilities MyUtils = new Utilities();
-
-            //*#*#*#* REMOVE COMMENT AFTER DEBUG MyUtils.TestInitialize();
-            // *#*#* ALSO REMOVE COMMENT IN CLEANUP AT BOTTOM
+            MyUtils.TestInitialize();
         }
         //************* Init Code *****************
 
@@ -80,19 +78,9 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
             
-
             Utilities MyUtils = new Utilities();
-
-            //**#*#*#*#*#*  DEBUGGING
-            // Remove comment in the Init Code when done debugging
-            //            // *#*#* ALSO REMOVE COMMENT IN CLEANUP AT BOTTOM
-            MyUtils.VerifyTimeTravelDebugging(testName, 1073741824, clientJobName, serverName, ambrosiaLogDirFromPTI, "1", "1");
-
-            //**#*#*#*#*#*
-
 
 
             //AMB1 - Job
@@ -635,7 +623,7 @@ namespace AmbrosiaTest
         {
             // Kill all ImmCoord.Workers, Job and Server exes
             Utilities MyUtils = new Utilities();
-//#*##* DEBUG - REMOVE WHEN DONE            MyUtils.UnitTestCleanup();
+            MyUtils.UnitTestCleanup();
         }
 
 
