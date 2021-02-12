@@ -70,7 +70,7 @@ namespace AmbrosiaTest
         public string deployModeSecondProc = "secondproc"; // original design where need IC in separate process
         public string deployModeInProc = "inprocdeploy"; // No longer need rp and sp ports since we are using pipes instead of TCP
         public string deployModeInProcManual = "inprocmanual";  // this is the TCP port call where need rp & sp but still in single proc per job or server
-
+        public string deployModeInProcTimeTravel = "inproctimetravel";  // Used by Client and Server of PTI for time travel debugging
 
         // Returns the Process ID of the process so you then can something with it
         // Currently output to file using ">", but using cmd.exe to do that.
@@ -501,7 +501,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyTestOutputFileToCmpFile(string testOutputLogFile, bool JSTest = false)
+        public void VerifyTestOutputFileToCmpFile(string testOutputLogFile, bool JSTest = false, bool TTDTest = false)
         {
 
             // Give it a second to get all ready to be verified - helps timing issues
@@ -511,6 +511,13 @@ namespace AmbrosiaTest
             string logOutputDirFileName = testLogDir + "\\" + testOutputLogFile;
             string cmpLogDir = ConfigurationManager.AppSettings["TestCMPDirectory"];
             string cmpDirFile = cmpLogDir + "\\" + testOutputLogFile.Replace(".log", ".cmp");
+
+            // TTD tests have different files so need modify file to do proper match
+            if (TTDTest)
+            {
+               cmpDirFile = cmpDirFile.Replace("_TTD_Verify", "_Verify");
+            }
+
 
             // Javascript tests 
             if (JSTest)
@@ -554,7 +561,7 @@ namespace AmbrosiaTest
             cmpFileStream.Close();
 
             // Go through filtered list of strings and verify
-            string errorMessage = "Log file vs Cmp file failed! Log file is " + testOutputLogFile + ". Elements are in the filtered list where *X* is ignored.";
+            string errorMessage = "Log file vs Cmp file failed! Log file: " + testOutputLogFile + ". Elements are in the filtered list where *X* is ignored.";
 
             // put around a try catch because want to stop the queue as well
             try
@@ -595,11 +602,15 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
+            string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
+
+            // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
             if (Directory.Exists(ambrosiaLogDir) ==false)
             {
-                // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
                 ambrosiaLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+                ambrosiaLogDirFromPTI = "..\\..\\"+ambrosiaLogDir+"\\";   // feels like there has to be better way of determing this
             }
+
 
             // used to get log file
             //            string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
@@ -654,6 +665,7 @@ namespace AmbrosiaTest
 
             // Get most recent version of SERVER log file and check point
             string startingServerChkPtVersionNumber = "1";
+
             string serverFirstFile = "";
             string serverLogFile = "";
             if (Directory.Exists(ambrosiaServerLogDir))
@@ -743,7 +755,6 @@ namespace AmbrosiaTest
                 //Server Call
                 logOutputFileName_Server_Verify = testName + "_Server_Verify.log";
                 int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Verify, Convert.ToInt32(optionalNumberOfClient), false);
-
             }
 
             // wait until done running
@@ -758,6 +769,32 @@ namespace AmbrosiaTest
                 VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Verify);
             }
 
+            // Test Time Travel Debugging on the Log Files from PTI job and PTI server
+            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber);
+
+        }
+
+        //** Basically same as VerifyAmbrosiaLogFile but instead of using Ambrosia.exe to verify log, this uses
+        //** job.exe and server.exe to verify it. Porbably easiest to call from VerifyAmbrosiaLogFile since that does
+        //** all the work to get the log files and checkpoint numbers
+        //** Assumption that this is called at the end of a test where Ambrosia.exe was already called to register for this test
+        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber)
+        {
+            // Job call
+            string logOutputFileName_ClientJob_TTD_Verify = testName + "_ClientJob_TTD_Verify.log";
+            int clientJobProcessID = StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_TTD_Verify, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingClientChkPtVersionNumber);
+
+            //Server Call
+            string logOutputFileName_Server_TTD_Verify = testName + "_Server_TTD_Verify.log";
+            int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_TTD_Verify,1, false,0, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingServerChkPtVersionNumber);
+
+            // wait until done running
+            bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
+            pass = WaitForProcessToFinish(logOutputFileName_ClientJob_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
+
+            // verify TTD files to cmp files
+            VerifyTestOutputFileToCmpFile(logOutputFileName_Server_TTD_Verify,false,true);
+            VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_TTD_Verify, false, true);
         }
 
         public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999, int overRideReceivePort = 0, int overRideSendPort = 0, string overRideLogLoc = "", string overRideIPAddr = "", string logToType = "")
@@ -954,7 +991,7 @@ namespace AmbrosiaTest
         }
 
         // Starts the server.exe from PerformanceTestUninterruptible.  
-        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0, string deployMode = "", string ICPort = "")
+        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0, string deployMode = "", string ICPort = "", string TTDLog = "", string TTDCheckpointNum = "")
         {
 
             // Configure upgrade properly
@@ -994,12 +1031,23 @@ namespace AmbrosiaTest
                           + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
                           + " -d=" + deployModeInProc + " -icp=" + ICPort;
             }
+            
             // In proc using TCP - this is the TCP port call where need rp & sp but still in single proc per job or server
             if (deployMode == deployModeInProcManual)
             {
                 argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
                         + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
                         + " -d=" + deployModeInProcManual + " -icp=" + ICPort;
+            }
+
+            // If starting in Time Travel debugger mode, then add the TTD parameters
+            if (deployMode == deployModeInProcTimeTravel)
+            {
+                // removed " -icp=" + ICPort
+                argString = "-j=" + perfJobName + " -s=" + perfServerName
+                          + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
+                          + " -d=" + deployModeInProcTimeTravel 
+                          + " -l=" + TTDLog + " -ch=" + TTDCheckpointNum;
             }
 
             // add upgrade switch if upgrading
@@ -1054,7 +1102,7 @@ namespace AmbrosiaTest
 
 
         // Perf Client from PerformanceTestInterruptible 
-        public int StartPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfMessageSize, string perfNumberRounds, string testOutputLogFile, string deployMode="", string ICPort="" )
+        public int StartPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfMessageSize, string perfNumberRounds, string testOutputLogFile, string deployMode="", string ICPort="", string TTDLog="", string TTDCheckpointNum="")
         {
 
             // Set path by using proper framework
@@ -1086,6 +1134,7 @@ namespace AmbrosiaTest
                 argString = "-j=" + perfJobName + " -s=" + perfServerName + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c"
                     + " -d=" + deployModeInProc + " -icp=" + ICPort;
             }
+
             // In proc using TCP - this is the TCP port call where need rp & sp but still in single proc per job or server
             if (deployMode == deployModeInProcManual)
             {
@@ -1093,6 +1142,14 @@ namespace AmbrosiaTest
                     + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c" + " -d=" + deployModeInProcManual + " -icp=" + ICPort;
             }
 
+            // If starting in Time Travel debugger mode, then add the TTD parameters
+            if (deployMode == deployModeInProcTimeTravel)
+            {
+                // removed " -icp=" + ICPort
+                argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
+                    + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c" + " -d=" + deployModeInProcTimeTravel  
+                    + " -l=" + TTDLog + " -ch=" + TTDCheckpointNum;
+            }
 
             // Start process
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
