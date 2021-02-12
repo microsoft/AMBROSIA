@@ -770,7 +770,7 @@ namespace AmbrosiaTest
             }
 
             // Test Time Travel Debugging on the Log Files from PTI job and PTI server
-            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber);
+            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient);
 
         }
 
@@ -778,15 +778,22 @@ namespace AmbrosiaTest
         //** job.exe and server.exe to verify it. Porbably easiest to call from VerifyAmbrosiaLogFile since that does
         //** all the work to get the log files and checkpoint numbers
         //** Assumption that this is called at the end of a test where Ambrosia.exe was already called to register for this test
-        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber)
+        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber, string optionalNumberOfClient = "")
         {
+
+            // Basically doing this for multi client stuff
+            if (optionalNumberOfClient == "")
+            {
+                optionalNumberOfClient = "1";
+            }
+
             // Job call
             string logOutputFileName_ClientJob_TTD_Verify = testName + "_ClientJob_TTD_Verify.log";
             int clientJobProcessID = StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_TTD_Verify, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingClientChkPtVersionNumber);
 
             //Server Call
             string logOutputFileName_Server_TTD_Verify = testName + "_Server_TTD_Verify.log";
-            int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_TTD_Verify,1, false,0, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingServerChkPtVersionNumber);
+            int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_TTD_Verify, Convert.ToInt32(optionalNumberOfClient), false,0, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingServerChkPtVersionNumber);
 
             // wait until done running
             bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
