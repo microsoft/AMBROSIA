@@ -70,7 +70,7 @@ namespace AmbrosiaTest
         public string deployModeSecondProc = "secondproc"; // original design where need IC in separate process
         public string deployModeInProc = "inprocdeploy"; // No longer need rp and sp ports since we are using pipes instead of TCP
         public string deployModeInProcManual = "inprocmanual";  // this is the TCP port call where need rp & sp but still in single proc per job or server
-
+        public string deployModeInProcTimeTravel = "inproctimetravel";  // Used by Client and Server of PTI for time travel debugging
 
         // Returns the Process ID of the process so you then can something with it
         // Currently output to file using ">", but using cmd.exe to do that.
@@ -581,6 +581,7 @@ namespace AmbrosiaTest
         public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false)
         {
 
+
             // Basically doing this for multi client stuff
             string optionalMultiClientStartingPoint = "";
             if (optionalNumberOfClient == "")
@@ -654,6 +655,7 @@ namespace AmbrosiaTest
 
             // Get most recent version of SERVER log file and check point
             string startingServerChkPtVersionNumber = "1";
+
             string serverFirstFile = "";
             string serverLogFile = "";
             if (Directory.Exists(ambrosiaServerLogDir))
@@ -743,7 +745,6 @@ namespace AmbrosiaTest
                 //Server Call
                 logOutputFileName_Server_Verify = testName + "_Server_Verify.log";
                 int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Verify, Convert.ToInt32(optionalNumberOfClient), false);
-
             }
 
             // wait until done running
@@ -758,6 +759,36 @@ namespace AmbrosiaTest
                 VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Verify);
             }
 
+            // Test Time Travel Debugging on the Log Files
+            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDir + "\\", startingClientChkPtVersionNumber, startingServerChkPtVersionNumber);
+
+        }
+
+        //** Basically same as VerifyAmbrosiaLogFile but instead of using Ambrosia.exe to verify log, this uses
+        //** job.exe and server.exe to verify it. Porbably easiest to call from VerifyAmbrosiaLogFile since that does
+        //** all the work to get the log files and checkpoint numbers
+        //** Assumption that this is called at the end of a test where Ambrosia.exe was already called to register for this test
+        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber)
+        {
+            // Job call
+            string logOutputFileName_ClientJob_TTD_Verify = testName + "_ClientJob_TTD_Verify.log";
+            int clientJobProcessID = StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_TTD_Verify, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingClientChkPtVersionNumber);
+
+            //Server Call
+            string logOutputFileName_Server_TTD_Verify = testName + "_Server_TTD_Verify.log";
+            int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_TTD_Verify,1, false,0, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingServerChkPtVersionNumber);
+
+            // wait until done running
+            bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
+            pass = WaitForProcessToFinish(logOutputFileName_ClientJob_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
+
+
+            //****
+            //*#*#*# TO DO:  The TTD Verify should be same as other Verify so compare TTD verify file with normal Verify *#*#
+            //****
+            // verify TTD files to cmp files
+            VerifyTestOutputFileToCmpFile(logOutputFileName_Server_TTD_Verify);
+            VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_TTD_Verify);
         }
 
         public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999, int overRideReceivePort = 0, int overRideSendPort = 0, string overRideLogLoc = "", string overRideIPAddr = "", string logToType = "")
@@ -954,7 +985,7 @@ namespace AmbrosiaTest
         }
 
         // Starts the server.exe from PerformanceTestUninterruptible.  
-        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0, string deployMode = "", string ICPort = "")
+        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0, string deployMode = "", string ICPort = "", string TTDLog = "", string TTDCheckpointNum = "")
         {
 
             // Configure upgrade properly
@@ -994,12 +1025,23 @@ namespace AmbrosiaTest
                           + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
                           + " -d=" + deployModeInProc + " -icp=" + ICPort;
             }
+            
             // In proc using TCP - this is the TCP port call where need rp & sp but still in single proc per job or server
             if (deployMode == deployModeInProcManual)
             {
                 argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
                         + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
                         + " -d=" + deployModeInProcManual + " -icp=" + ICPort;
+            }
+
+            // If starting in Time Travel debugger mode, then add the TTD parameters
+            if (deployMode == deployModeInProcTimeTravel)
+            {
+                // removed " -icp=" + ICPort
+                argString = "-j=" + perfJobName + " -s=" + perfServerName
+                          + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
+                          + " -d=" + deployModeInProcTimeTravel 
+                          + " -l=" + TTDLog + " -ch=" + TTDCheckpointNum;
             }
 
             // add upgrade switch if upgrading
@@ -1054,7 +1096,7 @@ namespace AmbrosiaTest
 
 
         // Perf Client from PerformanceTestInterruptible 
-        public int StartPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfMessageSize, string perfNumberRounds, string testOutputLogFile, string deployMode="", string ICPort="" )
+        public int StartPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfMessageSize, string perfNumberRounds, string testOutputLogFile, string deployMode="", string ICPort="", string TTDLog="", string TTDCheckpointNum="")
         {
 
             // Set path by using proper framework
@@ -1086,6 +1128,7 @@ namespace AmbrosiaTest
                 argString = "-j=" + perfJobName + " -s=" + perfServerName + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c"
                     + " -d=" + deployModeInProc + " -icp=" + ICPort;
             }
+
             // In proc using TCP - this is the TCP port call where need rp & sp but still in single proc per job or server
             if (deployMode == deployModeInProcManual)
             {
@@ -1093,6 +1136,14 @@ namespace AmbrosiaTest
                     + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c" + " -d=" + deployModeInProcManual + " -icp=" + ICPort;
             }
 
+            // If starting in Time Travel debugger mode, then add the TTD parameters
+            if (deployMode == deployModeInProcTimeTravel)
+            {
+                // removed " -icp=" + ICPort
+                argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
+                    + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c" + " -d=" + deployModeInProcTimeTravel  
+                    + " -l=" + TTDLog + " -ch=" + TTDCheckpointNum;
+            }
 
             // Start process
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
