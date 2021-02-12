@@ -501,7 +501,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyTestOutputFileToCmpFile(string testOutputLogFile, bool JSTest = false)
+        public void VerifyTestOutputFileToCmpFile(string testOutputLogFile, bool JSTest = false, bool TTDTest = false)
         {
 
             // Give it a second to get all ready to be verified - helps timing issues
@@ -511,6 +511,13 @@ namespace AmbrosiaTest
             string logOutputDirFileName = testLogDir + "\\" + testOutputLogFile;
             string cmpLogDir = ConfigurationManager.AppSettings["TestCMPDirectory"];
             string cmpDirFile = cmpLogDir + "\\" + testOutputLogFile.Replace(".log", ".cmp");
+
+            // TTD tests have different files so need modify file to do proper match
+            if (TTDTest)
+            {
+               cmpDirFile = cmpDirFile.Replace("_TTD_Verify", "_Verify");
+            }
+
 
             // Javascript tests 
             if (JSTest)
@@ -554,7 +561,7 @@ namespace AmbrosiaTest
             cmpFileStream.Close();
 
             // Go through filtered list of strings and verify
-            string errorMessage = "Log file vs Cmp file failed! Log file is " + testOutputLogFile + ". Elements are in the filtered list where *X* is ignored.";
+            string errorMessage = "Log file vs Cmp file failed! Log file: " + testOutputLogFile + ". Elements are in the filtered list where *X* is ignored.";
 
             // put around a try catch because want to stop the queue as well
             try
@@ -581,7 +588,6 @@ namespace AmbrosiaTest
         public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false)
         {
 
-
             // Basically doing this for multi client stuff
             string optionalMultiClientStartingPoint = "";
             if (optionalNumberOfClient == "")
@@ -596,11 +602,15 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
+            string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
+
+            // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
             if (Directory.Exists(ambrosiaLogDir) ==false)
             {
-                // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
                 ambrosiaLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+                ambrosiaLogDirFromPTI = "..\\..\\"+ambrosiaLogDir+"\\";   // feels like there has to be better way of determing this
             }
+
 
             // used to get log file
             //            string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
@@ -759,8 +769,8 @@ namespace AmbrosiaTest
                 VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Verify);
             }
 
-            // Test Time Travel Debugging on the Log Files
-            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDir + "\\", startingClientChkPtVersionNumber, startingServerChkPtVersionNumber);
+            // Test Time Travel Debugging on the Log Files from PTI job and PTI server
+            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber);
 
         }
 
@@ -782,13 +792,9 @@ namespace AmbrosiaTest
             bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
             pass = WaitForProcessToFinish(logOutputFileName_ClientJob_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
 
-
-            //****
-            //*#*#*# TO DO:  The TTD Verify should be same as other Verify so compare TTD verify file with normal Verify *#*#
-            //****
             // verify TTD files to cmp files
-            VerifyTestOutputFileToCmpFile(logOutputFileName_Server_TTD_Verify);
-            VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_TTD_Verify);
+            VerifyTestOutputFileToCmpFile(logOutputFileName_Server_TTD_Verify,false,true);
+            VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_TTD_Verify, false, true);
         }
 
         public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999, int overRideReceivePort = 0, int overRideSendPort = 0, string overRideLogLoc = "", string overRideIPAddr = "", string logToType = "")
