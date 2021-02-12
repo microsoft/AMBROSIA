@@ -194,6 +194,66 @@ var p_0 = Ambrosia.BinarySerializer.Deserialize<System.String>(p_0_ValueBuffer);
                         }
                     }
                     break;
+                case 5:
+                    // IncCurrentCommandAsync
+                    {
+                        // deserialize arguments
+                        // call the method
+						byte[] argExBytes = null;
+						int argExSize = 0;
+						Exception currEx = null;
+						int arg0Size = 0;
+						byte[] arg0Bytes = null;
+
+						try 
+						{
+								await this.instance.IncCurrentCommandAsync();
+						}
+						catch (Exception ex)
+						{
+							currEx = ex;
+						}
+
+                        if (!rpcType.IsFireAndForget())
+                        {
+                            // serialize result and send it back (there isn't one)
+                            arg0Size = 0;
+                            var wp = this.StartRPC_ReturnValue(senderOfRPC, sequenceNumber, currEx == null ? arg0Size : argExSize, currEx == null ? ReturnValueTypes.EmptyReturnValue : ReturnValueTypes.Exception);
+
+                            this.ReleaseBufferAndSend();
+                        }
+                    }
+                    break;
+                case 6:
+                    // DecCurrentCommandAsync
+                    {
+                        // deserialize arguments
+                        // call the method
+						byte[] argExBytes = null;
+						int argExSize = 0;
+						Exception currEx = null;
+						int arg0Size = 0;
+						byte[] arg0Bytes = null;
+
+						try 
+						{
+								await this.instance.DecCurrentCommandAsync();
+						}
+						catch (Exception ex)
+						{
+							currEx = ex;
+						}
+
+                        if (!rpcType.IsFireAndForget())
+                        {
+                            // serialize result and send it back (there isn't one)
+                            arg0Size = 0;
+                            var wp = this.StartRPC_ReturnValue(senderOfRPC, sequenceNumber, currEx == null ? arg0Size : argExSize, currEx == null ? ReturnValueTypes.EmptyReturnValue : ReturnValueTypes.Exception);
+
+                            this.ReleaseBufferAndSend();
+                        }
+                    }
+                    break;
             }
 
             return true;

@@ -82,12 +82,14 @@ namespace XamarinCommandShell
             _commandExecuter = inCommands;
             InitializeComponent();
             // Initialize the on-screen homeDirectory to the potentially recovered contents
-            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { homeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostRootDirectory; });
+            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { homeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostRootDirectory(); });
             // Initialize the on-screen relativeDirectory to the potentially recovered contents
-            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { relativeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostRelativeDirectory; });
+            homeDirectory.Dispatcher.BeginInvokeOnMainThread(() => { relativeDirectory.Text = CommandShellImmortal.myCommandShellImmortal.HostRelativeDirectory(); });
+            // Initialize the current command
+            command.Dispatcher.BeginInvokeOnMainThread(() => { command.Text = CommandShellImmortal.myCommandShellImmortal.HostCurrentCommand(); });
             _myAccumulatedOutput = "";
             // Initialize the on-screen contents to the potentially recovered contents
-            consoleOutput.Text = CommandShellImmortal.myCommandShellImmortal.HostConsoleOutput;
+            consoleOutput.Text = CommandShellImmortal.myCommandShellImmortal.HostConsoleOutput();
             _commandOutputWriter = new TextOutputAccumulator(this);
             _refreshQueue = new AsyncQueue<bool>();
             CheckRefreshQueueAsync();           
@@ -157,14 +159,22 @@ namespace XamarinCommandShell
 
         private void btnPreviousCmd_Clicked(object sender, EventArgs e)
         {
-            // Get the previous command from the recoverable state
-             command.Text = CommandShellImmortal.myCommandShellImmortal.HostPreviousCommand;
+            Thread prevThread = new Thread(() => 
+            { 
+                var retrievedCommand = CommandShellImmortal.myCommandShellImmortal.HostPreviousCommandAsync().Result;
+                command.Dispatcher.BeginInvokeOnMainThread(() => { command.Text = retrievedCommand; });
+            });
+            prevThread.Start();
         }
 
         private void btnNextCmd_Clicked(object sender, EventArgs e)
         {
-            // Get the next command from the recoverable state
-            command.Text = CommandShellImmortal.myCommandShellImmortal.HostNextCommand;
+            Thread nextThread = new Thread(() => 
+            { 
+                var retrievedCommand = CommandShellImmortal.myCommandShellImmortal.HostNextCommandAsync().Result;
+                command.Dispatcher.BeginInvokeOnMainThread(() => { command.Text = retrievedCommand; });
+            });
+            nextThread.Start();
         }
     }
 }
