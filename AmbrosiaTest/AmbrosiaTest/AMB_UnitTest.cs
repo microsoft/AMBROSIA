@@ -79,8 +79,9 @@ namespace AmbrosiaTest
             string serverName = testName + "server";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
-
+            
             Utilities MyUtils = new Utilities();
+
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
