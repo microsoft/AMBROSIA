@@ -40,8 +40,8 @@ namespace Ambrosia
         public const byte CountReplayableRPCBatchByte = 13;
         public const byte trimToByte = 14;
         public const byte becomingPrimaryByte = 15;
-        public const byte currentLSNByte = 16;
-        public const byte committedSeqID = 17;
+        public const byte CurrentLSNByte = 16;
+        public const byte CommittedSeqNoByte = 17;
     }
 
     public static class RpcTypes

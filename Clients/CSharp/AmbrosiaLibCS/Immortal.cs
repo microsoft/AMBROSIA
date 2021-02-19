@@ -348,7 +348,7 @@ namespace Ambrosia
                         this._prevWriteSeqID = writeSeqID;
                         this._outputLock.Acquire(3);
                         this._ambrosiaSendToStream.WriteInt(1 + LongSize(writeSeqID));
-                        this._ambrosiaSendToStream.WriteByte(AmbrosiaRuntimeLBConstants.currentLSNByte);
+                        this._ambrosiaSendToStream.WriteByte(AmbrosiaRuntimeLBConstants.CurrentLSNByte);
                         this._ambrosiaSendToStream.WriteLong(writeSeqID);
                         this._outputLock.Release();
                     }
