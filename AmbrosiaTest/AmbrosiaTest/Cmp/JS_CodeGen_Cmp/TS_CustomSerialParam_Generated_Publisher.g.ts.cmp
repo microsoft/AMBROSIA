@@ -23,7 +23,8 @@ export namespace State
         }
     }
 
-    export let _appState: AppState = null; // Assign this using the return value of IC.start()
+    /** Only assign this using the return value of IC.start(), and [if not using the generated checkpointConsumer()] in the 'onFinished' callback of an IncomingCheckpoint object. */
+    export let _appState: AppState = null;
 }
 
 /** Returns an OutgoingCheckpoint object used to serialize app state to a checkpoint. */
@@ -83,8 +84,8 @@ export function messageDispatcher(message: Messages.DispatchedMessage): void
 }
 
 /** 
- * Synchronous Ambrosia message dispatcher.\
- * \
+ * Synchronous Ambrosia message dispatcher.
+ * 
  * **WARNING:** Avoid using any asynchronous features (async/await, promises, callbacks, timers, events, etc.). See "Rules for Message Handling" above. 
  */
 function dispatcher(message: Messages.DispatchedMessage): void
