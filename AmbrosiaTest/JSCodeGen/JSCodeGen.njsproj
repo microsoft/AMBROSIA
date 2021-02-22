@@ -49,6 +49,9 @@
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NoTaggedItems.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_MethodIDInt.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_PublishMethodBeforeRef.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod3.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod2.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod1.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnionTypeCommented.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_VersionInt.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_RunTimeBool.ts" />
@@ -64,7 +67,7 @@
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StringEnum.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TagInterface.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TagMethod.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\PI.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_StaticMethod.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_LitObjArray.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_GenType2.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_GenType1.ts" />

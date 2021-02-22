@@ -137,8 +137,8 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_NamespaceModule.ts";
-            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a module; valid targets are: function, type alias, enum";
-            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a module; valid targets are: function, type alias, enum";
+            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a module; valid targets are: function, static method, type alias, and enum ";
+            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a module; valid targets are: function, static method, type alias, and enum ";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
@@ -277,6 +277,47 @@ namespace AmbrosiaTest
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
         }
+
+        [TestMethod]
+        public void JS_CG_Neg_StaticMethod1()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_StaticMethod1.ts";
+            string ConsumerErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'doRuntimeTypeChecking' is not a boolean ";
+            string PublisherErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'doRuntimeTypeChecking' is not a boolean ";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+        }
+
+        [TestMethod]
+        public void JS_CG_Neg_StaticMethod2()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_StaticMethod2.ts";
+            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a non-static method";
+            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a non-static method";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+        }
+
+        [TestMethod]
+        public void JS_CG_Neg_StaticMethod3()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_StaticMethod3.ts";
+            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a static method of a class expression";
+            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a static method of a class expression";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+        }
+
+
 
         [TestMethod]
         public void JS_CG_Neg_StringEnum()
