@@ -232,8 +232,8 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_PublishClass.ts";
-            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a class; valid targets are: function, type alias, enum";
-            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a class; valid targets are: function, type alias, enum";
+            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a class; valid targets are: function, static method, type alias, and enum";
+            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a class; valid targets are: function, static method, type alias, and enum";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
@@ -284,8 +284,8 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_StaticMethod1.ts";
-            string ConsumerErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'doRuntimeTypeChecking' is not a boolean ";
-            string PublisherErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'doRuntimeTypeChecking' is not a boolean ";
+            string ConsumerErrorMsg = "Warning: Skipping static method 'hello'";
+            string PublisherErrorMsg = "Error: The input source file (TS_StaticMethod1.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);

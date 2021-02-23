@@ -194,15 +194,28 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
 
     if (errorMsg)
     {
-        Utils.log(`Error: ${errorMsg}`);
+        switch (methodName)
+        {
+            case "BasicTypes":
+            case "getMedia":
+            case "warnUser":
+            case "makeName":
+            case "return_number":
+            case "returnstring":
+            case "fnWithMissingType":
+                Utils.log(`Error: ${errorMsg}`);
+                break;
+            default:
+                handled = false;
+                break;
+        }
     }
     else
     {
         switch (methodName)
         {
             case "BasicTypes":
-                const BasicTypes_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "getMedia":
@@ -211,8 +224,7 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "warnUser":
-                const warnUser_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "makeName":
@@ -231,8 +243,7 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "fnWithMissingType":
-                const fnWithMissingType_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             default:

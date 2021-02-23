@@ -46,7 +46,15 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
 
     if (errorMsg)
     {
-        Utils.log(`Error: ${errorMsg}`);
+        switch (methodName)
+        {
+            case "myComplexReturnFunction":
+                Utils.log(`Error: ${errorMsg}`);
+                break;
+            default:
+                handled = false;
+                break;
+        }
     }
     else
     {
