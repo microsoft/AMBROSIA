@@ -40,15 +40,22 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
 
     if (errorMsg)
     {
-        Utils.log(`Error: ${errorMsg}`);
+        switch (methodName)
+        {
+            case "hello":
+                Utils.log(`Error: ${errorMsg}`);
+                break;
+            default:
+                handled = false;
+                break;
+        }
     }
     else
     {
         switch (methodName)
         {
             case "hello":
-                const hello_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             default:

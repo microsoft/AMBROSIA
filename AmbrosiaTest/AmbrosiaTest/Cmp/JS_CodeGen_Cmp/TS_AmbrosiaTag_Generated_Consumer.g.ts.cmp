@@ -136,45 +136,52 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
 
     if (errorMsg)
     {
-        Utils.log(`Error: ${errorMsg}`);
+        switch (methodName)
+        {
+            case "OneLineNoComment":
+            case "MultiLineCommentBeforeTag":
+            case "MultiSeparateLinesCommentBeforeTag":
+            case "EmptyLineBetweenTagAndFctn":
+            case "SpacingAroundTag":
+            case "JSDOcTag":
+            case "fnOverload":
+                Utils.log(`Error: ${errorMsg}`);
+                break;
+            default:
+                handled = false;
+                break;
+        }
     }
     else
     {
         switch (methodName)
         {
             case "OneLineNoComment":
-                const OneLineNoComment_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "MultiLineCommentBeforeTag":
-                const MultiLineCommentBeforeTag_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "MultiSeparateLinesCommentBeforeTag":
-                const MultiSeparateLinesCommentBeforeTag_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "EmptyLineBetweenTagAndFctn":
-                const EmptyLineBetweenTagAndFctn_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "SpacingAroundTag":
-                const SpacingAroundTag_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "JSDOcTag":
-                const JSDOcTag_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             case "fnOverload":
-                const fnOverload_Result: void = result;
-                // TODO: Handle the result, optionally using the callContextData passed in the call
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             default:
