@@ -293,6 +293,7 @@ namespace Server
     {
         private static string _serviceLogPath = Path.Combine(Path.GetPathRoot(Path.GetFullPath(".")), "AmbrosiaLogs") + Path.DirectorySeparatorChar;
         private static long _checkpointToLoad = 1;
+        private static int _currentVersion = 0;
         private static int _receivePort = -1;
         private static int _sendPort = -1;
         private static int _icPort = -1;
@@ -358,7 +359,7 @@ namespace Server
                             }
                             break;
                         case ICDeploymentMode.InProcTimeTravel:
-                            using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad))
+                            using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad, _currentVersion))
                             {
                                 // nothing to call on c, just doing this for calling Dispose.
                                 Console.WriteLine("*X* Press enter to terminate program.");
@@ -422,7 +423,7 @@ namespace Server
                             }
                             break;
                         case ICDeploymentMode.InProcTimeTravel:
-                            using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad))
+                            using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad, _currentVersion))
                             {
                                 // nothing to call on c, just doing this for calling Dispose.
                                 Console.WriteLine("*X* Press enter to terminate program.");
@@ -486,6 +487,7 @@ namespace Server
                 { "d|ICDeploymentMode=", "IC deployment mode specification (SecondProc(Default)/InProcDeploy/InProcManual/InProcTimeTravel)", d => _ICDeploymentMode = (ICDeploymentMode) Enum.Parse(typeof(ICDeploymentMode), d, true)},
                 { "l|log=", "If TTD, the service log path.", l => _serviceLogPath = l },
                 { "ch|checkpoint=", "If TTD, the checkpoint # to load.", c => _checkpointToLoad = long.Parse(c) },
+                { "cv|currentVersion=", "The version # used to time travel debug (ignored otherwise).", cv => _currentVersion = int.Parse(cv)},
                 { "h|help", "show this message and exit", h => showHelp = h != null },
             };
 

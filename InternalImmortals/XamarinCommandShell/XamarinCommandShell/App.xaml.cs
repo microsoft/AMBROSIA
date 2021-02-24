@@ -13,10 +13,10 @@ namespace XamarinCommandShell
 
         public App(IOSCommands inCommands)
         {
-//            GenericLogsInterface.SetToGenericLogs();
+            GenericLogsInterface.SetToGenericLogs();
             // Store the logs in Azure by default. Comment the line below and uncomment the line above to store them in the file system.
 
-            AzureBlobsLogsInterface.SetToAzureBlobsLogs();
+            //AzureBlobsLogsInterface.SetToAzureBlobsLogs();
 
             // Deploy the immortal on another thread as part of startup.
             new Thread(new ThreadStart(() => _immortalHandle = AmbrosiaFactory.Deploy<ICommandShellImmortal>("CommandShell", new CommandShellImmortal(), 2500))).Start();
