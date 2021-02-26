@@ -1272,7 +1272,8 @@ namespace AmbrosiaTest
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_upgraded);
 
             // Verify integrity of Ambrosia logs by replaying and TTD
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB2.AMB_Version);
+            // Do not verify log file through replay / ttd - doesn't work when log files span different versions
+            // MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB2.AMB_Version);
 
         }
 
