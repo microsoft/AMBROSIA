@@ -206,6 +206,8 @@ namespace Ambrosia
         int _curBufPages;
         AmbrosiaRuntime _owningRuntime;
         OutputConnectionRecord _owningOutputRecord;
+        LinkedList<(long, long)> _page2SeqID = new LinkedList<(long, long)>();
+
 
         internal class BufferPage
         {
@@ -512,6 +514,16 @@ namespace Ambrosia
                 }
                 int numRPCs = (int)(curBuffer.HighestSeqNo - curBuffer.LowestSeqNo + 1 - relSeqPos);
                 curBuffer.UnsentReplayableMessages = 0;
+
+                // XXX Remove this!!!
+                var curDependency = _page2SeqID.First;
+                while (curDependency != null && curDependency.Value.Item2 <= _owningOutputRecord.LastSeqSentToReceiver + numRPCs)
+                {
+                    var toRemove = curDependency;
+                    curDependency = curDependency.Next;
+                    _page2SeqID.Remove(toRemove);
+                }
+
                 ReleaseAppendLock();
                 Debug.Assert((nextSeqNo == curBuffer.LowestSeqNo + relSeqPos) && (nextSeqNo >= curBuffer.LowestSeqNo) && ((nextSeqNo + numRPCs - 1) <= curBuffer.HighestSeqNo));
                 ReleaseTrimLock();
@@ -751,7 +763,8 @@ namespace Ambrosia
 
         // Assumed that the caller releases the lock acquired here
         internal BufferPage GetWritablePage(int writeLength,
-                                            long nextSeqNo)
+                                            long nextSeqNo,
+                                            long associatedPageID)
         {
             if (_pool == null)
             {
@@ -773,6 +786,19 @@ namespace Ambrosia
                     addBufferPage(writeLength, nextSeqNo);
                 }
             }
+
+            var lastQueueEntry = _page2SeqID.Last;
+            if (lastQueueEntry == null || lastQueueEntry.Value.Item1 != associatedPageID)
+            {
+                Debug.Assert(lastQueueEntry == null || lastQueueEntry.Value.Item1 < associatedPageID);
+                _page2SeqID.AddLast((associatedPageID, nextSeqNo));
+            }
+            else
+            {
+                Debug.Assert(lastQueueEntry.Value.Item2 + 1 == nextSeqNo);
+                lastQueueEntry.Value = (associatedPageID, nextSeqNo);
+            }
+
             var retVal = _bufferQ.PeekLast();
             return retVal;
         }
@@ -3249,7 +3275,7 @@ namespace Ambrosia
                     for (int i = 0; i < numRPCs; i++)
                     {
                         FlexReadBuffer.Deserialize(memStream, batchServiceBuffer);
-                        ProcessRPC(batchServiceBuffer);
+                        ProcessRPC(batchServiceBuffer, _processingPageID);
                     }
                     memStream.Dispose();
                     localServiceBuffer.ResetBuffer();
@@ -3262,7 +3288,7 @@ namespace Ambrosia
                     break;
 
                 case RPCByte:
-                    ProcessRPC(localServiceBuffer);
+                    ProcessRPC(localServiceBuffer, _processingPageID);
                     // Now process any pending RPC requests from the local service before going async again
                     break;
 
@@ -3274,7 +3300,7 @@ namespace Ambrosia
                     GetSystemTimePreciseAsFileTime(out time);
                     memStream.WriteLongFixed(time);
                     // Treat as RPC
-                    ProcessRPC(localServiceBuffer);
+                    ProcessRPC(localServiceBuffer, _processingPageID);
                     memStream.Dispose();
                     break;
 
@@ -3285,7 +3311,7 @@ namespace Ambrosia
                     GetSystemTimePreciseAsFileTime(out time);
                     memStream.WriteLongFixed(time);
                     // Treat as RPC
-                    ProcessRPC(localServiceBuffer);
+                    ProcessRPC(localServiceBuffer, _processingPageID);
                     memStream.Dispose();
                     break;
 
@@ -3343,7 +3369,7 @@ namespace Ambrosia
             return true;
         }
 
-        private void ProcessRPC(FlexReadBuffer RpcBuffer)
+        private void ProcessRPC(FlexReadBuffer RpcBuffer, long associatedPageID)
         {
             var sizeBytes = RpcBuffer.LengthLength;
             int destBytesSize = RpcBuffer.Buffer.ReadBufferedInt(sizeBytes + 1);
@@ -3384,7 +3410,7 @@ namespace Ambrosia
                 if ((_shuffleOutputRecord.LastSeqNoFromLocalService + 1 >= _shuffleOutputRecord.ReplayFrom) &&
                     (_shuffleOutputRecord.LastSeqNoFromLocalService + 1 >= _shuffleOutputRecord.ReplayableTrimTo))
                 {
-                    var writablePage = _shuffleOutputRecord.BufferedOutput.GetWritablePage(totalSize, _shuffleOutputRecord.LastSeqNoFromLocalService + 1);
+                    var writablePage = _shuffleOutputRecord.BufferedOutput.GetWritablePage(totalSize, _shuffleOutputRecord.LastSeqNoFromLocalService + 1, associatedPageID);
                     writablePage.HighestSeqNo = _shuffleOutputRecord.LastSeqNoFromLocalService + 1;
 
                     var methodID = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1);
