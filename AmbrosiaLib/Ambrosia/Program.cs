@@ -2084,6 +2084,8 @@ namespace Ambrosia
         public const byte CountReplayableRPCBatchByte = AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte;
         public const byte trimToByte = AmbrosiaRuntimeLBConstants.trimToByte;
         public const byte becomingPrimaryByte = AmbrosiaRuntimeLBConstants.becomingPrimaryByte;
+        public const byte CurrentLSNByte = AmbrosiaRuntimeLBConstants.CurrentLSNByte;
+
 
         CRAClientLibrary _coral;
 
@@ -2109,6 +2111,11 @@ namespace Ambrosia
 
         // true when this service is in an active/active configuration. False if set to single node
         bool _activeActive;
+
+        // Track LB progress for async recoverability.
+        long _processingPageID = -1;
+        public long _committedPageID = -1;
+        public long _durablePageID = -1;
 
         internal enum AARole { Primary, Secondary, Checkpointer };
         AARole _myRole;
@@ -3280,6 +3287,13 @@ namespace Ambrosia
                     // Treat as RPC
                     ProcessRPC(localServiceBuffer);
                     memStream.Dispose();
+                    break;
+
+                case CurrentLSNByte:
+                    var newProcessingLSN = localServiceBuffer.Buffer.ReadBufferedLong(sizeBytes + 1);
+                    Debug.Assert(_processingPageID == -1 || newProcessingLSN == _processingPageID + 1);
+                    _processingPageID = newProcessingLSN;
+                    localServiceBuffer.ResetBuffer();
                     break;
 
                 default:

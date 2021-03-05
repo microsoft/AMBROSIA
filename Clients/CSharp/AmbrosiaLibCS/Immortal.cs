@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
@@ -30,6 +31,8 @@ namespace Ambrosia
         private Stream _ambrosiaReceiveFromStream;
         private Stream _ambrosiaSendToStream;
         private OutputConnectionRecord _ambrosiaSendToConnectionRecord;
+
+        private long _prevWriteSeqID = -1;
 
         protected string localAmbrosiaRuntime; // if at least one method in this API requires a return address
         protected byte[] localAmbrosiaBytes;
@@ -338,6 +341,18 @@ namespace Ambrosia
                     bytesToRead = await this._ambrosiaReceiveFromStream.ReadIntFixedAsync(cancelTokenSource.Token);
                     long checkBytes = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
                     long writeSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
+
+                    // Tell the IC we're processing a new writeSeqID worth of requests. 
+                    if (writeSeqID >= 0)
+                    {
+                        Debug.Assert(writeSeqID == _prevWriteSeqID + 1);
+                        this._prevWriteSeqID = writeSeqID;
+                        this._outputLock.Acquire(3);
+                        this._ambrosiaSendToStream.WriteInt(1 + LongSize(writeSeqID));
+                        this._ambrosiaSendToStream.WriteByte(AmbrosiaRuntimeLBConstants.CurrentLSNByte);
+                        this._ambrosiaSendToStream.WriteLong(writeSeqID);
+                        this._outputLock.Release();
+                    }
                 }
 
                 while (bytesToRead > 24)
