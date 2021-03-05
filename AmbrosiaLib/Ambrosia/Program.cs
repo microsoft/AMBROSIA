@@ -1285,6 +1285,12 @@ namespace Ambrosia
             {
                 try
                 {
+                    _workStream.Write(firstBufToCommit, 0, 4);
+                    _workStream.WriteIntFixed(length1 + length2);
+                    _workStream.Write(firstBufToCommit, 8, 16);
+                    await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
+                    await _workStream.WriteAsync(secondBufToCommit, 0, length2);
+
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
@@ -1352,6 +1358,9 @@ namespace Ambrosia
             {
                 try
                 {
+                    await _workStream.WriteAsync(buf, 0, length);
+                    var flushtask = _workStream.FlushAsync();
+
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
@@ -1361,8 +1370,6 @@ namespace Ambrosia
                         await _logStream.FlushAsync();
                     }
                     SendInputWatermarks(uncommittedWatermarks, outputs);
-                    await _workStream.WriteAsync(buf, 0, length);
-                    var flushtask = _workStream.FlushAsync();
                     _uncommittedWatermarksBak = uncommittedWatermarks;
                     _uncommittedWatermarksBak.Clear();
                     _trimWatermarksBak = trimWatermarks;
