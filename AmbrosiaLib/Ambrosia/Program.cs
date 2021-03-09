@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Xml.Serialization;
 using System.IO.Pipes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using CRA.ClientLibrary.DataProcessing;
 
 namespace Ambrosia
 {
@@ -994,12 +995,19 @@ namespace Ambrosia
         public long LastProcessedID { get; set; }
         [DataMember]
         public long LastProcessedReplayableID { get; set; }
+
+        private AmbrosiaRuntime _myAmbrosia;
+        
+
+
         public InputConnectionRecord()
         {
             DataConnectionStream = null;
             LastProcessedID = 0;
             LastProcessedReplayableID = 0;
         }
+
+        
     }
 
     internal class OutputConnectionRecord
@@ -1035,6 +1043,15 @@ namespace Ambrosia
         internal object _trimLock = new object();
         internal object _remoteTrimLock = new object();
 
+        // Updated via fromControl.
+        internal long _committedSeqNo;
+
+        // The following are updated locally.
+        private LinkedList<LongPair> _commitDependencies;
+        private LinkedListNode<LongPair> _commitDepCursor;
+        private long _maxCommittedSeqID;
+
+
         public OutputConnectionRecord(AmbrosiaRuntime inAmbrosia)
         {
             ReplayFrom = 0;
@@ -1053,6 +1070,142 @@ namespace Ambrosia
             LastSeqSentToReceiver = 0;
             WillResetConnection = inAmbrosia._createService;
             ConnectingAfterRestart = inAmbrosia._restartWithRecovery;
+
+            _commitDependencies = new LinkedList<LongPair>();
+            _commitDepCursor = null;
+            _maxCommittedSeqID = -1;
+        }
+
+        internal void RecordDependency(long pageID,
+                                       long seqID,
+                                       ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                       ConcurrentDictionary<long, int> pageDepCounts)
+        {
+            bool seqIDCommitted = true;
+            lock (_commitDependencies)
+            {
+#if DEBUG
+                if (_commitDependencies.Count > 0)
+                {
+                    var prevDep = _commitDependencies.Last.Value;
+                    Debug.Assert(prevDep.First < pageID);
+                    Debug.Assert(prevDep.Second < seqID);
+                    Debug.Assert(_commitDepCursor != null);
+                }
+#endif
+                if (_maxCommittedSeqID < seqID)
+                {
+                    seqIDCommitted = false;
+                    LongPair toAdd = new LongPair(pageID, seqID);
+                    _commitDependencies.AddLast(toAdd);
+                    if (_commitDependencies.Count == 1)
+                    {
+                        Debug.Assert(_commitDepCursor == null);
+                        _commitDepCursor = _commitDependencies.First;
+                    }
+                    Debug.Assert(_commitDepCursor != null);
+                }
+            }
+
+            if (seqIDCommitted)
+            {
+                UpdatePageDepCount(pageID, outputs, pageDepCounts);
+            }
+        }
+
+        internal void UpdatePageDepCount(long pageID,
+                                         ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                         ConcurrentDictionary<long, int> pageDepCounts)
+        {
+            Debug.Assert(pageDepCounts.ContainsKey(pageID));
+
+            // Update the page's dependency count.
+            int depCount;
+            do
+            {
+                depCount = pageDepCounts[pageID];
+                Debug.Assert(depCount > 0);
+            } while (!pageDepCounts.TryUpdate(pageID, depCount - 1, depCount));
+
+            // The page has committed.
+            if (depCount - 1 == 0)
+            {
+                int prevDepCount;
+                var success = pageDepCounts.TryRemove(pageID, out prevDepCount);
+                Debug.Assert(success);
+                Debug.Assert(prevDepCount == 0);
+
+                var lastCommittedPage = Interlocked.Read(ref MyAmbrosia._committedPageID);
+                var startPage = lastCommittedPage + 1;
+
+                // Try to commit as many pages as possible, up until the current durablePageID. 
+                // Two cases in which we break out of this loop:
+                // 1) A page with a lower pageID has yet to commit, in which case we can't commit the current page.
+                // 2) We raced with an inputConnection thread that's committing pages. Give up and let that thread continue.
+                while (!pageDepCounts.ContainsKey(lastCommittedPage + 1) && lastCommittedPage + 1 <= Interlocked.Read(ref MyAmbrosia._durablePageID))
+                {
+                    var cmpXchgOut = Interlocked.CompareExchange(ref MyAmbrosia._committedPageID, lastCommittedPage + 1, lastCommittedPage);
+                    if (cmpXchgOut != lastCommittedPage)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        lastCommittedPage += 1;
+                    }
+                }
+
+                // Notify outputConnectionRecords that new pages have committed.
+                if (startPage != lastCommittedPage + 1)
+                {
+                    foreach (var kvp in outputs)
+                    {
+                        var outputRecord = kvp.Value;
+                        if (outputRecord.ControlWorkQ.IsEmpty)
+                        {
+                            outputRecord.ControlWorkQ.Enqueue(-2);
+                        }
+                    }
+                }
+            }
+        }
+
+        internal void UpdateMaxSeqID(long committedSeqID,
+                                     ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                     ConcurrentDictionary<long, int> pageDepCounts)
+        {
+            Monitor.Enter(_commitDependencies);
+
+            Debug.Assert(_maxCommittedSeqID < committedSeqID);
+            _maxCommittedSeqID = committedSeqID;
+
+            while (_commitDepCursor != null)
+            {
+                Debug.Assert(_commitDependencies.Count != 0);
+
+                var pageID = _commitDepCursor.Value.First;
+                var seqID = _commitDepCursor.Value.Second;
+
+                if (seqID <= _maxCommittedSeqID)
+                {
+                    var toRemove = _commitDepCursor;
+                    _commitDepCursor = _commitDepCursor.Next;
+                    _commitDependencies.Remove(toRemove);
+
+                    Monitor.Exit(_commitDependencies);
+                    UpdatePageDepCount(pageID, outputs, pageDepCounts);
+                    Monitor.Enter(_commitDependencies);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            Debug.Assert((_commitDependencies.Count == 0 && _commitDepCursor == null) ||
+                         (_commitDependencies.Count != 0 && _commitDepCursor != null));
+
+            Monitor.Exit(_commitDependencies);
         }
     }
 
@@ -1301,13 +1454,16 @@ namespace Ambrosia
                 }
             }
 
-            private async Task Commit(byte[] firstBufToCommit,
+            private async Task Harden(byte[] firstBufToCommit,
                                       int length1,
                                       byte[] secondBufToCommit,
                                       int length2,
                                       ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
                                       ConcurrentDictionary<string, long> trimWatermarks,
-                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                      ConcurrentDictionary<string, InputConnectionRecord> inputs,
+                                      ConcurrentDictionary<long, int> pageDependencies,
+                                      long pageID)
             {
                 try
                 {
@@ -1330,6 +1486,11 @@ namespace Ambrosia
                         await _logStream.FlushAsync();
                     }
 
+                    var prevDurablePage = Interlocked.Exchange(ref _myAmbrosia._durablePageID, pageID);
+                    Debug.Assert(prevDurablePage == pageID - 1);
+
+                    TryCommit(uncommittedWatermarks, outputs, pageDependencies, pageID);
+
                     SendInputWatermarks(uncommittedWatermarks, outputs);
                     _workStream.Write(firstBufToCommit, 0, 4);
                     _workStream.WriteIntFixed(length1 + length2);
@@ -1349,7 +1510,7 @@ namespace Ambrosia
                     _myAmbrosia.OnError(5, e.Message);
                 }
                 _bufbak = firstBufToCommit;
-                await TryCommitAsync(outputs);
+                await TryHardenAsync(outputs, inputs, pageDependencies);
             }
 
             private async Task writeFullWaterMarksAsync(ConcurrentDictionary<string, LongPair> uncommittedWatermarks)
@@ -1376,11 +1537,14 @@ namespace Ambrosia
                     _logStream.WriteLongFixed(kv.Value);
                 }
             }
-            private async Task Commit(byte[] buf,
+            private async Task Harden(byte[] buf,
                                       int length,
                                       ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
                                       ConcurrentDictionary<string, long> trimWatermarks,
-                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                      ConcurrentDictionary<string, InputConnectionRecord> inputs,
+                                      ConcurrentDictionary<long, int> pageDependencies,
+                                      long pageID)
             {
                 try
                 {
@@ -1395,6 +1559,13 @@ namespace Ambrosia
                         await writeSimpleWaterMarksAsync(trimWatermarks);
                         await _logStream.FlushAsync();
                     }
+
+                    // Update the durable pageID.
+                    var prevDurablePage = Interlocked.Exchange(ref _myAmbrosia._durablePageID, pageID);
+                    Debug.Assert(prevDurablePage == pageID - 1);
+
+                    TryCommit(uncommittedWatermarks, outputs, pageDependencies, pageID);
+                    
                     SendInputWatermarks(uncommittedWatermarks, outputs);
                     _uncommittedWatermarksBak = uncommittedWatermarks;
                     _uncommittedWatermarksBak.Clear();
@@ -1406,7 +1577,112 @@ namespace Ambrosia
                     _myAmbrosia.OnError(5, e.Message);
                 }
                 _bufbak = buf;
-                await TryCommitAsync(outputs);
+                await TryHardenAsync(outputs, inputs, pageDependencies);
+            }
+
+            private void TryCommit(ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
+                                   ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                   ConcurrentDictionary<long, int> pageDependencies,
+                                   long pageID)
+            {
+                var depCount = uncommittedWatermarks.Count;
+                var hasLocalDep = uncommittedWatermarks.ContainsKey("");
+                var hasRemoteDeps = !(depCount == 0 || (depCount == 1 && hasLocalDep));
+
+                if (hasRemoteDeps)
+                {
+                    if (hasLocalDep)
+                    {
+                        pageDependencies[pageID] = uncommittedWatermarks.Count - 1;
+                    }
+                    else
+                    {
+                        pageDependencies[pageID] = uncommittedWatermarks.Count;
+                    }
+
+                    if (pageID % 2 == 0)
+                    {
+                        foreach (var kv in uncommittedWatermarks)
+                        {
+                            if (kv.Key.Equals(""))
+                            {
+                                continue;
+                            }
+
+                            var outputConnection = outputs[kv.Key];
+                            outputConnection.RecordDependency(pageID, kv.Value.First, outputs, pageDependencies);
+                        }
+
+                        // XXX This needs to be removed!
+                        foreach (var kv in uncommittedWatermarks)
+                        {
+                            if (kv.Key.Equals(""))
+                            {
+                                continue;
+                            }
+
+                            var prevSeqNo = Interlocked.Exchange(ref outputs[kv.Key]._committedSeqNo, kv.Value.First);
+                            Debug.Assert(prevSeqNo < kv.Value.First);
+                            if (outputs[kv.Key].ControlWorkQ.IsEmpty)
+                            {
+                                outputs[kv.Key].ControlWorkQ.Enqueue(-2);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // XXX This needs to be removed!
+                        foreach (var kv in uncommittedWatermarks)
+                        {
+                            if (kv.Key.Equals(""))
+                            {
+                                continue;
+                            }
+
+                            var prevSeqNo = Interlocked.Exchange(ref outputs[kv.Key]._committedSeqNo, kv.Value.First);
+                            Debug.Assert(prevSeqNo < kv.Value.First);
+                            if (outputs[kv.Key].ControlWorkQ.IsEmpty)
+                            {
+                                outputs[kv.Key].ControlWorkQ.Enqueue(-2);
+                            }
+                        }
+
+                        foreach (var kv in uncommittedWatermarks)
+                        {
+                            if (kv.Key.Equals(""))
+                            {
+                                continue;
+                            }
+
+                            var outputConnection = outputs[kv.Key];
+                            outputConnection.RecordDependency(pageID, kv.Value.First, outputs, pageDependencies);
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    // The page has no remote dependencies, try to commit it.
+                    var lastCommittedPage = Interlocked.Read(ref _myAmbrosia._committedPageID);
+                    // Debug.Assert(lastCommittedPage < pageID);
+
+                    while (!pageDependencies.ContainsKey(lastCommittedPage + 1) && lastCommittedPage + 1 <= pageID)
+                    {
+                        var cmpXchgOut = Interlocked.CompareExchange(ref _myAmbrosia._committedPageID, lastCommittedPage + 1, lastCommittedPage);
+                        if (cmpXchgOut != lastCommittedPage)
+                        {
+                            // Two cases:
+                            // 1) A page with a lower pageID has yet to commit, in which case we can't commit the current page.
+                            // 2) We raced with an inputConnection thread that's committing pages. Give up and let that thread continue.
+                            break;
+                        }
+                        else
+                        {
+                            lastCommittedPage += 1;
+                        }
+                    }
+                }
             }
 
             public async Task SleepAsync()
@@ -1610,7 +1886,8 @@ namespace Ambrosia
                                            long newSeqNo,
                                            long newReplayableSeqNo,
                                            ConcurrentDictionary<string, OutputConnectionRecord> outputs,
-                                           InputConnectionRecord associatedInputConnectionRecord)
+                                           ConcurrentDictionary<string, InputConnectionRecord> inputs,
+                                           ConcurrentDictionary<long, int> pageDependencies)
             {
                 var copyFromBuffer = copyFromFlexBuffer.Buffer;
                 var length = copyFromFlexBuffer.Length;
@@ -1650,6 +1927,7 @@ namespace Ambrosia
                     {
                         // We are now preventing recovery until addrow finishes and all resulting commits have completed. We can safely update
                         // LastProcessedID and LastProcessedReplayableID
+                        var associatedInputConnectionRecord = inputs[outputToUpdate];
                         associatedInputConnectionRecord.LastProcessedID = newSeqNo;
                         associatedInputConnectionRecord.LastProcessedReplayableID = newReplayableSeqNo;
                         if (sealing)
@@ -1717,6 +1995,7 @@ namespace Ambrosia
                             }
                             writeStream.WriteLongFixed(checkBytes);
                             writeStream.WriteLongFixed(_nextWriteID);
+                            var pageID = _nextWriteID;
                             _nextWriteID++;
 
                             // Do the actual commit
@@ -1733,7 +2012,7 @@ namespace Ambrosia
                             {
                                 // add row to current buffer and commit
                                 _uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
-                                _lastCommitTask = Commit(_buf, (int)newLength, _uncommittedWatermarks, oldTrimWatermarks, outputs);
+                                _lastCommitTask = Harden(_buf, (int)newLength, _uncommittedWatermarks, oldTrimWatermarks, outputs, inputs, pageDependencies, pageID);
                                 newLocalStatus = HeaderSize << SealedBits;
                             }
                             else if (length > (_maxBufSize - HeaderSize))
@@ -1742,14 +2021,14 @@ namespace Ambrosia
                                 copyFromFlexBuffer.StealBuffer();
                                 // write new event as part of commit
                                 _uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
-                                var commitTask = Commit(_buf, (int)oldBufLength, copyFromBuffer, length, _uncommittedWatermarks, oldTrimWatermarks, outputs);
+                                var commitTask = Harden(_buf, (int)oldBufLength, copyFromBuffer, length, _uncommittedWatermarks, oldTrimWatermarks, outputs, inputs, pageDependencies, pageID);
                                 newLocalStatus = HeaderSize << SealedBits;
                             }
                             else
                             {
                                 // commit and add new event to new buffer
                                 newUncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
-                                _lastCommitTask = Commit(_buf, (int)oldBufLength, _uncommittedWatermarks, oldTrimWatermarks, outputs);
+                                _lastCommitTask = Harden(_buf, (int)oldBufLength, _uncommittedWatermarks, oldTrimWatermarks, outputs, inputs, pageDependencies, pageID);
                                 Buffer.BlockCopy(copyFromBuffer, 0, newWriteBuf, (int)HeaderSize, length);
                                 newLocalStatus = (HeaderSize + length) << SealedBits;
                             }
@@ -1773,7 +2052,7 @@ namespace Ambrosia
                             {
                                 if (localStatus % 2 == 0 && _bufbak != null)
                                 {
-                                    await TryCommitAsync(outputs);
+                                    await TryHardenAsync(outputs, inputs, pageDependencies);
                                 }
                                 return (long)_logStream.FileSize;
                             }
@@ -1782,7 +2061,9 @@ namespace Ambrosia
                 }
             }
 
-            public async Task TryCommitAsync(ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+            public async Task TryHardenAsync(ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                             ConcurrentDictionary<string, InputConnectionRecord> inputs,
+                                             ConcurrentDictionary<long, int> pageDependencies)
             {
                 long localStatus;
                 localStatus = Interlocked.Read(ref _status);
@@ -1840,6 +2121,7 @@ namespace Ambrosia
                     long checkBytes = CheckBytes(HeaderSize, (int)bufLength - HeaderSize);
                     writeStream.WriteLongFixed(checkBytes);
                     writeStream.WriteLongFixed(_nextWriteID);
+                    var pageID = _nextWriteID;
                     _nextWriteID++;
 
                     // Grab the current state of trim levels since the last write
@@ -1851,7 +2133,7 @@ namespace Ambrosia
                         _trimWatermarks = _trimWatermarksBak;
                         _trimWatermarksBak = null;
                     }
-                    _lastCommitTask = Commit(_buf, (int)bufLength, _uncommittedWatermarks, oldTrimWatermarks, outputs);
+                    _lastCommitTask = Harden(_buf, (int)bufLength, _uncommittedWatermarks, oldTrimWatermarks, outputs, inputs, pageDependencies, pageID);
                     newLocalStatus = HeaderSize << SealedBits;
                     _buf = newWriteBuf;
                     _uncommittedWatermarks = newUncommittedWatermarks;
@@ -2070,6 +2352,7 @@ namespace Ambrosia
             }
         }
 
+        ConcurrentDictionary<long, int> _pageDependencies;
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
         ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
         internal int _localServiceReceiveFromPort;           // specifiable on the command line
@@ -2450,6 +2733,7 @@ namespace Ambrosia
             _lastLogFile = 0;
             _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
             _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
+            _pageDependencies = new ConcurrentDictionary<long, int>();
             _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
 
             _myRole = AARole.Primary;
@@ -2658,7 +2942,7 @@ namespace Ambrosia
             // This is a safe place to try to commit, because if this is called during recovery,
             // it's after replace and moving to the next log file. Note that this will also have the effect
             // of shaking loose the initialization message, ensuring liveliness.
-            await _committer.TryCommitAsync(_outputs);
+            await _committer.TryHardenAsync(_outputs, _inputs, _pageDependencies);
             return oldVerLogHandle;
         }
 
@@ -3576,6 +3860,7 @@ namespace Ambrosia
 
         {
             OutputConnectionRecord outputConnectionRecord;
+            InputConnectionRecord inputConnectionRecord;
             if (destString.Equals(ServiceName()))
             {
                 destString = "";
@@ -3594,6 +3879,7 @@ namespace Ambrosia
                     Trace.TraceInformation("restoring output:{0}", destString);
                 }
             }
+
             // Process remote trim message
             var inputFlexBuffer = new FlexReadBuffer();
             await FlexReadBuffer.DeserializeAsync(writeToStream, inputFlexBuffer, ct);
@@ -3604,6 +3890,9 @@ namespace Ambrosia
 
             // This code dequeues output producing tasks and runs them
             long currentTrim = -1;
+            long currentCommittedSeqNo = -1;
+            long currentCommittedPage = -1;
+
             int maxSizeOfWatermark = sizeof(int) + 4 + 2 * sizeof(long);
             var watermarkArr = new byte[maxSizeOfWatermark];
             var watermarkStream = new MemoryStream(watermarkArr);
@@ -3620,6 +3909,22 @@ namespace Ambrosia
                         outputConnectionRecord.BufferedOutput.ReleaseTrimLock();
                     }
                     var nextEntry = await outputConnectionRecord.ControlWorkQ.DequeueAsync(ct);
+
+                    var committedSeqNo = Interlocked.Read(ref outputConnectionRecord._committedSeqNo);
+                    var committedPageID = Interlocked.Read(ref _committedPageID);
+
+                    if (committedSeqNo > currentCommittedSeqNo)
+                    {
+                        currentCommittedSeqNo = committedSeqNo;
+                        outputConnectionRecord.UpdateMaxSeqID(currentCommittedSeqNo, _outputs, _pageDependencies);
+                    }
+
+                    if (committedPageID > currentCommittedPage)
+                    {
+                        // XXX This needs to be completed!!!
+                        currentCommittedPage = committedPageID;
+                    }
+
                     if (lastRemoteTrim < outputConnectionRecord.RemoteTrim)
                     {
                         // This is a send watermark
@@ -3832,11 +4137,11 @@ namespace Ambrosia
                     long newFileSize;
                     if (inputFlexBuffer.Buffer[sizeBytes + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
                     {
-                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
+                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, _inputs, _pageDependencies);
                     }
                     else
                     {
-                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID, _outputs, inputRecord);
+                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID, _outputs, _inputs, _pageDependencies);
                     }
                     inputFlexBuffer.ResetBuffer();
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
@@ -3856,7 +4161,7 @@ namespace Ambrosia
                     var memStream = new MemoryStream(inputFlexBuffer.Buffer, restOfBatchOffset, inputFlexBuffer.Length - restOfBatchOffset);
                     var numRPCs = memStream.ReadInt();
                     var numReplayableRPCs = memStream.ReadInt();
-                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numReplayableRPCs, _outputs, inputRecord);
+                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numReplayableRPCs, _outputs, _inputs, _pageDependencies);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
@@ -3875,7 +4180,7 @@ namespace Ambrosia
                     restOfBatchOffset = inputFlexBuffer.LengthLength + 1;
                     memStream = new MemoryStream(inputFlexBuffer.Buffer, restOfBatchOffset, inputFlexBuffer.Length - restOfBatchOffset);
                     numRPCs = memStream.ReadInt();
-                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numRPCs, _outputs, inputRecord);
+                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numRPCs, _outputs, _inputs, _pageDependencies);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
@@ -3897,7 +4202,7 @@ namespace Ambrosia
                     GetSystemTimePreciseAsFileTime(out time);
                     memStream.WriteLongFixed(time);
                     // Treat as RPC
-                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
+                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, _inputs, _pageDependencies);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     break;
@@ -3908,7 +4213,7 @@ namespace Ambrosia
                     GetSystemTimePreciseAsFileTime(out time);
                     memStream.WriteLongFixed(time);
                     // Treat as RPC
-                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
+                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, _inputs, _pageDependencies);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     break;
