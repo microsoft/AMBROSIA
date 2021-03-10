@@ -1472,6 +1472,8 @@ namespace Ambrosia
                     _workStream.Write(firstBufToCommit, 8, 16);
                     await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
                     await _workStream.WriteAsync(secondBufToCommit, 0, length2);
+                    var flushtask = _workStream.FlushAsync();
+
 
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
@@ -1492,14 +1494,8 @@ namespace Ambrosia
                     TryCommit(uncommittedWatermarks, outputs, pageDependencies, pageID);
 
                     SendInputWatermarks(uncommittedWatermarks, outputs);
-                    _workStream.Write(firstBufToCommit, 0, 4);
-                    _workStream.WriteIntFixed(length1 + length2);
-                    _workStream.Write(firstBufToCommit, 8, 16);
-                    await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
-                    await _workStream.WriteAsync(secondBufToCommit, 0, length2);
                     // Return the second byte array to the FlexReader pool
                     FlexReadBuffer.ReturnBuffer(secondBufToCommit);
-                    var flushtask = _workStream.FlushAsync();
                     _uncommittedWatermarksBak = uncommittedWatermarks;
                     _uncommittedWatermarksBak.Clear();
                     _trimWatermarksBak = trimWatermarks;

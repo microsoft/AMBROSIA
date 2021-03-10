@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -41,12 +42,14 @@ namespace Ambrosia
         long _bufferedOutputLock;
         internal byte[] TempArrForWritingBatchBytes { get; set; }
         internal MemoryStream MemStreamForWritingBatchBytes { get; set; }
+        bool _prevStandalonePage;
 
 
         internal EventBuffer()
         {
             _bufferQ = new ElasticCircularBuffer<BufferPage>();
             _bufferedOutputLock = 0;
+            _prevStandalonePage = false;
             TempArrForWritingBatchBytes = new byte[sizeof(int) + sizeof(int) + 3];
             MemStreamForWritingBatchBytes = new MemoryStream(TempArrForWritingBatchBytes);
         }
@@ -253,7 +256,7 @@ namespace Ambrosia
         }
 
         // Assumed that the caller releases the lock acquired here
-        internal BufferPage getWritablePage(int writeLength)
+        internal BufferPage getWritablePage(int writeLength, bool standalonePage=false)
         {
             if (_pool == null)
             {
@@ -266,9 +269,10 @@ namespace Ambrosia
                 }
             }
             LockOutputBuffer();
-            if (_bufferQ.IsEmpty())
+            if (_bufferQ.IsEmpty() || _prevStandalonePage || standalonePage)
             {
-                // Q is empty, must add an empty page
+                // If the previous page contains a standalone message, then it should have just one message.
+                Debug.Assert(!(_prevStandalonePage && !_bufferQ.IsEmpty()) || _bufferQ.PeekLast().NumMessages == 1);
                 addBufferPage(writeLength);
             }
             else
@@ -281,6 +285,7 @@ namespace Ambrosia
                     addBufferPage(writeLength);
                 }
             }
+            _prevStandalonePage = standalonePage;
             var retVal = _bufferQ.PeekLast();
             return retVal;
         }
