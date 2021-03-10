@@ -342,16 +342,23 @@ namespace Ambrosia
                     long checkBytes = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
                     long writeSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
 
-                    // Tell the IC we're processing a new writeSeqID worth of requests. 
+                    // Tell the IC we're processing a new input log page.
                     if (writeSeqID >= 0)
                     {
-                        Debug.Assert(writeSeqID == _prevWriteSeqID + 1);
-                        this._prevWriteSeqID = writeSeqID;
-                        this._outputLock.Acquire(3);
-                        this._ambrosiaSendToStream.WriteInt(1 + LongSize(writeSeqID));
-                        this._ambrosiaSendToStream.WriteByte(AmbrosiaRuntimeLBConstants.CurrentLSNByte);
-                        this._ambrosiaSendToStream.WriteLong(writeSeqID);
-                        this._outputLock.Release();
+                        Debug.Assert(writeSeqID > _prevWriteSeqID);
+                        _prevWriteSeqID = writeSeqID;
+
+                        var msgSize = 1 + LongSize(_prevWriteSeqID);
+                        // var totalMsgSize = msgSize + IntSize(msgSize);
+                        var writeablePage = _ambrosiaSendToConnectionRecord.BufferedOutput.getWritablePage(msgSize, true);
+                        writeablePage.NumMessages++;
+                        var writeBuffer = writeablePage.PageBytes;
+
+                        writeablePage.curLength += writeBuffer.WriteInt(writeablePage.curLength, msgSize);
+                        writeBuffer[writeablePage.curLength++] = AmbrosiaRuntimeLBConstants.CurrentLSNByte;
+                        writeablePage.curLength += writeBuffer.WriteLong(writeablePage.curLength, _prevWriteSeqID);
+
+                        ReleaseBufferAndSend();
                     }
                 }
 
@@ -513,6 +520,7 @@ namespace Ambrosia
                         case AmbrosiaRuntimeLBConstants.RPCBatchByte:
                         case AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte:
                             {
+
                                 RPCsReceived++;
                                 var numberOfRPCs = 1;
                                 var lengthOfCurrentRPC = 0;
