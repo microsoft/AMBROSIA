@@ -67,6 +67,8 @@
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StringEnum.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TagInterface.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TagMethod.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_JSDocComment2.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_JSDocComment.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_StaticMethod.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_LitObjArray.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_GenType2.ts" />

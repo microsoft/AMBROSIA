@@ -1,0 +1,68 @@
+// Generated consumer-side API for the 'server' Ambrosia Node instance.
+// Publisher: Darren Gehring [darrenge@microsoft.com].
+// Note: This file was generated
+// Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
+import Ambrosia = require("ambrosia-node");
+import IC = Ambrosia.IC;
+import Utils = Ambrosia.Utils;
+
+let DESTINATION_INSTANCE_NAME: string = "server";
+let POST_TIMEOUT_IN_MS: number = 8000; // -1 = Infinite
+
+/** Some static methods. */
+export namespace StaticStuff
+{
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
+    export function hello_PostFork(callContextData: any, name: string): void
+    {
+        IC.postFork(DESTINATION_INSTANCE_NAME, "hello", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("name", name));
+    }
+
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
+    export function hello_PostImpulse(callContextData: any, name: string): void
+    {
+        IC.postImpulse(DESTINATION_INSTANCE_NAME, "hello", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("name", name));
+    }
+}
+
+/**
+ * Handler for the results of previously called post methods (in Ambrosia, only 'post' methods return values). See Messages.PostResultDispatcher.\
+ * Must return true only if the result (or error) was handled.
+ */
+export function postResultDispatcher(senderInstanceName: string, methodName: string, methodVersion: number, callID: number, callContextData: any, result: any, errorMsg: string): boolean
+{
+    const sender: string = IC.isSelf(senderInstanceName) ? "local" : `'${senderInstanceName}'`;
+    let handled: boolean = true;
+
+    if (senderInstanceName !== DESTINATION_INSTANCE_NAME)
+    {
+        return (false); // Not handled (this post result is from a different instance than the one this consumer-side file is for)
+    }
+
+    if (errorMsg)
+    {
+        switch (methodName)
+        {
+            case "hello":
+                Utils.log(`Error: ${errorMsg}`);
+                break;
+            default:
+                handled = false;
+                break;
+        }
+    }
+    else
+    {
+        switch (methodName)
+        {
+            case "hello":
+                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
+                Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
+                break;
+            default:
+                handled = false;
+                break;
+        }
+    }
+    return (handled);
+}
