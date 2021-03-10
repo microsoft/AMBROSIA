@@ -52,7 +52,8 @@ export namespace Test
     export enum Letters { A = 0, B = 3, C = 4, D = 9 }
 
     /**
-     * Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+     * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
      * Example of a [post] method that uses custom types.
      */
     export function makeName_PostFork(callContextData: any, firstName?: string, lastName?: string): void
@@ -63,7 +64,8 @@ export namespace Test
     }
 
     /**
-     * Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+     * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
      * Example of a [post] method that uses custom types.
      */
     export function makeName_PostImpulse(callContextData: any, firstName?: string, lastName?: string): void
