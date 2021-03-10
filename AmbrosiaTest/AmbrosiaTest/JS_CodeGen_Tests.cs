@@ -145,6 +145,28 @@ namespace AmbrosiaTest
         }
 
         [TestMethod]
+        public void JS_CG_JSDocComment_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_JSDocComment.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_JSDocComment2_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_JSDocComment2.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
         public void JS_CG_LiteralObjArray_Test()
         {
             JS_Utilities JSUtils = new JS_Utilities();
