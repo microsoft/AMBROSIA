@@ -16,10 +16,23 @@ export namespace State
     {
         // TODO: Define your application state here
 
+        /**
+         * @param restoredAppState Supplied only when loading (restoring) a checkpoint.\
+         * **WARNING:** restoredAppState will be an object literal, so you must use this to reinstantiate any members that are (or contain) class references.
+         */
         constructor(restoredAppState?: AppState)
         {
             super(restoredAppState);
-            // TODO: Initialize your application state here
+
+            if (restoredAppState)
+            {
+                // TODO: Re-initialize your application state from restoredAppState here
+                // WARNING: You MUST reinstantiate all members that are (or contain) class references because restoredAppState is data-only
+            }
+            else
+            {
+                // TODO: Initialize your application state here
+            }
         }
     }
 
@@ -72,13 +85,14 @@ export function messageDispatcher(message: Messages.DispatchedMessage): void
     // Reason: Because a message handler always has to run to completion (see Rule #1), if it runs for too long it can monopolize the system leading to performance issues.
     //         Further, this becomes a very costly message to have to replay during recovery. So instead, when an message handler needs to send a large sequence (series)
     //         of independent messages, it should be designed to be restartable so that the sequence can pick up where it left off (rather than starting over) when resuming
-    //         execution (ie. after loading a checkpoint that occurred during the long-running - but incomplete - sequence). To avoid a single message handler having to send
-    //         the entire sequence, large sequences should be sent in smaller batches using either explicit batches (IC.enqueueFork + IC.flushQueue) or implicit batches 
-    //         (IC.callFork / IC.postFork) inside a setImmediate() callback. This asynchrony is necessary to allow I/O with the IC to interleave, and is one of the few allowable 
-    //         exceptions to the "always only use asynchronous code" dictate in Rule #1. Restartability is achieved by sending a 'sequence continuation' message at the end of
-    //         each batch, which describes the remaining work to be done. Because the handler for the 'sequence continuation' message only ever sends the next batch plus the
-    //         'sequence continuation' message, it can run to completion quickly, which both keeps the system responsive (by allowing interleaving I/O) while also complying 
-    //         with Rule #1. Interleaving I/O allows the instance to service self-calls, and allows checkpoints to be taken between batches.
+    //         execution (ie. after loading a checkpoint that occurred during the long-running - but incomplete - sequence). Restartability is achieved by sending a 
+    //         'sequence continuation' message at the end of each batch, which describes the remaining work to be done. Because the handler for the 'sequence continuation' 
+    //         message only ever sends the next batch plus the 'sequence continuation' message, it can run to completion quickly, which both keeps the system responsive 
+    //         (by allowing interleaving I/O) while also complying with Rule #1.
+    //         In addition to this "contination messasage" technique for sending a series, if any single message handler has to send a large number of mesages it should be 
+    //         sent in batches using either explicit batches (IC.enqueueFork + IC.flushQueue) or implicit batches (IC.callFork / IC.postFork) inside a setImmediate() callback.
+    //         This asynchrony is necessary to allow I/O with the IC to interleave, and is one of the few allowable exceptions to the "always only use asynchronous code" 
+    //         dictate in Rule #1. Interleaving I/O allows the instance to service self-calls, and allows checkpoints to be taken between batches.
     
     dispatcher(message);
 }
@@ -181,6 +195,10 @@ function dispatcher(message: Messages.DispatchedMessage): void
 
                     case Messages.AppEventType.BecomingPrimary:
                         // TODO: Add an exported [non-async] function 'onBecomingPrimary(): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParam.ts, then (after the next code-gen) a call to it will be generated here
+                        break;
+                    
+                    case Messages.AppEventType.CheckpointLoaded:
+                        // TODO: Add an exported [non-async] function 'onCheckpointLoaded(checkpointSizeInBytes: number): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParam.ts, then (after the next code-gen) a call to it will be generated here
                         break;
                 }
                 break;

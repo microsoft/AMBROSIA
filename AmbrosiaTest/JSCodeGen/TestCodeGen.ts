@@ -24,8 +24,6 @@ async function main()
     {
         await Ambrosia.initializeAsync(Ambrosia.LBInitMode.CodeGen);
         let sourceFile: string = Utils.getCommandLineArg("sourceFile");
-        let codeGenKind: Meta.GeneratedFileKind = Meta.GeneratedFileKind[Utils.getCommandLineArg("codeGenKind", "All")] ?? Meta.GeneratedFileKind.All;
-        let mergeType: Meta.FileMergeType = Meta.FileMergeType[Utils.getCommandLineArg("mergeType", "None")] ?? Meta.FileMergeType.None;
         let generatedFileName: string = Utils.getCommandLineArg("generatedFileName", "TestOutput") ?? "TestOutput";
  
         Meta.emitTypeScriptFileFromSource(sourceFile, { fileKind: Meta.GeneratedFileKind.Consumer, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFileName: generatedFileName+"_Consumer" });

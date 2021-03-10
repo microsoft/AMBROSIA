@@ -154,7 +154,7 @@ namespace AmbrosiaTest
             }
             catch (Exception e)
             {
-                Assert.Fail("<BuildTSApp> Failure! Exception:" + e.Message);
+                Assert.Fail("<BuildJSTestApp> Failure! " + e.Message);
             }
         }
 

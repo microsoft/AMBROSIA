@@ -9,22 +9,27 @@ import Utils = Ambrosia.Utils;
 let DESTINATION_INSTANCE_NAME: string = "server";
 let POST_TIMEOUT_IN_MS: number = 8000; // -1 = Infinite
 
+/**
+Test File to test all the the ways that the ambrosia tag can be set and still work
+ */
 export namespace Test
 {
-    /** Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). */
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
     export function OneLineNoComment_PostFork(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "OneLineNoComment", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /** Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). */
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
     export function OneLineNoComment_PostImpulse(callContextData: any): void
     {
         IC.postImpulse(DESTINATION_INSTANCE_NAME, "OneLineNoComment", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /** Multi Line with Comment before Tag
-     * Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * Multi Line with Comment before Tag
      * but still before tag
      */
     export function MultiLineCommentBeforeTag_PostFork(callContextData: any): void
@@ -32,8 +37,10 @@ export namespace Test
         IC.postFork(DESTINATION_INSTANCE_NAME, "MultiLineCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /** Multi Line with Comment before Tag
-     * Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * Multi Line with Comment before Tag
      * but still before tag
      */
     export function MultiLineCommentBeforeTag_PostImpulse(callContextData: any): void
@@ -41,60 +48,72 @@ export namespace Test
         IC.postImpulse(DESTINATION_INSTANCE_NAME, "MultiLineCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /** Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). */
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
     export function MultiSeparateLinesCommentBeforeTag_PostFork(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "MultiSeparateLinesCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /** Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). */
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
     export function MultiSeparateLinesCommentBeforeTag_PostImpulse(callContextData: any): void
     {
         IC.postImpulse(DESTINATION_INSTANCE_NAME, "MultiSeparateLinesCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /************** Have a space after the tag before function declaration
-     * Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * ************ Have a space after the tag before function declaration
      */
     export function EmptyLineBetweenTagAndFctn_PostFork(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "EmptyLineBetweenTagAndFctn", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /************** Have a space after the tag before function declaration
-     * Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * ************ Have a space after the tag before function declaration
      */
     export function EmptyLineBetweenTagAndFctn_PostImpulse(callContextData: any): void
     {
         IC.postImpulse(DESTINATION_INSTANCE_NAME, "EmptyLineBetweenTagAndFctn", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /****** Spacing around the tag
-     * Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * **** Spacing around the tag
      */
     export function SpacingAroundTag_PostFork(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "SpacingAroundTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /****** Spacing around the tag
-     * Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * **** Spacing around the tag
      */
     export function SpacingAroundTag_PostImpulse(callContextData: any): void
     {
         IC.postImpulse(DESTINATION_INSTANCE_NAME, "SpacingAroundTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /** JS Doc
-     * Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * JS Doc
      */
     export function JSDOcTag_PostFork(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "JSDOcTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /** JS Doc
-     * Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * JS Doc
      */
     export function JSDOcTag_PostImpulse(callContextData: any): void
     {
@@ -102,7 +121,8 @@ export namespace Test
     }
 
     /**
-     * Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
      * The ambrosia tag must be on the implementation of an overloaded function
      */
     export function fnOverload_PostFork(callContextData: any, name?: string): void
@@ -111,7 +131,8 @@ export namespace Test
     }
 
     /**
-     * Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
      * The ambrosia tag must be on the implementation of an overloaded function
      */
     export function fnOverload_PostImpulse(callContextData: any, name?: string): void

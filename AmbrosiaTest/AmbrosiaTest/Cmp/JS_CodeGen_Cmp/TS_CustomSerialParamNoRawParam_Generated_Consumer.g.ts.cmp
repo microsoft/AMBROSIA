@@ -9,6 +9,9 @@ import Utils = Ambrosia.Utils;
 let DESTINATION_INSTANCE_NAME: string = "server";
 let POST_TIMEOUT_IN_MS: number = 8000; // -1 = Infinite
 
+/**
+Test when missing @param rawParams
+ */
 export namespace Test
 {
     /**

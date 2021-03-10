@@ -50,7 +50,7 @@
         },
         "debugStartCheckpoint": {
             "type": "number",
-            "description": "The checkpoint number to start \"time-travel debugging\" from."
+            "description": "The checkpoint number to start \"time-travel debugging\" from. Defaults to 0 (which means don't debug)."
         },
         "debugTestUpgrade": {
             "type": "boolean",
@@ -147,6 +147,12 @@
                     "type": "number",
                     "description": "Set this to a positive integer to generate a warning whenever the number of in-flight post methods reaches this threshold. Defaults to -1 (no limit).",
                     "default": -1
+                },
+                "messageBytePoolSizeInMB":
+                {
+                    "type": "number",
+                    "description": "The size (in MB) of the message byte pool used for optimizing message construction. Defaults to 2MB.",
+                    "default": 2
                 }
             }
         }
