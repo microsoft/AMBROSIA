@@ -92,7 +92,7 @@
                 },
                 "deleteRemoteCRAConnections": {
                     "type": "boolean",
-                    "description": "[Debug] Set this to true to delete non-local CRA connections at startup. Defaults to false.",
+                    "description": "[Debug] Set this to true to delete any previously created non-local CRA connections [from this instance] at startup. Defaults to false.",
                     "default": false
                 },
                 "allowCustomJSONSerialization": {

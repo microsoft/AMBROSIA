@@ -259,6 +259,10 @@ function dispatcher(message: Messages.DispatchedMessage): void
                     case Messages.AppEventType.CheckpointLoaded:
                         // TODO: Add an exported [non-async] function 'onCheckpointLoaded(checkpointSizeInBytes: number): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         break;
+
+                    case Messages.AppEventType.CheckpointSaved:
+                        // TODO: Add an exported [non-async] function 'onCheckpointSaved(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        break;
                 }
                 break;
         }
