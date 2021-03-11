@@ -207,8 +207,9 @@ namespace Ambrosia
         int _curBufPages;
         AmbrosiaRuntime _owningRuntime;
         OutputConnectionRecord _owningOutputRecord;
-        LinkedList<(long, long)> _page2SeqID = new LinkedList<(long, long)>();
 
+        long _committedSeqNo;
+        LinkedList<(long, long)> _page2SeqID = new LinkedList<(long, long)>();
 
         internal class BufferPage
         {
@@ -480,6 +481,30 @@ namespace Ambrosia
             }
         }
 
+        internal long FindCommittedSeqNo(long committedPageID)
+        {
+            long maxSeqNo = -1;
+            AcquireAppendLock(2);
+
+            var curDependency = _page2SeqID.First;
+            while (curDependency != null && curDependency.Value.Item1 <= committedPageID)
+            {
+                maxSeqNo = curDependency.Value.Item2;
+                var toRemove = curDependency;
+                curDependency = curDependency.Next;
+                _page2SeqID.Remove(toRemove);
+            }
+
+            if (maxSeqNo != -1)
+            {
+                _committedSeqNo = maxSeqNo;
+            }
+
+            ReleaseAppendLock();
+
+            return _committedSeqNo;
+        }
+
         internal async Task<BuffersCursor> SendAsync(Stream outputStream,
                                                      BuffersCursor placeToStart)
         {
@@ -515,16 +540,6 @@ namespace Ambrosia
                 }
                 int numRPCs = (int)(curBuffer.HighestSeqNo - curBuffer.LowestSeqNo + 1 - relSeqPos);
                 curBuffer.UnsentReplayableMessages = 0;
-
-                // XXX Remove this!!!
-                var curDependency = _page2SeqID.First;
-                while (curDependency != null && curDependency.Value.Item2 <= _owningOutputRecord.LastSeqSentToReceiver + numRPCs)
-                {
-                    var toRemove = curDependency;
-                    curDependency = curDependency.Next;
-                    _page2SeqID.Remove(toRemove);
-                }
-
                 ReleaseAppendLock();
                 Debug.Assert((nextSeqNo == curBuffer.LowestSeqNo + relSeqPos) && (nextSeqNo >= curBuffer.LowestSeqNo) && ((nextSeqNo + numRPCs - 1) <= curBuffer.HighestSeqNo));
                 ReleaseTrimLock();
@@ -1044,7 +1059,7 @@ namespace Ambrosia
         internal object _remoteTrimLock = new object();
 
         // Updated via fromControl.
-        internal long _committedSeqNo;
+        internal long _committedInputSeqNo;
 
         // The following are updated locally.
         private LinkedList<LongPair> _commitDependencies;
@@ -1141,7 +1156,7 @@ namespace Ambrosia
                 // Try to commit as many pages as possible, up until the current durablePageID. 
                 // Two cases in which we break out of this loop:
                 // 1) A page with a lower pageID has yet to commit, in which case we can't commit the current page.
-                // 2) We raced with an inputConnection thread that's committing pages. Give up and let that thread continue.
+                // 2) We raced and lost with another thread that's committing pages. Give up and let that thread continue.
                 while (!pageDepCounts.ContainsKey(lastCommittedPage + 1) && lastCommittedPage + 1 <= Interlocked.Read(ref MyAmbrosia._durablePageID))
                 {
                     var cmpXchgOut = Interlocked.CompareExchange(ref MyAmbrosia._committedPageID, lastCommittedPage + 1, lastCommittedPage);
@@ -1596,86 +1611,46 @@ namespace Ambrosia
                         pageDependencies[pageID] = uncommittedWatermarks.Count;
                     }
 
-                    if (pageID % 2 == 0)
+                    foreach (var kv in uncommittedWatermarks)
                     {
-                        foreach (var kv in uncommittedWatermarks)
+                        if (!kv.Key.Equals(""))
                         {
-                            if (kv.Key.Equals(""))
-                            {
-                                continue;
-                            }
-
                             var outputConnection = outputs[kv.Key];
                             outputConnection.RecordDependency(pageID, kv.Value.First, outputs, pageDependencies);
                         }
-
-                        // XXX This needs to be removed!
-                        foreach (var kv in uncommittedWatermarks)
-                        {
-                            if (kv.Key.Equals(""))
-                            {
-                                continue;
-                            }
-
-                            var prevSeqNo = Interlocked.Exchange(ref outputs[kv.Key]._committedSeqNo, kv.Value.First);
-                            Debug.Assert(prevSeqNo < kv.Value.First);
-                            if (outputs[kv.Key].ControlWorkQ.IsEmpty)
-                            {
-                                outputs[kv.Key].ControlWorkQ.Enqueue(-2);
-                            }
-                        }
                     }
-                    else
-                    {
-                        // XXX This needs to be removed!
-                        foreach (var kv in uncommittedWatermarks)
-                        {
-                            if (kv.Key.Equals(""))
-                            {
-                                continue;
-                            }
-
-                            var prevSeqNo = Interlocked.Exchange(ref outputs[kv.Key]._committedSeqNo, kv.Value.First);
-                            Debug.Assert(prevSeqNo < kv.Value.First);
-                            if (outputs[kv.Key].ControlWorkQ.IsEmpty)
-                            {
-                                outputs[kv.Key].ControlWorkQ.Enqueue(-2);
-                            }
-                        }
-
-                        foreach (var kv in uncommittedWatermarks)
-                        {
-                            if (kv.Key.Equals(""))
-                            {
-                                continue;
-                            }
-
-                            var outputConnection = outputs[kv.Key];
-                            outputConnection.RecordDependency(pageID, kv.Value.First, outputs, pageDependencies);
-                        }
-
-                    }
-
                 }
                 else
                 {
                     // The page has no remote dependencies, try to commit it.
                     var lastCommittedPage = Interlocked.Read(ref _myAmbrosia._committedPageID);
-                    // Debug.Assert(lastCommittedPage < pageID);
+                    var startPage = lastCommittedPage;
 
+                    // Try to commit as many pages as possible, up until the current durablePageID. 
+                    // Two cases in which we break out of this loop:
+                    // 1) A page with a lower pageID has yet to commit, in which case we can't commit the current page.
+                    // 2) We raced and lost with another thread that's committing pages. Give up and let that thread continue.
                     while (!pageDependencies.ContainsKey(lastCommittedPage + 1) && lastCommittedPage + 1 <= pageID)
                     {
                         var cmpXchgOut = Interlocked.CompareExchange(ref _myAmbrosia._committedPageID, lastCommittedPage + 1, lastCommittedPage);
                         if (cmpXchgOut != lastCommittedPage)
                         {
-                            // Two cases:
-                            // 1) A page with a lower pageID has yet to commit, in which case we can't commit the current page.
-                            // 2) We raced with an inputConnection thread that's committing pages. Give up and let that thread continue.
                             break;
                         }
                         else
                         {
                             lastCommittedPage += 1;
+                        }
+                    }
+
+                    if (startPage != lastCommittedPage)
+                    {
+                        foreach (var kv in outputs)
+                        {
+                            if (kv.Value.ControlWorkQ.IsEmpty)
+                            {
+                                kv.Value.ControlWorkQ.Enqueue(-2);
+                            }
                         }
                     }
                 }
@@ -2390,7 +2365,7 @@ namespace Ambrosia
         public const byte trimToByte = AmbrosiaRuntimeLBConstants.trimToByte;
         public const byte becomingPrimaryByte = AmbrosiaRuntimeLBConstants.becomingPrimaryByte;
         public const byte CurrentLSNByte = AmbrosiaRuntimeLBConstants.CurrentLSNByte;
-
+        public const byte CommittedSeqNoByte = AmbrosiaRuntimeLBConstants.CommittedSeqNoByte;
 
         CRAClientLibrary _coral;
 
@@ -3886,12 +3861,13 @@ namespace Ambrosia
 
             // This code dequeues output producing tasks and runs them
             long currentTrim = -1;
-            long currentCommittedSeqNo = -1;
+            long currentCommittedInputSeqNo = -1;
+            long currentCommittedOutputSeqNo = -1;
             long currentCommittedPage = -1;
 
             int maxSizeOfWatermark = sizeof(int) + 4 + 2 * sizeof(long);
-            var watermarkArr = new byte[maxSizeOfWatermark];
-            var watermarkStream = new MemoryStream(watermarkArr);
+            var controlArr = new byte[maxSizeOfWatermark];
+            var controlStream = new MemoryStream(controlArr);
             try
             {
                 while (true)
@@ -3906,19 +3882,32 @@ namespace Ambrosia
                     }
                     var nextEntry = await outputConnectionRecord.ControlWorkQ.DequeueAsync(ct);
 
-                    var committedSeqNo = Interlocked.Read(ref outputConnectionRecord._committedSeqNo);
+                    var committedInputSeqNo = Interlocked.Read(ref outputConnectionRecord._committedInputSeqNo);
                     var committedPageID = Interlocked.Read(ref _committedPageID);
 
-                    if (committedSeqNo > currentCommittedSeqNo)
+                    if (committedInputSeqNo > currentCommittedInputSeqNo)
                     {
-                        currentCommittedSeqNo = committedSeqNo;
-                        outputConnectionRecord.UpdateMaxSeqID(currentCommittedSeqNo, _outputs, _pageDependencies);
+                        currentCommittedInputSeqNo = committedInputSeqNo;
+                        outputConnectionRecord.UpdateMaxSeqID(currentCommittedInputSeqNo, _outputs, _pageDependencies);
                     }
 
                     if (committedPageID > currentCommittedPage)
                     {
-                        // XXX This needs to be completed!!!
                         currentCommittedPage = committedPageID;
+                        var committedOutputSeqNo = outputConnectionRecord.BufferedOutput.FindCommittedSeqNo(currentCommittedPage);
+                        if (committedOutputSeqNo > currentCommittedOutputSeqNo)
+                        {
+                            currentCommittedOutputSeqNo = committedOutputSeqNo;
+                            controlStream.Position = 0;
+                            var commitMsgLen = 1 + StreamCommunicator.LongSize(currentCommittedOutputSeqNo);
+                            Debug.Assert(commitMsgLen <= maxSizeOfWatermark);
+
+                            controlStream.WriteInt(commitMsgLen);
+                            controlStream.WriteByte(AmbrosiaRuntime.CommittedSeqNoByte);
+                            controlStream.WriteLong(currentCommittedOutputSeqNo);
+                            await writeToStream.WriteAsync(controlArr, 0, commitMsgLen + StreamCommunicator.IntSize(commitMsgLen));
+                            var flushTask = writeToStream.FlushAsync();
+                        }
                     }
 
                     if (lastRemoteTrim < outputConnectionRecord.RemoteTrim)
@@ -3931,13 +3920,13 @@ namespace Ambrosia
                             lastRemoteTrim = outputConnectionRecord.RemoteTrim;
                             lastRemoteTrimReplayable = outputConnectionRecord.RemoteTrimReplayable;
                         }
-                        watermarkStream.Position = 0;
+                        controlStream.Position = 0;
                         var watermarkLength = 1 + StreamCommunicator.LongSize(lastRemoteTrim) + StreamCommunicator.LongSize(lastRemoteTrimReplayable);
-                        watermarkStream.WriteInt(watermarkLength);
-                        watermarkStream.WriteByte(AmbrosiaRuntime.CommitByte);
-                        watermarkStream.WriteLong(lastRemoteTrim);
-                        watermarkStream.WriteLong(lastRemoteTrimReplayable);
-                        await writeToStream.WriteAsync(watermarkArr, 0, watermarkLength + StreamCommunicator.IntSize(watermarkLength));
+                        controlStream.WriteInt(watermarkLength);
+                        controlStream.WriteByte(AmbrosiaRuntime.CommitByte);
+                        controlStream.WriteLong(lastRemoteTrim);
+                        controlStream.WriteLong(lastRemoteTrimReplayable);
+                        await writeToStream.WriteAsync(controlArr, 0, watermarkLength + StreamCommunicator.IntSize(watermarkLength));
                         var flushTask = writeToStream.FlushAsync();
                     }
                 }
@@ -4113,6 +4102,19 @@ namespace Ambrosia
                             }
                         }
                         break;
+
+                    case CommittedSeqNoByte:
+                        var outConnectionRecord = _outputs[inputName];
+                        long committedSeqNo = StreamCommunicator.ReadBufferedLong(inputFlexBuffer.Buffer, sizeBytes + 1);
+                        inputFlexBuffer.ResetBuffer();
+                        Interlocked.Exchange(ref outConnectionRecord._committedInputSeqNo, committedSeqNo);
+                        if (outConnectionRecord.ControlWorkQ.IsEmpty)
+                        {
+                            outConnectionRecord.ControlWorkQ.Enqueue(-2);
+                        }
+
+                        break;
+
                     default:
                         // Bubble the exception up to CRA
                         throw new Exception("Illegal leading byte in input control message");

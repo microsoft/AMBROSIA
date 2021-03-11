@@ -41,6 +41,7 @@ namespace Ambrosia
         public const byte trimToByte = 14;
         public const byte becomingPrimaryByte = 15;
         public const byte CurrentLSNByte = 16;
+        public const byte CommittedSeqNoByte = 17;
     }
 
     public static class RpcTypes
