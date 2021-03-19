@@ -8,6 +8,11 @@
             "type": "string",
             "description": "The location of the matching JSON schema file, which is required for IntelliSense and auto-completion when editing using VSCode/VS2019+."
         },
+        "autoRegister": {
+            "type": "boolean",
+            "description": "Whether to automatically [re]register this Ambrosia Immortal instance at startup. When true, the following settings must also be explicitly set: icReceivePort, icSendPort, icLogFolder. If [re]registration succeeds, this setting automatically resets to false. Defaults to false.",
+            "default": false
+        },
         "instanceName": {
             "type": "string",
             "description": "The name this Ambrosia Immortal instance will be referred to by all instances (including itself).",
@@ -27,7 +32,7 @@
         },
         "icLogFolder": {
             "type": "string",
-            "description": "The folder where the Immortal Coordinator (IC) will persist its logs. If not provided, it will be read from the registration."
+            "description": "The folder where the Immortal Coordinator (IC) will write its logs (or read logs from if doing \"time-travel debugging\"). If not provided, it will be read from the registration."
         },
         "icLogStorageType" : {
             "type": "string",
@@ -37,7 +42,7 @@
         },
         "icBinFolder": {
             "type": "string",
-            "description": "The folder where the Immortal Coordinator (IC) binaries exist. If not specified, the 'AMBROSIATOOLS' environment variable will be used."
+            "description": "The folder path(s) where the Immortal Coordinator (IC) binaries exist. Separate multiple paths with ';'. If not specified, the 'AMBROSIATOOLS' environment variable will be used."
         },
         "icIPv4Address" : {
             "type": "string",
@@ -54,7 +59,7 @@
         },
         "debugTestUpgrade": {
             "type": "boolean",
-            "description": "Whether to perform a test upgrade (for debugging/testing purposes). Defaults to false.",
+            "description": "Whether to perform a test upgrade (for debugging/testing purposes). If set to true, a non-zero 'debugStartCheckpoint' must also be specified. Defaults to false.",
             "default": false
         },
         "logTriggerSizeInMB": {
@@ -73,6 +78,11 @@
             "type": "number",
             "description": "The nominal version of this Immortal instance. Used to identify the log sub-folder name (ie. &lt;icInstanceName>_&lt;appVersion>) that will be logged to (or read from, if debugStartCheckpoint is specified)."
         },
+        "upgradeVersion": {
+            "type": "number",
+            "description": "The nominal version this Immortal instance should upgrade to at startup. Must be greater than 'appVersion' to trigger an upgrade, or 0 (meaning do not upgrade). Test the upgrade first by setting 'debugTestUpgrade' to true. Defaults to 0.",
+            "default": 0
+        },
         "secureNetworkAssemblyName" : {
             "type": "string",
             "description": "The name of the .NET assembly used to establish a secure network channel between ICs."
@@ -87,7 +97,7 @@
             "properties": {
                 "deleteLogs": {
                     "type": "boolean",
-                    "description": "Set this to true to clear the IC logs (all prior checkpoints and logged state changes will be permanently lost, and recovery will not run). Defaults to false.",
+                    "description": "[Debug] Set this to true to clear the IC logs (all prior checkpoints and logged state changes will be PERMANENTLY LOST, and recovery will not run). Defaults to false.",
                     "default": false
                 },
                 "deleteRemoteCRAConnections": {

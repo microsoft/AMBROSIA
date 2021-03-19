@@ -1,7 +1,7 @@
 // Generated publisher-side framework for the 'server' Ambrosia Node instance.
 // Note: This file was generated
 // Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
-import * as PTM from "./JS_CodeGen_TestFiles/TS_EventHandlers"; // PTM = "Published Types and Methods", but this file can also include app-state and app-event handlers
+import * as PTM from "./JS_CodeGen_TestFiles/TS_AmbrosiaTag"; // PTM = "Published Types and Methods", but this file can also include app-state and app-event handlers
 import Ambrosia = require("ambrosia-node"); 
 import Utils = Ambrosia.Utils;
 import IC = Ambrosia.IC;
@@ -9,7 +9,7 @@ import Messages = Ambrosia.Messages;
 import Meta = Ambrosia.Meta;
 import Streams = Ambrosia.Streams;
 
-// TODO: It's recommended that you move this namespace to your input file (./JS_CodeGen_TestFiles/TS_EventHandlers.ts) then re-run code-gen
+// TODO: It's recommended that you move this namespace to your input file (./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts) then re-run code-gen
 export namespace State
 {
     export class AppState extends Ambrosia.AmbrosiaAppState
@@ -36,7 +36,10 @@ export namespace State
         }
     }
 
-    /** Only assign this using the return value of IC.start(), and [if not using the generated checkpointConsumer()] in the 'onFinished' callback of an IncomingCheckpoint object. */
+    /**
+     * Only assign this using the return value of IC.start(), the return value of the upgrade() method of your AmbrosiaAppState
+     * instance, and [if not using the generated checkpointConsumer()] in the 'onFinished' callback of an IncomingCheckpoint object.
+     */
     export let _appState: AppState = null;
 }
 
@@ -79,7 +82,7 @@ export function messageDispatcher(message: Messages.DispatchedMessage): void
     //         If Rule #1 is followed, the app is automatically in compliance with Rule #2.
     // Reason: Unless your application has a way to capture (and rehydrate) runtime execution state (specifically the message handler stack) in the serialized
     //         application state (checkpoint), recovery of the checkpoint will not be able to complete the in-flight message handlers. But if there are no 
-    //         in-flight handlers at the time the checkpoint is taken (because they all complete), then the problem of how to complete them during recovery is moot. 
+    //         in-flight handlers at the time the checkpoint is taken (because they all completed), then the problem of how to complete them during recovery is moot. 
     //
     // Rule 3: Avoid sending too many messages in a single message handler.
     // Reason: Because a message handler always has to run to completion (see Rule #1), if it runs for too long it can monopolize the system leading to performance issues.
@@ -123,14 +126,43 @@ function dispatcher(message: Messages.DispatchedMessage): void
                     
                             switch (methodName)
                             {
-                                case "onbecomingprimary":
-                                    IC.postResult<void>(rpc, PTM.Test.onbecomingprimary());
+                                case "OneLineNoComment":
+                                    IC.postResult<void>(rpc, PTM.Test.OneLineNoComment());
+                                    break;
+                                
+                                case "MultiLineCommentBeforeTag":
+                                    IC.postResult<void>(rpc, PTM.Test.MultiLineCommentBeforeTag());
+                                    break;
+                                
+                                case "MultiSeparateLinesCommentBeforeTag":
+                                    IC.postResult<void>(rpc, PTM.Test.MultiSeparateLinesCommentBeforeTag());
+                                    break;
+                                
+                                case "EmptyLineBetweenTagAndFctn":
+                                    IC.postResult<void>(rpc, PTM.Test.EmptyLineBetweenTagAndFctn());
+                                    break;
+                                
+                                case "SpacingAroundTag":
+                                    IC.postResult<void>(rpc, PTM.Test.SpacingAroundTag());
+                                    break;
+                                
+                                case "JSDOcTag":
+                                    IC.postResult<void>(rpc, PTM.Test.JSDOcTag());
+                                    break;
+                                
+                                case "fnOverload":
+                                    {
+                                        let name: string = IC.getPostMethodArg(rpc, "name?");
+                                        IC.postResult<void>(rpc, PTM.Test.fnOverload(name));
+                                    }
                                     break;
                                 
                                 default:
-                                    let errorMsg: string = `Post method '${methodName}' is not implemented`;
-                                    Utils.log(`(${errorMsg})`, loggingPrefix)
-                                    IC.postError(rpc, new Error(errorMsg));
+                                    {
+                                        let errorMsg: string = `Post method '${methodName}' is not implemented`;
+                                        Utils.log(`(${errorMsg})`, loggingPrefix)
+                                        IC.postError(rpc, new Error(errorMsg));
+                                    }
                                     break;
                             }
                         }
@@ -144,7 +176,7 @@ function dispatcher(message: Messages.DispatchedMessage): void
                     // Code-gen: Fork/Impulse method handlers will go here
                     
                     default:
-                        Utils.log(`(No method is associated with methodID ${rpc.methodID})`, loggingPrefix)
+                        Utils.log(`Error: Method dispatch failed (reason: No method is associated with methodID ${rpc.methodID})`);
                         break;
                 }
                 break;
@@ -156,51 +188,56 @@ function dispatcher(message: Messages.DispatchedMessage): void
                 {
                     case Messages.AppEventType.ICStarting:
                         // Code-gen: Published types will go here
-                        Meta.publishPostMethod("onbecomingprimary", 1, [], "void");
-                        PTM.onICStarting();
+                        Meta.publishPostMethod("OneLineNoComment", 1, [], "void");
+                        Meta.publishPostMethod("MultiLineCommentBeforeTag", 1, [], "void");
+                        Meta.publishPostMethod("MultiSeparateLinesCommentBeforeTag", 1, [], "void");
+                        Meta.publishPostMethod("EmptyLineBetweenTagAndFctn", 1, [], "void");
+                        Meta.publishPostMethod("SpacingAroundTag", 1, [], "void");
+                        Meta.publishPostMethod("JSDOcTag", 1, [], "void");
+                        Meta.publishPostMethod("fnOverload", 1, ["name?: string"], "void");
+                        // TODO: Add an exported [non-async] function 'onICStarting(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStarted:
-                        PTM.onICStarted();
+                        // TODO: Add an exported [non-async] function 'onICStarted(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStopped:
-                        const exitCode: number = appEvent.args[0] as number;
-                        PTM.onICStopped(exitCode);
+                        // TODO: Add an exported [non-async] function 'onICStopped(exitCode: number): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICReadyForSelfCallRpc:
-                        PTM.onICReadyForSelfCallRpc();
+                        // TODO: Add an exported [non-async] function 'onICReadyForSelfCallRpc(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
     
                     case Messages.AppEventType.RecoveryComplete:
-                        PTM.Test.onRecoveryComplete();
+                        // TODO: Add an exported [non-async] function 'onRecoveryComplete(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.UpgradeStateAndCode:
-                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/TS_EventHandlers.ts, then (after the next code-gen) a call to it will be generated here
-                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_EventHandlers.ts in order to reference the 'Messages' namespace.
-                        //       Also, your handler should call IC.upgrade() [to upgrade code] and _appState.upgrade() [to upgrade state].
+                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
+                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts in order to reference the 'Messages' namespace.
+                        //       Also, your handler MUST call IC.upgrade() [to upgrade code] and the upgrade() method of your AmbrosiaAppState instance [to upgrade state].
                         break;
 
                     case Messages.AppEventType.IncomingCheckpointStreamSize:
-                        PTM.onIncomingCheckpointStreamSize();
+                        // TODO: Add an exported [non-async] function 'onIncomingCheckpointStreamSize(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
                     
                     case Messages.AppEventType.FirstStart:
-                        // TODO: Add an exported [non-async] function 'onFirstStart(): void' to ./JS_CodeGen_TestFiles/TS_EventHandlers.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported [non-async] function 'onFirstStart(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.BecomingPrimary:
-                        PTM.Test.onBecomingPrimary();
+                        // TODO: Add an exported [non-async] function 'onBecomingPrimary(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
                     
                     case Messages.AppEventType.CheckpointLoaded:
-                        // TODO: Add an exported [non-async] function 'onCheckpointLoaded(checkpointSizeInBytes: number): void' to ./JS_CodeGen_TestFiles/TS_EventHandlers.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported [non-async] function 'onCheckpointLoaded(checkpointSizeInBytes: number): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.CheckpointSaved:
-                        // TODO: Add an exported [non-async] function 'onCheckpointSaved(): void' to ./JS_CodeGen_TestFiles/TS_EventHandlers.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported [non-async] function 'onCheckpointSaved(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
                 }
                 break;
