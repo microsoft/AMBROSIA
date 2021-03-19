@@ -56,7 +56,7 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_AsyncFctn.ts";
             string ConsumerErrorMsg = "as a post method (reason: async functions are not supported)";
-            string PublisherErrorMsg = "Error: Unable to publish type alias 'Digits'";
+            string PublisherErrorMsg = "Error: Unable to publish function 'ComputePI'"; 
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
