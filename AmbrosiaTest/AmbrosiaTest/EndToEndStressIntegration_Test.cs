@@ -813,7 +813,7 @@ namespace AmbrosiaTest
                 AMB_PersistLogs = "Y",
                 AMB_NewLogTriggerSize = "1000",
                 AMB_ActiveActive = "N",
-                AMB_Version = "9"
+                AMB_Version = "0"  // client always is 0
             };
             MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
 
@@ -902,7 +902,7 @@ namespace AmbrosiaTest
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_upgraded);
 
             // Verify integrity of Ambrosia logs by replaying
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB2.AMB_Version);
         }
 
         //** Upgrade scenario where the server is upgraded server before client is finished
@@ -932,7 +932,7 @@ namespace AmbrosiaTest
                 AMB_PersistLogs = "Y",
                 AMB_NewLogTriggerSize = "1000",
                 AMB_ActiveActive = "N",
-                AMB_Version = "10"
+                AMB_Version = "0" // client is always 0
             };
             MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
 
@@ -1018,6 +1018,10 @@ namespace AmbrosiaTest
 
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_upgraded);
+
+            // Verify integrity of Ambrosia logs by replaying
+            // Do not verify log file through replay / ttd - doesn't work when log files span different versions
+            // MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB2.AMB_Version);
 
         }
 
@@ -1106,7 +1110,7 @@ namespace AmbrosiaTest
                 AMB_PersistLogs = "Y",
                 AMB_NewLogTriggerSize = "1000",
                 AMB_ActiveActive = "N",
-                AMB_Version = "10"
+                AMB_Version = "0"
             };
             MyUtils.CallAMB(AMB4, logOutputFileName_AMB4, AMB_ModeConsts.RegisterInstance);
 

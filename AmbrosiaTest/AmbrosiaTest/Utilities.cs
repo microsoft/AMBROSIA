@@ -588,7 +588,7 @@ namespace AmbrosiaTest
         public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false)
         {
 
-            // Basically doing this for multi client stuff
+            // Doing this for multi client situations
             string optionalMultiClientStartingPoint = "";
             if (optionalNumberOfClient == "")
             {
@@ -613,9 +613,7 @@ namespace AmbrosiaTest
 
 
             // used to get log file
-            //            string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
-            //            string ambrosiaServerLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "server_" + CurrentVersion;
-            string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_" + CurrentVersion;
+            string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_0";  // client is always 0 so don't use + CurrentVersion;
             string ambrosiaServerLogDir = ambrosiaLogDir + "\\" + testName + "server_" + CurrentVersion;
 
             string startingClientChkPtVersionNumber = "1";
@@ -711,7 +709,7 @@ namespace AmbrosiaTest
                 AMB_ServiceName = clientJobName,
                 AMB_ServiceLogPath = ambrosiaLogDir + "\\",
                 AMB_StartingCheckPointNum = startingClientChkPtVersionNumber,
-                AMB_Version = CurrentVersion.ToString(),
+                AMB_Version = "0",   // always 0 CurrentVersion.ToString(),
                 AMB_TestingUpgrade = "N",
                 AMB_PortAppReceives = "1000",
                 AMB_PortAMBSends = "1001"
@@ -758,8 +756,9 @@ namespace AmbrosiaTest
             }
 
             // wait until done running
-            bool pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, testName, true);
-            pass = WaitForProcessToFinish(logOutputFileName_ClientJob_Verify, numBytes.ToString(), 15, false, testName, true);
+            bool pass = WaitForProcessToFinish(logOutputFileName_ClientJob_Verify, numBytes.ToString(), 15, false, testName, true);
+            pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, testName, true);
+            
 
             // MTFs don't check cmp files because they change from run to run
             if (checkCmpFile)
@@ -770,7 +769,7 @@ namespace AmbrosiaTest
             }
 
             // Test Time Travel Debugging on the Log Files from PTI job and PTI server
-            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient);
+            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion);
 
         }
 
@@ -778,7 +777,7 @@ namespace AmbrosiaTest
         //** job.exe and server.exe to verify it. Porbably easiest to call from VerifyAmbrosiaLogFile since that does
         //** all the work to get the log files and checkpoint numbers
         //** Assumption that this is called at the end of a test where Ambrosia.exe was already called to register for this test
-        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber, string optionalNumberOfClient = "")
+        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber, string optionalNumberOfClient = "", string currentVersion = "")
         {
 
             // Basically doing this for multi client stuff
@@ -793,7 +792,7 @@ namespace AmbrosiaTest
 
             //Server Call
             string logOutputFileName_Server_TTD_Verify = testName + "_Server_TTD_Verify.log";
-            int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_TTD_Verify, Convert.ToInt32(optionalNumberOfClient), false,0, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingServerChkPtVersionNumber);
+            int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_TTD_Verify, Convert.ToInt32(optionalNumberOfClient), false,0, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingServerChkPtVersionNumber,currentVersion);
 
             // wait until done running
             bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
@@ -998,7 +997,7 @@ namespace AmbrosiaTest
         }
 
         // Starts the server.exe from PerformanceTestUninterruptible.  
-        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0, string deployMode = "", string ICPort = "", string TTDLog = "", string TTDCheckpointNum = "")
+        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0, string deployMode = "", string ICPort = "", string TTDLog = "", string TTDCheckpointNum = "", string currentVersion = "")
         {
 
             // Configure upgrade properly
@@ -1055,6 +1054,12 @@ namespace AmbrosiaTest
                           + " -n=" + NumClients.ToString() + " -m=" + optionalMemoryAllocat.ToString() + " -c"
                           + " -d=" + deployModeInProcTimeTravel 
                           + " -l=" + TTDLog + " -ch=" + TTDCheckpointNum;
+
+                // The version # used to time travel debug (ignored otherwise).
+                if (currentVersion != "")
+                {
+                    argString = argString + " -cv=" + currentVersion;
+                }
             }
 
             // add upgrade switch if upgrading

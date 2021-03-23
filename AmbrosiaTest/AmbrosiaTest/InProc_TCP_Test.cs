@@ -443,7 +443,7 @@ namespace AmbrosiaTest
             string logOutputFileName_ClientJob_Restarted = testName + "_ClientJob_Restarted.log";
             int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted, MyUtils.deployModeInProcManual, "1500");
 
-            // Give it 5seconds to do something before killing it again
+            // Give it 5 seconds to do something before killing it again
             Thread.Sleep(5000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
@@ -595,7 +595,7 @@ namespace AmbrosiaTest
                 AMB_PersistLogs = "Y",
                 AMB_NewLogTriggerSize = "1000",
                 AMB_ActiveActive = "N",
-                AMB_Version = "10"
+                AMB_Version = "0"   // Client is always 0
             };
             MyUtils.CallAMB(AMB1, logOutputFileName_AMB1, AMB_ModeConsts.RegisterInstance);
 
@@ -669,6 +669,10 @@ namespace AmbrosiaTest
 
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_upgraded);
+
+            // Verify integrity of Ambrosia logs by replaying
+            // Do not verify log file through replay / ttd - doesn't work when log files span different versions
+            // MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB2.AMB_Version);
         }
 
 
