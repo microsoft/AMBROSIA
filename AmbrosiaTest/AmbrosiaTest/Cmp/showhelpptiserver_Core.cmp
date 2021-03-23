@@ -21,4 +21,6 @@ Options:
                                      InProcTimeTravel)
   -l, --log=VALUE                  If TTD, the service log path.
   -ch, --checkpoint=VALUE          If TTD, the checkpoint # to load.
+  -cv, --currentVersion=VALUE      The version # used to time travel debug (
+                                     ignored otherwise).
   -h, --help                       show this message and exit
