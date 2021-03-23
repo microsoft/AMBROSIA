@@ -18,7 +18,7 @@ namespace AmbrosiaTest
         {
             // Build the JS app first from a JS file
             JS_Utilities JSUtils = new JS_Utilities();
-//*#*#*# COMMENT OUT FOR NOW - EASIER WITH TEST WRITING ETCJSUtils.BuildJSTestApp();
+//*#*#*# COMMENT OUT FOR NOW - EASIER WITH TEST WRITING ETC .. JSUtils.BuildJSTestApp();
         }
 
         // NOTE: Make sure all names be "Azure Safe". No capital letters and no underscore.
@@ -30,15 +30,12 @@ namespace AmbrosiaTest
         }
         //************* Init Code *****************
 
-        [TestMethod]
-        public void JS_CG_Misc_PI_Test()
+        [TestCleanup()]
+        public void Cleanup()
         {
+            // Kill all exes associated with tests
             JS_Utilities JSUtils = new JS_Utilities();
-
-            string testfileName = "PI.ts";
-
-            // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName);
+            JSUtils.JS_TestCleanup();
         }
 
 
@@ -87,6 +84,27 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName);
         }
 
+        [TestMethod]
+        public void JS_CG_CustomSerialParam_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_CustomSerialParam.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_CustomSerialParamNoRaw_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_CustomSerialParamNoRawParam.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
 
 
         [TestMethod]
@@ -104,7 +122,74 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, false, ConsumerWarning, PublisherWarning);
         }
 
-        //**** Misc valid tests that are just a "catch all" if don't know where to put teest
+        [TestMethod]
+        public void JS_CG_GenTypeConcrete_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_GenType1.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_GenTypeConcrete2_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_GenType2.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_JSDocComment_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_JSDocComment.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_JSDocComment2_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_JSDocComment2.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_LiteralObjArray_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_LitObjArray.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_StaticMethod_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_StaticMethod.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+
+        //**** Misc valid tests that are just a "catch all" if don't know where to put test
         [TestMethod]
         public void JS_CG_Misc_Test()
         {
