@@ -153,6 +153,9 @@ namespace Ambrosia
                     false);
             }) { IsBackground = true };
             _iCThread.Start();
+
+            // Wait for the IC to finish setting up the named pipes before continuing (waiting avoids a potential deadlock)
+            while (!AmbrosiaRuntime._listening) ;
             return Deploy<T>(serviceName, instance, 0, 0);
         }
 
@@ -177,6 +180,9 @@ namespace Ambrosia
         {
             _iCThread = new Thread(() => startIC(serviceName, iCPort, replicaNumber, secureNetworkClassName, secureNetworkAssemblyName)) { IsBackground = true };
             _iCThread.Start();
+
+            // Wait for the IC to finish setting up the named pipes before continuing (waiting avoids a potential deadlock)
+            while (!AmbrosiaRuntime._listening) ;
             return Deploy<T>(serviceName, instance, 0, 0);
         }
 
@@ -258,6 +264,9 @@ namespace Ambrosia
         {
             _iCThread = new Thread(() => startIC(serviceName, iCPort, replicaNumber, secureNetworkClassName, secureNetworkAssemblyName)) { IsBackground = true };
             _iCThread.Start();
+
+            // Wait for the IC to finish setting up the named pipes before continuing (waiting avoids a potential deadlock)
+            while (!AmbrosiaRuntime._listening) ;
             return Deploy<T, T2, Z2>(serviceName, instance, 0, 0);
         }
 
@@ -286,6 +295,9 @@ namespace Ambrosia
             })
             { IsBackground = true };
             _iCThread.Start();
+
+            // Wait for the IC to finish setting up the named pipes before continuing (waiting avoids a potential deadlock)
+            while (!AmbrosiaRuntime._listening) ;
             return Deploy<T, T2, Z2>(serviceName, instance, 0, 0);
         }
 
