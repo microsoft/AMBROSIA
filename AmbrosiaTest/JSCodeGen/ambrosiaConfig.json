@@ -1,15 +1,18 @@
 {
     "$schema": "./ambrosiaConfig-schema.json",
+    "autoRegister": false,
     "instanceName": "server",
-    "useRegistrationSettings": false,
     "icCraPort": 2500,
     "icReceivePort": 2000,
     "icSendPort": 2001,
     "icLogFolder": "C:/logs/",
-    "icBinFolder": "C:/Ambrosia-win/x64/Release",
+    "icBinFolder": "C:/src/Git/PostSledgehammer/AMBROSIA/ImmortalCoordinator/bin/x64/Release;C:/src/Git/PostSledgehammer/AMBROSIA/Ambrosia/Ambrosia/bin/x64/Release",
     "useNetCore": false,
+    "logTriggerSizeInMB": 1024,
     "debugStartCheckpoint": 0,
+    "debugTestUpgrade": false,
     "appVersion": 0,
+    "upgradeVersion": 0,
     "lbOptions": 
     {
         "deleteLogs": true, 

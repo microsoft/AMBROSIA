@@ -1,0 +1,152 @@
+// Generated consumer-side API for the 'server' Ambrosia Node instance.
+// Publisher: Darren Gehring [darrenge@microsoft.com].
+// Note: This file was generated
+// Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
+import Ambrosia = require("ambrosia-node");
+import IC = Ambrosia.IC;
+import Utils = Ambrosia.Utils;
+
+let DESTINATION_INSTANCE_NAME: string = "server";
+let POST_TIMEOUT_IN_MS: number = 8000; // -1 = Infinite
+
+export namespace Test
+{
+    /**
+     * Example of a complex type.
+     */
+    export class Name
+    {
+        first: string;
+        last: string;
+        priorNames: Names[];
+
+        constructor(first: string, last: string, priorNames: Names[])
+        {
+            this.first = first;
+            this.last = last;
+            this.priorNames = priorNames;
+        }
+    }
+
+    /**
+     * Example of a type that references another type.
+     */
+    export type Names = Name[];
+
+    /**
+     * Example of a nested complex type.
+     */
+    export class Nested
+    {
+        abc: { a: Uint8Array, b: { c: Names } };
+
+        constructor(abc: { a: Uint8Array, b: { c: Names } })
+        {
+            this.abc = abc;
+        }
+    }
+
+    /**
+     * Example of an enum.
+     */
+    export enum Letters { A = 0, B = 3, C = 4, D = 9 }
+
+    /**
+     * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * Example of a [post] method that uses custom types.
+     */
+    export function makeName_PostFork(callContextData: any, firstName?: string, lastName?: string): void
+    {
+        IC.postFork(DESTINATION_INSTANCE_NAME, "makeName", 1, POST_TIMEOUT_IN_MS, callContextData, 
+            IC.arg("firstName?", firstName), 
+            IC.arg("lastName?", lastName));
+    }
+
+    /**
+     * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * Example of a [post] method that uses custom types.
+     */
+    export function makeName_PostImpulse(callContextData: any, firstName?: string, lastName?: string): void
+    {
+        IC.postImpulse(DESTINATION_INSTANCE_NAME, "makeName", 1, POST_TIMEOUT_IN_MS, callContextData, 
+            IC.arg("firstName?", firstName), 
+            IC.arg("lastName?", lastName));
+    }
+
+    /**
+     * Example of a [non-post] method
+     */
+    export function DoIt_Fork(p1: Name[][]): void
+    {
+        IC.callFork(DESTINATION_INSTANCE_NAME, 123, { p1: p1 });
+    }
+
+    /**
+     * Example of a [non-post] method
+     */
+    export function DoIt_Impulse(p1: Name[][]): void
+    {
+        IC.callImpulse(DESTINATION_INSTANCE_NAME, 123, { p1: p1 });
+    }
+
+    /**
+     * Example of a [non-post] method
+     */
+    export function DoIt_EnqueueFork(p1: Name[][]): void
+    {
+        IC.queueFork(DESTINATION_INSTANCE_NAME, 123, { p1: p1 });
+    }
+
+    /**
+     * Example of a [non-post] method
+     */
+    export function DoIt_EnqueueImpulse(p1: Name[][]): void
+    {
+        IC.queueImpulse(DESTINATION_INSTANCE_NAME, 123, { p1: p1 });
+    }
+}
+
+/**
+ * Handler for the results of previously called post methods (in Ambrosia, only 'post' methods return values). See Messages.PostResultDispatcher.\
+ * Must return true only if the result (or error) was handled.
+ */
+export function postResultDispatcher(senderInstanceName: string, methodName: string, methodVersion: number, callID: number, callContextData: any, result: any, errorMsg: string): boolean
+{
+    const sender: string = IC.isSelf(senderInstanceName) ? "local" : `'${senderInstanceName}'`;
+    let handled: boolean = true;
+
+    if (senderInstanceName !== DESTINATION_INSTANCE_NAME)
+    {
+        return (false); // Not handled (this post result is from a different instance than the one this consumer-side file is for)
+    }
+
+    if (errorMsg)
+    {
+        switch (methodName)
+        {
+            case "makeName":
+                Utils.log(`Error: ${errorMsg}`);
+                break;
+            default:
+                handled = false;
+                break;
+        }
+    }
+    else
+    {
+        switch (methodName)
+        {
+            case "makeName":
+                const makeName_Result: Test.Names = result;
+                // TODO: Handle the result, optionally using the callContextData passed in the call
+                Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
+                break;
+            default:
+                handled = false;
+                break;
+        }
+    }
+    return (handled);
+}

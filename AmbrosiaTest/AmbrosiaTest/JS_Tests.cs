@@ -15,9 +15,9 @@ namespace AmbrosiaTest
         [ClassInitialize()]
         public static void Class_Initialize(TestContext tc)
         {
-            // Build the JS app first from a JS file
+            // Build the JS PTI first from a JS file
             JS_Utilities JSUtils = new JS_Utilities();
-            JSUtils.BuildJSTestApp();
+            //JSUtils.BuildJSTestApp();   // at some point this will be the JS PTI
         }
 
         // NOTE: Make sure all names be "Azure Safe". No capital letters and no underscore.
@@ -30,24 +30,32 @@ namespace AmbrosiaTest
         //************* Init Code *****************
 
 
-        [TestMethod]
-        public void JS_UnitTest()
+        [TestCleanup()]
+        public void Cleanup()
         {
-            string testName = "jsunittest";
-            string clientJobName = testName + "clientjob";
-            string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-            string byteSize = "1073741824";
+            // Kill all exes associated with tests
+            JS_Utilities JSUtils = new JS_Utilities();
+            JSUtils.JS_TestCleanup();
+        }
+
+        [TestMethod]
+        public void JS_NodeUnitTests()
+        {
 
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
+            string testName = "jsnodeunittest";
+            string finishedString = "UNIT TESTS COMPLETE";
+            string successString = "SUMMARY: 78 passed (100%), 0 failed (0%)";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
 
-            int JSTestAppID = JSUtils.StartJSTestApp(logOutputFileName_TestApp);
+            // Launched all the unit tests for JS Node (npm run unittests)
+            int JSTestAppID = JSUtils.StartJSNodeUnitTests(logOutputFileName_TestApp);
 
-
-            string DG = "Done!";
+            // Wait until summary at the end and if not there, then know not finished
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, finishedString, 2, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 1, false, testName, true);
 
         }
     }

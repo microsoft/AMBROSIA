@@ -57,9 +57,10 @@ export namespace Test {
         console.log("JSDOcTag");
     }
 
+
     /*  This will NOT generate code - causes a warning that Skipping Function */
     /******** @ambrosia publish=true          */
-    export function NotJSDOcTag() {
+    export function NotJSDOcTag() { 
         console.log("NotJSDOcTag");
     }
 
