@@ -2170,6 +2170,9 @@ namespace Ambrosia
         // Hack for enabling fast IP6 loopback in Windows on .NET
         const int SIO_LOOPBACK_FAST_PATH = (-1744830448);
 
+        // This is a hack to keep threads from deadlocking when running integrated IC. Has no affect for separate IC.
+        volatile public static bool _listening = false;
+
         void SetupLocalServiceStreams()
         {
             // Check to see if this is a tightly bound IC 
@@ -2177,6 +2180,7 @@ namespace Ambrosia
             {
                 //Use anonymous pipes for communication rather than TCP
                 var pipeServer = new AnonymousPipeServerStream(PipeDirection.In, HandleInheritability.Inheritable);
+                _listening = true;
                 StartupParamOverrides.ICReceivePipeName = pipeServer.GetClientHandleAsString();
                 _localServiceReceiveFromStream = pipeServer;
                 pipeServer = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.Inheritable);
