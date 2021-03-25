@@ -760,7 +760,7 @@ namespace AmbrosiaTest
             pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, testName, true);
             
 
-            // MTFs don't check cmp files because they change from run to run
+            // MTFs don't check cmp files because they change from run to run 
             if (checkCmpFile)
             {
                 // verify new log files to cmp files
@@ -768,8 +768,8 @@ namespace AmbrosiaTest
                 VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Verify);
             }
 
-            // Test Time Travel Debugging on the Log Files from PTI job and PTI server
-            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion);
+            // Test Time Travel Debugging on the Log Files from PTI job and PTI server - don't do for MTF as not needed for TTD handled by other tests also cmp files change too much
+            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion, checkCmpFile);
 
         }
 
@@ -777,7 +777,7 @@ namespace AmbrosiaTest
         //** job.exe and server.exe to verify it. Porbably easiest to call from VerifyAmbrosiaLogFile since that does
         //** all the work to get the log files and checkpoint numbers
         //** Assumption that this is called at the end of a test where Ambrosia.exe was already called to register for this test
-        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber, string optionalNumberOfClient = "", string currentVersion = "")
+        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber, string optionalNumberOfClient = "", string currentVersion = "", bool checkCmpFile = true)
         {
 
             // Basically doing this for multi client stuff
@@ -795,12 +795,16 @@ namespace AmbrosiaTest
             int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_TTD_Verify, Convert.ToInt32(optionalNumberOfClient), false,0, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingServerChkPtVersionNumber,currentVersion);
 
             // wait until done running
-            bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
+            bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 20, false, testName, true);
             pass = WaitForProcessToFinish(logOutputFileName_ClientJob_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
 
-            // verify TTD files to cmp files
-            VerifyTestOutputFileToCmpFile(logOutputFileName_Server_TTD_Verify,false,true);
-            VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_TTD_Verify, false, true);
+            // With Meantime to Failure tests don't check cmp files because they change from run to run 
+            if (checkCmpFile)
+            {
+                // verify TTD files to cmp files
+                VerifyTestOutputFileToCmpFile(logOutputFileName_Server_TTD_Verify, false, true);
+                VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_TTD_Verify, false, true);
+            }
         }
 
         public int StartImmCoord(string ImmCoordName, int portImmCoordListensAMB, string testOutputLogFile, bool ActiveActive = false, int replicaNum = 9999, int overRideReceivePort = 0, int overRideSendPort = 0, string overRideLogLoc = "", string overRideIPAddr = "", string logToType = "")
