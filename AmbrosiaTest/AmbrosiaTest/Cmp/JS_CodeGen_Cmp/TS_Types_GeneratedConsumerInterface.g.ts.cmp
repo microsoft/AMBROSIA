@@ -76,7 +76,7 @@ export namespace Test
      * 
      * *********** Primitives - bool, string, number, array
      */
-    export function BasicTypes_PostFork(callContextData: any, isFalse: boolean, height: number, mystring?: string, mystring2?: string, my_array?: number[], notSure?: any): void
+    export function BasicTypes_Post(callContextData: any, isFalse: boolean, height: number, mystring?: string, mystring2?: string, my_array?: number[], notSure?: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "BasicTypes", 1, POST_TIMEOUT_IN_MS, callContextData, 
             IC.arg("isFalse", isFalse), 
@@ -88,59 +88,23 @@ export namespace Test
     }
 
     /**
-     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * *********** Primitives - bool, string, number, array
-     */
-    export function BasicTypes_PostImpulse(callContextData: any, isFalse: boolean, height: number, mystring?: string, mystring2?: string, my_array?: number[], notSure?: any): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "BasicTypes", 1, POST_TIMEOUT_IN_MS, callContextData, 
-            IC.arg("isFalse", isFalse), 
-            IC.arg("height", height), 
-            IC.arg("mystring?", mystring), 
-            IC.arg("mystring2?", mystring2), 
-            IC.arg("my_array?", my_array), 
-            IC.arg("notSure?", notSure));
-    }
-
-    /**
      * *Note: The result (PrintMedia) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
      * ******* Function using / returning Numeric Enum
      */
-    export function getMedia_PostFork(callContextData: any, mediaName: string): void
+    export function getMedia_Post(callContextData: any, mediaName: string): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "getMedia", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("mediaName", mediaName));
     }
 
     /**
-     * *Note: The result (PrintMedia) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * ******* Function using / returning Numeric Enum
-     */
-    export function getMedia_PostImpulse(callContextData: any, mediaName: string): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "getMedia", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("mediaName", mediaName));
-    }
-
-    /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
      * *********** Void type
      */
-    export function warnUser_PostFork(callContextData: any): void
+    export function warnUser_Post(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "warnUser", 1, POST_TIMEOUT_IN_MS, callContextData);
-    }
-
-    /**
-     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * *********** Void type
-     */
-    export function warnUser_PostImpulse(callContextData: any): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "warnUser", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
     /**
@@ -148,7 +112,7 @@ export namespace Test
      * 
      * ************ Example of a [post] method that uses custom types.
      */
-    export function makeName_PostFork(callContextData: any, firstName?: string, lastName?: string): void
+    export function makeName_Post(callContextData: any, firstName?: string, lastName?: string): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "makeName", 1, POST_TIMEOUT_IN_MS, callContextData, 
             IC.arg("firstName?", firstName), 
@@ -156,79 +120,34 @@ export namespace Test
     }
 
     /**
-     * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * ************ Example of a [post] method that uses custom types.
-     */
-    export function makeName_PostImpulse(callContextData: any, firstName?: string, lastName?: string): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "makeName", 1, POST_TIMEOUT_IN_MS, callContextData, 
-            IC.arg("firstName?", firstName), 
-            IC.arg("lastName?", lastName));
-    }
-
-    /**
      * *Note: The result (number) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
      * ******* Function returning number
      */
-    export function return_number_PostFork(callContextData: any, strvalue: string): void
+    export function return_number_Post(callContextData: any, strvalue: string): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "return_number", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("strvalue", strvalue));
     }
 
     /**
-     * *Note: The result (number) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * ******* Function returning number
-     */
-    export function return_number_PostImpulse(callContextData: any, strvalue: string): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "return_number", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("strvalue", strvalue));
-    }
-
-    /**
      * *Note: The result (string) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
      * ******* Function returning string
      */
-    export function returnstring_PostFork(callContextData: any, numvalue: number): void
+    export function returnstring_Post(callContextData: any, numvalue: number): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "returnstring", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("numvalue", numvalue));
     }
 
     /**
-     * *Note: The result (string) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * ******* Function returning string
-     */
-    export function returnstring_PostImpulse(callContextData: any, numvalue: number): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "returnstring", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("numvalue", numvalue));
-    }
-
-    /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
      * ******* Function with missing types ****
      * Function with missing type information
      */
-    export function fnWithMissingType_PostFork(callContextData: any, p1: any, p2: number): void
+    export function fnWithMissingType_Post(callContextData: any, p1: any, p2: number): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "fnWithMissingType", 1, POST_TIMEOUT_IN_MS, callContextData, 
-            IC.arg("p1", p1), 
-            IC.arg("p2", p2));
-    }
-
-    /**
-     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * ******* Function with missing types ****
-     * Function with missing type information
-     */
-    export function fnWithMissingType_PostImpulse(callContextData: any, p1: any, p2: number): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "fnWithMissingType", 1, POST_TIMEOUT_IN_MS, callContextData, 
             IC.arg("p1", p1), 
             IC.arg("p2", p2));
     }
