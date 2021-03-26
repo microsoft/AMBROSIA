@@ -15,49 +15,26 @@ Test File to test all the the ways that the ambrosia tag can be set and still wo
 export namespace Test
 {
     /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
-    export function OneLineNoComment_PostFork(callContextData: any): void
+    export function OneLineNoComment_Post(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "OneLineNoComment", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
-    export function OneLineNoComment_PostImpulse(callContextData: any): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "OneLineNoComment", 1, POST_TIMEOUT_IN_MS, callContextData);
-    }
-
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
      * Multi Line with Comment before Tag
      * but still before tag
      */
-    export function MultiLineCommentBeforeTag_PostFork(callContextData: any): void
+    export function MultiLineCommentBeforeTag_Post(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "MultiLineCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
-    /**
-     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * Multi Line with Comment before Tag
-     * but still before tag
-     */
-    export function MultiLineCommentBeforeTag_PostImpulse(callContextData: any): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "MultiLineCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
-    }
-
     /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
-    export function MultiSeparateLinesCommentBeforeTag_PostFork(callContextData: any): void
+    export function MultiSeparateLinesCommentBeforeTag_Post(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "MultiSeparateLinesCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
-    }
-
-    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
-    export function MultiSeparateLinesCommentBeforeTag_PostImpulse(callContextData: any): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "MultiSeparateLinesCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 
     /**
@@ -65,7 +42,7 @@ export namespace Test
      * 
      * ************ Have a space after the tag before function declaration
      */
-    export function EmptyLineBetweenTagAndFctn_PostFork(callContextData: any): void
+    export function EmptyLineBetweenTagAndFctn_Post(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "EmptyLineBetweenTagAndFctn", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
@@ -73,19 +50,9 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
-     * ************ Have a space after the tag before function declaration
-     */
-    export function EmptyLineBetweenTagAndFctn_PostImpulse(callContextData: any): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "EmptyLineBetweenTagAndFctn", 1, POST_TIMEOUT_IN_MS, callContextData);
-    }
-
-    /**
-     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
      * **** Spacing around the tag
      */
-    export function SpacingAroundTag_PostFork(callContextData: any): void
+    export function SpacingAroundTag_Post(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "SpacingAroundTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
@@ -93,19 +60,9 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
-     * **** Spacing around the tag
-     */
-    export function SpacingAroundTag_PostImpulse(callContextData: any): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "SpacingAroundTag", 1, POST_TIMEOUT_IN_MS, callContextData);
-    }
-
-    /**
-     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
      * JS Doc
      */
-    export function JSDOcTag_PostFork(callContextData: any): void
+    export function JSDOcTag_Post(callContextData: any): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "JSDOcTag", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
@@ -113,31 +70,11 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
-     * JS Doc
-     */
-    export function JSDOcTag_PostImpulse(callContextData: any): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "JSDOcTag", 1, POST_TIMEOUT_IN_MS, callContextData);
-    }
-
-    /**
-     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
      * The ambrosia tag must be on the implementation of an overloaded function
      */
-    export function fnOverload_PostFork(callContextData: any, name?: string): void
+    export function fnOverload_Post(callContextData: any, name?: string): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "fnOverload", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("name?", name));
-    }
-
-    /**
-     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * The ambrosia tag must be on the implementation of an overloaded function
-     */
-    export function fnOverload_PostImpulse(callContextData: any, name?: string): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "fnOverload", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("name?", name));
     }
 }
 
