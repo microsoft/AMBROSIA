@@ -56,21 +56,9 @@ export namespace Test
      * 
      * Example of a [post] method that uses custom types.
      */
-    export function makeName_PostFork(callContextData: any, firstName?: string, lastName?: string): void
+    export function makeName_Post(callContextData: any, firstName?: string, lastName?: string): void
     {
         IC.postFork(DESTINATION_INSTANCE_NAME, "makeName", 1, POST_TIMEOUT_IN_MS, callContextData, 
-            IC.arg("firstName?", firstName), 
-            IC.arg("lastName?", lastName));
-    }
-
-    /**
-     * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * Example of a [post] method that uses custom types.
-     */
-    export function makeName_PostImpulse(callContextData: any, firstName?: string, lastName?: string): void
-    {
-        IC.postImpulse(DESTINATION_INSTANCE_NAME, "makeName", 1, POST_TIMEOUT_IN_MS, callContextData, 
             IC.arg("firstName?", firstName), 
             IC.arg("lastName?", lastName));
     }
