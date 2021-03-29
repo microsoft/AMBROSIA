@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\Xamarin.Forms.5.0.0.2012\build\Xamarin.Forms.props" Condition="Exists('..\packages\Xamarin.Forms.5.0.0.2012\build\Xamarin.Forms.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -40,10 +40,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AmbrosiaLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=2d13f5b952ecb8f6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.19\lib\netstandard2.0\AmbrosiaLib.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.21\lib\netstandard2.0\AmbrosiaLib.dll</HintPath>
     </Reference>
     <Reference Include="AmbrosiaLibCS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=2d13f5b952ecb8f6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.19\lib\netstandard2.0\AmbrosiaLibCS.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.21\lib\netstandard2.0\AmbrosiaLibCS.dll</HintPath>
     </Reference>
     <Reference Include="Aqua, Version=4.0.0.0, Culture=neutral, PublicKeyToken=82d6c51b67e8b655, processorArchitecture=MSIL">
       <HintPath>..\packages\aqua-core.4.5.1\lib\net451\Aqua.dll</HintPath>
@@ -65,7 +65,7 @@
       <HintPath>..\packages\Azure.Storage.Common.12.4.3\lib\netstandard2.0\Azure.Storage.Common.dll</HintPath>
     </Reference>
     <Reference Include="AzureBlobsLogPicker, Version=1.0.0.0, Culture=neutral, PublicKeyToken=2d13f5b952ecb8f6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.19\lib\netstandard2.0\AzureBlobsLogPicker.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.21\lib\netstandard2.0\AzureBlobsLogPicker.dll</HintPath>
     </Reference>
     <Reference Include="CRA.ClientLibrary, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc877ef3899064b2, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CRA.2020.9.24.1\lib\net46\CRA.ClientLibrary.dll</HintPath>
@@ -81,7 +81,7 @@
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\GtkSharp\2.12\lib\gtk-sharp-2.0\gdk-sharp.dll</HintPath>
     </Reference>
     <Reference Include="GenericLogPicker, Version=1.0.0.0, Culture=neutral, PublicKeyToken=2d13f5b952ecb8f6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.19\lib\netstandard2.0\GenericLogPicker.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.21\lib\netstandard2.0\GenericLogPicker.dll</HintPath>
     </Reference>
     <Reference Include="glade-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -100,7 +100,7 @@
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\GtkSharp\2.12\lib\gtk-sharp-2.0\gtk-sharp.dll</HintPath>
     </Reference>
     <Reference Include="ImmortalCoordinator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=2d13f5b952ecb8f6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.19\lib\netstandard2.0\ImmortalCoordinator.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.21\lib\netstandard2.0\ImmortalCoordinator.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Azure.KeyVault.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Azure.KeyVault.Core.1.0.0\lib\net40\Microsoft.Azure.KeyVault.Core.dll</HintPath>
@@ -146,7 +146,7 @@
       <HintPath>..\packages\Remote.Linq.Newtonsoft.Json.5.8.2\lib\net451\Remote.Linq.Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="SharedAmbrosiaTools, Version=1.0.0.0, Culture=neutral, PublicKeyToken=2d13f5b952ecb8f6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.19\lib\netstandard2.0\SharedAmbrosiaTools.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Ambrosia.LibCS.1.0.21\lib\netstandard2.0\SharedAmbrosiaTools.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.AppContext, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
