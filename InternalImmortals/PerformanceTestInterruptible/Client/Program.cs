@@ -129,9 +129,6 @@ namespace Job
         public async Task PrintBytesReceivedAsync()
         {
             Console.WriteLine("Bytes received: {0}", _bytesReceived);
-            Console.WriteLine("DONE");
-            Console.Out.Flush();
-            Console.Out.Flush();
             ClientBootstrapper.finishedTokenQ.Enqueue(0);
         }
 
@@ -263,10 +260,15 @@ namespace Job
             {
                 Thread.Sleep(3000);
                 Trace.Flush();
+                Trace.Flush();
+                _iCListener.Flush();
                 _iCListener.Flush();
                 _iCWriter.Flush();
                 _iCWriter.Flush();
             }
+            Console.WriteLine("DONE");
+            Console.Out.Flush();
+            Console.Out.Flush();
             System.Environment.Exit(0);
         }
 

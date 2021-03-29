@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Microsoft.VisualStudio.Threading;
 
 namespace Server
 {
@@ -128,9 +129,7 @@ namespace Server
                 {
                     _jobs[i].PrintBytesReceivedFork();
                 }
-                Console.WriteLine("DONE");
-                Console.Out.Flush();
-                Console.Out.Flush();
+                ServerBootstrapper.finishedTokenQ.Enqueue(0);
             }
         }
 
@@ -253,9 +252,7 @@ namespace Server
             {
                 _jobs[i].PrintBytesReceivedFork();
             }
-            Console.WriteLine("DONE");
-            Console.Out.Flush();
-            Console.Out.Flush();
+            ServerBootstrapper.finishedTokenQ.Enqueue(0);
         }
 
         void TimerLoop()
@@ -304,10 +301,27 @@ namespace Server
         private static int _numJobs = 1;
         private static bool _isUpgrading;
         private static long _memoryUsed;
+        public static AsyncQueue<int> finishedTokenQ;
         private static ICDeploymentMode _ICDeploymentMode = ICDeploymentMode.SecondProc;
         static Thread _iCThread;
         static FileStream _iCWriter = null;
         static TextWriterTraceListener _iCListener;
+
+        static internal void FlushOutput()
+        {
+            if (_iCWriter != null)
+            {
+                Thread.Sleep(3000);
+                Trace.Flush();
+                Trace.Flush();
+                _iCListener.Flush();
+                _iCListener.Flush();
+                _iCWriter.Flush();
+                _iCWriter.Flush();
+            }
+            Console.Out.Flush();
+            Console.Out.Flush();
+        }
 
         static void Main(string[] args)
         {
@@ -323,6 +337,8 @@ namespace Server
 
             try
             {
+                finishedTokenQ = new AsyncQueue<int>();
+
                 // for debugging don't want to auto continue but for test automation want this to auto continue
                 if (!_autoContinue)
                 {
@@ -338,37 +354,34 @@ namespace Server
                         case ICDeploymentMode.SecondProc:
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                // nothing to call on c, just doing this for calling Dispose.
-                                Console.WriteLine("*X* Press enter to terminate program.");
-                                // Doing this wait to make the bash script happy, which automatically move past the Readline.
-                                Thread.Sleep(1000 * 60 * 60 * 24);
-                                Console.ReadLine();
+                                int jobsEnded = 0;
+                                while (jobsEnded < _numJobs)
+                                {
+                                    finishedTokenQ.DequeueAsync().Wait();
+                                    jobsEnded++;
+                                }
                             }
                             break;
                         case ICDeploymentMode.InProcDeploy:
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _icPort))
                             {
-                                // nothing to call on c, just doing this for calling Dispose.
-                                Console.WriteLine("*X* Press enter to terminate program.");
-                                Console.ReadLine();
-                                Thread.Sleep(3000);
-                                Trace.Flush();
-                                _iCListener.Flush();
-                                _iCWriter.Flush();
-                                _iCWriter.Flush();
+                                int jobsEnded = 0;
+                                while (jobsEnded < _numJobs)
+                                {
+                                    finishedTokenQ.DequeueAsync().Wait();
+                                    jobsEnded++;
+                                }
                             }
                             break;
                         case ICDeploymentMode.InProcTimeTravel:
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad, _currentVersion))
                             {
-                                // nothing to call on c, just doing this for calling Dispose.
-                                Console.WriteLine("*X* Press enter to terminate program.");
-                                Console.ReadLine();
-                                Thread.Sleep(3000);
-                                Trace.Flush();
-                                _iCListener.Flush();
-                                _iCWriter.Flush();
-                                _iCWriter.Flush();
+                                int jobsEnded = 0;
+                                while (jobsEnded < _numJobs)
+                                {
+                                    finishedTokenQ.DequeueAsync().Wait();
+                                    jobsEnded++;
+                                }
                             }
                             break;
                         case ICDeploymentMode.InProcManual:
@@ -382,14 +395,12 @@ namespace Server
                             _iCThread.Start();
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                // nothing to call on c, just doing this for calling Dispose.
-                                Console.WriteLine("*X* Press enter to terminate program.");
-                                Console.ReadLine();
-                                Thread.Sleep(3000);
-                                Trace.Flush();
-                                _iCListener.Flush();
-                                _iCWriter.Flush();
-                                _iCWriter.Flush();
+                                int jobsEnded = 0;
+                                while (jobsEnded < _numJobs)
+                                {
+                                    finishedTokenQ.DequeueAsync().Wait();
+                                    jobsEnded++;
+                                }
                             }
                             break;
                     }
@@ -402,37 +413,34 @@ namespace Server
                         case ICDeploymentMode.SecondProc:
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                // nothing to call on c, just doing this for calling Dispose.
-                                Console.WriteLine("*X* Press enter to terminate program.");
-                                // Doing this wait to make the bash script happy, which automatically move past the Readline.
-                                Thread.Sleep(1000 * 60 * 60 * 24);
-                                Console.ReadLine();
+                                int jobsEnded = 0;
+                                while (jobsEnded < _numJobs)
+                                {
+                                    finishedTokenQ.DequeueAsync().Wait();
+                                    jobsEnded++;
+                                }
                             }
                             break;
                         case ICDeploymentMode.InProcDeploy:
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _icPort))
                             {
-                                // nothing to call on c, just doing this for calling Dispose.
-                                Console.WriteLine("*X* Press enter to terminate program.");
-                                Console.ReadLine();
-                                Thread.Sleep(3000);
-                                Trace.Flush();
-                                _iCListener.Flush();
-                                _iCWriter.Flush();
-                                _iCWriter.Flush();
+                                int jobsEnded = 0;
+                                while (jobsEnded < _numJobs)
+                                {
+                                    finishedTokenQ.DequeueAsync().Wait();
+                                    jobsEnded++;
+                                }
                             }
                             break;
                         case ICDeploymentMode.InProcTimeTravel:
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad, _currentVersion))
                             {
-                                // nothing to call on c, just doing this for calling Dispose.
-                                Console.WriteLine("*X* Press enter to terminate program.");
-                                Console.ReadLine();
-                                Thread.Sleep(3000);
-                                Trace.Flush();
-                                _iCListener.Flush();
-                                _iCWriter.Flush();
-                                _iCWriter.Flush();
+                                int jobsEnded = 0;
+                                while (jobsEnded < _numJobs)
+                                {
+                                    finishedTokenQ.DequeueAsync().Wait();
+                                    jobsEnded++;
+                                }
                             }
                             break;
                         case ICDeploymentMode.InProcManual:
@@ -446,14 +454,12 @@ namespace Server
                             _iCThread.Start();
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                // nothing to call on c, just doing this for calling Dispose.
-                                Console.WriteLine("*X* Press enter to terminate program.");
-                                Console.ReadLine();
-                                Thread.Sleep(3000);
-                                Trace.Flush();
-                                _iCListener.Flush();
-                                _iCWriter.Flush();
-                                _iCWriter.Flush();
+                                int jobsEnded = 0;
+                                while (jobsEnded < _numJobs)
+                                {
+                                    finishedTokenQ.DequeueAsync().Wait();
+                                    jobsEnded++;
+                                }
                             }
                             break;
                     }
@@ -461,6 +467,8 @@ namespace Server
             }
             catch (Exception e) { Console.WriteLine(e.Message); }
             Console.WriteLine("*X* Terminating.");
+            Console.WriteLine("DONE");
+            FlushOutput();
             System.Environment.Exit(0);
         }
 
