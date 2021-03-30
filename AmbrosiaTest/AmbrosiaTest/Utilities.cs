@@ -162,7 +162,7 @@ namespace AmbrosiaTest
         // is hit or until maxDelay (mins) is hit
         // After the doneString is found it also determines if the extraStringToFind is part of it as well.
         // ASSUMPTION: done string is always after the extra string - so if extra string is not found by time it hits DONE, then know it isn't in output
-        public bool WaitForProcessToFinish(string logFile, string extraStringToFind, int maxDelay, bool truncateAmbrosiaLogs, string testName, bool assertOnFalseReturn)
+        public bool WaitForProcessToFinish(string logFile, string extraStringToFind, int maxDelay, bool truncateAmbrosiaLogs, string testName, bool assertOnFalseReturn, bool checkForDoneString = true)
         {
             int timeCheckInterval = 10000;  // 10 seconds
             int maxTimeLoops = (maxDelay * 60000) / timeCheckInterval;
@@ -182,7 +182,17 @@ namespace AmbrosiaTest
                 {
                     string line = logFileReader.ReadLine();
                     if (line.Contains(extraStringToFind))
+                    {
                         foundExtraString = true;
+
+                        // since not looking for done, need to close things down here
+                        if (checkForDoneString == false)
+                        {
+                            logFileReader.Close();
+                            logFileStream.Close();
+                            return true;
+                        }
+                    }
 
                     if (line.Contains(doneString))
                     {
@@ -215,8 +225,15 @@ namespace AmbrosiaTest
                 FailureSupport(testName);
 
                 // If times out without string hit - then pop exception
-                
-                Assert.Fail("<WaitForProcessToFinish> Failure! Looking for '"+ doneString + "' string AND the extra string:" + extraStringToFind +  " in log file:" + logFile + " but did not find one or both after waiting:" + maxDelay.ToString() + " minutes.");
+
+                if (checkForDoneString)
+                {
+                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for '" + doneString + "' string AND the extra string:" + extraStringToFind + " in log file:" + logFile + " but did not find one or both after waiting:" + maxDelay.ToString() + " minutes.");
+                }
+                else
+                {
+                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for string:" + extraStringToFind + " in log file:" + logFile + " but did not find it after waiting:" + maxDelay.ToString() + " minutes.");
+                }
             }
 
             return false;  // made it this far, we know it is a false

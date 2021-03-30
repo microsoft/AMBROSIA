@@ -425,7 +425,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_Restarted, byteSize, 5, false, testName, true);
 
             // Also verify ImmCoord has the string to show it is primary
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, newPrimary, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, newPrimary, 5, false, testName, true,false);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(serverProcessID2);

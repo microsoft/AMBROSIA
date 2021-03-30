@@ -172,7 +172,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_Restarted, byteSize, 15, false, testName, true);
 
             // Also verify ImmCoord has the string to show it is primary
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, newPrimary, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, newPrimary, 5, false, testName, true, false);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(serverProcessID2);
@@ -954,8 +954,8 @@ namespace AmbrosiaTest
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server3);
 
             // Also verify ImmCoord has the string to show it is primary for both server and client
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, newPrimary, 5, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord6, newPrimary, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, newPrimary, 5, false, testName, true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord6, newPrimary, 5, false, testName, true,false);
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
@@ -1402,8 +1402,8 @@ namespace AmbrosiaTest
             // Also verify ImmCoord has the string to show server3 was primary then server4 became primary
             //*** Note - can't verify which one will be primary because both Server3 and Server4 are secondary
             //** They both are trying to take over primary if it dies. No way of knowing which one is.
-            //pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, newPrimary, 1, false, testName, true);
-            //pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord4, newPrimary, 1, false, testName, true);
+            //pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, newPrimary, 1, false, testName, true,false);
+            //pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord4, newPrimary, 1, false, testName, true,false);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(serverProcessID2);
