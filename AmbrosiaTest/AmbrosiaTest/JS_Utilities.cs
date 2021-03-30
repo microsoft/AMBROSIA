@@ -54,14 +54,14 @@ namespace AmbrosiaTest
                 // Verify things differently if it is a negative test
                 if (NegTest)
                 {
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, CodeGenFailMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, CodeGenFailMessage, 1, false, TestFile, true,false);
                 }
                 else
                 {
                     // Wait to see if success comes shows up in log file for total and for consumer and publisher
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, CodeGenSuccessMessage, 1, false, TestFile, true);
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConSuccessString, 1, false, TestFile, true);
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PubSuccessString, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, CodeGenSuccessMessage, 1, false, TestFile, true,false);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConSuccessString, 1, false, TestFile, true,false);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PubSuccessString, 1, false, TestFile, true,false);
 
                     // Verify the generated files with cmp files 
                     string GenConsumerFile = TestName + "_GeneratedConsumerInterface.g.ts";
@@ -73,11 +73,11 @@ namespace AmbrosiaTest
                 // Can use these to verify extra messages in the log file
                 if (ExtraConErrorMessage != "")
                 {
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraConErrorMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraConErrorMessage, 1, false, TestFile, true,false);
                 }
                 if (ExtraPubErrorMessage != "")
                 {
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraPubErrorMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ExtraPubErrorMessage, 1, false, TestFile, true,false);
 
                 }
             }

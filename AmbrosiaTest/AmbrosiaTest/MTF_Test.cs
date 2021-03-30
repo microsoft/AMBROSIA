@@ -173,8 +173,8 @@ namespace AmbrosiaTest
 
             // Verify client / server have proper bytes
             MyUtils.VerifyBytesRecievedInTwoLogFiles(logOutputFileName_ClientJob, logOutputFileName_Server);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, totalNumBytesReceived.ToString(), 1, false, testName, true); // Total bytes received
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, totalNumBytesReceived.ToString(), 1, false, testName, true); // Total bytes received
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, totalNumBytesReceived.ToString(), 1, false, testName, true,false); // Total bytes received
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, totalNumBytesReceived.ToString(), 1, false, testName, true,false); // Total bytes received
 
             // Verify integrity of Ambrosia logs by replaying - do NOT check cmp files because MTF can change run to run
             MyUtils.VerifyAmbrosiaLogFile(testName, totalNumBytesReceived, false, false, AMB1.AMB_Version);
