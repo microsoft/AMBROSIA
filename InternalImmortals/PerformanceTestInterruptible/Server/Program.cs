@@ -323,6 +323,18 @@ namespace Server
             Console.Out.Flush();
         }
 
+        static internal async Task WaitForJobsToFinishAsync()
+        {
+            int jobsEnded = 0;
+            while (jobsEnded < _numJobs)
+            {
+                await finishedTokenQ.DequeueAsync();
+                jobsEnded++;
+            }
+            await Task.Delay(10000);
+            return;
+        }
+
         static void Main(string[] args)
         {
             ParseAndValidateOptions(args);
@@ -354,34 +366,19 @@ namespace Server
                         case ICDeploymentMode.SecondProc:
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                int jobsEnded = 0;
-                                while (jobsEnded < _numJobs)
-                                {
-                                    finishedTokenQ.DequeueAsync().Wait();
-                                    jobsEnded++;
-                                }
+                                WaitForJobsToFinishAsync().Wait();                            
                             }
                             break;
                         case ICDeploymentMode.InProcDeploy:
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _icPort))
                             {
-                                int jobsEnded = 0;
-                                while (jobsEnded < _numJobs)
-                                {
-                                    finishedTokenQ.DequeueAsync().Wait();
-                                    jobsEnded++;
-                                }
+                                WaitForJobsToFinishAsync().Wait();
                             }
                             break;
                         case ICDeploymentMode.InProcTimeTravel:
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad, _currentVersion))
                             {
-                                int jobsEnded = 0;
-                                while (jobsEnded < _numJobs)
-                                {
-                                    finishedTokenQ.DequeueAsync().Wait();
-                                    jobsEnded++;
-                                }
+                                WaitForJobsToFinishAsync().Wait();
                             }
                             break;
                         case ICDeploymentMode.InProcManual:
@@ -395,12 +392,7 @@ namespace Server
                             _iCThread.Start();
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                int jobsEnded = 0;
-                                while (jobsEnded < _numJobs)
-                                {
-                                    finishedTokenQ.DequeueAsync().Wait();
-                                    jobsEnded++;
-                                }
+                                WaitForJobsToFinishAsync().Wait();
                             }
                             break;
                     }
@@ -413,34 +405,19 @@ namespace Server
                         case ICDeploymentMode.SecondProc:
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                int jobsEnded = 0;
-                                while (jobsEnded < _numJobs)
-                                {
-                                    finishedTokenQ.DequeueAsync().Wait();
-                                    jobsEnded++;
-                                }
+                                WaitForJobsToFinishAsync().Wait();
                             }
                             break;
                         case ICDeploymentMode.InProcDeploy:
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _icPort))
                             {
-                                int jobsEnded = 0;
-                                while (jobsEnded < _numJobs)
-                                {
-                                    finishedTokenQ.DequeueAsync().Wait();
-                                    jobsEnded++;
-                                }
+                                WaitForJobsToFinishAsync().Wait();
                             }
                             break;
                         case ICDeploymentMode.InProcTimeTravel:
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad, _currentVersion))
                             {
-                                int jobsEnded = 0;
-                                while (jobsEnded < _numJobs)
-                                {
-                                    finishedTokenQ.DequeueAsync().Wait();
-                                    jobsEnded++;
-                                }
+                                WaitForJobsToFinishAsync().Wait();
                             }
                             break;
                         case ICDeploymentMode.InProcManual:
@@ -454,12 +431,7 @@ namespace Server
                             _iCThread.Start();
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                int jobsEnded = 0;
-                                while (jobsEnded < _numJobs)
-                                {
-                                    finishedTokenQ.DequeueAsync().Wait();
-                                    jobsEnded++;
-                                }
+                                WaitForJobsToFinishAsync().Wait();
                             }
                             break;
                     }
