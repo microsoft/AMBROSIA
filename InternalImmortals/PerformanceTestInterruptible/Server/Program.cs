@@ -311,7 +311,6 @@ namespace Server
         {
             if (_iCWriter != null)
             {
-                Thread.Sleep(3000);
                 Trace.Flush();
                 Trace.Flush();
                 _iCListener.Flush();
@@ -331,7 +330,9 @@ namespace Server
                 await finishedTokenQ.DequeueAsync();
                 jobsEnded++;
             }
-            await Task.Delay(10000);
+            Console.WriteLine("DONE");
+            FlushOutput();
+            await Task.Delay(5000);
             return;
         }
 
@@ -438,9 +439,8 @@ namespace Server
                 }
             }
             catch (Exception e) { Console.WriteLine(e.Message); }
-            Console.WriteLine("*X* Terminating.");
-            Console.WriteLine("DONE");
-            FlushOutput();
+            Console.Out.Flush();
+            Console.Out.Flush();
             System.Environment.Exit(0);
         }
 

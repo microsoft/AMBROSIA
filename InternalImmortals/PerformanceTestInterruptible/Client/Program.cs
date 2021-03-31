@@ -189,6 +189,25 @@ namespace Job
             System.Environment.Exit(0);
         }
 
+        static internal async Task WaitForJobToFinishAsync()
+        {
+            await finishedTokenQ.DequeueAsync();
+            if (_iCWriter != null)
+            {
+                Trace.Flush();
+                Trace.Flush();
+                _iCListener.Flush();
+                _iCListener.Flush();
+                _iCWriter.Flush();
+                _iCWriter.Flush();
+            }
+            Console.WriteLine("DONE");
+            Console.Out.Flush();
+            Console.Out.Flush();
+            return;
+        }
+
+
         static void Main(string[] args)
         {
             ParseAndValidateOptions(args);
@@ -217,26 +236,26 @@ namespace Job
 #endif
                 var myClient = new Job(_perfServer, _maxMessageSize, _numRounds, _descendingSize);
 
-                new Thread(() => ConsoleListen()) { IsBackground = true }.Start();
+//                new Thread(() => ConsoleListen()) { IsBackground = true }.Start();
 
                 switch (_ICDeploymentMode)
                 {
                     case ICDeploymentMode.SecondProc:
                         using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
                         {
-                            finishedTokenQ.DequeueAsync().Wait();
+                            WaitForJobToFinishAsync().Wait();                        
                         }
                         break;
                     case ICDeploymentMode.InProcDeploy:
                         using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _icPort))
                         {
-                            finishedTokenQ.DequeueAsync().Wait();
+                            WaitForJobToFinishAsync().Wait();
                         }
                         break;
                     case ICDeploymentMode.InProcTimeTravel:
                         using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _serviceLogPath, _checkpointToLoad))
                         {
-                            finishedTokenQ.DequeueAsync().Wait();
+                            WaitForJobToFinishAsync().Wait();
                         }
                         break;
                     case ICDeploymentMode.InProcManual:
@@ -250,23 +269,12 @@ namespace Job
                         _iCThread.Start();
                         using (var c = AmbrosiaFactory.Deploy<IJob>(_perfJob, myClient, _receivePort, _sendPort))
                         {
-                            finishedTokenQ.DequeueAsync().Wait();
+                            WaitForJobToFinishAsync().Wait();
                         }
                         break;
                 }
             }
             catch { /* Swallowing errors to make Darren's testing framework happy. */ }
-            if (_iCWriter != null)
-            {
-                Thread.Sleep(3000);
-                Trace.Flush();
-                Trace.Flush();
-                _iCListener.Flush();
-                _iCListener.Flush();
-                _iCWriter.Flush();
-                _iCWriter.Flush();
-            }
-            Console.WriteLine("DONE");
             Console.Out.Flush();
             Console.Out.Flush();
             System.Environment.Exit(0);
