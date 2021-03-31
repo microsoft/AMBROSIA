@@ -170,10 +170,15 @@ If recovering and upgrading a standalone immortal, or starting as an upgrading s
    > Note: Replayed messages MUST be processed by the old (pre-upgrade) code to prevent changing the generated sequence
    of messages that will be sent to the IC as a consequence of replay. <br/>Further, this requires that your
    service (application) is capable of dynamically switching (at runtime) from the old to the new version of its code.
-   See 'App Upgrade' below.
+   See '[App Upgrade](#app-upgrade)' below.
  * Receive `UpgradeTakeCheckpoint` message
  * Upgrade state and code
  * Send a `Checkpoint` message for upgraded state
+ * Receive `TakeCheckpoint` message. This is usually the next message received, but other messages can come before it.
+ * Send a `Checkpoint` message [the upgrade is complete once the IC receives this checkpoint]
+   > Note: The second checkpoint is necessary for the successful handoff of the new version in the active/active case,
+   which is the scenario which will use the upgrade feature the most. But the additional `TakeCheckpoint` will also be
+   received when running standalone.
  * Normal processing
 
 If performing a repro test:
@@ -182,7 +187,7 @@ If performing a repro test:
  * Receive logged replay messages
 
 > Repro testing, also known as "Time-Travel Debugging", allows a given existing log to be replayed, for example to re-create 
-the sequence of messages (and resulting state changes) that led to a bug. See 'App Upgrade' below.
+the sequence of messages (and resulting state changes) that led to a bug. See '[App Upgrade](#app-upgrade)' below.
 
 If performing an upgrade test:
 
@@ -193,7 +198,7 @@ If performing an upgrade test:
 
 > Upgrade testing, in addition to testing the upgrade code path, allows messages to be replayed against an upgraded 
 service to verify if the changes cause bugs. This helps catch regressions before actually upgrading the live service.
-See 'App Upgrade' below.
+See '[App Upgrade](#app-upgrade)' below.
 
 ### Normal processing:
 
@@ -243,7 +248,7 @@ There are 3 different messages that tell the LB it is becoming the primary, with
 * `TakeBecomingPrimaryCheckpoint` – The instance is becoming the primary and **should** take a checkpoint (ie. this is the first start of the primary).
 * `BecomingPrimary` – The instance is becoming the primary but **should not** take a checkpoint (ie. this is a non-first start of the primary).
 * `UpgradeTakeCheckpoint` – The instance is a primary that is being upgraded and **should** take a checkpoint. Note that only a newly registered secondary
-   can be upgraded, and it will cause all other secondaries – along with the existing primary – to die (see 'App Upgrade' below).
+   can be upgraded, and it will cause all other secondaries – along with the existing primary – to die (see '[App Upgrade](#app-upgrade)' below).
 
 Finally, "non-active/active" (or "standalone") refers to a single immortal instance running by itself without any secondaries.
 
@@ -263,6 +268,9 @@ Performing an upgrade of a standalone instance always involves stopping the app 
 * Stop the current instance.
 * Run `Ambrosia.exe RegisterInstance --instanceName=xxxxx --currentVersion=n --upgradeVersion=m` where n and m are the integer version numbers with m > n.
 * Start the new instance (that contains the VCurrent and VNext app code, and the VCurrent-to-VNext state conversion code).
+* The upgrade is complete after the IC receives the checkpoint taken in response to the next `TakeCheckpoint` received after `UpgradeTakeCheckpoint` (see '[Communication Protocols](#communication-protocols)' above).
+* Once the upgrade is complete, the instance must be re-registered with the new `--currentVersion` before the next restart (but only while the instance is stopped):\
+ `Ambrosia.exe RegisterInstance --instanceName=xxxxx --currentVersion=m --upgradeVersion=0`
 
 To upgrade an active/active instance a new replica (secondary) is registered and started, which upgrades the current version, similar to
 the previous example, but for a new replica. When the replica finishes recovering, it stops the primary, and holds a
@@ -271,14 +279,16 @@ including taking the first checkpoint for the new version, execution continues a
 If the upgrade fails, the upgrading secondary releases the lock on the log, and one of the suspended secondaries becomes
 primary and continues with the old version of state/code.
 
+Upgrade is intended mainly for use in active/active (ie. high availability scenarios). Standalone immortal upgrades are typically expected to involve simply deleting the logs during the installation of the upgraded app.
+
 Before doing a real (live) upgrade you can test the upgrade with this [abridged] example command:
 
-`Ambrosia.exe DebugInstance --checkpoint=3 --currentVersion=0 --testingUpgrade=true`
+`Ambrosia.exe DebugInstance --checkpoint=3 --currentVersion=0 --testingUpgrade`
 
 > Note: Performing an upgrade test leads to a `UpgradeService` message being received as opposed to a `UpgradeTakeCheckpoint` message being 
 received when doing a real (live) upgrade.
 
-Doing a repro test (aka. "Time-Travel Debugging") is similar, just with `--testingUpgrade` set to false (or ommitted):
+Doing a repro test (aka. "Time-Travel Debugging") is similar, just with `--testingUpgrade` ommitted):
 
-`Ambrosia.exe DebugInstance --checkpoint=1 --currentVersion=0 --testingUpgrade=false`
+`Ambrosia.exe DebugInstance --checkpoint=1 --currentVersion=0`
 
