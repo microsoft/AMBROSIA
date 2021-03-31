@@ -54,8 +54,8 @@ namespace AmbrosiaTest
             int JSTestAppID = JSUtils.StartJSNodeUnitTests(logOutputFileName_TestApp);
 
             // Wait until summary at the end and if not there, then know not finished
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, finishedString, 2, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 1, false, testName, true);
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, finishedString, 2, false, testName, true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 1, false, testName, true,false);
 
         }
     }

@@ -759,7 +759,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_Restarted, byteSize, 20, false, testName, true);
 
             // verify actually killed first one - this output was from Imm Coord but not showing any more 
-            //pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, killJobMessage, 5, false, testName, true);
+            //pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, killJobMessage, 5, false, testName, true,false);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID_Restarted);
