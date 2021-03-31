@@ -1189,14 +1189,14 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_upgraded, byteSize, 5, false, testName, true);
 
             // Also verify ImmCoord has the string to show it is it killed itself and others killed off too
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord1, upgradingImmCoordPrimary, 5, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord1_Upgraded, newPrimary, 5, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord2, immCoordKilledMessage, 5, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, immCoordKilledMessage, 5, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1, serverKilledMessage, 5, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1, serverKilledMessage, 5, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server2, serverKilledMessage, 5, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_upgraded, serverUpgradePrimary, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord1, upgradingImmCoordPrimary, 5, false, testName, true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord1_Upgraded, newPrimary, 5, false, testName, true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord2, immCoordKilledMessage, 5, false, testName, true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, immCoordKilledMessage, 5, false, testName, true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1, serverKilledMessage, 5, false, testName, true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1, serverKilledMessage, 5, false, testName, true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server2, serverKilledMessage, 5, false, testName, true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_upgraded, serverUpgradePrimary, 5, false, testName, true,false);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(serverProcessID_upgraded);
@@ -1570,7 +1570,7 @@ namespace AmbrosiaTest
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
 
             // verify ImmCoord has the string to show it failed because of bad IP ...
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord_Bad, overrideIPAddress, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord_Bad, overrideIPAddress, 5, false, testName, true,false);
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
@@ -1673,7 +1673,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_Restarted, byteSize, 20, false, testName, true);
 
             // verify actually killed first one
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord1, killJobMessage, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord1, killJobMessage, 5, false, testName, true,false);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID_Restarted);
