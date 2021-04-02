@@ -1211,8 +1211,8 @@ namespace AmbrosiaTest
             // really reliable. As long as they get through whole thing, that is what counts.
 
             // Verify ImmCoord has the string to show it is primary for both server and client
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord2_Restarted, newPrimary, 5, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord5_Restarted, newPrimary, 5, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord2_Restarted, newPrimary, 5, false, testName, true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord5_Restarted, newPrimary, 5, false, testName, true,false);
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);

@@ -1153,13 +1153,11 @@ namespace AmbrosiaTest
 
             //Delay until server upgrade is done
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, byteSize, 30, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, newUpgradedPrimary, 5, false, testName, true, false);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID);
             MyUtils.KillProcess(serverProcessID_upgraded);
-
-            // Also verify upgraded server showing new upgraded primary
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, newUpgradedPrimary, 5, false, testName, true,false);
 
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
