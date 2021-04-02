@@ -107,7 +107,6 @@ namespace AmbrosiaTest
 
             try
             {
-
                 // Start cmd.exe process that launches proper exe
                 Process process = Process.Start(startInfo);
                 if (waitForExit)
@@ -159,16 +158,14 @@ namespace AmbrosiaTest
         }
 
         // timing mechanism to see when a process finishes. It uses a trigger string ("DONE") and will delay until that string
-        // is hit or until maxDelay (mins) is hit
-        // After the doneString is found it also determines if the extraStringToFind is part of it as well.
-        // ASSUMPTION: done string is always after the extra string - so if extra string is not found by time it hits DONE, then know it isn't in output
+        // is hit or until maxDelay (mins) is hit it also can determine if the extraStringToFind is part of it as well.
         public bool WaitForProcessToFinish(string logFile, string extraStringToFind, int maxDelay, bool truncateAmbrosiaLogs, string testName, bool assertOnFalseReturn, bool checkForDoneString = true)
         {
             int timeCheckInterval = 10000;  // 10 seconds
             int maxTimeLoops = (maxDelay * 60000) / timeCheckInterval;
             string doneString = "DONE";
             bool foundExtraString = false;
-
+            bool foundDoneString = false;
             logFile = ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\" + logFile;
 
             for (int i = 0; i < maxTimeLoops; i++)
@@ -181,11 +178,19 @@ namespace AmbrosiaTest
                 while (!logFileReader.EndOfStream)
                 {
                     string line = logFileReader.ReadLine();
+
+                    // Looking for "DONE"
+                    if (line.Contains(doneString))
+                    {
+                        foundDoneString = true;
+                    }
+
+                    // Looking for extra string (usually byte size or some extra message in output)
                     if (line.Contains(extraStringToFind))
                     {
                         foundExtraString = true;
 
-                        // since not looking for done, need to close things down here
+                        // since not looking for done, can close things down here
                         if (checkForDoneString == false)
                         {
                             logFileReader.Close();
@@ -194,13 +199,12 @@ namespace AmbrosiaTest
                         }
                     }
 
-                    if (line.Contains(doneString))
+                    // kick out because had success only if doneString is found AND the extra string is found 
+                    if ((foundDoneString) && (foundExtraString))
                     {
                         logFileReader.Close();
                         logFileStream.Close();
-
-                        if (foundExtraString)
-                            return true; // kick out because had success only if doneString is found AND the extra string is found 
+                        return true; 
                     }
                 }
 
@@ -225,7 +229,6 @@ namespace AmbrosiaTest
                 FailureSupport(testName);
 
                 // If times out without string hit - then pop exception
-
                 if (checkForDoneString)
                 {
                     Assert.Fail("<WaitForProcessToFinish> Failure! Looking for '" + doneString + "' string AND the extra string:" + extraStringToFind + " in log file:" + logFile + " but did not find one or both after waiting:" + maxDelay.ToString() + " minutes.");
