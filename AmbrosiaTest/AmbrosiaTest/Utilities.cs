@@ -52,7 +52,7 @@ namespace AmbrosiaTest
         // .NET CORE only has DLLs, so no AMB exe so run by using "dotnet"
         // The two strings (NetFramework and NetCoreFramework) are part of the path when calling PTI and PT - called in helper functions
         //*********
-        public bool NetFrameworkTestRun = true;
+        public bool NetFrameworkTestRun = false;
         public string NetFramework = "net461";
         public string NetCoreFramework = "netcoreapp3.1";
 
@@ -615,7 +615,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false)
+        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false, bool checkForDoneString = true)
         {
 
             // Doing this for multi client situations
@@ -786,8 +786,8 @@ namespace AmbrosiaTest
             }
 
             // wait until done running
-            bool pass = WaitForProcessToFinish(logOutputFileName_ClientJob_Verify, numBytes.ToString(), 15, false, testName, true);
-            pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, testName, true);
+            bool pass = WaitForProcessToFinish(logOutputFileName_ClientJob_Verify, numBytes.ToString(), 15, false, testName, true, checkForDoneString);
+            pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, testName, true, checkForDoneString);
             
 
             // MTFs don't check cmp files because they change from run to run 
@@ -799,7 +799,7 @@ namespace AmbrosiaTest
             }
 
             // Test Time Travel Debugging on the Log Files from PTI job and PTI server - don't do for MTF as not needed for TTD handled by other tests also cmp files change too much
-            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion, checkCmpFile);
+            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion, checkCmpFile, checkForDoneString);
 
         }
 
@@ -807,7 +807,7 @@ namespace AmbrosiaTest
         //** job.exe and server.exe to verify it. Porbably easiest to call from VerifyAmbrosiaLogFile since that does
         //** all the work to get the log files and checkpoint numbers
         //** Assumption that this is called at the end of a test where Ambrosia.exe was already called to register for this test
-        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber, string optionalNumberOfClient = "", string currentVersion = "", bool checkCmpFile = true)
+        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber, string optionalNumberOfClient = "", string currentVersion = "", bool checkCmpFile = true, bool checkForDoneString = true)
         {
 
             // Basically doing this for multi client stuff
@@ -825,8 +825,8 @@ namespace AmbrosiaTest
             int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_TTD_Verify, Convert.ToInt32(optionalNumberOfClient), false,0, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingServerChkPtVersionNumber,currentVersion);
 
             // wait until done running
-            bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 20, false, testName, true);
-            pass = WaitForProcessToFinish(logOutputFileName_ClientJob_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
+            bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 20, false, testName, true, checkForDoneString);
+            pass = WaitForProcessToFinish(logOutputFileName_ClientJob_TTD_Verify, numBytes.ToString(), 15, false, testName, true, checkForDoneString);
 
             // With Meantime to Failure tests don't check cmp files because they change from run to run 
             if (checkCmpFile)
