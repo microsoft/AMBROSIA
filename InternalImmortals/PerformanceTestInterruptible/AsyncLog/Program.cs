@@ -1,5 +1,6 @@
 ﻿using Ambrosia;
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -33,7 +34,16 @@ namespace AsyncLog
     public struct LSN
     {
         public long sequenceID;
+        public long epochID;
         public long logID;
+
+        public bool LessThanOrEqualTo(LSN other)
+        {
+            Debug.Assert(this.logID == other.logID);
+
+            return (this.epochID < other.epochID) ||
+                (this.epochID == other.epochID && this.sequenceID <= other.sequenceID);
+        }
     }
 
     public interface ILog
@@ -908,8 +918,11 @@ namespace AsyncLog
     {
         private ILogWriter _logStream;
         private long _logID;
-        private long _lastSequenceID;
+        private long _lastEpochSequenceID;
+        private long _epochID;
         private long _durablePageID;
+
+        private long _completedWrites;
 
         private Task _lastCommitTask;
 
@@ -930,6 +943,9 @@ namespace AsyncLog
         const int numWritesBits = 31;
         const long Last32Mask = 0x00000000FFFFFFFF;
         const long First32Mask = Last32Mask << 32;
+
+        ConcurrentDictionary<long, LSN> _pageDeps;
+        ConcurrentDictionary<long, LSN> _pageDepsBak;
 
         internal unsafe long CheckBytes(byte[] bufToCalc,
                                         int offset,
@@ -1052,7 +1068,7 @@ namespace AsyncLog
             return firstBufferCheck ^ shiftedSecondBuffer;
         }
 
-        public async Task<LSN> AppendAsync(byte[] payload, int length)
+        public async Task<LSN> AppendAsync(byte[] payload, int length, LSN[] dependencies, int num_dependencies)
         {
             while (true)
             {
@@ -1088,14 +1104,30 @@ namespace AsyncLog
                 // Check if the compare and swap succeeded, otherwise try again
                 if (origVal == localStatus)
                 {
-                    // XXX Jose: Not sure if this actually works!
-                    // I'm assuming that a successful seal blocks appends to a new page until we reset the status.
-                    Debug.Assert(false);
-                    var sequenceID = Interlocked.Increment(ref _lastSequenceID);
-
                     LSN retLSN;
+
                     retLSN.logID = _logID;
-                    retLSN.sequenceID = sequenceID;
+                    retLSN.epochID = _epochID;
+
+                    // Keep track of specified dependencies.
+                    for (int i = 0; i < num_dependencies; ++i)
+                    {
+                        // We're only accounting for dependencies on other logs. 
+                        // Local dependencies are implicitly handled via log ordering.
+                        Debug.Assert(dependencies[i].logID != _logID);
+                        if (!_pageDeps.TryAdd(dependencies[i].logID, dependencies[i]))
+                        {
+                            LSN currentDep = _pageDeps[dependencies[i].logID];
+                            while (!dependencies[i].LessThanOrEqualTo(currentDep))
+                            {
+                                if (_pageDeps.TryUpdate(dependencies[i].logID, dependencies[i], currentDep))
+                                {
+                                    break;
+                                }
+                                currentDep = _pageDeps[dependencies[i].logID];
+                            }
+                        }
+                    }
 
                     // This call successfully sealed the buffer. Remember we still have an extra
                     // message to take care of
@@ -1118,15 +1150,18 @@ namespace AsyncLog
                         _bufbak = null;
 
                         // Wait for other writes to complete before committing
+                        var numWrites = (newLocalStatus >> (64 - numWritesBits));
                         while (true)
                         {
-                            localStatus = Interlocked.Read(ref _status);
-                            var numWrites = (localStatus >> (64 - numWritesBits));
-                            if (numWrites == 0)
+                            var completedWrites = Interlocked.Read(ref _completedWrites);
+                            if (completedWrites != numWrites)
+                            {
+                                await Task.Yield();
+                            }
+                            else
                             {
                                 break;
                             }
-                            await Task.Yield();
                         }
 
                         // Filling header with enough info to detect incomplete writes and also writing the page length
@@ -1182,28 +1217,23 @@ namespace AsyncLog
                         }
                         _buf = newWriteBuf;
                         _status = newLocalStatus;
+
+                        retLSN.sequenceID = _lastEpochSequenceID + (newLocalStatus >> (64 - numWritesBits)) + 1;
                         return retLSN;
                     }
 
                     // Add the message to the existing buffer
                     Buffer.BlockCopy(payload, 0, _buf, (int)oldBufLength, length);
-                    // Reduce write count
-                    while (true)
+                    // Update completed write count.
+                    Interlocked.Increment(ref _completedWrites);
+                    localStatus = Interlocked.Read(ref _status);
+                    if (localStatus % 2 == 0 && _bufbak != null)
                     {
-                        localStatus = Interlocked.Read(ref _status);
-                        var newWrites = (localStatus >> (64 - numWritesBits)) - 1;
-                        newLocalStatus = (localStatus & ((Last32Mask << 1) + 1)) |
-                                      (newWrites << (64 - numWritesBits));
-                        origVal = Interlocked.CompareExchange(ref _status, newLocalStatus, localStatus);
-                        if (origVal == localStatus)
-                        {
-                            if (localStatus % 2 == 0 && _bufbak != null)
-                            {
-                                await TryHardenAsync();
-                            }
-                            return retLSN;
-                        }
+                        await TryHardenAsync();
                     }
+
+                    retLSN.sequenceID = _lastEpochSequenceID + (newLocalStatus >> (64 - numWritesBits));
+                    return retLSN;
                 }
             }
         }
