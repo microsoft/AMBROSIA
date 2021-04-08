@@ -37,7 +37,7 @@
         "icLogStorageType" : {
             "type": "string",
             "enum": [ "Files", "Blobs" ],
-            "description": "The storage type that the Immortal Coordinator (IC) logs will be persisted in. Defaults to 'Files'",
+            "description": "The storage type that the Immortal Coordinator (IC) logs will be persisted in. Defaults to \"Files\".",
             "default": "Files"
         },
         "icBinFolder": {
@@ -83,6 +83,12 @@
             "description": "The nominal version this Immortal instance should upgrade to at startup. Must be greater than 'appVersion' to trigger an upgrade, or 0 (meaning do not upgrade). Test the upgrade first by setting 'debugTestUpgrade' to true. Defaults to 0.",
             "default": 0
         },
+        "activeCode": {
+            "type": "string",
+            "enum": [ "VCurrent", "VNext" ],
+            "default": "VCurrent",
+            "description": "Which version of application code is currently active (before an upgrade: \"VCurrent\"; immediately after an upgrade: \"VNext\"). This setting is changed automatically during an upgrade, but must be manually changed back to 'VCurrent' (along with updating the code) when preparing for a subsequent upgrade. Defaults to \"VCurrent\"."
+        },
         "secureNetworkAssemblyName" : {
             "type": "string",
             "description": "The name of the .NET assembly used to establish a secure network channel between ICs."
@@ -119,7 +125,7 @@
                     "type": "string",
                     "enum": [ "Minimal", "Normal", "Verbose" ],
                     "default": "Normal",
-                    "description": "The level of detail to include in the language-binding output log. Defaults to 'Normal'."
+                    "description": "The level of detail to include in the language-binding output log. Defaults to \"Normal\"."
                 },
                 "outputLogDestination": {
                     "type": "string",
