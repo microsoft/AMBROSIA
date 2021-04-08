@@ -42,11 +42,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_AmbrosiaTagNewline.ts";
-            string ConsumerErrorMsg = "Error: A newline is not allowed in the attributes of an @ambrosia tag";
-            string PublisherErrorMsg = "Error: A newline is not allowed in the attributes of an @ambrosia tag";
+            string PrimaryErrorMessage = "Error: A newline is not allowed in the attributes of an @ambrosia tag";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -55,11 +55,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_AsyncFctn.ts";
-            string ConsumerErrorMsg = "as a post method (reason: async functions are not supported)";
-            string PublisherErrorMsg = "Error: Unable to publish function 'ComputePI'"; 
+            string PrimaryErrorMessage = "as a post method (reason: async functions are not supported)";
+            string SecondaryErrorMessage = "Error: Unable to publish function 'ComputePI'"; 
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -68,11 +68,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_CommasBetweenAttrib.ts";
-            string ConsumerErrorMsg = "Error: Malformed @ambrosia attribute 'publish=true version=1 doRuntimeTypeChecking=true'";
-            string PublisherErrorMsg = "expected format is: attrName=attrValue, ...";
+            string PrimaryErrorMessage = "Error: Malformed @ambrosia attribute 'publish=true version=1 doRuntimeTypeChecking=true'";
+            string SecondaryErrorMessage = "expected format is: attrName=attrValue, ...";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -83,11 +83,11 @@ namespace AmbrosiaTest
             string testfileName = "TS_GenericType.ts";
 
             // Consumer and Publisher error msg the same ... since part of message has path (which can differ from machine to machine) - verify first part of message in conumser string and second part in Publisher
-            string ConsumerErrorMsg = "Unable to publish function 'generic'";
-            string PublisherErrorMsg = "TS_GenericType.ts:8:5) as a post method (reason: Generic functions are not supported)";
+            string PrimaryErrorMessage = "Unable to publish function 'generic'";
+            string SecondaryErrorMessage = "TS_GenericType.ts:8:5) as a post method (reason: Generic functions are not supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
@@ -97,11 +97,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_MethodIDInt.ts";
-            string ConsumerErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'methodID' is not an integer";
-            string PublisherErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'methodID' is not an integer";
+            string PrimaryErrorMessage = "Error: The value ('Hello') supplied for @ambrosia attribute 'methodID' is not an integer";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
@@ -111,11 +111,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_MethodIDNeg.ts";
-            string ConsumerErrorMsg = "Error: Unable to publish function 'MyFn'";
-            string PublisherErrorMsg = "as a method (reason: Method ID -2 is invalid";
+            string PrimaryErrorMessage = "Error: The value (-2) supplied for @ambrosia";
+            string SecondaryErrorMessage = "attribute 'methodID' cannot be negative";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -124,11 +124,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_MethodIDOnType.ts";
-            string ConsumerErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'methodID' is not an integer";
-            string PublisherErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'methodID' is not an integer";
+            string PrimaryErrorMessage = "Error: The value ('Hello') supplied for @ambrosia attribute 'methodID' is not an integer";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -137,11 +137,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_NamespaceModule.ts";
-            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a module; valid targets are: function, static method, type alias, and enum ";
-            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a module; valid targets are: function, static method, type alias, and enum ";
-
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a module; valid targets are: function, method, type alias, and enum";
+            string SecondaryErrorMessage = "";
+        
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
@@ -151,11 +151,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_NestedFunction.ts";
-            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a local function ('localFn'";
-            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a local function ('localFn'";
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a local function ('localFn'";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -164,11 +164,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_NoTaggedItems.ts";
-            string ConsumerErrorMsg = "Error: The input source file (TS_NoTaggedItems.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
-            string PublisherErrorMsg = "Error: The input source file (TS_NoTaggedItems.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+            string PrimaryErrorMessage = "Error: The input source file (TS_NoTaggedItems.ts) does not publish any entities (exported functions, static methods, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -177,11 +177,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_NoFunctionComplexType.ts";
-            string ConsumerErrorMsg = "Error: Unable to publish type alias 'myComplexType'";
-            string PublisherErrorMsg = "as a type (reason: The published type 'myComplexType' [property 'fn'] has an invalid type ('()=>void'); function types are not supported)";
+            string PrimaryErrorMessage = "Error: Unable to publish type alias 'myComplexType'";
+            string SecondaryErrorMessage = "as a type (reason: The published type 'myComplexType' [property 'fn'] has an invalid type ('()=>void'); function types are not supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
@@ -191,11 +191,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_NoFunctionType.ts";
-            string ConsumerErrorMsg = "Error: Unable to publish type alias 'fnType'";
-            string PublisherErrorMsg = "as a type (reason: The published type 'fnType' has an invalid type ('(p1:number)=>string'); function types are not supported)";
+            string PrimaryErrorMessage = "Error: Unable to publish type alias 'fnType'";
+            string SecondaryErrorMessage = "as a type (reason: The published type 'fnType' has an invalid type ('(p1:number)=>string'); function types are not supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
@@ -205,11 +205,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_OptionalProperties.ts";
-            string ConsumerErrorMsg = "Error: Unable to publish type alias 'MyTypeWithOptionalMembers'";
-            string PublisherErrorMsg = "as a type (reason: Property 'bar' is optional, but types with optional properties are not supported)";
+            string PrimaryErrorMessage = "Error: Unable to publish type alias 'MyTypeWithOptionalMembers'";
+            string SecondaryErrorMessage = "as a type (reason: Property 'bar' is optional; types with optional properties are not supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -218,11 +218,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_OverloadedFunction.ts";
-            string ConsumerErrorMsg = "Error: Unable to publish function 'fnOverload'";
-            string PublisherErrorMsg = "as a post method (reason: The @ambrosia tag must appear on the implementation of an overloaded function";
+            string PrimaryErrorMessage = "Error: Unable to publish function 'fnOverload'";
+            string SecondaryErrorMessage = "as a post method (reason: The @ambrosia tag must appear on the implementation of an overloaded function";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
@@ -232,11 +232,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_PublishClass.ts";
-            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a class; valid targets are: function, static method, type alias, and enum";
-            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a class; valid targets are: function, static method, type alias, and enum";
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a class; valid targets are: function, method, type alias, and enum";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -245,11 +245,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_PublishMethodBeforeRef.ts";
-            string ConsumerErrorMsg = "Error: Unable to publish function 'fn'";
-            string PublisherErrorMsg = "as a post method (reason: The following types must be published before any method can be published: 'Name' found in published type 'MyType')";
+            string PrimaryErrorMessage = "Error: Unable to publish function 'fn'";
+            string SecondaryErrorMessage = "as a post method (reason: The following types must be published before any method can be published: 'Name' found in published type 'MyType')";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -258,11 +258,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_QuoteAttributeValue.ts";
-            string ConsumerErrorMsg = "Error: The value ('\"true\"') supplied for @ambrosia attribute 'publish' is not a boolean";
-            string PublisherErrorMsg = "Error: The value ('\"true\"') supplied for @ambrosia attribute 'publish' is not a boolean";
+            string PrimaryErrorMessage = "Error: The value ('\"true\"') supplied for @ambrosia attribute 'publish' is not a boolean";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -271,11 +271,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_RunTimeBool.ts";
-            string ConsumerErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'doRuntimeTypeChecking' is not a boolean ";
-            string PublisherErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'doRuntimeTypeChecking' is not a boolean ";
+            string PrimaryErrorMessage = "Error: The value ('Hello') supplied for @ambrosia attribute 'doRuntimeTypeChecking' is not a boolean ";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -284,11 +284,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_StaticMethod1.ts";
-            string ConsumerErrorMsg = "Warning: Skipping static method 'hello'";
-            string PublisherErrorMsg = "Error: The input source file (TS_StaticMethod1.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+            string PrimaryErrorMessage = "Warning: Skipping static method 'hello'";
+            string SecondaryErrorMessage = "Error: The input source file (TS_StaticMethod1.ts) does not publish any entities (exported functions, static methods, type aliases and enums annotated with an @ambrosia JSDoc tag)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -297,11 +297,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_StaticMethod2.ts";
-            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a non-static method";
-            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a non-static method";
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a non-static method";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -310,11 +310,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_StaticMethod3.ts";
-            string ConsumerErrorMsg = "Error: The @ambrosia tag is not valid on a static method of a class expression";
-            string PublisherErrorMsg = "Error: The @ambrosia tag is not valid on a static method of a class expression";
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a static method of a class expression";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
@@ -327,11 +327,11 @@ namespace AmbrosiaTest
             string testfileName = "TS_StringEnum.ts";
 
             // Consumer and Publisher error msg the same ... since part of message has path (which can differ from machine to machine) - verify first part of message in conumser string and second part in Publisher
-            string ConsumerErrorMsg = "Error: Unable to publish enum 'PrintMediaString'";
-            string PublisherErrorMsg = "TS_StringEnum.ts:6:5) as a type (reason: Unable to parse enum value 'NewspaperStringEnum' (\"NEWSPAPER\"); only integers are supported)";
+            string PrimaryErrorMessage = "Error: Unable to publish enum 'PrintMediaString'";
+            string SecondaryErrorMessage = "TS_StringEnum.ts:6:5) as a type (reason: Unable to parse enum value 'NewspaperStringEnum' (\"NEWSPAPER\"); only integers are supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -340,11 +340,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_TagInterface.ts";
-            string ConsumerErrorMsg = "Error: The input source file (TS_TagInterface.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
-            string PublisherErrorMsg = "Error: The input source file (TS_TagInterface.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+            string PrimaryErrorMessage = "Error: The input source file (TS_TagInterface.ts) does not publish any entities (exported functions, static methods, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
@@ -354,11 +354,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_TagMethod.ts";
-            string ConsumerErrorMsg = "Error: The input source file (TS_TagMethod.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
-            string PublisherErrorMsg = "Error: The input source file (TS_TagMethod.ts) does not publish any entities (exported functions, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+            string PrimaryErrorMessage = "Error: The input source file (TS_TagMethod.ts) does not publish any entities (exported functions, static methods, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -367,11 +367,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_TupleType.ts";
-            string ConsumerErrorMsg = "Error: Unable to publish type alias 'MyTupleType'";
-            string PublisherErrorMsg = "as a type (reason: The published type 'MyTupleType' has an invalid type ('[string,number]'); tuple types are not supported)";
+            string PrimaryErrorMessage = "Error: Unable to publish type alias 'MyTupleType'";
+            string SecondaryErrorMessage = "as a type (reason: The published type 'MyTupleType' has an invalid type ('[string,number]'); tuple types are not supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
@@ -381,11 +381,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_TwoAmbrTags.ts";
-            string ConsumerErrorMsg = "Error: The @ambrosia tag is defined more than once at";
-            string PublisherErrorMsg = "Error: The @ambrosia tag is defined more than once at";
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is defined more than once";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -394,11 +394,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_UnionType.ts";
-            string ConsumerErrorMsg = "Error: Unable to publish type alias 'MyUnionType'";
-            string PublisherErrorMsg = "as a type (reason: The published type 'MyUnionType' has an invalid type ('string|number'); union types are not supported)";
+            string PrimaryErrorMessage = "Error: Unable to publish type alias 'MyUnionType'";
+            string SecondaryErrorMessage = "as a type (reason: The published type 'MyUnionType' has an invalid type ('string|number'); union types are not supported)";
                                         
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -407,11 +407,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_UnionTypeCommented.ts";
-            string ConsumerErrorMsg = "Error: Unable to publish function 'myComplexReturnFunction'";
-            string PublisherErrorMsg = "as a post method (reason: The return type of method 'myComplexReturnFunction' [property 'r2'] has an invalid type ('number|string'); union types are not supported)";
+            string PrimaryErrorMessage = "Error: Unable to publish function 'myComplexReturnFunction'";
+            string SecondaryErrorMessage = "as a post method (reason: The return type of method 'myComplexReturnFunction' [property 'r2'] has an invalid type ('number|string'); union types are not supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
@@ -421,11 +421,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_UnknownAttribute.ts";
-            string ConsumerErrorMsg = "Error: The @ambrosia attribute 'published' is invalid for a function";
-            string PublisherErrorMsg = "valid attributes are: publish, version, methodID, doRuntimeTypeChecking";
+            string PrimaryErrorMessage = "Error: The @ambrosia attribute 'published' is invalid for a function";
+            string SecondaryErrorMessage = "valid attributes are: publish, version, methodID, doRuntimeTypeChecking";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -434,11 +434,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_VersionInt.ts";
-            string ConsumerErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'version' is not an integer";
-            string PublisherErrorMsg = "Error: The value ('Hello') supplied for @ambrosia attribute 'version' is not an integer";
+            string PrimaryErrorMessage = "Error: The value ('Hello') supplied for @ambrosia attribute 'version' is not an integer";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
         [TestMethod]
@@ -447,11 +447,11 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_SingleUInt8Array.ts";
-            string ConsumerErrorMsg = "Unable to publish function 'takesCustomSerializedParams'";
-            string PublisherErrorMsg = "Uint8Array parameter; Post methods do NOT support custom (raw byte) parameter serialization - all parameters are always serialized to JSON)";
+            string PrimaryErrorMessage = "Unable to publish function 'takesCustomSerializedParams'";
+            string SecondaryErrorMessage = "Uint8Array parameter; Post methods do NOT support custom (raw byte) parameter serialization - all parameters are always serialized to JSON)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, ConsumerErrorMsg, PublisherErrorMsg);
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
 
