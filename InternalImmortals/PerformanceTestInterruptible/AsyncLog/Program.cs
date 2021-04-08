@@ -1115,6 +1115,7 @@ namespace AsyncLog
                         // We're only accounting for dependencies on other logs. 
                         // Local dependencies are implicitly handled via log ordering.
                         Debug.Assert(dependencies[i].logID != _logID);
+
                         if (!_pageDeps.TryAdd(dependencies[i].logID, dependencies[i]))
                         {
                             LSN currentDep = _pageDeps[dependencies[i].logID];
