@@ -104,6 +104,21 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
+        [TestMethod]
+        public void JS_CG_Neg_IntersectionType()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_NoIntersectionType.ts";
+
+            // Consumer and Publisher error msg the same ... since part of message has path (which can differ from machine to machine) - verify first part of message in conumser string and second part in Publisher
+            string PrimaryErrorMessage = "Error: Unable to publish type alias 'IntersectionType'";
+            string SecondaryErrorMessage = "as a type (reason: The published type 'IntersectionType' has an invalid type ('FullName[]&ShortName[]'); intersection types are not supported)";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
+        }
+
 
         [TestMethod]
         public void JS_CG_Neg_MethodIDInt()
@@ -158,19 +173,32 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
-
         [TestMethod]
         public void JS_CG_Neg_NestedFctn()
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testfileName = "TS_NestedFunction.ts";
+            string testfileName = "TS_NestedFunction.ts";  // Cannot publish a local (nested) function
             string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a local function";
             string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
+
+        [TestMethod]
+        public void JS_CG_Neg_NestedFctn2()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_NestedFunction2.ts";  // Cannot publish a local (nested) function in a static method
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a local function";
+            string SecondaryErrorMessage = "";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
+        }
+
 
         [TestMethod]
         public void JS_CG_Neg_NoTaggedItems()
@@ -297,7 +325,7 @@ namespace AmbrosiaTest
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testfileName = "TS_StaticMethod1.ts";
+            string testfileName = "TS_StaticMethod1.ts";  // he parent class of a published static method must be exported.
             string PrimaryErrorMessage = "Warning: Skipping static method 'hello'";
             string SecondaryErrorMessage = "Error: The input source file (TS_StaticMethod1.ts) does not publish any entities (exported functions, static methods, type aliases and enums annotated with an @ambrosia JSDoc tag)";
 
@@ -310,7 +338,7 @@ namespace AmbrosiaTest
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testfileName = "TS_StaticMethod2.ts";
+            string testfileName = "TS_StaticMethod2.ts"; // A method must have the 'static' modifier to be published.
             string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a non-static method";
             string SecondaryErrorMessage = "";
 
@@ -323,7 +351,7 @@ namespace AmbrosiaTest
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testfileName = "TS_StaticMethod3.ts";
+            string testfileName = "TS_StaticMethod3.ts"; // Cannot publish a static method from a class expression
             string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a static method of a class expression";
             string SecondaryErrorMessage = "";
 
@@ -331,6 +359,18 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
+        [TestMethod]
+        public void JS_CG_Neg_StaticMethod4()  
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_StaticMethod4.ts";  // Can't publish a private static method
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a private static method";
+            string SecondaryErrorMessage = "";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
+        }
 
 
         [TestMethod]
