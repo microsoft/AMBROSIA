@@ -69,7 +69,7 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_CircReference.ts";
             string PrimaryErrorMessage = "Error: Unable to publish type alias 'CNames'";
-            string SecondaryErrorMessage = "as a type (reason: Unable to expand the definition for type 'CName' because it has a circular reference with type 'CNames')";
+            string SecondaryErrorMessage = "as a type (reason: Deferred expansion of type(s) failed (reason: Unable to expand type definition '{ first: string, last: string, priorNames: CNames[] }' because it has a circular reference with definition 'CName[]')) ";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -113,7 +113,7 @@ namespace AmbrosiaTest
 
             // Consumer and Publisher error msg the same ... since part of message has path (which can differ from machine to machine) - verify first part of message in conumser string and second part in Publisher
             string PrimaryErrorMessage = "Error: Unable to publish type alias 'IntersectionType'";
-            string SecondaryErrorMessage = "as a type (reason: The published type 'IntersectionType' has an invalid type ('FullName[]&ShortName[]'); intersection types are not supported)";
+            string SecondaryErrorMessage = "as a type (reason: The published type 'IntersectionType' has an invalid type ('FullName[] & ShortName[]'); intersection types are not supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -166,8 +166,8 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_NamespaceModule.ts";
-            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a module; valid targets are: function, method, type alias, and enum";
-            string SecondaryErrorMessage = "";
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a module";
+            string SecondaryErrorMessage = "valid targets are: function, static method, type alias, and enum";
         
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -220,7 +220,7 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_NoFunctionComplexType.ts";
             string PrimaryErrorMessage = "Error: Unable to publish type alias 'myComplexType'";
-            string SecondaryErrorMessage = "as a type (reason: The published type 'myComplexType' [property 'fn'] has an invalid type ('()=>void'); function types are not supported)";
+            string SecondaryErrorMessage = "as a type (reason: The published type 'myComplexType' [property 'fn'] has an invalid type ('() => void'); function types are not supported";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -234,7 +234,7 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_NoFunctionType.ts";
             string PrimaryErrorMessage = "Error: Unable to publish type alias 'fnType'";
-            string SecondaryErrorMessage = "as a type (reason: The published type 'fnType' has an invalid type ('(p1:number)=>string'); function types are not supported)";
+            string SecondaryErrorMessage = "as a type (reason: The published type 'fnType' has an invalid type ('(p1: number) => string'); function types are not supported) ";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -267,15 +267,14 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
-
         [TestMethod]
         public void JS_CG_Neg_PublishClass()
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_PublishClass.ts";
-            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a class; valid targets are: function, method, type alias, and enum";
-            string SecondaryErrorMessage = "";
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a class";
+            string SecondaryErrorMessage = "valid targets are: function, static method, type alias, and enum";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -422,7 +421,7 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_TupleType.ts";
             string PrimaryErrorMessage = "Error: Unable to publish type alias 'MyTupleType'";
-            string SecondaryErrorMessage = "as a type (reason: The published type 'MyTupleType' has an invalid type ('[string,number]'); tuple types are not supported)";
+            string SecondaryErrorMessage = "as a type (reason: The published type 'MyTupleType' has an invalid type ('[string, number]'); tuple types are not supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -449,7 +448,7 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_UnionType.ts";
             string PrimaryErrorMessage = "Error: Unable to publish type alias 'MyUnionType'";
-            string SecondaryErrorMessage = "as a type (reason: The published type 'MyUnionType' has an invalid type ('string|number'); union types are not supported)";
+            string SecondaryErrorMessage = "as a type (reason: The published type 'MyUnionType' has an invalid type ('string | number'); union types are not supported)";
                                         
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -462,7 +461,7 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_UnionTypeCommented.ts";
             string PrimaryErrorMessage = "Error: Unable to publish function 'myComplexReturnFunction'";
-            string SecondaryErrorMessage = "as a post method (reason: The return type of method 'myComplexReturnFunction' [property 'r2'] has an invalid type ('number|string'); union types are not supported)";
+            string SecondaryErrorMessage = "as a post method (reason: The return type of method 'myComplexReturnFunction' [property 'r2'] has an invalid type ('number | string'); union types are not supported) ";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
