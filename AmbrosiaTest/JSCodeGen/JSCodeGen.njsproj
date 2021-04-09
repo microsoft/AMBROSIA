@@ -40,7 +40,9 @@
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\ASTTest.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_AmbrosiaTagNewline.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_CircReference.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NestedFunction2.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NoFunctionComplexType.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NoIntersectionType.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NoFunctionType.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_OverloadedFunction.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_GenericType.ts" />
@@ -50,6 +52,7 @@
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NoTaggedItems.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_MethodIDInt.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_PublishMethodBeforeRef.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod4.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod3.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod2.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod1.ts" />
