@@ -169,7 +169,8 @@ function dispatcher(message: Messages.DispatchedMessage): void
                 switch (appEvent.eventType)
                 {
                     case Messages.AppEventType.ICStarting:
-                        Meta.publishType("Name", "{ first: string, last: string, priorNames: Names[] }");
+                        Meta.publishType("MixedTest", "{ p1: string[], p2: string[][], p3: { p4: number, p5: string }[] }");
+                        Meta.publishType("Name", "{ first: string, last: string }");
                         Meta.publishType("Names", "Name[]");
                         Meta.publishType("Nested", "{ abc: { a: Uint8Array, b: { c: Names } } }");
                         Meta.publishType("Letters", "number");
@@ -194,10 +195,18 @@ function dispatcher(message: Messages.DispatchedMessage): void
                         // TODO: Add an exported [non-async] function 'onRecoveryComplete(): void' to ./JS_CodeGen_TestFiles/ASTTest.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
-                    case Messages.AppEventType.UpgradeStateAndCode:
-                        // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/ASTTest.ts, then (after the next code-gen) a call to it will be generated here
+                    case Messages.AppEventType.UpgradeState:
+                        // TODO: Add an exported [non-async] function 'onUpgradeState(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/ASTTest.ts, then (after the next code-gen) a call to it will be generated here
                         // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/ASTTest.ts in order to reference the 'Messages' namespace.
-                        //       Also, your handler MUST call IC.upgrade() [to upgrade code] and the upgrade() method of your AmbrosiaAppState instance [to upgrade state].
+                        //       Upgrading is performed by calling _appState.upgrade(), for example:
+                        //       _appState = _appState.upgrade<AppStateVNext>(AppStateVNext);
+                        break;
+
+                    case Messages.AppEventType.UpgradeCode:
+                        // TODO: Add an exported [non-async] function 'onUpgradeCode(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/ASTTest.ts, then (after the next code-gen) a call to it will be generated here
+                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/ASTTest.ts in order to reference the 'Messages' namespace.
+                        //       Upgrading is performed by calling IC.upgrade(), passing the new handlers from the "upgraded" PublisherFramework.g.ts,
+                        //       which should be part of your app (alongside your original PublisherFramework.g.ts).
                         break;
 
                     case Messages.AppEventType.IncomingCheckpointStreamSize:
@@ -218,6 +227,10 @@ function dispatcher(message: Messages.DispatchedMessage): void
 
                     case Messages.AppEventType.CheckpointSaved:
                         // TODO: Add an exported [non-async] function 'onCheckpointSaved(): void' to ./JS_CodeGen_TestFiles/ASTTest.ts, then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.UpgradeComplete:
+                        // TODO: Add an exported [non-async] function 'onUpgradeComplete(): void' to ./JS_CodeGen_TestFiles/ASTTest.ts, then (after the next code-gen) a call to it will be generated here
                         break;
                 }
                 break;

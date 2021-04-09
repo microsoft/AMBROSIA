@@ -12,19 +12,33 @@ let POST_TIMEOUT_IN_MS: number = 8000; // -1 = Infinite
 export namespace Test
 {
     /**
+     * Testing 1) a mix of ',' and ';' member separators, 2) A complex-type array */
+    export class MixedTest
+    {
+        p1: string[];
+        p2: string[][];
+        p3: { p4: number, p5: string }[];
+
+        constructor(p1: string[], p2: string[][], p3: { p4: number, p5: string }[])
+        {
+            this.p1 = p1;
+            this.p2 = p2;
+            this.p3 = p3;
+        }
+    }
+
+    /**
      * Example of a complex type.
      */
     export class Name
     {
         first: string;
         last: string;
-        priorNames: Names[];
 
-        constructor(first: string, last: string, priorNames: Names[])
+        constructor(first: string, last: string)
         {
             this.first = first;
             this.last = last;
-            this.priorNames = priorNames;
         }
     }
 
@@ -52,13 +66,26 @@ export namespace Test
     export enum Letters { A = 0, B = 3, C = 4, D = 9 }
 
     /**
+     * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * Example of a [post] method that uses custom types.
+     */
+    export function makeName_Post(callContextData: any, firstName?: string, lastName?: string): number
+    {
+        const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "makeName", 1, POST_TIMEOUT_IN_MS, callContextData, 
+            IC.arg("firstName?", firstName), 
+            IC.arg("lastName?", lastName));
+        return (callID);
+    }
+
+    /**
      * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
      * Example of a [post] method that uses custom types.
      */
-    export function makeName_Post(callContextData: any, firstName?: string, lastName?: string): void
+    export function makeName_PostByImpulse(callContextData: any, firstName?: string, lastName?: string): void
     {
-        IC.postFork(DESTINATION_INSTANCE_NAME, "makeName", 1, POST_TIMEOUT_IN_MS, callContextData, 
+        IC.postByImpulse(DESTINATION_INSTANCE_NAME, "makeName", 1, POST_TIMEOUT_IN_MS, callContextData, 
             IC.arg("firstName?", firstName), 
             IC.arg("lastName?", lastName));
     }

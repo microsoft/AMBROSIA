@@ -63,6 +63,20 @@ namespace AmbrosiaTest
         }
 
         [TestMethod]
+        public void JS_CG_Neg_CircularReference()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_CircReference.ts";
+            string PrimaryErrorMessage = "Error: Unable to publish type alias 'CNames'";
+            string SecondaryErrorMessage = "as a type (reason: Unable to expand the definition for type 'CName' because it has a circular reference with type 'CNames')";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
+        }
+
+
+        [TestMethod]
         public void JS_CG_Neg_CommaAttrib()
         {
             JS_Utilities JSUtils = new JS_Utilities();
@@ -151,7 +165,7 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_NestedFunction.ts";
-            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a local function ('localFn'";
+            string PrimaryErrorMessage = "Error: The @ambrosia tag is not valid on a local function";
             string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
@@ -414,19 +428,32 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
-
         [TestMethod]
-        public void JS_CG_Neg_UnknownAttribute()
+        public void JS_CG_Neg_UnknownAtt_Method()
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testfileName = "TS_UnknownAttribute.ts";
-            string PrimaryErrorMessage = "Error: The @ambrosia attribute 'published' is invalid for a function";
+            string testfileName = "TS_UnknownAtt_Method.ts";
+            string PrimaryErrorMessage = "Error: Unknown @ambrosia attribute 'published'";
             string SecondaryErrorMessage = "valid attributes are: publish, version, methodID, doRuntimeTypeChecking";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
+
+        [TestMethod]
+        public void JS_CG_Neg_UnknownAtt_Type()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_UnknownAtt_Type.ts";
+            string PrimaryErrorMessage = "Error: Unknown @ambrosia attribute 'published'";
+            string SecondaryErrorMessage = "valid attributes are: publish";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
+        }
+
 
         [TestMethod]
         public void JS_CG_Neg_VersionInt()

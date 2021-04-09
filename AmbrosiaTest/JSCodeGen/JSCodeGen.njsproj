@@ -39,6 +39,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\ASTTest.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_AmbrosiaTagNewline.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_CircReference.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NoFunctionComplexType.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NoFunctionType.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_OverloadedFunction.ts" />
@@ -53,13 +54,14 @@
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod2.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod1.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnionTypeCommented.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnknownAtt_Type.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_VersionInt.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_RunTimeBool.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_QuoteAttributeValue.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_CommasBetweenAttrib.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_NamespaceModule.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_PublishClass.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnknownAttribute.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnknownAtt_Method.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TwoAmbrTags.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnionType.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TupleType.ts" />
