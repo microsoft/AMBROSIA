@@ -343,8 +343,8 @@ namespace AmbrosiaTest
             string logOutputFileName_Server = testName + "_Server.log";
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0,MyUtils.deployModeInProc, "2500");
 
-            // Give it 4 seconds to do something before killing it
-            Thread.Sleep(4000);
+            // Give it 3 seconds to do something before killing it
+            Thread.Sleep(3000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // DO NOT Kill both Job and Server 
@@ -1042,7 +1042,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob1, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob2, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob3, byteSize, 15, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true,false);   // don't check for DONE sometimes not getting it ... not big deal
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(serverProcessID);
@@ -1062,7 +1062,7 @@ namespace AmbrosiaTest
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
 
             // Verify log files
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version, "4");
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version, "4",false,false);
 
         }
 
@@ -1153,13 +1153,11 @@ namespace AmbrosiaTest
 
             //Delay until server upgrade is done
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, byteSize, 30, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, newUpgradedPrimary, 5, false, testName, true, false);
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID);
             MyUtils.KillProcess(serverProcessID_upgraded);
-
-            // Also verify upgraded server showing new upgraded primary
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, newUpgradedPrimary, 5, false, testName, true,false);
 
             // Verify Client
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);

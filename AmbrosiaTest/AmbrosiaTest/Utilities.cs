@@ -107,7 +107,6 @@ namespace AmbrosiaTest
 
             try
             {
-
                 // Start cmd.exe process that launches proper exe
                 Process process = Process.Start(startInfo);
                 if (waitForExit)
@@ -159,16 +158,14 @@ namespace AmbrosiaTest
         }
 
         // timing mechanism to see when a process finishes. It uses a trigger string ("DONE") and will delay until that string
-        // is hit or until maxDelay (mins) is hit
-        // After the doneString is found it also determines if the extraStringToFind is part of it as well.
-        // ASSUMPTION: done string is always after the extra string - so if extra string is not found by time it hits DONE, then know it isn't in output
+        // is hit or until maxDelay (mins) is hit it also can determine if the extraStringToFind is part of it as well.
         public bool WaitForProcessToFinish(string logFile, string extraStringToFind, int maxDelay, bool truncateAmbrosiaLogs, string testName, bool assertOnFalseReturn, bool checkForDoneString = true)
         {
             int timeCheckInterval = 10000;  // 10 seconds
             int maxTimeLoops = (maxDelay * 60000) / timeCheckInterval;
             string doneString = "DONE";
             bool foundExtraString = false;
-
+            bool foundDoneString = false;
             logFile = ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\" + logFile;
 
             for (int i = 0; i < maxTimeLoops; i++)
@@ -181,11 +178,19 @@ namespace AmbrosiaTest
                 while (!logFileReader.EndOfStream)
                 {
                     string line = logFileReader.ReadLine();
+
+                    // Looking for "DONE"
+                    if (line.Contains(doneString))
+                    {
+                        foundDoneString = true;
+                    }
+
+                    // Looking for extra string (usually byte size or some extra message in output)
                     if (line.Contains(extraStringToFind))
                     {
                         foundExtraString = true;
 
-                        // since not looking for done, need to close things down here
+                        // since not looking for done, can close things down here
                         if (checkForDoneString == false)
                         {
                             logFileReader.Close();
@@ -194,13 +199,12 @@ namespace AmbrosiaTest
                         }
                     }
 
-                    if (line.Contains(doneString))
+                    // kick out because had success only if doneString is found AND the extra string is found 
+                    if ((foundDoneString) && (foundExtraString))
                     {
                         logFileReader.Close();
                         logFileStream.Close();
-
-                        if (foundExtraString)
-                            return true; // kick out because had success only if doneString is found AND the extra string is found 
+                        return true; 
                     }
                 }
 
@@ -225,7 +229,6 @@ namespace AmbrosiaTest
                 FailureSupport(testName);
 
                 // If times out without string hit - then pop exception
-
                 if (checkForDoneString)
                 {
                     Assert.Fail("<WaitForProcessToFinish> Failure! Looking for '" + doneString + "' string AND the extra string:" + extraStringToFind + " in log file:" + logFile + " but did not find one or both after waiting:" + maxDelay.ToString() + " minutes.");
@@ -612,7 +615,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false)
+        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false, bool checkForDoneString = true)
         {
 
             // Doing this for multi client situations
@@ -783,8 +786,8 @@ namespace AmbrosiaTest
             }
 
             // wait until done running
-            bool pass = WaitForProcessToFinish(logOutputFileName_ClientJob_Verify, numBytes.ToString(), 15, false, testName, true);
-            pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, testName, true);
+            bool pass = WaitForProcessToFinish(logOutputFileName_ClientJob_Verify, numBytes.ToString(), 15, false, testName, true, checkForDoneString);
+            pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, testName, true, checkForDoneString);
             
 
             // MTFs don't check cmp files because they change from run to run 
@@ -796,7 +799,7 @@ namespace AmbrosiaTest
             }
 
             // Test Time Travel Debugging on the Log Files from PTI job and PTI server - don't do for MTF as not needed for TTD handled by other tests also cmp files change too much
-            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion, checkCmpFile);
+            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion, checkCmpFile, checkForDoneString);
 
         }
 
@@ -804,7 +807,7 @@ namespace AmbrosiaTest
         //** job.exe and server.exe to verify it. Porbably easiest to call from VerifyAmbrosiaLogFile since that does
         //** all the work to get the log files and checkpoint numbers
         //** Assumption that this is called at the end of a test where Ambrosia.exe was already called to register for this test
-        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber, string optionalNumberOfClient = "", string currentVersion = "", bool checkCmpFile = true)
+        public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber, string optionalNumberOfClient = "", string currentVersion = "", bool checkCmpFile = true, bool checkForDoneString = true)
         {
 
             // Basically doing this for multi client stuff
@@ -822,8 +825,8 @@ namespace AmbrosiaTest
             int serverProcessID = StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_TTD_Verify, Convert.ToInt32(optionalNumberOfClient), false,0, deployModeInProcTimeTravel,"", ambrosiaLogDir, startingServerChkPtVersionNumber,currentVersion);
 
             // wait until done running
-            bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 20, false, testName, true);
-            pass = WaitForProcessToFinish(logOutputFileName_ClientJob_TTD_Verify, numBytes.ToString(), 15, false, testName, true);
+            bool pass = WaitForProcessToFinish(logOutputFileName_Server_TTD_Verify, numBytes.ToString(), 20, false, testName, true, checkForDoneString);
+            pass = WaitForProcessToFinish(logOutputFileName_ClientJob_TTD_Verify, numBytes.ToString(), 15, false, testName, true, checkForDoneString);
 
             // With Meantime to Failure tests don't check cmp files because they change from run to run 
             if (checkCmpFile)
