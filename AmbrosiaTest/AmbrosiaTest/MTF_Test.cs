@@ -25,6 +25,8 @@ namespace AmbrosiaTest
         // This has Persist Logs = Y for both Job and Server
         // Set Server \ Job to exchange random sized 
         //****************************
+
+        /*  Commment out MTF so don't run in normal queue. Just remove comments when want to run MTF tests locally.
         [TestMethod]
         public void AMB_MTF_KILL_PERSIST_Test()
         {
@@ -367,6 +369,7 @@ namespace AmbrosiaTest
 
         }
 
+        */
         [TestCleanup()]
         public void Cleanup()
         {
