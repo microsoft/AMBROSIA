@@ -1,10 +1,14 @@
 export namespace Test
 {
-    //** @ambrosia publish=true */
-    interface IFoo
+    /**
+     * Testing 1) a mix of ',' and ';' member separators, 2) A complex-type array
+     * @ambrosia publish = true */
+    export type MixedTest = 
     {
-        foo: number;
-    }
+        p1: string[];
+        p2: string[][],
+        p3: { p4: number; p5: string }[];
+    };
 
     /** 
      * Example of a complex type.
@@ -15,8 +19,7 @@ export namespace Test
         // Test 1
         first: string, // Test 2
         /** Test 3 */
-        last: string, /* Test 4 */
-        priorNames: Names[]
+        last: string /* Test 4 */
     }
 
     /** 
@@ -62,7 +65,7 @@ export namespace Test
     export function makeName(firstName: string = "John", lastName: string /** Foo */ = "Doe"): Names
     {
         let names: Names;
-        let name: Name = { first: firstName, last: lastName, priorNames: [] };
+        let name: Name = { first: firstName, last: lastName };
         names.push(name);
         return (names);
     }

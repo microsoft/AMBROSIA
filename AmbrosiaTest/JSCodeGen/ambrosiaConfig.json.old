@@ -13,6 +13,7 @@
     "debugTestUpgrade": false,
     "appVersion": 0,
     "upgradeVersion": 0,
+    "activeCode": "VCurrent",
     "lbOptions": 
     {
         "deleteLogs": true, 
