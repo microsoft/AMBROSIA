@@ -14,10 +14,29 @@ Test File to test all the the ways that the ambrosia tag can be set and still wo
  */
 export namespace Test
 {
-    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
-    export function OneLineNoComment_Post(callContextData: any): void
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.* */
+    export function OneLineNoComment_Post(callContextData: any): number
     {
-        IC.postFork(DESTINATION_INSTANCE_NAME, "OneLineNoComment", 1, POST_TIMEOUT_IN_MS, callContextData);
+        const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "OneLineNoComment", 1, POST_TIMEOUT_IN_MS, callContextData);
+        return (callID);
+    }
+
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
+    export function OneLineNoComment_PostByImpulse(callContextData: any): void
+    {
+        IC.postByImpulse(DESTINATION_INSTANCE_NAME, "OneLineNoComment", 1, POST_TIMEOUT_IN_MS, callContextData);
+    }
+
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * Multi Line with Comment before Tag
+     * but still before tag
+     */
+    export function MultiLineCommentBeforeTag_Post(callContextData: any): number
+    {
+        const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "MultiLineCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+        return (callID);
     }
 
     /**
@@ -26,15 +45,33 @@ export namespace Test
      * Multi Line with Comment before Tag
      * but still before tag
      */
-    export function MultiLineCommentBeforeTag_Post(callContextData: any): void
+    export function MultiLineCommentBeforeTag_PostByImpulse(callContextData: any): void
     {
-        IC.postFork(DESTINATION_INSTANCE_NAME, "MultiLineCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+        IC.postByImpulse(DESTINATION_INSTANCE_NAME, "MultiLineCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+    }
+
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.* */
+    export function MultiSeparateLinesCommentBeforeTag_Post(callContextData: any): number
+    {
+        const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "MultiSeparateLinesCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+        return (callID);
     }
 
     /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
-    export function MultiSeparateLinesCommentBeforeTag_Post(callContextData: any): void
+    export function MultiSeparateLinesCommentBeforeTag_PostByImpulse(callContextData: any): void
     {
-        IC.postFork(DESTINATION_INSTANCE_NAME, "MultiSeparateLinesCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+        IC.postByImpulse(DESTINATION_INSTANCE_NAME, "MultiSeparateLinesCommentBeforeTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+    }
+
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * ************ Have a space after the tag before function declaration
+     */
+    export function EmptyLineBetweenTagAndFctn_Post(callContextData: any): number
+    {
+        const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "EmptyLineBetweenTagAndFctn", 1, POST_TIMEOUT_IN_MS, callContextData);
+        return (callID);
     }
 
     /**
@@ -42,9 +79,20 @@ export namespace Test
      * 
      * ************ Have a space after the tag before function declaration
      */
-    export function EmptyLineBetweenTagAndFctn_Post(callContextData: any): void
+    export function EmptyLineBetweenTagAndFctn_PostByImpulse(callContextData: any): void
     {
-        IC.postFork(DESTINATION_INSTANCE_NAME, "EmptyLineBetweenTagAndFctn", 1, POST_TIMEOUT_IN_MS, callContextData);
+        IC.postByImpulse(DESTINATION_INSTANCE_NAME, "EmptyLineBetweenTagAndFctn", 1, POST_TIMEOUT_IN_MS, callContextData);
+    }
+
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * **** Spacing around the tag
+     */
+    export function SpacingAroundTag_Post(callContextData: any): number
+    {
+        const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "SpacingAroundTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+        return (callID);
     }
 
     /**
@@ -52,9 +100,20 @@ export namespace Test
      * 
      * **** Spacing around the tag
      */
-    export function SpacingAroundTag_Post(callContextData: any): void
+    export function SpacingAroundTag_PostByImpulse(callContextData: any): void
     {
-        IC.postFork(DESTINATION_INSTANCE_NAME, "SpacingAroundTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+        IC.postByImpulse(DESTINATION_INSTANCE_NAME, "SpacingAroundTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+    }
+
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * JS Doc
+     */
+    export function JSDOcTag_Post(callContextData: any): number
+    {
+        const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "JSDOcTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+        return (callID);
     }
 
     /**
@@ -62,9 +121,20 @@ export namespace Test
      * 
      * JS Doc
      */
-    export function JSDOcTag_Post(callContextData: any): void
+    export function JSDOcTag_PostByImpulse(callContextData: any): void
     {
-        IC.postFork(DESTINATION_INSTANCE_NAME, "JSDOcTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+        IC.postByImpulse(DESTINATION_INSTANCE_NAME, "JSDOcTag", 1, POST_TIMEOUT_IN_MS, callContextData);
+    }
+
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * The ambrosia tag must be on the implementation of an overloaded function
+     */
+    export function fnOverload_Post(callContextData: any, name?: string): number
+    {
+        const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "fnOverload", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("name?", name));
+        return (callID);
     }
 
     /**
@@ -72,9 +142,9 @@ export namespace Test
      * 
      * The ambrosia tag must be on the implementation of an overloaded function
      */
-    export function fnOverload_Post(callContextData: any, name?: string): void
+    export function fnOverload_PostByImpulse(callContextData: any, name?: string): void
     {
-        IC.postFork(DESTINATION_INSTANCE_NAME, "fnOverload", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("name?", name));
+        IC.postByImpulse(DESTINATION_INSTANCE_NAME, "fnOverload", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("name?", name));
     }
 }
 

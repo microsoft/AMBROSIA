@@ -266,11 +266,13 @@ flexibility to the deployment configuration of the service.
 
 Performing an upgrade of a standalone instance always involves stopping the app (or service), so it always involves downtime. The steps are:
 * Stop the current instance.
-* Run `Ambrosia.exe RegisterInstance --instanceName=xxxxx --currentVersion=n --upgradeVersion=m` where n and m are the integer version numbers with m > n.
+* Run `Ambrosia.exe RegisterInstance --instanceName=xxxxx --currentVersion=n --upgradeVersion=m` where n and m are the integer version numbers with m > n. 
+  Note that this is an abridged version of the actual command; running `Ambrosia.exe RegisterInstance` requires that you re-specify **all** previously provided parameters, otherwise they will revert to their default values.
 * Start the new instance (that contains the VCurrent and VNext app code, and the VCurrent-to-VNext state conversion code).
 * The upgrade is complete after the IC receives the checkpoint taken in response to the next `TakeCheckpoint` received after `UpgradeTakeCheckpoint` (see '[Communication Protocols](#communication-protocols)' above).
 * Once the upgrade is complete, the instance must be re-registered with the new `--currentVersion` before the next restart (but only while the instance is stopped):\
- `Ambrosia.exe RegisterInstance --instanceName=xxxxx --currentVersion=m --upgradeVersion=0`
+ `Ambrosia.exe RegisterInstance --instanceName=xxxxx --currentVersion=m`
+* Further, before the next restart the application must be swapped for one that uses the VNext code (or the existing application should be configured to only use the VNext code).
 
 To upgrade an active/active instance a new replica (secondary) is registered and started, which upgrades the current version, similar to
 the previous example, but for a new replica. When the replica finishes recovering, it stops the primary, and holds a
