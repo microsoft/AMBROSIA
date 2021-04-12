@@ -322,7 +322,7 @@ namespace Server
             Console.Out.Flush();
         }
 
-        static internal async Task WaitForJobsToFinishAsync()
+        static internal async Task WaitForJobsToFinishAndThenWaitAsync()
         {
             int jobsEnded = 0;
             while (jobsEnded < _numJobs)
@@ -332,7 +332,7 @@ namespace Server
             }
             Console.WriteLine("DONE");
             FlushOutput();
-            await Task.Delay(5000);
+            await finishedTokenQ.DequeueAsync();
             return;
         }
 
@@ -367,19 +367,19 @@ namespace Server
                         case ICDeploymentMode.SecondProc:
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                WaitForJobsToFinishAsync().Wait();                            
+                                WaitForJobsToFinishAndThenWaitAsync().Wait();                            
                             }
                             break;
                         case ICDeploymentMode.InProcDeploy:
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _icPort))
                             {
-                                WaitForJobsToFinishAsync().Wait();
+                                WaitForJobsToFinishAndThenWaitAsync().Wait();
                             }
                             break;
                         case ICDeploymentMode.InProcTimeTravel:
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad, _currentVersion))
                             {
-                                WaitForJobsToFinishAsync().Wait();
+                                WaitForJobsToFinishAndThenWaitAsync().Wait();
                             }
                             break;
                         case ICDeploymentMode.InProcManual:
@@ -393,7 +393,7 @@ namespace Server
                             _iCThread.Start();
                             using (var c = AmbrosiaFactory.Deploy<IServer>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                WaitForJobsToFinishAsync().Wait();
+                                WaitForJobsToFinishAndThenWaitAsync().Wait();
                             }
                             break;
                     }
@@ -406,19 +406,19 @@ namespace Server
                         case ICDeploymentMode.SecondProc:
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                WaitForJobsToFinishAsync().Wait();
+                                WaitForJobsToFinishAndThenWaitAsync().Wait();
                             }
                             break;
                         case ICDeploymentMode.InProcDeploy:
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _icPort))
                             {
-                                WaitForJobsToFinishAsync().Wait();
+                                WaitForJobsToFinishAndThenWaitAsync().Wait();
                             }
                             break;
                         case ICDeploymentMode.InProcTimeTravel:
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _serviceLogPath, _checkpointToLoad, _currentVersion))
                             {
-                                WaitForJobsToFinishAsync().Wait();
+                                WaitForJobsToFinishAndThenWaitAsync().Wait();
                             }
                             break;
                         case ICDeploymentMode.InProcManual:
@@ -432,7 +432,7 @@ namespace Server
                             _iCThread.Start();
                             using (var c = AmbrosiaFactory.Deploy<IServer, IServer, ServerUpgraded>(_perfServer, myServer, _receivePort, _sendPort))
                             {
-                                WaitForJobsToFinishAsync().Wait();
+                                WaitForJobsToFinishAndThenWaitAsync().Wait();
                             }
                             break;
                     }
