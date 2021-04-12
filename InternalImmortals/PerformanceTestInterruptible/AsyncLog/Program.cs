@@ -48,9 +48,16 @@ namespace AsyncLog
 
     public interface ILog
     {
-        Task<LSN> AppendAsync(byte[] payload, int size);
+        Task<LSN> AppendAsync(byte[] payload, int size, LSN[] dependencies, int numDependencies);
         void Snapshot();
         byte[] GetNext();
+    }
+
+    public interface ILogAppendClient
+    {
+        Task<ValueTuple<byte[], int>> BeforeEpochAsync(LSN lsn);
+        Task AfterEpochAsync(LSN lsn);
+        void Commit(LSN lsn);
     }
 
     internal class Committer
@@ -916,6 +923,9 @@ namespace AsyncLog
 
     public class AmbrosiaLog : ILog
     {
+        private ILogAppendClient _appendClient;
+        private Task _epochDurabilityTask;
+
         private ILogWriter _logStream;
         private long _logID;
         private long _lastEpochSequenceID;
@@ -931,10 +941,12 @@ namespace AsyncLog
         byte[] _buf;
         volatile byte[] _bufbak;
         long _maxBufSize;
-        internal const int HeaderSize = 24;  // 4 Committer ID, 8 Write ID, 8 check bytes, 4 page size
+        internal const int HeaderSize = 40;  // 4 Committer ID, 8 Epoch ID, 8 check bytes, 4 page size, 8 min LSN, 8 max LSN
 
         byte[] _checkTempBytes = new byte[8];
         byte[] _checkTempBytes2 = new byte[8];
+
+        ConcurrentBag<Stream> _subscriberStreams;
 
         // Used in CAS. The first 31 bits are the #of writers, the next 32 bits is the buffer size, the last bit is the sealed bit
         long _status;
@@ -1096,8 +1108,8 @@ namespace AsyncLog
                 else
                 {
                     // We're going to try to add to the end of the existing buffer
-                    var newWrites = (localStatus >> (64 - numWritesBits)) + 1;
-                    newLocalStatus = ((newWrites) << (64 - numWritesBits)) | (newLength << SealedBits);
+                    var newWriteCount = (localStatus >> (64 - numWritesBits)) + 1;
+                    newLocalStatus = ((newWriteCount) << (64 - numWritesBits)) | (newLength << SealedBits);
                 }
                 var origVal = Interlocked.CompareExchange(ref _status, newLocalStatus, localStatus);
 
@@ -1166,7 +1178,7 @@ namespace AsyncLog
                         }
 
                         // Filling header with enough info to detect incomplete writes and also writing the page length
-                        var writeStream = new MemoryStream(_buf, 4, 20);
+                        var writeStream = new MemoryStream(_buf, 4, 36);
                         int lengthOnPage;
                         if (newLength <= _maxBufSize)
                         {
@@ -1177,6 +1189,7 @@ namespace AsyncLog
                             lengthOnPage = (int)oldBufLength;
                         }
                         writeStream.WriteIntFixed(lengthOnPage);
+
                         if (newLength <= _maxBufSize)
                         {
                             // Copy the contents into the log record buffer
@@ -1193,6 +1206,10 @@ namespace AsyncLog
                             // new message is too big to land in a commit buffer and will be tacked on the end.
                             checkBytes = CheckBytesExtra(HeaderSize, lengthOnPage - HeaderSize, payload, length);
                         }
+                        writeStream.WriteLongFixed(checkBytes);
+                        writeStream.WriteLongFixed(_epochID);
+                        writeStream.WriteLongFixed(_lastEpochSequenceID + 1);
+                        writeStream.WriteLongFixed(_lastEpochSequenceID + (newLocalStatus >> (64 - numWritesBits)) + 1);
 
                         // Do the actual commit
                         if (newLength <= _maxBufSize)
@@ -1241,14 +1258,31 @@ namespace AsyncLog
 
         private async Task HardenAsync(byte[] buf, int length)
         {
+            LSN lastLSN;
+            lastLSN.sequenceID = _completedWrites + 1 + _lastEpochSequenceID;
+            lastLSN.epochID = _epochID;
+            lastLSN.logID = _logID;
+
             try
             {
+                // Get the client's footer to associate with the epoch.
+                var clientFooter = await _appendClient.BeforeEpochAsync(lastLSN);
+
+                foreach (var subscriber in _subscriberStreams)
+                {
+                    await subscriber.WriteAsync(buf, 0, length);
+                    var flushtask = subscriber.FlushAsync();
+                }
+
                 // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                 if (_persistLogs)
                 {
                     await _logStream.WriteAsync(buf, 0, length);
                     await _logStream.FlushAsync();
                 }
+
+                // Signal completion to the client.
+                _epochDurabilityTask = _appendClient.AfterEpochAsync(lastLSN);
 
                 // Update the durable pageID.
                 Interlocked.Increment(ref _durablePageID);
@@ -1260,6 +1294,13 @@ namespace AsyncLog
             {
                 throw e;
             }
+
+            // Jose: The Interlocked statements below might be overkill.
+            _lastEpochSequenceID = lastLSN.sequenceID;
+            var newEpoch = Interlocked.Increment(ref _epochID);
+            Debug.Assert(newEpoch == lastLSN.epochID + 1);
+            Interlocked.Exchange(ref _completedWrites, 0);
+
             _bufbak = buf;
             await TryHardenAsync();
         }
@@ -1276,7 +1317,7 @@ namespace AsyncLog
                 {
                     _logStream.Write(firstBufToCommit, 0, 4);
                     _logStream.WriteIntFixed(length1 + length2);
-                    _logStream.Write(firstBufToCommit, 8, 16);
+                    _logStream.Write(firstBufToCommit, 8, 32);
                     await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
                     await _logStream.WriteAsync(secondBufToCommit, 0, length2);
                     await _logStream.FlushAsync();
