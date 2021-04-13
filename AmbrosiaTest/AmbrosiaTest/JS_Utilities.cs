@@ -19,7 +19,7 @@ namespace AmbrosiaTest
         public string CodeGenNoTypeScriptErrorsMessage = "Success: No TypeScript errors found in generated file ";
 
         // Runs a TS file through the JS LB and verifies code gen works correctly
-        public void Test_CodeGen_TSFile(string TestFile, bool NegTest = false, string PrimaryErrorMessage = "", string SecondaryErrorMessage = "")
+        public void Test_CodeGen_TSFile(string TestFile, bool NegTest = false, string PrimaryErrorMessage = "", string SecondaryErrorMessage = "", bool UsingRandomTestFile = false)
         {
             try
             {
@@ -55,6 +55,14 @@ namespace AmbrosiaTest
                 if (NegTest)
                 {
                     pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, CodeGenFailMessage, 1, false, TestFile, true);
+
+                    // Verify the log file only has the one error at the end
+                    if (UsingRandomTestFile)
+                    {
+
+                        //*#*#*#*# TO DO
+                    }
+
                 }
                 else
                 {
@@ -178,8 +186,6 @@ namespace AmbrosiaTest
 
             return processID;
         }
-
-
 
         //** Clean up all the left overs from JS tests. 
         public void JS_TestCleanup()
