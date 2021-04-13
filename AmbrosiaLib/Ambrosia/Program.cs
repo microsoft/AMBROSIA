@@ -18,6 +18,7 @@ using CRA.ClientLibrary;
 using System.Diagnostics;
 using System.Xml.Serialization;
 using System.IO.Pipes;
+using AsyncLog;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CRA.ClientLibrary.DataProcessing;
 
@@ -1351,7 +1352,7 @@ namespace Ambrosia
         // Used to hold the bytes which will go in the log. Note that two streams are passed in. The
         // log stream must write to durable storage and be flushable, while the second stream initiates
         // actual action taken after the message has been made durable.
-        internal class Committer
+        internal class Committer : ILogAppendClient
         {
             byte[] _buf;
             volatile byte[] _bufbak;
@@ -1375,6 +1376,12 @@ namespace Ambrosia
             int _committerID;
             internal long _nextWriteID;
             AmbrosiaRuntime _myAmbrosia;
+
+            internal LSN _prevEpochLSN;
+            internal long _asyncLogEpochID;
+            internal ILog _asyncLog;
+            internal long _completedAppends;
+
 
             public Committer(Stream workStream,
                              bool persistLogs,
@@ -1851,6 +1858,16 @@ namespace Ambrosia
                 return checkBytes;
             }
 
+            public async Task<ValueTuple<byte[], int>> BeforeEpochAsync(LSN lsn)
+            {
+                var appendCount = lsn.sequenceID - _prevEpochLSN.sequenceID;
+                while (Interlocked.Read(ref _completedAppends) != appendCount)
+                {
+                    await Task.Yield();
+                }
+
+
+            }
 
             public async Task<long> AddRow(FlexReadBuffer copyFromFlexBuffer,
                                            string outputToUpdate,
@@ -1862,6 +1879,43 @@ namespace Ambrosia
             {
                 var copyFromBuffer = copyFromFlexBuffer.Buffer;
                 var length = copyFromFlexBuffer.Length;
+
+                // Append a new log record.
+                var lsn = await _asyncLog.AppendAsync(copyFromBuffer, length, null, 0);
+
+                // Wait for previous epoch's meta-data to finish processing.
+                var currentEpoch = Interlocked.Read(ref _asyncLogEpochID);
+                while (currentEpoch < lsn.epochID)
+                {
+                    await Task.Yield();
+                    currentEpoch = Interlocked.Read(ref _asyncLogEpochID);
+                }
+                Debug.Assert(lsn.epochID == currentEpoch);
+
+                // Update meta-data.
+                var associatedInputConnectionRecord = inputs[outputToUpdate];
+                associatedInputConnectionRecord.LastProcessedID = newSeqNo;
+                associatedInputConnectionRecord.LastProcessedReplayableID = newReplayableSeqNo;
+                _uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
+
+                // Bump append count (associated with each epoch).
+                Interlocked.Increment(ref _completedAppends);
+                return 0;
+            }
+            
+                /*
+                while (true)
+                {
+                    var addrow = Interlocked.Read(ref _epochAddRows);
+                    if (lsn > lsnWorkWatermark && Interlocked.CompareExchange()
+                    {
+                        break;
+                    }
+
+                }
+                while (Interlocked.Read)
+
+
                 while (true)
                 {
                     bool sealing = false;
@@ -2031,6 +2085,7 @@ namespace Ambrosia
                     }
                 }
             }
+            */
 
             public async Task TryHardenAsync(ConcurrentDictionary<string, OutputConnectionRecord> outputs,
                                              ConcurrentDictionary<string, InputConnectionRecord> inputs,
@@ -2372,6 +2427,9 @@ namespace Ambrosia
         // Connection to local service
         Stream _localServiceReceiveFromStream;
         Stream _localServiceSendToStream;
+
+        // Replacement for the committer.
+        ILog _asyncLog;
 
         // Precommit buffers used for writing things to append blobs
         Committer _committer;
