@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading;
 using System.Windows.Forms; // need this to handle threading issue on sleeps
 using System.Configuration;
+using System.IO;
 
 
 namespace AmbrosiaTest
@@ -34,8 +35,30 @@ namespace AmbrosiaTest
 
 
         //************* Negative Tests *****************
- 
-         
+
+
+        // ** Shotgun approach of throwing a bunch of ts files against code gen and see if any fails
+        [TestMethod]
+        public void JS_CG_Neg_AmbrosiaSrcFiles_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+            Utilities MyUtils = new Utilities();
+
+            // get ambrosia-node source files
+            string AmbrosiaNodeDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"] + "\\node_modules\\ambrosia-node\\src";
+
+            foreach (string currentSrcFile in Directory.GetFiles(AmbrosiaNodeDir, "*.ts", SearchOption.AllDirectories))
+            {
+
+                string PrimaryErrorMessage = "Error: The input source file";
+                string SecondaryErrorMessage = " does not publish any entities (exported functions, static methods, type aliases and enums annotated with an @ambrosia JSDoc tag)";
+
+                // Generate the consumer and publisher files and verify output and the generated files to cmp files
+                JSUtils.Test_CodeGen_TSFile(currentSrcFile, true, PrimaryErrorMessage, SecondaryErrorMessage,true);
+            }
+        }
+
+
         [TestMethod]
         public void JS_CG_Neg_AmbrosiaTagNewLine()
         {
