@@ -37,7 +37,7 @@ namespace AmbrosiaTest
         //************* Negative Tests *****************
 
 
-        // ** Shotgun approach of throwing a bunch of ts files against code gen and see if any fails
+        // ** Shotgun approach of throwing a bunch of ts files against code gen and see if any fails beyond just saying it is not annotated
         [TestMethod]
         public void JS_CG_Neg_AmbrosiaSrcFiles_Test()
         {
@@ -45,16 +45,19 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
 
             // get ambrosia-node source files
-            string AmbrosiaNodeDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"] + "\\node_modules\\ambrosia-node\\src";
+            string AmbrosiaNodeDir = @"../../../../JSCodeGen/node_modules/ambrosia-node/src/";
 
-            foreach (string currentSrcFile in Directory.GetFiles(AmbrosiaNodeDir, "*.ts", SearchOption.AllDirectories))
+            // loop through all the Ambrosia JS src files and generate them
+            foreach (string currentSrcFile in Directory.GetFiles(AmbrosiaNodeDir, "*.ts"))
             {
+
+                string fileName = Path.GetFileName(currentSrcFile);
 
                 string PrimaryErrorMessage = "Error: The input source file";
                 string SecondaryErrorMessage = " does not publish any entities (exported functions, static methods, type aliases and enums annotated with an @ambrosia JSDoc tag)";
 
                 // Generate the consumer and publisher files and verify output and the generated files to cmp files
-                JSUtils.Test_CodeGen_TSFile(currentSrcFile, true, PrimaryErrorMessage, SecondaryErrorMessage,true);
+                JSUtils.Test_CodeGen_TSFile(fileName, true, PrimaryErrorMessage, SecondaryErrorMessage,true);
             }
         }
 
