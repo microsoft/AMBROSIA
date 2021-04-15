@@ -1366,10 +1366,26 @@ namespace Ambrosia
             const long First32Mask = Last32Mask << 32;
             ILogWriter _logStream;
             Stream _workStream;
+
+            int _epochWindow;
+            long _epochLow;
+            long _epochHigh;
+            long[] _appendCounts;
+            ConcurrentDictionary<string, LongPair>[] _uncommittedWatermarks;
+            ConcurrentDictionary<string, long>[] _trimWatermarks;
+            byte[][] _watermarkBufs;
+
+            /*
             ConcurrentDictionary<string, LongPair> _uncommittedWatermarks;
             ConcurrentDictionary<string, LongPair> _uncommittedWatermarksBak;
             internal ConcurrentDictionary<string, long> _trimWatermarks;
             ConcurrentDictionary<string, long> _trimWatermarksBak;
+            byte[] _watermarksBuf;
+            MemoryStream _watermarkStream;
+            byte[] _watermarksBufBak;
+            MemoryStream _watermarkStreamBak;
+            */
+
             internal const int HeaderSize = 24;  // 4 Committer ID, 8 Write ID, 8 check bytes, 4 page size
             Task _lastCommitTask;
             bool _persistLogs;
@@ -1380,8 +1396,6 @@ namespace Ambrosia
             internal LSN _prevEpochLSN;
             internal long _asyncLogEpochID;
             internal ILog _asyncLog;
-            internal long _completedAppends;
-
 
             public Committer(Stream workStream,
                              bool persistLogs,
@@ -1531,28 +1545,28 @@ namespace Ambrosia
                 await TryHardenAsync(outputs, inputs, pageDependencies);
             }
 
-            private async Task writeFullWaterMarksAsync(ConcurrentDictionary<string, LongPair> uncommittedWatermarks)
+            private async Task writeFullWaterMarksAsync(MemoryStream watermarkStream, ConcurrentDictionary<string, LongPair> uncommittedWatermarks)
             {
-                _logStream.WriteInt(uncommittedWatermarks.Count);
+                watermarkStream.WriteInt(uncommittedWatermarks.Count);
                 foreach (var kv in uncommittedWatermarks)
                 {
                     var sourceBytes = Encoding.UTF8.GetBytes(kv.Key);
-                    _logStream.WriteInt(sourceBytes.Length);
-                    await _logStream.WriteAsync(sourceBytes, 0, sourceBytes.Length);
-                    _logStream.WriteLongFixed(kv.Value.First);
-                    _logStream.WriteLongFixed(kv.Value.Second);
+                    watermarkStream.WriteInt(sourceBytes.Length);
+                    await watermarkStream.WriteAsync(sourceBytes, 0, sourceBytes.Length);
+                    watermarkStream.WriteLongFixed(kv.Value.First);
+                    watermarkStream.WriteLongFixed(kv.Value.Second);
                 }
             }
 
-            private async Task writeSimpleWaterMarksAsync(ConcurrentDictionary<string, long> uncommittedWatermarks)
+            private async Task writeSimpleWaterMarksAsync(MemoryStream watermarkStream, ConcurrentDictionary<string, long> uncommittedWatermarks)
             {
-                _logStream.WriteInt(uncommittedWatermarks.Count);
+                watermarkStream.WriteInt(uncommittedWatermarks.Count);
                 foreach (var kv in uncommittedWatermarks)
                 {
                     var sourceBytes = Encoding.UTF8.GetBytes(kv.Key);
-                    _logStream.WriteInt(sourceBytes.Length);
-                    await _logStream.WriteAsync(sourceBytes, 0, sourceBytes.Length);
-                    _logStream.WriteLongFixed(kv.Value);
+                    watermarkStream.WriteInt(sourceBytes.Length);
+                    await watermarkStream.WriteAsync(sourceBytes, 0, sourceBytes.Length);
+                    watermarkStream.WriteLongFixed(kv.Value);
                 }
             }
             private async Task Harden(byte[] buf,
@@ -1858,16 +1872,45 @@ namespace Ambrosia
                 return checkBytes;
             }
 
-            public async Task<ValueTuple<byte[], int>> BeforeEpochAsync(LSN lsn)
+            public async Task<ValueTuple<byte[], long>> BeforeEpochAsync(LSN lsn)
             {
-                var appendCount = lsn.sequenceID - _prevEpochLSN.sequenceID;
-                while (Interlocked.Read(ref _completedAppends) != appendCount)
+                var index = lsn.epochID;
+
+                // Wait for prior BeforeEpoch calls to finish.
+                while (index - 1 > _epochLow)
                 {
                     await Task.Yield();
                 }
 
+                // Wait for all outstanding appends in this epoch to finish.
+                var appendCount = lsn.sequenceID - _prevEpochLSN.sequenceID;
+                int counter = 0;
+                while (Interlocked.Read(ref _appendCounts[index]) != appendCount)
+                {
+                    while (counter != 10000)
+                    {
+                        counter++;
+                    }
+                    counter = 0;
+                }
 
+                // Serialize watermark dictionaries.
+                MemoryStream st = new MemoryStream(_watermarkBufs[index]);
+                await writeFullWaterMarksAsync(st, _uncommittedWatermarks[index]);
+                await writeSimpleWaterMarksAsync(st, _trimWatermarks[index]);
+
+                // Clear up epoch related meta-data.
+                Interlocked.Exchange(ref _appendCounts[index], 0);
+                _uncommittedWatermarks[index].Clear();
+                _trimWatermarks[index].Clear();
+
+                Interlocked.Increment(ref _epochLow);
+
+                ValueTuple<byte[], long> ret = (_watermarkBufs[index], st.Length);
+                return ret;
             }
+
+            
 
             public async Task<long> AddRow(FlexReadBuffer copyFromFlexBuffer,
                                            string outputToUpdate,
@@ -1883,23 +1926,37 @@ namespace Ambrosia
                 // Append a new log record.
                 var lsn = await _asyncLog.AppendAsync(copyFromBuffer, length, null, 0);
 
-                // Wait for previous epoch's meta-data to finish processing.
-                var currentEpoch = Interlocked.Read(ref _asyncLogEpochID);
-                while (currentEpoch < lsn.epochID)
+                while (true)
                 {
-                    await Task.Yield();
-                    currentEpoch = Interlocked.Read(ref _asyncLogEpochID);
+                    var minEpoch = Interlocked.Read(ref _epochLow);
+                    var maxEpoch = Interlocked.Read(ref _epochHigh);
+
+                    Debug.Assert(lsn.epochID >= minEpoch);
+                    if (lsn.epochID <= maxEpoch)
+                    {
+                        break;
+                    }
+                    else if ((lsn.epochID - minEpoch + 1 <= _epochWindow) && 
+                             (Interlocked.CompareExchange(ref _epochHigh, lsn.epochID, maxEpoch) == maxEpoch)) // Bump maxEpoch to the lsn's epochID.
+                    {
+                        break;
+                    }
+                    else if (lsn.epochID - minEpoch + 1 > _epochWindow) // There aren't any slots left.
+                    {
+                        await Task.Yield();
+                    }
                 }
-                Debug.Assert(lsn.epochID == currentEpoch);
+
+                var index = lsn.epochID % _epochWindow;
 
                 // Update meta-data.
                 var associatedInputConnectionRecord = inputs[outputToUpdate];
                 associatedInputConnectionRecord.LastProcessedID = newSeqNo;
                 associatedInputConnectionRecord.LastProcessedReplayableID = newReplayableSeqNo;
-                _uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
 
-                // Bump append count (associated with each epoch).
-                Interlocked.Increment(ref _completedAppends);
+                // Update committer meta-data.
+                _uncommittedWatermarks[index][outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
+                Interlocked.Increment(ref _appendCounts[index]);
                 return 0;
             }
             

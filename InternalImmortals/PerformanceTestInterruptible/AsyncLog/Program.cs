@@ -55,7 +55,7 @@ namespace AsyncLog
 
     public interface ILogAppendClient
     {
-        Task<ValueTuple<byte[], int>> BeforeEpochAsync(LSN lsn);
+        Task<ValueTuple<byte[], long>> BeforeEpochAsync(LSN lsn);
         Task AfterEpochAsync(LSN lsn);
         void Commit(LSN lsn);
     }
@@ -941,7 +941,7 @@ namespace AsyncLog
         byte[] _buf;
         volatile byte[] _bufbak;
         long _maxBufSize;
-        internal const int HeaderSize = 40;  // 4 Committer ID, 8 Epoch ID, 8 check bytes, 4 page size, 8 min LSN, 8 max LSN
+        internal const int HeaderSize = 44;  // 4 Committer ID, 8 Epoch ID, 8 check bytes, 4 page size, 4 footer size, 8 min LSN, 8 max LSN
 
         byte[] _checkTempBytes = new byte[8];
         byte[] _checkTempBytes2 = new byte[8];

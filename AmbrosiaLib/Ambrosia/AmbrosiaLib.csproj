@@ -37,6 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\InternalImmortals\PerformanceTestInterruptible\AsyncLog\AsyncLog.csproj" />
     <ProjectReference Include="..\..\SharedAmbrosiaTools\SharedAmbrosiaTools.csproj" />
   </ItemGroup>
 </Project>
