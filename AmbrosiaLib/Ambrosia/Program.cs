@@ -1355,7 +1355,6 @@ namespace Ambrosia
         internal class Committer : ILogAppendClient
         {
             byte[] _buf;
-            volatile byte[] _bufbak;
             long _maxBufSize;
             // Used in CAS. The first 31 bits are the #of writers, the next 32 bits is the buffer size, the last bit is the sealed bit
             long _status;
@@ -1367,24 +1366,17 @@ namespace Ambrosia
             ILogWriter _logStream;
             Stream _workStream;
 
+            // AsyncLog specific data.
             int _epochWindow;
+            long _epochCursor;
             long _epochLow;
             long _epochHigh;
             long[] _appendCounts;
+            LSN _prevEpochLSN;
             ConcurrentDictionary<string, LongPair>[] _uncommittedWatermarks;
             ConcurrentDictionary<string, long>[] _trimWatermarks;
             byte[][] _watermarkBufs;
-
-            /*
-            ConcurrentDictionary<string, LongPair> _uncommittedWatermarks;
-            ConcurrentDictionary<string, LongPair> _uncommittedWatermarksBak;
-            internal ConcurrentDictionary<string, long> _trimWatermarks;
-            ConcurrentDictionary<string, long> _trimWatermarksBak;
-            byte[] _watermarksBuf;
-            MemoryStream _watermarkStream;
-            byte[] _watermarksBufBak;
-            MemoryStream _watermarkStreamBak;
-            */
+            ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
 
             internal const int HeaderSize = 24;  // 4 Committer ID, 8 Write ID, 8 check bytes, 4 page size
             Task _lastCommitTask;
@@ -1393,7 +1385,7 @@ namespace Ambrosia
             internal long _nextWriteID;
             AmbrosiaRuntime _myAmbrosia;
 
-            internal LSN _prevEpochLSN;
+            internal long _prevEpochSeqID;
             internal long _asyncLogEpochID;
             internal ILog _asyncLog;
 
@@ -1401,12 +1393,17 @@ namespace Ambrosia
                              bool persistLogs,
                              AmbrosiaRuntime myAmbrosia,
                              long maxBufSize = 8 * 1024 * 1024,
-                             ILogReader recoveryStream = null)
+                             ILogReader recoveryStream = null,
+                             int outstandingEpochWindows = 3,
+                             int watermarkBufSize = 8 *1024)
             {
                 _myAmbrosia = myAmbrosia;
                 _persistLogs = persistLogs;
-                _uncommittedWatermarksBak = new ConcurrentDictionary<string, LongPair>();
-                _trimWatermarksBak = new ConcurrentDictionary<string, long>();
+
+                // Jose: Using a magic number of "3" here, not sure how appropriate this is.
+                _uncommittedWatermarks = new ConcurrentDictionary<string, LongPair>[outstandingEpochWindows];
+                _trimWatermarks = new ConcurrentDictionary<string, long>[outstandingEpochWindows];
+
                 if (maxBufSize <= 0)
                 {
                     // Recovering
@@ -1417,8 +1414,11 @@ namespace Ambrosia
                     var bufSize = recoveryStream.ReadIntFixed();
                     _status = bufSize << SealedBits;
                     recoveryStream.ReadAllRequiredBytes(_buf, 0, bufSize);
-                    _uncommittedWatermarks = _uncommittedWatermarks.AmbrosiaDeserialize(recoveryStream);
-                    _trimWatermarks = _trimWatermarks.AmbrosiaDeserialize(recoveryStream);
+
+                    // Jose: Need to handle this case appropriately.
+                    Debug.Assert(false);
+                    // _uncommittedWatermarks = _uncommittedWatermarks.AmbrosiaDeserialize(recoveryStream);
+                    // _trimWatermarks = _trimWatermarks.AmbrosiaDeserialize(recoveryStream);
                 }
                 else
                 {
@@ -1426,13 +1426,25 @@ namespace Ambrosia
                     _status = HeaderSize << SealedBits;
                     _maxBufSize = maxBufSize;
                     _buf = new byte[maxBufSize];
-                    _uncommittedWatermarks = new ConcurrentDictionary<string, LongPair>();
-                    _trimWatermarks = new ConcurrentDictionary<string, long>();
+
+                    // AsyncLog-specific data.
+                    _uncommittedWatermarks = new ConcurrentDictionary<string, LongPair>[outstandingEpochWindows];
+                    _trimWatermarks = new ConcurrentDictionary<string, long>[outstandingEpochWindows];
+                    _appendCounts = new long[outstandingEpochWindows];
+                    _watermarkBufs = new byte[outstandingEpochWindows][];
+                    for (int i = 0; i < outstandingEpochWindows; ++i)
+                    {
+                        _uncommittedWatermarks[i] = new ConcurrentDictionary<string, LongPair>();
+                        _trimWatermarks[i] = new ConcurrentDictionary<string, long>();
+                        _watermarkBufs[i] = new byte[watermarkBufSize];
+                    }
+
                     long curTime;
                     GetSystemTimePreciseAsFileTime(out curTime);
                     _committerID = (int)((curTime << 33) >> 33);
                     _nextWriteID = 0;
                 }
+                /*
                 _bufbak = new byte[_maxBufSize];
                 var memWriter = new MemoryStream(_buf);
                 var memWriterBak = new MemoryStream(_bufbak);
@@ -1440,6 +1452,7 @@ namespace Ambrosia
                 memWriterBak.WriteIntFixed(_committerID);
                 _logStream = null;
                 _workStream = workStream;
+                */
             }
 
             internal int CommitID { get { return _committerID; } }
@@ -1490,61 +1503,6 @@ namespace Ambrosia
                 }
             }
 
-            private async Task Harden(byte[] firstBufToCommit,
-                                      int length1,
-                                      byte[] secondBufToCommit,
-                                      int length2,
-                                      ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
-                                      ConcurrentDictionary<string, long> trimWatermarks,
-                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs,
-                                      ConcurrentDictionary<string, InputConnectionRecord> inputs,
-                                      ConcurrentDictionary<long, int> pageDependencies,
-                                      long pageID)
-            {
-                try
-                {
-                    _workStream.Write(firstBufToCommit, 0, 4);
-                    _workStream.WriteIntFixed(length1 + length2);
-                    _workStream.Write(firstBufToCommit, 8, 16);
-                    await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
-                    await _workStream.WriteAsync(secondBufToCommit, 0, length2);
-                    var flushtask = _workStream.FlushAsync();
-
-
-                    // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
-                    if (_persistLogs)
-                    {
-                        _logStream.Write(firstBufToCommit, 0, 4);
-                        _logStream.WriteIntFixed(length1 + length2);
-                        _logStream.Write(firstBufToCommit, 8, 16);
-                        await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
-                        await _logStream.WriteAsync(secondBufToCommit, 0, length2);
-                        await writeFullWaterMarksAsync(uncommittedWatermarks);
-                        await writeSimpleWaterMarksAsync(trimWatermarks);
-                        await _logStream.FlushAsync();
-                    }
-
-                    var prevDurablePage = Interlocked.Exchange(ref _myAmbrosia._durablePageID, pageID);
-                    Debug.Assert(prevDurablePage == pageID - 1);
-
-                    TryCommit(uncommittedWatermarks, outputs, pageDependencies, pageID);
-
-                    SendInputWatermarks(uncommittedWatermarks, outputs);
-                    // Return the second byte array to the FlexReader pool
-                    FlexReadBuffer.ReturnBuffer(secondBufToCommit);
-                    _uncommittedWatermarksBak = uncommittedWatermarks;
-                    _uncommittedWatermarksBak.Clear();
-                    _trimWatermarksBak = trimWatermarks;
-                    _trimWatermarksBak.Clear();
-                }
-                catch (Exception e)
-                {
-                    _myAmbrosia.OnError(5, e.Message);
-                }
-                _bufbak = firstBufToCommit;
-                await TryHardenAsync(outputs, inputs, pageDependencies);
-            }
-
             private async Task writeFullWaterMarksAsync(MemoryStream watermarkStream, ConcurrentDictionary<string, LongPair> uncommittedWatermarks)
             {
                 watermarkStream.WriteInt(uncommittedWatermarks.Count);
@@ -1568,48 +1526,6 @@ namespace Ambrosia
                     await watermarkStream.WriteAsync(sourceBytes, 0, sourceBytes.Length);
                     watermarkStream.WriteLongFixed(kv.Value);
                 }
-            }
-            private async Task Harden(byte[] buf,
-                                      int length,
-                                      ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
-                                      ConcurrentDictionary<string, long> trimWatermarks,
-                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs,
-                                      ConcurrentDictionary<string, InputConnectionRecord> inputs,
-                                      ConcurrentDictionary<long, int> pageDependencies,
-                                      long pageID)
-            {
-                try
-                {
-                    await _workStream.WriteAsync(buf, 0, length);
-                    var flushtask = _workStream.FlushAsync();
-
-                    // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
-                    if (_persistLogs)
-                    {
-                        await _logStream.WriteAsync(buf, 0, length);
-                        await writeFullWaterMarksAsync(uncommittedWatermarks);
-                        await writeSimpleWaterMarksAsync(trimWatermarks);
-                        await _logStream.FlushAsync();
-                    }
-
-                    // Update the durable pageID.
-                    var prevDurablePage = Interlocked.Exchange(ref _myAmbrosia._durablePageID, pageID);
-                    Debug.Assert(prevDurablePage == pageID - 1);
-
-                    TryCommit(uncommittedWatermarks, outputs, pageDependencies, pageID);
-                    
-                    SendInputWatermarks(uncommittedWatermarks, outputs);
-                    _uncommittedWatermarksBak = uncommittedWatermarks;
-                    _uncommittedWatermarksBak.Clear();
-                    _trimWatermarksBak = trimWatermarks;
-                    _trimWatermarksBak.Clear();
-                }
-                catch (Exception e)
-                {
-                    _myAmbrosia.OnError(5, e.Message);
-                }
-                _bufbak = buf;
-                await TryHardenAsync(outputs, inputs, pageDependencies);
             }
 
             private void TryCommit(ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
@@ -1679,41 +1595,33 @@ namespace Ambrosia
 
             public async Task SleepAsync()
             {
-                while (true)
+                // Pause the log, get back the last entry's LSN.
+                var lastAppend = await _asyncLog.SleepAsync();
+
+                // Wait for prior epochs to be made durable.
+                var durableEpoch = Interlocked.Read(ref _epochLow);
+                while (durableEpoch != lastAppend.epochID - 1)
                 {
-                    // We're going to try to seal the buffer
-                    var localStatus = Interlocked.Read(ref _status);
-                    // Yield if the sealed bit is set
-                    while (localStatus % 2 == 1)
-                    {
-                        await Task.Yield();
-                        localStatus = Interlocked.Read(ref _status);
-                    }
-                    var newLocalStatus = localStatus + 1;
-                    var origVal = Interlocked.CompareExchange(ref _status, newLocalStatus, localStatus);
+                    Debug.Assert(lastAppend.epochID - 1 > durableEpoch);
+                    await Task.Yield();
+                    durableEpoch = Interlocked.Read(ref _epochLow);
+                }
 
-                    // Check if the compare and swap succeeded, otherwise try again
-                    if (origVal == localStatus)
-                    {
-                        // We successfully sealed the buffer and must wait until any active commit finishes
-                        while (_bufbak == null)
-                        {
-                            await Task.Yield();
-                        }
-
-                        // Wait for all writes to complete before sleeping
-                        while (true)
-                        {
-                            localStatus = Interlocked.Read(ref _status);
-                            var numWrites = (localStatus >> (64 - numWritesBits));
-                            if (numWrites == 0)
-                            {
-                                break;
-                            }
-                            await Task.Yield();
-                        }
-                        return;
-                    }
+                // Wait for appends in this epoch to finish.
+                var processingEpoch = Interlocked.Read(ref _epochHigh);
+                while (processingEpoch != lastAppend.epochID)
+                {
+                    Debug.Assert(lastAppend.epochID > processingEpoch);
+                    await Task.Yield();
+                    processingEpoch = Interlocked.Read(ref _epochHigh);
+                }
+                var index = lastAppend.epochID % _epochWindow;
+                var appendCount = Interlocked.Read(ref _appendCounts[index]);
+                var expectedAppends = lastAppend.sequenceID - _prevEpochSeqID;
+                while (appendCount != expectedAppends)
+                {
+                    await Task.Yield();
+                    appendCount = Interlocked.Read(ref _appendCounts[index]);
                 }
             }
 
@@ -1874,17 +1782,26 @@ namespace Ambrosia
 
             public async Task<ValueTuple<byte[], long>> BeforeEpochAsync(LSN lsn)
             {
-                var index = lsn.epochID;
+                var index = lsn.epochID % _epochWindow;
 
                 // Wait for prior BeforeEpoch calls to finish.
-                while (index - 1 > _epochLow)
+                int counter = 0;
+                while (index - 1 > Interlocked.Read(ref _epochCursor))
                 {
+                    while (counter != 10000)
+                    {
+                        counter++;
+                    }
+                    if (index - 1 == Interlocked.Read(ref _epochCursor))
+                    {
+                        break;
+                    }
+                    counter = 0;
                     await Task.Yield();
                 }
 
                 // Wait for all outstanding appends in this epoch to finish.
-                var appendCount = lsn.sequenceID - _prevEpochLSN.sequenceID;
-                int counter = 0;
+                var appendCount = lsn.sequenceID - Interlocked.Read(ref _prevEpochLSN.sequenceID);
                 while (Interlocked.Read(ref _appendCounts[index]) != appendCount)
                 {
                     while (counter != 10000)
@@ -1899,18 +1816,44 @@ namespace Ambrosia
                 await writeFullWaterMarksAsync(st, _uncommittedWatermarks[index]);
                 await writeSimpleWaterMarksAsync(st, _trimWatermarks[index]);
 
-                // Clear up epoch related meta-data.
-                Interlocked.Exchange(ref _appendCounts[index], 0);
-                _uncommittedWatermarks[index].Clear();
-                _trimWatermarks[index].Clear();
-
-                Interlocked.Increment(ref _epochLow);
+                Interlocked.Exchange(ref _prevEpochLSN.sequenceID, lsn.sequenceID);
+                Interlocked.Increment(ref _prevEpochLSN.epochID);
+                Interlocked.Increment(ref _epochCursor);
 
                 ValueTuple<byte[], long> ret = (_watermarkBufs[index], st.Length);
                 return ret;
             }
 
-            
+            public async Task AfterEpochAsync(LSN lsn)
+            {
+                var index = lsn.epochID % _epochWindow;
+
+                // Wait for prior AfterEpoch calls to finish.
+                int counter = 0;
+                while (index - 1 > Interlocked.Read(ref _epochLow))
+                {
+                    while (counter != 10000)
+                    {
+                        counter++;
+                    }
+                    if (index - 1 == Interlocked.Read(ref _epochLow))
+                    {
+                        break;
+                    }
+
+                    counter = 0;
+                    await Task.Yield();
+                }
+
+                SendInputWatermarks(_uncommittedWatermarks[index], _outputs);
+
+                // Clear up meta-data.
+                _appendCounts[index] = 0;
+                _trimWatermarks[index].Clear();
+                _uncommittedWatermarks[index].Clear();
+
+                Interlocked.Increment(ref _epochLow);
+            }
 
             public async Task<long> AddRow(FlexReadBuffer copyFromFlexBuffer,
                                            string outputToUpdate,
@@ -1959,276 +1902,17 @@ namespace Ambrosia
                 Interlocked.Increment(ref _appendCounts[index]);
                 return 0;
             }
-            
-                /*
-                while (true)
-                {
-                    var addrow = Interlocked.Read(ref _epochAddRows);
-                    if (lsn > lsnWorkWatermark && Interlocked.CompareExchange()
-                    {
-                        break;
-                    }
-
-                }
-                while (Interlocked.Read)
-
-
-                while (true)
-                {
-                    bool sealing = false;
-                    long localStatus;
-                    localStatus = Interlocked.Read(ref _status);
-
-                    // Yield if the sealed bit is set
-                    while (localStatus % 2 == 1)
-                    {
-                        await Task.Yield();
-                        localStatus = Interlocked.Read(ref _status);
-                    }
-                    var oldBufLength = ((localStatus >> SealedBits) & Last32Mask);
-                    var newLength = oldBufLength + length;
-
-                    // Assemble the new status 
-                    long newLocalStatus;
-                    if ((newLength > _maxBufSize) || (_bufbak != null))
-                    {
-                        // We're going to try to seal the buffer
-                        newLocalStatus = localStatus + 1;
-                        sealing = true;
-                    }
-                    else
-                    {
-                        // We're going to try to add to the end of the existing buffer
-                        var newWrites = (localStatus >> (64 - numWritesBits)) + 1;
-                        newLocalStatus = ((newWrites) << (64 - numWritesBits)) | (newLength << SealedBits);
-                    }
-                    var origVal = Interlocked.CompareExchange(ref _status, newLocalStatus, localStatus);
-
-                    // Check if the compare and swap succeeded, otherwise try again
-                    if (origVal == localStatus)
-                    {
-                        // We are now preventing recovery until addrow finishes and all resulting commits have completed. We can safely update
-                        // LastProcessedID and LastProcessedReplayableID
-                        var associatedInputConnectionRecord = inputs[outputToUpdate];
-                        associatedInputConnectionRecord.LastProcessedID = newSeqNo;
-                        associatedInputConnectionRecord.LastProcessedReplayableID = newReplayableSeqNo;
-                        if (sealing)
-                        {
-                            // This call successfully sealed the buffer. Remember we still have an extra
-                            // message to take care of
-
-                            // We have just filled the backup buffer and must wait until any other commit finishes
-                            int counter = 0;
-                            while (_bufbak == null)
-                            {
-                                counter++;
-                                if (counter == 100000)
-                                {
-                                    counter = 0;
-                                    await Task.Yield();
-                                }
-                            }
-
-                            // There is no other write going on. Take the backup buffer
-                            var newUncommittedWatermarks = _uncommittedWatermarksBak;
-                            var newWriteBuf = _bufbak;
-                            _bufbak = null;
-                            _uncommittedWatermarksBak = null;
-
-                            // Wait for other writes to complete before committing
-                            while (true)
-                            {
-                                localStatus = Interlocked.Read(ref _status);
-                                var numWrites = (localStatus >> (64 - numWritesBits));
-                                if (numWrites == 0)
-                                {
-                                    break;
-                                }
-                                await Task.Yield();
-                            }
-
-                            // Filling header with enough info to detect incomplete writes and also writing the page length
-                            var writeStream = new MemoryStream(_buf, 4, 20);
-                            int lengthOnPage;
-                            if (newLength <= _maxBufSize)
-                            {
-                                lengthOnPage = (int)newLength;
-                            }
-                            else
-                            {
-                                lengthOnPage = (int)oldBufLength;
-                            }
-                            writeStream.WriteIntFixed(lengthOnPage);
-                            if (newLength <= _maxBufSize)
-                            {
-                                // Copy the contents into the log record buffer
-                                Buffer.BlockCopy(copyFromBuffer, 0, _buf, (int)oldBufLength, length);
-                            }
-                            long checkBytes;
-                            if (length <= (_maxBufSize - HeaderSize))
-                            {
-                                // new message will end up in a commit buffer. Use normal CheckBytes
-                                checkBytes = CheckBytes(HeaderSize, lengthOnPage - HeaderSize);
-                            }
-                            else
-                            {
-                                // new message is too big to land in a commit buffer and will be tacked on the end.
-                                checkBytes = CheckBytesExtra(HeaderSize, lengthOnPage - HeaderSize, copyFromBuffer, length);
-                            }
-                            writeStream.WriteLongFixed(checkBytes);
-                            writeStream.WriteLongFixed(_nextWriteID);
-                            var pageID = _nextWriteID;
-                            _nextWriteID++;
-
-                            // Do the actual commit
-                            // Grab the current state of trim levels since the last write
-                            // Note that the trim thread may want to modify the table, requiring a lock
-                            ConcurrentDictionary<string, long> oldTrimWatermarks;
-                            lock (_trimWatermarks)
-                            {
-                                oldTrimWatermarks = _trimWatermarks;
-                                _trimWatermarks = _trimWatermarksBak;
-                                _trimWatermarksBak = null;
-                            }
-                            if (newLength <= _maxBufSize)
-                            {
-                                // add row to current buffer and commit
-                                _uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
-                                _lastCommitTask = Harden(_buf, (int)newLength, _uncommittedWatermarks, oldTrimWatermarks, outputs, inputs, pageDependencies, pageID);
-                                newLocalStatus = HeaderSize << SealedBits;
-                            }
-                            else if (length > (_maxBufSize - HeaderSize))
-                            {
-                                // Steal the byte array in the flex buffer to return it after writing
-                                copyFromFlexBuffer.StealBuffer();
-                                // write new event as part of commit
-                                _uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
-                                var commitTask = Harden(_buf, (int)oldBufLength, copyFromBuffer, length, _uncommittedWatermarks, oldTrimWatermarks, outputs, inputs, pageDependencies, pageID);
-                                newLocalStatus = HeaderSize << SealedBits;
-                            }
-                            else
-                            {
-                                // commit and add new event to new buffer
-                                newUncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
-                                _lastCommitTask = Harden(_buf, (int)oldBufLength, _uncommittedWatermarks, oldTrimWatermarks, outputs, inputs, pageDependencies, pageID);
-                                Buffer.BlockCopy(copyFromBuffer, 0, newWriteBuf, (int)HeaderSize, length);
-                                newLocalStatus = (HeaderSize + length) << SealedBits;
-                            }
-                            _buf = newWriteBuf;
-                            _uncommittedWatermarks = newUncommittedWatermarks;
-                            _status = newLocalStatus;
-                            return (long)_logStream.FileSize;
-                        }
-                        // Add the message to the existing buffer
-                        Buffer.BlockCopy(copyFromBuffer, 0, _buf, (int)oldBufLength, length);
-                        _uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
-                        // Reduce write count
-                        while (true)
-                        {
-                            localStatus = Interlocked.Read(ref _status);
-                            var newWrites = (localStatus >> (64 - numWritesBits)) - 1;
-                            newLocalStatus = (localStatus & ((Last32Mask << 1) + 1)) |
-                                          (newWrites << (64 - numWritesBits));
-                            origVal = Interlocked.CompareExchange(ref _status, newLocalStatus, localStatus);
-                            if (origVal == localStatus)
-                            {
-                                if (localStatus % 2 == 0 && _bufbak != null)
-                                {
-                                    await TryHardenAsync(outputs, inputs, pageDependencies);
-                                }
-                                return (long)_logStream.FileSize;
-                            }
-                        }
-                    }
-                }
-            }
-            */
-
-            public async Task TryHardenAsync(ConcurrentDictionary<string, OutputConnectionRecord> outputs,
-                                             ConcurrentDictionary<string, InputConnectionRecord> inputs,
-                                             ConcurrentDictionary<long, int> pageDependencies)
-            {
-                long localStatus;
-                localStatus = Interlocked.Read(ref _status);
-
-                var bufLength = ((localStatus >> SealedBits) & Last32Mask);
-                // give up and try later if the sealed bit is set or there is nothing to write
-                if (localStatus % 2 == 1 || bufLength == HeaderSize || _bufbak == null)
-                {
-                    return;
-                }
-
-                // Assemble the new status 
-                long newLocalStatus;
-                newLocalStatus = localStatus + 1;
-                var origVal = Interlocked.CompareExchange(ref _status, newLocalStatus, localStatus);
-
-                // Check if the compare and swap succeeded, otherwise skip flush
-                if (origVal == localStatus)
-                {
-                    // This call successfully sealed the buffer.
-
-                    // We have just filled the backup buffer and must wait until any other commit finishes
-                    int counter = 0;
-                    while (_bufbak == null)
-                    {
-                        counter++;
-                        if (counter == 100000)
-                        {
-                            counter = 0;
-                            await Task.Yield();
-                        }
-                    }
-
-                    // There is no other write going on. Take the backup buffer
-                    var newUncommittedWatermarks = _uncommittedWatermarksBak;
-                    var newWriteBuf = _bufbak;
-                    _bufbak = null;
-                    _uncommittedWatermarksBak = null;
-
-                    // Wait for other writes to complete before committing
-                    while (true)
-                    {
-                        localStatus = Interlocked.Read(ref _status);
-                        var numWrites = (localStatus >> (64 - numWritesBits));
-                        if (numWrites == 0)
-                        {
-                            break;
-                        }
-                        await Task.Yield();
-                    }
-
-                    // Filling header with enough info to detect incomplete writes and also writing the page length
-                    var writeStream = new MemoryStream(_buf, 4, 20);
-                    writeStream.WriteIntFixed((int)bufLength);
-                    long checkBytes = CheckBytes(HeaderSize, (int)bufLength - HeaderSize);
-                    writeStream.WriteLongFixed(checkBytes);
-                    writeStream.WriteLongFixed(_nextWriteID);
-                    var pageID = _nextWriteID;
-                    _nextWriteID++;
-
-                    // Grab the current state of trim levels since the last write
-                    // Note that the trim thread may want to modify the table, requiring a lock
-                    ConcurrentDictionary<string, long> oldTrimWatermarks;
-                    lock (_trimWatermarks)
-                    {
-                        oldTrimWatermarks = _trimWatermarks;
-                        _trimWatermarks = _trimWatermarksBak;
-                        _trimWatermarksBak = null;
-                    }
-                    _lastCommitTask = Harden(_buf, (int)bufLength, _uncommittedWatermarks, oldTrimWatermarks, outputs, inputs, pageDependencies, pageID);
-                    newLocalStatus = HeaderSize << SealedBits;
-                    _buf = newWriteBuf;
-                    _uncommittedWatermarks = newUncommittedWatermarks;
-                    _status = newLocalStatus;
-                }
-            }
 
             internal void ClearNextWrite()
             {
+                // Jose: Need to figure out how to deal with this!
+                Debug.Assert(false);
+
+                /*
                 _uncommittedWatermarksBak.Clear();
                 _trimWatermarksBak.Clear();
                 _status = HeaderSize << SealedBits;
+                */
             }
 
             internal void SendUpgradeRequest()
