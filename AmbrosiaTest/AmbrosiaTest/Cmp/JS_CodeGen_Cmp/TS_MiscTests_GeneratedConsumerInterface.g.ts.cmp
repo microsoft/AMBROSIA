@@ -15,13 +15,24 @@ Test File of misc tests. If find a theme or grouping then move out of this file 
 export namespace Test
 {
     /**
+     * *Note: The result ({ r1: string, r2: string }) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * Correctly handle line-breaks and comments
+     */
+    export function myComplexReturnFunction_Post(callContextData: any): number
+    {
+        const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "myComplexReturnFunction", 1, POST_TIMEOUT_IN_MS, callContextData);
+        return (callID);
+    }
+
+    /**
      * *Note: The result ({ r1: string, r2: string }) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
      * Correctly handle line-breaks and comments
      */
-    export function myComplexReturnFunction_Post(callContextData: any): void
+    export function myComplexReturnFunction_PostByImpulse(callContextData: any): void
     {
-        IC.postFork(DESTINATION_INSTANCE_NAME, "myComplexReturnFunction", 1, POST_TIMEOUT_IN_MS, callContextData);
+        IC.postByImpulse(DESTINATION_INSTANCE_NAME, "myComplexReturnFunction", 1, POST_TIMEOUT_IN_MS, callContextData);
     }
 }
 

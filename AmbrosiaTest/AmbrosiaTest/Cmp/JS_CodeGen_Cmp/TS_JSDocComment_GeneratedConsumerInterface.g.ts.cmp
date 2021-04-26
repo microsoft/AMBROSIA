@@ -12,10 +12,17 @@ let POST_TIMEOUT_IN_MS: number = 8000; // -1 = Infinite
 /** Some static methods. */
 export namespace StaticStuff
 {
-    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
-    export function hello_Post(callContextData: any, name: string): void
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.* */
+    export function hello_Post(callContextData: any, name: string): number
     {
-        IC.postFork(DESTINATION_INSTANCE_NAME, "hello", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("name", name));
+        const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "hello", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("name", name));
+        return (callID);
+    }
+
+    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
+    export function hello_PostByImpulse(callContextData: any, name: string): void
+    {
+        IC.postByImpulse(DESTINATION_INSTANCE_NAME, "hello", 1, POST_TIMEOUT_IN_MS, callContextData, IC.arg("name", name));
     }
 }
 

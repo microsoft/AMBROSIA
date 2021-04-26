@@ -377,7 +377,7 @@ namespace AmbrosiaTest
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
 
             // Verify Server
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
+            //MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
 
             // check message - comes from Imm Coord so won't show in Job for InProc
