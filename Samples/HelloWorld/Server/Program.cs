@@ -66,6 +66,12 @@ namespace Server
             }
         }
 
+        enum ICExecutionStyle{
+            TwoProc,
+            InProc,
+            TimeTravelDebugging
+        }
+
         static void Main(string[] args)
         {
             int coordinatorPort = 2500;
@@ -77,39 +83,61 @@ namespace Server
             {
                 serviceName = args[0];
             }
-            var twoProc = false;
+            var iCExecutionStyle = ICExecutionStyle.InProc;
+            string logPath = null;
+            int checkpointToLoad = 0;
             if (args.Length >= 2)
             {
-                twoProc = true;
-            }
-            if (args.Length >= 3)
-            {
-                receivePort = int.Parse(args[2]);
-            }
-            if (args.Length >= 4)
-            {
-                sendPort = int.Parse(args[3]);
-            }
-
-            GenericLogsInterface.SetToGenericLogs();
-            if (!twoProc)
-            {
-                using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
+                if (args[1].ToUpper().Equals("TTD"))
                 {
-                    var iCListener = new TextWriterTraceListener(coordinatorOutput);
-                    Trace.Listeners.Add(iCListener);
-                    using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), coordinatorPort))
+                    iCExecutionStyle = ICExecutionStyle.TimeTravelDebugging;
+                    logPath = args[2];
+                    checkpointToLoad = int.Parse(args[3]);
+                }
+                else if (args[1].ToUpper().Equals("TWOPROC"))
+                {
+                    iCExecutionStyle = ICExecutionStyle.TwoProc;
+                    if (args.Length >= 3)
                     {
-                        Thread.Sleep(14 * 24 * 3600 * 1000);
+                        receivePort = int.Parse(args[2]);
+                    }
+                    if (args.Length >= 4)
+                    {
+                        sendPort = int.Parse(args[3]);
                     }
                 }
             }
-            else
+            GenericLogsInterface.SetToGenericLogs();
+            switch (iCExecutionStyle)
             {
-                using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
-                {
-                    Thread.Sleep(14 * 24 * 3600 * 1000);
-                }
+                case ICExecutionStyle.InProc:
+                    using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
+                    {
+                        var iCListener = new TextWriterTraceListener(coordinatorOutput);
+                        Trace.Listeners.Add(iCListener);
+                        using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), coordinatorPort))
+                        {
+                            Thread.Sleep(14 * 24 * 3600 * 1000);
+                        }
+                    }
+                    break;
+                case ICExecutionStyle.TwoProc:
+                    using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
+                    {
+                        Thread.Sleep(14 * 24 * 3600 * 1000);
+                    }
+                    break;
+                case ICExecutionStyle.TimeTravelDebugging:
+                    using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
+                    {
+                        var iCListener = new TextWriterTraceListener(coordinatorOutput);
+                        Trace.Listeners.Add(iCListener);
+                        using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), logPath, checkpointToLoad))
+                        {
+                            Thread.Sleep(14 * 24 * 3600 * 1000);
+                        }
+                    }
+                    break;
             }
         }
     }
