@@ -1,11 +1,10 @@
 export module Test
 {
     /**********  Negative Test *************
-    /**
-     * Unknown attribute name
+    /** 
+     * Unknown attribute name [on a type]
      * @ambrosia published=true
      */
-    export function MyFn6(): void {
-    }
+    export type NewType = number[];
 }
 

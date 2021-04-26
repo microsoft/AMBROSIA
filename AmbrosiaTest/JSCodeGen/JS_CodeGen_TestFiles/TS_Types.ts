@@ -84,13 +84,12 @@ export namespace Test
     /*************** Complex Type ************* 
      * @ambrosia publish=true
      */
-    export type Name = 
+	export type Name = 
     {
         // Test 1
         first: string, // Test 2
         /** Test 3 */
-        last: string, /* Test 4 */
-        priorNames: Names[]
+        last: string /* Test 4 */
     }
 
     /************** Example of a type that references another type *************.
@@ -120,7 +119,7 @@ export namespace Test
     export function makeName(firstName: string = "John", lastName: string /** Foo */ = "Doe"): Names
     {
         let names: Names;
-        let name: Name = { first: firstName, last: lastName, priorNames: [] };
+        let name: Name = { first: firstName, last: lastName };
         names.push(name);
         return (names);
     }
