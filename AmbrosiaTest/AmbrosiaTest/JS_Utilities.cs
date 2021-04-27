@@ -19,17 +19,16 @@ namespace AmbrosiaTest
         public string CodeGenNoTypeScriptErrorsMessage = "Success: No TypeScript errors found in generated file ";
 
         // Runs a TS file through the JS LB and verifies code gen works correctly
-        public void Test_CodeGen_TSFile(string TestFile, bool NegTest = false, string PrimaryErrorMessage = "", string SecondaryErrorMessage = "")
+        // Handles  valid tests one way, Negative tests from a different directory and Source Files as negative tests
+        public void Test_CodeGen_TSFile(string TestFile, bool NegTest = false, string PrimaryErrorMessage = "", string SecondaryErrorMessage = "", bool UsingSrcTestFile = false)
         {
             try
             {
-                // Test Name is just the file without the extension
-                string TestName = TestFile.Substring(0, TestFile.Length - 3);
 
                 Utilities MyUtils = new Utilities();
-                string ConSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName+ "_GeneratedConsumerInterface.g.ts";
-                string PubSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName+ "_GeneratedPublisherFramework.g.ts";
-                bool pass = true;  // not actually used in this test but it is a generic utility fctn return
+
+                // Test Name is just the file without the extension
+                string TestName = TestFile.Substring(0, TestFile.Length - 3);
 
                 // Launch the client job process with these values
                 string testfileDir = @"../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/";
@@ -37,12 +36,25 @@ namespace AmbrosiaTest
                 {
                     testfileDir = @"../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/NegativeTests/";
                 }
+                if (UsingSrcTestFile)
+                {
+                    testfileDir = @"../../AmbrosiaTest/JSCodeGen/node_modules/ambrosia-node/src/";
+                    TestName = "SRC_" + TestName;
+                }
+
+
+                string ConSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName + "_GeneratedConsumerInterface.g.ts";
+                string PubSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName + "_GeneratedPublisherFramework.g.ts";
+                bool pass = true;  // not actually used in this test but it is a generic utility fctn return
+
+
                 string testappdir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
-                string sourcefile = testfileDir+TestFile;
+                string sourcefile = testfileDir + TestFile;
                 string generatedfile = TestName + "_Generated";
                 string fileNameExe = "node.exe";
                 string argString = "out\\TestCodeGen.js sourceFile=" + sourcefile + " mergeType=None generatedFileName=" + generatedfile;
                 string testOutputLogFile = TestName + "_CodeGen_Out.log";
+
 
                 int processID = MyUtils.LaunchProcess(testappdir, fileNameExe, argString, false, testOutputLogFile);
                 if (processID <= 0)
@@ -54,14 +66,44 @@ namespace AmbrosiaTest
                 // Verify things differently if it is a negative test
                 if (NegTest)
                 {
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, CodeGenFailMessage, 1, false, TestFile, true,false);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, CodeGenFailMessage, 1, false, TestFile, true);
+
+                    // Verify the log file only has the one error (one that is related to not being annotated)
+                    if (UsingSrcTestFile)
+                    {
+
+                        string TestLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+                        string outputFile = TestLogDir + "\\" + testOutputLogFile;
+
+                        var total = 0;
+                        using (StreamReader sr = new StreamReader(outputFile))
+                        {
+
+                            while (!sr.EndOfStream)
+                            {
+                                var counts = sr
+                                    .ReadLine()
+                                    .Split(' ')
+                                    .GroupBy(s => s)
+                                    .Select(g => new { Word = g.Key, Count = g.Count() });
+                                var wc = counts.SingleOrDefault(c => c.Word == "Error:");
+                                total += (wc == null) ? 0 : wc.Count;
+                            }
+                        }
+
+                        // Look for "Error:" in the log file
+                        if (total > 1)
+                        {
+                            Assert.Fail("<Test_CodeGen_TSFile> Failure! Found more than 1 error in output file:"+ testOutputLogFile);
+                        }
+                    }
                 }
                 else
                 {
                     // Wait to see if success comes shows up in log file for total and for consumer and publisher
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, CodeGenSuccessMessage, 1, false, TestFile, true,false);
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConSuccessString, 1, false, TestFile, true,false);
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PubSuccessString, 1, false, TestFile, true,false);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, CodeGenSuccessMessage, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, ConSuccessString, 1, false, TestFile, true);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PubSuccessString, 1, false, TestFile, true);
 
                     // Verify the generated files with cmp files 
                     string GenConsumerFile = TestName + "_GeneratedConsumerInterface.g.ts";
@@ -73,13 +115,14 @@ namespace AmbrosiaTest
                 // Can use these to verify extra messages in the log file
                 if (PrimaryErrorMessage != "")
                 {
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PrimaryErrorMessage, 1, false, TestFile, true,false);
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, PrimaryErrorMessage, 1, false, TestFile, true);
                 }
                 if (SecondaryErrorMessage != "")
                 {
-                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, SecondaryErrorMessage, 1, false, TestFile, true,false);
-
+                    pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, SecondaryErrorMessage, 1, false, TestFile, true);
                 }
+
+
             }
             catch (Exception e)
             {
@@ -178,8 +221,6 @@ namespace AmbrosiaTest
 
             return processID;
         }
-
-
 
         //** Clean up all the left overs from JS tests. 
         public void JS_TestCleanup()
