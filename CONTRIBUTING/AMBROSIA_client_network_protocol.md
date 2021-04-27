@@ -260,9 +260,12 @@ numbers involved: it simply has code/state for VCurrent and code/state for VNext
 that the app can recover using VCurrent, but then proceed using VNext. When the LB receives `UpgradeTakeCheckpoint` 
 (or `UpgradeService` when doing an upgrade test) it switches over the state and code from VCurrent to VNext.
 Note that the lack of version numbering from the LB's perspective is in contrast to the parameters supplied to 
-`Ambrosia.exe RegisterInstance` (see below) which are specific integer version numbers. These numbers refer to "the version
-of the running instance", not "the version of the state/code". This loose relationship is by design to offer maximum
-flexibility to the deployment configuration of the service. 
+`Ambrosia.exe RegisterInstance` (see below) which are specific integer version numbers. These numbers refer to "the migration
+version of the instance", not "the version of the running state/code". This loose relationship is by design to offer maximum
+flexibility to the deployment configuration of the service. For example, to perform a "downgrade", the downgraded code would be
+included in the app as the VNext code, while the `upgradeVersion` number used in `RegisterInstance` to prepare for the 
+downgrade (see below) would still be increased. This illustrates how the term 'upgrade' is more accurately thought of as referring
+to the _migration_ of code (and state).
 
 Performing an upgrade of a standalone instance always involves stopping the app (or service), so it always involves downtime. The steps are:
 * Stop the current instance.
