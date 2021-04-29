@@ -48,6 +48,12 @@
             "type": "string",
             "description": "An override IPv4 address for the Immortal Coordinator (IC) to use instead of the local IPv4 address."
         },
+        "icHostingMode" : {
+            "type": "string",
+            "enum": [ "Integrated", "Separated" ],
+            "description": "The hosting mode for the Immortal Coordinator (IC), which affects where and how the IC runs. If not explicitly set, the value will be computed based on the value provided for (or the omission of) 'icIPv4Address'.",
+            "default": "Integrated"
+        },
         "useNetCore": {
             "type": "boolean",
             "description": "Whether to use .NET Core (instead of .Net Framework) to run the Immortal Coordinator (IC) [this is Windows-only option]. Defaults to false.",
@@ -76,12 +82,11 @@
         },
         "appVersion": {
             "type": "number",
-            "description": "The nominal version of this Immortal instance. Used to identify the log sub-folder name (ie. &lt;icInstanceName>_&lt;appVersion>) that will be logged to (or read from, if debugStartCheckpoint is specified)."
+            "description": "The nominal version of this Immortal instance. Used to identify the log sub-folder name (ie. &lt;icInstanceName>_&lt;appVersion>) that will be logged to (or read from if debugStartCheckpoint is specified)."
         },
         "upgradeVersion": {
             "type": "number",
-            "description": "The nominal version this Immortal instance should upgrade to at startup. Must be greater than 'appVersion' to trigger an upgrade, or 0 (meaning do not upgrade). Test the upgrade first by setting 'debugTestUpgrade' to true. Defaults to 0.",
-            "default": 0
+            "description": "The nominal version this Immortal instance should upgrade (migrate) to at startup. Must be greater than 'appVersion' to trigger an upgrade. Test the upgrade first by setting 'debugTestUpgrade' to true."
         },
         "activeCode": {
             "type": "string",
