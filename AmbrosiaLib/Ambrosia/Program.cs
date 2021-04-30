@@ -1780,6 +1780,11 @@ namespace Ambrosia
                 return checkBytes;
             }
 
+            public async Task Commit(LSN lsn)
+            {
+                Debug.Assert(false);
+            }
+
             public async Task<ValueTuple<byte[], long>> BeforeEpochAsync(LSN lsn)
             {
                 var index = lsn.epochID % _epochWindow;

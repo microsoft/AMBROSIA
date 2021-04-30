@@ -50,43 +50,61 @@ namespace AsyncLog
     {
         Task<LSN> AppendAsync(byte[] payload, int size, LSN[] dependencies, int numDependencies);
         Task<LSN> SleepAsync();
-        void Snapshot();
-        byte[] GetNext();
     }
 
     public interface ILogAppendClient
     {
-        Task<ValueTuple<byte[], long>> BeforeEpochAsync(LSN lsn);
+        Task<ValueTuple<byte[], int>> BeforeEpochAsync(LSN lsn);
         Task AfterEpochAsync(LSN lsn);
-        void Commit(LSN lsn);
+        Task Commit(LSN lsn);
     }
 
     public class AmbrosiaLog : ILog
     {
         private ILogAppendClient _appendClient;
-        private Task _epochDurabilityTask;
+        private Task _clientDurabilityTask;
 
         private ILogWriter _logStream;
         private long _logID;
         private long _lastEpochSequenceID;
         private long _epochID;
-        private long _durablePageID;
 
         private long _completedWrites;
 
-        private Task _lastCommitTask;
+        private Task _durabilityTask;
 
         private bool _persistLogs;
 
         byte[] _buf;
         volatile byte[] _bufbak;
         long _maxBufSize;
-        internal const int HeaderSize = 44;  // 4 Committer ID, 8 Epoch ID, 8 check bytes, 4 page size, 4 footer size, 8 min LSN, 8 max LSN
+        internal const int HeaderSize = 40;
+
+        //  Header format:
+        //  ----------------------
+        //  | CommitterID        |
+        //  | 4 bytes            |
+        //  ----------------------
+        //  | PageSize           |
+        //  | 4 bytes            |
+        //  ----------------------
+        //  | CheckBytes         |
+        //  | 8 bytes            |
+        //  ----------------------
+        //  | EpochID            |
+        //  | 8 bytes            |
+        //  ----------------------
+        //  | MinSequenceID      |
+        //  | 8 bytes            |
+        //  ----------------------
+        //  | MaxSequenceID      |
+        //  | 8 bytes            |
+        //  ----------------------
 
         byte[] _checkTempBytes = new byte[8];
         byte[] _checkTempBytes2 = new byte[8];
 
-        ConcurrentBag<Stream> _subscriberStreams;
+        Stream _localListener;
 
         // Used in CAS. The first 31 bits are the #of writers, the next 32 bits is the buffer size, the last bit is the sealed bit
         long _status;
@@ -139,7 +157,7 @@ namespace AsyncLog
                 }
                 else
                 {
-                    // XXX Jose: This is a hack. Fix it for real.
+                    // Jose: This is a hack. Fix it for real.
                     Trace.Assert(false);
                     // _myAmbrosia.OnError(0, "checkbytes case not implemented 2");
                 }
@@ -186,7 +204,9 @@ namespace AsyncLog
                 }
                 else
                 {
-                    _myAmbrosia.OnError(0, "checkbytes case not implemented");
+                    // Jose: This is a hack. Fix it for real.
+                    Trace.Assert(false);
+                    // _myAmbrosia.OnError(0, "checkbytes case not implemented 2");
                 }
             }
             return checkBytes;
@@ -248,14 +268,36 @@ namespace AsyncLog
                     while (numWrites < completedWrites)
                     {
                         await Task.Yield();
-                        Interlocked.Read(ref _completedWrites);
+                        completedWrites = Interlocked.Read(ref _completedWrites);
                     }
 
                     LSN retLSN;
-                    retLSN.sequenceID = _lastEpochSequenceID + (newLocalStatus >> (64 - numWritesBits));
+                    retLSN.sequenceID = _lastEpochSequenceID + numWrites;
                     retLSN.epochID = _epochID;
                     retLSN.logID = _logID;
                     return retLSN;
+                }
+            }
+        }
+
+        private void AddDependencies(ConcurrentDictionary<long, LSN> depDict, LSN[] dependencies, int num_dependencies)
+        {
+            for (int i = 0; i < num_dependencies; ++i)
+            {
+                // We're only accounting for dependencies on other logs. Local dependencies are implicitly handled via log ordering.
+                Debug.Assert(dependencies[i].logID != _logID);
+
+                if (!depDict.TryAdd(dependencies[i].logID, dependencies[i]))
+                {
+                    LSN currentDep = depDict[dependencies[i].logID];
+                    while (!dependencies[i].LessThanOrEqualTo(currentDep))
+                    {
+                        if (depDict.TryUpdate(dependencies[i].logID, dependencies[i], currentDep))
+                        {
+                            break;
+                        }
+                        currentDep = depDict[dependencies[i].logID];
+                    }
                 }
             }
         }
@@ -301,27 +343,6 @@ namespace AsyncLog
                     retLSN.logID = _logID;
                     retLSN.epochID = _epochID;
 
-                    // Keep track of specified dependencies.
-                    for (int i = 0; i < num_dependencies; ++i)
-                    {
-                        // We're only accounting for dependencies on other logs. 
-                        // Local dependencies are implicitly handled via log ordering.
-                        Debug.Assert(dependencies[i].logID != _logID);
-
-                        if (!_pageDeps.TryAdd(dependencies[i].logID, dependencies[i]))
-                        {
-                            LSN currentDep = _pageDeps[dependencies[i].logID];
-                            while (!dependencies[i].LessThanOrEqualTo(currentDep))
-                            {
-                                if (_pageDeps.TryUpdate(dependencies[i].logID, dependencies[i], currentDep))
-                                {
-                                    break;
-                                }
-                                currentDep = _pageDeps[dependencies[i].logID];
-                            }
-                        }
-                    }
-
                     // This call successfully sealed the buffer. Remember we still have an extra
                     // message to take care of
                     if (sealing)
@@ -340,21 +361,16 @@ namespace AsyncLog
 
                         // There is no other write going on. Take the backup buffer
                         var newWriteBuf = _bufbak;
+                        var newPageDeps = _pageDepsBak;
                         _bufbak = null;
 
-                        // Wait for other writes to complete before committing
-                        var numWrites = (newLocalStatus >> (64 - numWritesBits));
-                        while (true)
+                        // Wait for in-flight writes to complete
+                        var expectedWrites = (newLocalStatus >> (64 - numWritesBits));
+                        var completedWrites = Interlocked.Read(ref _completedWrites);
+                        while (expectedWrites != completedWrites)
                         {
-                            var completedWrites = Interlocked.Read(ref _completedWrites);
-                            if (completedWrites != numWrites)
-                            {
-                                await Task.Yield();
-                            }
-                            else
-                            {
-                                break;
-                            }
+                            await Task.Yield();
+                            completedWrites = Interlocked.Read(ref _completedWrites);
                         }
 
                         // Filling header with enough info to detect incomplete writes and also writing the page length
@@ -389,36 +405,49 @@ namespace AsyncLog
                         writeStream.WriteLongFixed(checkBytes);
                         writeStream.WriteLongFixed(_epochID);
                         writeStream.WriteLongFixed(_lastEpochSequenceID + 1);
-                        writeStream.WriteLongFixed(_lastEpochSequenceID + (newLocalStatus >> (64 - numWritesBits)) + 1);
+                        writeStream.WriteLongFixed(_lastEpochSequenceID + completedWrites + 1);
 
                         // Do the actual commit
                         if (newLength <= _maxBufSize)
                         {
-                            // add row to current buffer and commit
-                            _lastCommitTask = HardenAsync(_buf, (int)newLength);
+                            // add event to current buffer and commit
+                            AddDependencies(_pageDeps, dependencies, num_dependencies);
+                            _durabilityTask = HardenAsync(_buf, (int)newLength, _pageDeps);
                             newLocalStatus = HeaderSize << SealedBits;
                         }
                         else if (length > (_maxBufSize - HeaderSize))
                         {
-                            // XXX Jose: Read up on FlexBuffer to figure out how to deal with the steal below.
-                            // Steal the byte array in the flex buffer to return it after writing
-                            // copyFromFlexBuffer.StealBuffer();
-                            var commitTask = HardenAsync(_buf, (int)oldBufLength, payload, length);
+                            // commit the current buffer and tack on the current event at the end
+                            AddDependencies(_pageDeps, dependencies, num_dependencies);
+                            _durabilityTask = HardenAsync(_buf, (int)oldBufLength, payload, length, _pageDeps);
                             newLocalStatus = HeaderSize << SealedBits;
                         }
                         else
                         {
                             // commit and add new event to new buffer
-                            _lastCommitTask = HardenAsync(_buf, (int)oldBufLength);
+                            AddDependencies(newPageDeps, dependencies, num_dependencies);
+                            _durabilityTask = HardenAsync(_buf, (int)oldBufLength, _pageDeps);
                             Buffer.BlockCopy(payload, 0, newWriteBuf, (int)HeaderSize, length);
                             newLocalStatus = (HeaderSize + length) << SealedBits;
                         }
-                        _buf = newWriteBuf;
-                        _status = newLocalStatus;
 
-                        retLSN.sequenceID = _lastEpochSequenceID + (newLocalStatus >> (64 - numWritesBits)) + 1;
+                        retLSN.sequenceID = _lastEpochSequenceID + completedWrites + 1;
+
+                        // Setup state for the new epoch
+                        _epochID += 1;
+                        _lastEpochSequenceID += completedWrites + 1;
+                        _buf = newWriteBuf;
+                        _pageDeps = newPageDeps;
+                        _completedWrites = 0;
+
+                        // Unlock the log for new appends
+                        var oldStatus = Interlocked.Exchange(ref _status, (HeaderSize << SealedBits));
+                        Debug.Assert(oldStatus == newLocalStatus);
+
                         return retLSN;
                     }
+
+                    AddDependencies(_pageDeps, dependencies, num_dependencies);
 
                     // Add the message to the existing buffer
                     Buffer.BlockCopy(payload, 0, _buf, (int)oldBufLength, length);
@@ -436,10 +465,10 @@ namespace AsyncLog
             }
         }
 
-        private async Task HardenAsync(byte[] buf, int length)
+        private async Task HardenAsync(byte[] buf, int length, ConcurrentDictionary<long, LSN> pageDeps)
         {
             LSN lastLSN;
-            lastLSN.sequenceID = _completedWrites + 1 + _lastEpochSequenceID;
+            lastLSN.sequenceID = _completedWrites + _lastEpochSequenceID + 1;
             lastLSN.epochID = _epochID;
             lastLSN.logID = _logID;
 
@@ -448,71 +477,112 @@ namespace AsyncLog
                 // Get the client's footer to associate with the epoch.
                 var clientFooter = await _appendClient.BeforeEpochAsync(lastLSN);
 
-                foreach (var subscriber in _subscriberStreams)
+                // Send committed page contents to local listener.
+                if (_localListener != null)
                 {
-                    await subscriber.WriteAsync(buf, 0, length);
-                    var flushtask = subscriber.FlushAsync();
+                    await _localListener.WriteAsync(buf, 0, length);
+                    var flushtask = _localListener.FlushAsync();
                 }
 
                 // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                 if (_persistLogs)
                 {
                     await _logStream.WriteAsync(buf, 0, length);
+
+                    // Write out the client's footer
+                    _logStream.WriteIntFixed(clientFooter.Item2);
+                    await _logStream.WriteAsync(clientFooter.Item1, 0, clientFooter.Item2);
+
+                    // Write out dependency meta-data
+                    WriteDependencies(pageDeps);
+
                     await _logStream.FlushAsync();
                 }
-
-                // Signal completion to the client.
-                _epochDurabilityTask = _appendClient.AfterEpochAsync(lastLSN);
-
-                // Update the durable pageID.
-                Interlocked.Increment(ref _durablePageID);
-
-                // XXX Jose: Need to handle this below!
-                // TryCommit(uncommittedWatermarks, outputs, pageDependencies, pageID);
             }
             catch (Exception e)
             {
                 throw e;
             }
 
-            // Jose: The Interlocked statements below might be overkill.
-            _lastEpochSequenceID = lastLSN.sequenceID;
-            var newEpoch = Interlocked.Increment(ref _epochID);
-            Debug.Assert(newEpoch == lastLSN.epochID + 1);
-            Interlocked.Exchange(ref _completedWrites, 0);
+            // Signal epoch durability to the client.
+            _clientDurabilityTask = _appendClient.AfterEpochAsync(lastLSN);
 
             _bufbak = buf;
+            pageDeps.Clear();
+            _pageDepsBak = pageDeps;
             await TryHardenAsync();
+        }
+
+        private void WriteDependencies(ConcurrentDictionary<long, LSN> pageDeps)
+        {
+            _logStream.WriteIntFixed(pageDeps.Count);
+            foreach (var kv in pageDeps)
+            {
+                _logStream.WriteLongFixed(kv.Value.logID);
+                _logStream.WriteLongFixed(kv.Value.epochID);
+                _logStream.WriteLongFixed(kv.Value.sequenceID);
+            }
         }
 
         private async Task HardenAsync(byte[] firstBufToCommit,
                           int length1,
                           byte[] secondBufToCommit,
-                          int length2)
+                          int length2,
+                          ConcurrentDictionary<long, LSN> pageDeps)
         {
+            LSN lastLSN;
+            lastLSN.sequenceID = _completedWrites + _lastEpochSequenceID + 1;
+            lastLSN.epochID = _epochID;
+            lastLSN.logID = _logID;
+
             try
-            { 
+            {
+                // Get the client's footer to associate with the epoch
+                var clientFooter = await _appendClient.BeforeEpochAsync(lastLSN);
+
+                // Send committed page contents to local listener
+                if (_localListener != null)
+                {
+                    // We're going to write a hand-crafted header to fix up the length
+                    _localListener.Write(firstBufToCommit, 0, 4);
+                    _localListener.WriteIntFixed(length1 + length2);
+                    _localListener.Write(firstBufToCommit, 8, 32);
+                    await _localListener.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
+                    await _localListener.WriteAsync(secondBufToCommit, 0, length2);
+                    var flushtask = _localListener.FlushAsync();
+                }
+
                 // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                 if (_persistLogs)
                 {
+                    // Write out the payload
                     _logStream.Write(firstBufToCommit, 0, 4);
                     _logStream.WriteIntFixed(length1 + length2);
                     _logStream.Write(firstBufToCommit, 8, 32);
                     await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
                     await _logStream.WriteAsync(secondBufToCommit, 0, length2);
+
+                    // Write out the client's footer
+                    _logStream.WriteIntFixed(clientFooter.Item2);
+                    await _logStream.WriteAsync(clientFooter.Item1, 0, clientFooter.Item2);
+
+                    // Write out dependency information
+                    WriteDependencies(pageDeps);
+
                     await _logStream.FlushAsync();
                 }
-
-                Interlocked.Increment(ref _durablePageID);
-
-                // XXX Jose: Need to deal with this!
-                // TryCommit(uncommittedWatermarks, outputs, pageDependencies, pageID);
             }
             catch (Exception e)
             {
                 throw e;
             }
+
+            // Signal epoch durability to the client.
+            _clientDurabilityTask = _appendClient.AfterEpochAsync(lastLSN);
+
             _bufbak = firstBufToCommit;
+            pageDeps.Clear();
+            _pageDepsBak = pageDeps;
             await TryHardenAsync();
         }
 
@@ -552,18 +622,17 @@ namespace AsyncLog
 
                 // There is no other write going on. Take the backup buffer
                 var newWriteBuf = _bufbak;
+                var newPageDeps = _pageDepsBak;
+
                 _bufbak = null;
 
-                // Wait for other writes to complete before committing
-                while (true)
+                // Wait for in-flight writes to complete
+                var expectedWrites = (newLocalStatus >> (64 - numWritesBits));
+                var completedWrites = Interlocked.Read(ref _completedWrites);
+                while (expectedWrites != completedWrites)
                 {
-                    localStatus = Interlocked.Read(ref _status);
-                    var numWrites = (localStatus >> (64 - numWritesBits));
-                    if (numWrites == 0)
-                    {
-                        break;
-                    }
                     await Task.Yield();
+                    completedWrites = Interlocked.Read(ref _completedWrites);
                 }
 
                 // Filling header with enough info to detect incomplete writes and also writing the page length
@@ -571,25 +640,24 @@ namespace AsyncLog
                 writeStream.WriteIntFixed((int)bufLength);
                 long checkBytes = CheckBytes(HeaderSize, (int)bufLength - HeaderSize);
                 writeStream.WriteLongFixed(checkBytes);
-                writeStream.WriteLongFixed(_nextWriteID);
-                var pageID = _nextWriteID;
-                _nextWriteID++;
+                writeStream.WriteLongFixed(_epochID);
+                writeStream.WriteLongFixed(_lastEpochSequenceID + 1);
+                writeStream.WriteLongFixed(_lastEpochSequenceID + completedWrites);
 
-                _lastCommitTask = HardenAsync(_buf, (int)bufLength);
-                newLocalStatus = HeaderSize << SealedBits;
+                // Make the page durable asynchronously
+                _durabilityTask = HardenAsync(_buf, (int)bufLength, _pageDeps);
+
+                // Set things up for the new epoch
+                _lastEpochSequenceID += completedWrites;
+                _epochID += 1;
                 _buf = newWriteBuf;
-                _status = newLocalStatus;
+                _pageDeps = newPageDeps;
+                _completedWrites = 0;
+
+                // Unlock the log for appends
+                newLocalStatus = HeaderSize << SealedBits;
+                Interlocked.Exchange(ref _status, newLocalStatus);
             }
-        }
-
-        public void Snapshot()
-        {
-            Debug.Assert(false);
-        }
-
-        public byte[] GetNext()
-        {
-            Debug.Assert(false);
         }
     }
 }
