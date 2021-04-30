@@ -1367,16 +1367,44 @@ namespace Ambrosia
             Stream _workStream;
 
             // AsyncLog specific data.
+            private struct EpochMetadata
+            {
+                public long appendCount;
+                public ConcurrentDictionary<string, LongPair> uncommittedWatermarks;
+                public byte[] watermarkBufs;
+                public ConcurrentDictionary<string, long> trimWatermarksBak;
+            }
+
             int _epochWindow;
             long _epochCursor;
             long _epochLow;
             long _epochHigh;
-            long[] _appendCounts;
+            EpochMetadata[] _epochArray;
+
+            // long[] _appendCounts;
             LSN _prevEpochLSN;
-            ConcurrentDictionary<string, LongPair>[] _uncommittedWatermarks;
-            ConcurrentDictionary<string, long>[] _trimWatermarks;
-            byte[][] _watermarkBufs;
+            // ConcurrentDictionary<string, LongPair>[] _uncommittedWatermarks;
+            // byte[][] _watermarkBufs;
             ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
+            internal ConcurrentDictionary<string, long> _trimWatermarks;
+            // ConcurrentDictionary<string, long>[] _trimWatermarksBak;
+
+            //
+            //
+            //       |------------------  _epochWindow --------------------|
+            //
+            //       *******************************************************
+            //       |                 |                 |                 |
+            //       *******************************************************
+            //       ^                                   ^                 ^
+            //       |                                   |                 |
+            //      _epochLow                       _epochCursor       _epochHigh
+            //
+            //  _epochWindow    -> Size of epoch meta-data array.
+            //  _epochLow       -> Earliest epoch for which AfterEpoch hasn't been called.
+            //  _epochCursor    -> Earliest epoch for which BeforeEpoch hasn't been called.
+            //  _epochHigh      -> Latest epoch at which an append has successfully completed.
+            //
 
             internal const int HeaderSize = 24;  // 4 Committer ID, 8 Write ID, 8 check bytes, 4 page size
             Task _lastCommitTask;
@@ -1399,10 +1427,7 @@ namespace Ambrosia
             {
                 _myAmbrosia = myAmbrosia;
                 _persistLogs = persistLogs;
-
-                // Jose: Using a magic number of "3" here, not sure how appropriate this is.
-                _uncommittedWatermarks = new ConcurrentDictionary<string, LongPair>[outstandingEpochWindows];
-                _trimWatermarks = new ConcurrentDictionary<string, long>[outstandingEpochWindows];
+                _trimWatermarks = new ConcurrentDictionary<string, long>();
 
                 if (maxBufSize <= 0)
                 {
@@ -1428,15 +1453,12 @@ namespace Ambrosia
                     _buf = new byte[maxBufSize];
 
                     // AsyncLog-specific data.
-                    _uncommittedWatermarks = new ConcurrentDictionary<string, LongPair>[outstandingEpochWindows];
-                    _trimWatermarks = new ConcurrentDictionary<string, long>[outstandingEpochWindows];
-                    _appendCounts = new long[outstandingEpochWindows];
-                    _watermarkBufs = new byte[outstandingEpochWindows][];
+                    _epochArray = new EpochMetadata[outstandingEpochWindows];
                     for (int i = 0; i < outstandingEpochWindows; ++i)
                     {
-                        _uncommittedWatermarks[i] = new ConcurrentDictionary<string, LongPair>();
-                        _trimWatermarks[i] = new ConcurrentDictionary<string, long>();
-                        _watermarkBufs[i] = new byte[watermarkBufSize];
+                        _epochArray[i].uncommittedWatermarks = new ConcurrentDictionary<string, LongPair>();
+                        _epochArray[i].trimWatermarksBak = new ConcurrentDictionary<string, long>();
+                        _epochArray[i].watermarkBufs = new byte[watermarkBufSize];
                     }
 
                     long curTime;
@@ -1616,12 +1638,12 @@ namespace Ambrosia
                     processingEpoch = Interlocked.Read(ref _epochHigh);
                 }
                 var index = lastAppend.epochID % _epochWindow;
-                var appendCount = Interlocked.Read(ref _appendCounts[index]);
+                var appendCount = _epochArray[index].appendCount;
                 var expectedAppends = lastAppend.sequenceID - _prevEpochSeqID;
                 while (appendCount != expectedAppends)
                 {
                     await Task.Yield();
-                    appendCount = Interlocked.Read(ref _appendCounts[index]);
+                    appendCount = Interlocked.Read(ref _epochArray[index].appendCount);
                 }
             }
 
@@ -1642,19 +1664,7 @@ namespace Ambrosia
 
             public async Task WakeupAsync()
             {
-                var localStatus = Interlocked.Read(ref _status);
-                if (localStatus % 2 == 0 || _bufbak == null)
-                {
-                    _myAmbrosia.OnError(5, "Tried to wakeup committer when not asleep");
-                }
-                // We're going to try to unseal the buffer
-                var newLocalStatus = localStatus - 1;
-                var origVal = Interlocked.CompareExchange(ref _status, newLocalStatus, localStatus);
-                // Check if the compare and swap succeeded
-                if (origVal != localStatus)
-                {
-                    _myAmbrosia.OnError(5, "Tried to wakeup committer when not asleep 2");
-                }
+                await _asyncLog.WakeupAsync();
             }
 
             byte[] _checkTempBytes = new byte[8];
@@ -1785,47 +1795,46 @@ namespace Ambrosia
                 Debug.Assert(false);
             }
 
-            public async Task<ValueTuple<byte[], long>> BeforeEpochAsync(LSN lsn)
+            public async Task<ValueTuple<byte[], int>> BeforeEpochAsync(LSN lsn)
             {
                 var index = lsn.epochID % _epochWindow;
 
                 // Wait for prior BeforeEpoch calls to finish.
-                int counter = 0;
-                while (index - 1 > Interlocked.Read(ref _epochCursor))
+                // Guarantees that BeforeEpoch is always processed in monotonically increasing epochID order.
+                var epochCursor = _epochCursor;
+                while (lsn.epochID != epochCursor)
                 {
-                    while (counter != 10000)
-                    {
-                        counter++;
-                    }
-                    if (index - 1 == Interlocked.Read(ref _epochCursor))
-                    {
-                        break;
-                    }
-                    counter = 0;
                     await Task.Yield();
+                    epochCursor = Interlocked.Read(ref _epochCursor);
                 }
 
-                // Wait for all outstanding appends in this epoch to finish.
-                var appendCount = lsn.sequenceID - Interlocked.Read(ref _prevEpochLSN.sequenceID);
-                while (Interlocked.Read(ref _appendCounts[index]) != appendCount)
+                // Wait for all outstanding appends in this epoch to finish their work.
+                var expectedAppends = lsn.sequenceID - _prevEpochLSN.sequenceID;
+                var completedAppends = Interlocked.Read(ref _epochArray[index].appendCount);
+                while (completedAppends != expectedAppends)
                 {
-                    while (counter != 10000)
-                    {
-                        counter++;
-                    }
-                    counter = 0;
+                    await Task.Yield();
+                    completedAppends = Interlocked.Read(ref _epochArray[index].appendCount);
+                }
+
+                // Grab the current state of trim levels since the last write
+                // Note that the trim thread may want to modify the table, requiring a lock
+                lock (_trimWatermarks)
+                {
+                    var oldTrimWatermarks = _trimWatermarks;
+                    _trimWatermarks = _epochArray[index].trimWatermarksBak;
+                    _epochArray[index].trimWatermarksBak = oldTrimWatermarks;
                 }
 
                 // Serialize watermark dictionaries.
-                MemoryStream st = new MemoryStream(_watermarkBufs[index]);
-                await writeFullWaterMarksAsync(st, _uncommittedWatermarks[index]);
-                await writeSimpleWaterMarksAsync(st, _trimWatermarks[index]);
+                MemoryStream st = new MemoryStream(_epochArray[index].watermarkBufs);
+                await writeFullWaterMarksAsync(st, _epochArray[index].uncommittedWatermarks);
+                await writeSimpleWaterMarksAsync(st, _epochArray[index].trimWatermarksBak);
+                Debug.Assert(st.Length < int.MaxValue);
 
-                Interlocked.Exchange(ref _prevEpochLSN.sequenceID, lsn.sequenceID);
-                Interlocked.Increment(ref _prevEpochLSN.epochID);
+                _prevEpochLSN = lsn;
                 Interlocked.Increment(ref _epochCursor);
-
-                ValueTuple<byte[], long> ret = (_watermarkBufs[index], st.Length);
+                ValueTuple<byte[], int> ret = (_epochArray[index].watermarkBufs, unchecked((int)st.Length));
                 return ret;
             }
 
@@ -1834,28 +1843,20 @@ namespace Ambrosia
                 var index = lsn.epochID % _epochWindow;
 
                 // Wait for prior AfterEpoch calls to finish.
-                int counter = 0;
-                while (index - 1 > Interlocked.Read(ref _epochLow))
+                // Guarantees that AfterEpoch is always called in monotonically increasing epochID order.
+                var epochLow = _epochLow;
+                while (lsn.epochID != epochLow)
                 {
-                    while (counter != 10000)
-                    {
-                        counter++;
-                    }
-                    if (index - 1 == Interlocked.Read(ref _epochLow))
-                    {
-                        break;
-                    }
-
-                    counter = 0;
                     await Task.Yield();
+                    epochLow = Interlocked.Read(ref _epochLow);
                 }
 
-                SendInputWatermarks(_uncommittedWatermarks[index], _outputs);
+                SendInputWatermarks(_epochArray[index].uncommittedWatermarks, _outputs);
 
                 // Clear up meta-data.
-                _appendCounts[index] = 0;
-                _trimWatermarks[index].Clear();
-                _uncommittedWatermarks[index].Clear();
+                _epochArray[index].appendCount = 0;
+                _epochArray[index].uncommittedWatermarks.Clear();
+                _epochArray[index].trimWatermarksBak.Clear();
 
                 Interlocked.Increment(ref _epochLow);
             }
@@ -1874,25 +1875,31 @@ namespace Ambrosia
                 // Append a new log record.
                 var lsn = await _asyncLog.AppendAsync(copyFromBuffer, length, null, 0);
 
+                long minEpoch = _epochLow;
+                long maxEpoch = _epochHigh;
                 while (true)
                 {
-                    var minEpoch = Interlocked.Read(ref _epochLow);
-                    var maxEpoch = Interlocked.Read(ref _epochHigh);
-
                     Debug.Assert(lsn.epochID >= minEpoch);
+
+                    // The LSN's epoch already has a slot.
                     if (lsn.epochID <= maxEpoch)
                     {
                         break;
                     }
-                    else if ((lsn.epochID - minEpoch + 1 <= _epochWindow) && 
-                             (Interlocked.CompareExchange(ref _epochHigh, lsn.epochID, maxEpoch) == maxEpoch)) // Bump maxEpoch to the lsn's epochID.
+
+                    // There's enough space in the circular buffer for a new entry, 
+                    else if (lsn.epochID - minEpoch + 1 <= _epochWindow)
                     {
-                        break;
+                        while (lsn.epochID > maxEpoch)
+                        {
+                            maxEpoch = Interlocked.CompareExchange(ref _epochHigh, maxEpoch + 1, maxEpoch);
+                        }
                     }
-                    else if (lsn.epochID - minEpoch + 1 > _epochWindow) // There aren't any slots left.
-                    {
-                        await Task.Yield();
-                    }
+
+                    // There aren't any slots left, backoff and try again.
+                    await Task.Yield();
+                    minEpoch = Interlocked.Read(ref _epochLow);
+                    maxEpoch = Interlocked.Read(ref _epochHigh);
                 }
 
                 var index = lsn.epochID % _epochWindow;
@@ -1903,8 +1910,11 @@ namespace Ambrosia
                 associatedInputConnectionRecord.LastProcessedReplayableID = newReplayableSeqNo;
 
                 // Update committer meta-data.
-                _uncommittedWatermarks[index][outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
-                Interlocked.Increment(ref _appendCounts[index]);
+                _epochArray[index].uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
+                Interlocked.Increment(ref _epochArray[index].appendCount);
+
+                // XXX This needs to return the logstream's file size!
+                Debug.Assert(false);
                 return 0;
             }
 

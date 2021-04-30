@@ -50,6 +50,7 @@ namespace AsyncLog
     {
         Task<LSN> AppendAsync(byte[] payload, int size, LSN[] dependencies, int numDependencies);
         Task<LSN> SleepAsync();
+        Task WakeupAsync();
     }
 
     public interface ILogAppendClient
@@ -277,6 +278,25 @@ namespace AsyncLog
                     retLSN.logID = _logID;
                     return retLSN;
                 }
+            }
+        }
+
+        public async Task WakeupAsync()
+        {
+            var localStatus = Interlocked.Read(ref _status);
+            if (localStatus % 2 == 0 || _bufbak == null)
+            {
+                // The log wasn't actually asleep!
+                Trace.Assert(false);
+            }
+            // We're going to try to unseal the buffer
+            var newLocalStatus = localStatus - 1;
+            var origVal = Interlocked.CompareExchange(ref _status, newLocalStatus, localStatus);
+            // Check if the compare and swap succeeded
+            if (origVal != localStatus)
+            {
+                // The log wasn't actually asleep!
+                Trace.Assert(false);
             }
         }
 
