@@ -1488,7 +1488,11 @@ namespace Ambrosia
                 serializeStream.WriteIntFixed((int)_maxBufSize);
                 serializeStream.WriteIntFixed((int)bufLength);
                 serializeStream.Write(_buf, 0, (int)bufLength);
-                _uncommittedWatermarks.AmbrosiaSerialize(serializeStream);
+
+                Debug.Assert(_epochLow == _epochCursor && _epochLow == _epochHigh);
+                var index = _epochHigh % _epochWindow;
+                _epochArray[index].uncommittedWatermarks.AmbrosiaSerialize(serializeStream);
+
                 _trimWatermarks.AmbrosiaSerialize(serializeStream);
             }
 
@@ -1650,16 +1654,11 @@ namespace Ambrosia
             // This method switches the log stream to the provided stream and removes the write lock on the old file
             public void SwitchLogStreams(ILogWriter newLogStream)
             {
-                if (_status % 2 != 1 || _bufbak == null)
+                if (_asyncLog.SleepStatus())
                 {
                     _myAmbrosia.OnError(5, "Committer is trying to switch log streams when awake");
                 }
-                // Release resources and lock on the old file
-                if (_logStream != null)
-                {
-                    _logStream.Dispose();
-                }
-                _logStream = newLogStream;
+                _asyncLog.SwitchLogStreams(newLogStream);
             }
 
             public async Task WakeupAsync()

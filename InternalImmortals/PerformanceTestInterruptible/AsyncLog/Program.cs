@@ -8,29 +8,6 @@ using System.Threading.Tasks;
 
 namespace AsyncLog
 {
-    public interface ILogWriter : IDisposable
-    {
-        ulong FileSize { get; }
-
-        void Flush();
-
-        Task FlushAsync();
-
-        void WriteInt(int value);
-
-        void WriteIntFixed(int value);
-
-        void WriteLongFixed(long value);
-
-        void Write(byte[] buffer,
-                   int offset,
-                   int length);
-
-        Task WriteAsync(byte[] buffer,
-                        int offset,
-                        int length);
-    }
-
     public struct LSN
     {
         public long sequenceID;
@@ -51,6 +28,8 @@ namespace AsyncLog
         Task<LSN> AppendAsync(byte[] payload, int size, LSN[] dependencies, int numDependencies);
         Task<LSN> SleepAsync();
         Task WakeupAsync();
+        bool SleepStatus();
+        void SwitchLogStreams(ILogWriter newLogStream);
     }
 
     public interface ILogAppendClient
@@ -542,6 +521,26 @@ namespace AsyncLog
                 _logStream.WriteLongFixed(kv.Value.epochID);
                 _logStream.WriteLongFixed(kv.Value.sequenceID);
             }
+        }
+
+        // This method switches the log stream to the provided stream and removes the write lock on the old file
+        public void SwitchLogStreams(ILogWriter newLogStream)
+        {
+            if (_status % 2 != 1 || _bufbak == null)
+            {
+                Trace.Assert(false);
+            }
+
+            if (_logStream != null)
+            {
+                _logStream.Dispose();
+            }
+            _logStream = newLogStream;
+        }
+
+        public bool SleepStatus()
+        {
+            return !(_status % 2 != 1 || _bufbak == null);
         }
 
         private async Task HardenAsync(byte[] firstBufToCommit,
