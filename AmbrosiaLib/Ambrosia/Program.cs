@@ -1405,7 +1405,29 @@ namespace Ambrosia
             //  _epochHigh      -> Latest epoch at which an append has successfully completed.
             //
 
-            internal const int HeaderSize = 24;  // 4 Committer ID, 8 Write ID, 8 check bytes, 4 page size
+            internal const int HeaderSize = 40;  // 4 Committer ID, 8 Write ID, 8 check bytes, 4 page size
+
+            //  Header format:
+            //  ----------------------
+            //  | CommitterID        |
+            //  | 4 bytes            |
+            //  ----------------------
+            //  | PageSize           |
+            //  | 4 bytes            |
+            //  ----------------------
+            //  | CheckBytes         |
+            //  | 8 bytes            |
+            //  ----------------------
+            //  | EpochID            |
+            //  | 8 bytes            |
+            //  ----------------------
+            //  | MinSequenceID      |
+            //  | 8 bytes            |
+            //  ----------------------
+            //  | MaxSequenceID      |
+            //  | 8 bytes            |
+            //  ----------------------
+
             Task _lastCommitTask;
             bool _persistLogs;
             int _committerID;
@@ -1968,6 +1990,8 @@ namespace Ambrosia
                 long checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
                 _workStream.WriteLongFixed(checkBytes);
                 _workStream.WriteLongFixed(-1);
+                _workStream.WriteLongFixed(-1);
+                _workStream.WriteLongFixed(-1);
                 _workStream.Write(messageBuf, 0, numMessageBytes);
                 _workStream.Flush();
             }
@@ -2006,6 +2030,8 @@ namespace Ambrosia
                 long checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
                 _workStream.WriteLongFixed(checkBytes);
                 _workStream.WriteLongFixed(-1);
+                _workStream.WriteLongFixed(-1);
+                _workStream.WriteLongFixed(-1);
                 _workStream.Write(messageBuf, 0, numMessageBytes);
                 _workStream.Flush();
             }
@@ -2023,6 +2049,8 @@ namespace Ambrosia
                 long checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
                 _workStream.WriteLongFixed(checkBytes);
                 _workStream.WriteLongFixed(-1);
+                _workStream.WriteLongFixed(-1);
+                _workStream.WriteLongFixed(-1);
                 _workStream.Write(messageBuf, 0, numMessageBytes);
                 _workStream.Flush();
             }
@@ -2033,6 +2061,8 @@ namespace Ambrosia
                 _workStream.WriteIntFixed(_committerID);
                 _workStream.WriteIntFixed((int)(HeaderSize + length));
                 _workStream.WriteLongFixed(0);
+                _workStream.WriteLongFixed(-2);
+                _workStream.WriteLongFixed(-2);
                 _workStream.WriteLongFixed(-2);
                 _workStream.Write(buf, 0, length);
                 var sizeBytes = StreamCommunicator.ReadBufferedInt(buf, 0);

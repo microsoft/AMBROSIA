@@ -323,7 +323,7 @@ namespace Ambrosia
 
             while (!cancelTokenSource.IsCancellationRequested)
             {
-                //Console.WriteLine("Waiting for next batch of messages from the LAR");
+                Console.WriteLine("Waiting for next batch of messages from the LAR");
 
                 lock (DispatchTaskIdQueueLock)
                 {
@@ -1404,7 +1404,9 @@ namespace Ambrosia
                 int commitID = MyImmortal._ambrosiaReceiveFromStream.ReadIntFixed();
                 int bytesToRead = MyImmortal._ambrosiaReceiveFromStream.ReadIntFixed();
                 long checkBytes = MyImmortal._ambrosiaReceiveFromStream.ReadLongFixed();
-                long writeSeqID = MyImmortal._ambrosiaReceiveFromStream.ReadLongFixed();
+                long epochID = MyImmortal._ambrosiaReceiveFromStream.ReadLongFixed();
+                long minSeqID = MyImmortal._ambrosiaReceiveFromStream.ReadLongFixed();
+                long maxSeqID = MyImmortal._ambrosiaReceiveFromStream.ReadLongFixed();
                 var _ = FlexReadBuffer.DeserializeAsync(MyImmortal._ambrosiaReceiveFromStream, inputFlexBuffer).Result;
 
                 bytesToRead -= inputFlexBuffer.Length;
