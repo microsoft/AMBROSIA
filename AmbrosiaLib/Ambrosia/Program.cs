@@ -1385,7 +1385,7 @@ namespace Ambrosia
             LSN _prevEpochLSN;
             internal ILog _asyncLog;
 
-            ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
+            // ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
             internal ConcurrentDictionary<string, long> _trimWatermarks;
 
             //
@@ -1900,7 +1900,7 @@ namespace Ambrosia
                     epochLow = Interlocked.Read(ref _epochLow);
                 }
 
-                SendInputWatermarks(_epochArray[index].uncommittedWatermarks, _outputs);
+                SendInputWatermarks(_epochArray[index].uncommittedWatermarks, _myAmbrosia._outputs);
 
                 // Clear up meta-data.
                 _epochArray[index].appendCount = 0;
@@ -2200,7 +2200,7 @@ namespace Ambrosia
 
         ConcurrentDictionary<long, int> _pageDependencies;
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
-        ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
+        internal ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
         internal int _localServiceReceiveFromPort;           // specifiable on the command line
         internal int _localServiceSendToPort;                // specifiable on the command line 
         internal string _serviceName;  // specifiable on the command line
