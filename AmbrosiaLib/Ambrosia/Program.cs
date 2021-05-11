@@ -1365,6 +1365,7 @@ namespace Ambrosia
             const long First32Mask = Last32Mask << 32;
             ILogWriter _logStream;
             Stream _workStream;
+            FlexReadBuffer _serviceInitMessage;
 
             // AsyncLog specific data.
             private struct EpochMetadata
@@ -1379,15 +1380,13 @@ namespace Ambrosia
             long _epochCursor;
             long _epochLow;
             long _epochHigh;
+            LSN[] _dummyBuf;
             EpochMetadata[] _epochArray;
-
-            // long[] _appendCounts;
             LSN _prevEpochLSN;
-            // ConcurrentDictionary<string, LongPair>[] _uncommittedWatermarks;
-            // byte[][] _watermarkBufs;
+            internal ILog _asyncLog;
+
             ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
             internal ConcurrentDictionary<string, long> _trimWatermarks;
-            // ConcurrentDictionary<string, long>[] _trimWatermarksBak;
 
             //
             //
@@ -1413,21 +1412,19 @@ namespace Ambrosia
             internal long _nextWriteID;
             AmbrosiaRuntime _myAmbrosia;
 
-            internal long _prevEpochSeqID;
-            internal long _asyncLogEpochID;
-            internal ILog _asyncLog;
-
             public Committer(Stream workStream,
                              bool persistLogs,
                              AmbrosiaRuntime myAmbrosia,
                              long maxBufSize = 8 * 1024 * 1024,
                              ILogReader recoveryStream = null,
                              int outstandingEpochWindows = 3,
-                             int watermarkBufSize = 8 *1024)
+                             int watermarkBufSize = 8 * 1024)
             {
                 _myAmbrosia = myAmbrosia;
                 _persistLogs = persistLogs;
                 _trimWatermarks = new ConcurrentDictionary<string, long>();
+                _dummyBuf = new LSN[1];
+                _serviceInitMessage = null;
 
                 if (maxBufSize <= 0)
                 {
@@ -1453,7 +1450,11 @@ namespace Ambrosia
                     _buf = new byte[maxBufSize];
 
                     // AsyncLog-specific data.
+                    _asyncLog = new AmbrosiaLog(workStream, this, persistLogs, maxBufSize);
                     _epochArray = new EpochMetadata[outstandingEpochWindows];
+                    _epochWindow = outstandingEpochWindows;
+                    _prevEpochLSN.epochID = -1;
+                    _prevEpochLSN.sequenceID = -1;
                     for (int i = 0; i < outstandingEpochWindows; ++i)
                     {
                         _epochArray[i].uncommittedWatermarks = new ConcurrentDictionary<string, LongPair>();
@@ -1473,8 +1474,9 @@ namespace Ambrosia
                 memWriter.WriteIntFixed(_committerID);
                 memWriterBak.WriteIntFixed(_committerID);
                 _logStream = null;
-                _workStream = workStream;
                 */
+
+                _workStream = workStream;
             }
 
             internal int CommitID { get { return _committerID; } }
@@ -1619,6 +1621,32 @@ namespace Ambrosia
                 }
             }
 
+            public async Task TryHardenInitialMessageAsync()
+            {
+                if (_serviceInitMessage == null)
+                {
+                    _myAmbrosia.OnError(0, "Trying to harden an uninitialized initial message.");
+                }
+
+                // Do the append
+                Debug.Assert(_asyncLog.SleepStatus() == SleepStatus.AWAKE);
+                Debug.Assert(_epochLow == _epochHigh && _epochLow == _epochCursor);
+                var lsn = await _asyncLog.AppendAsync(_serviceInitMessage.Buffer, _serviceInitMessage.Length, _dummyBuf, 0);
+                Debug.Assert(_epochHigh == lsn.epochID);
+
+                // Update meta-data
+                var index = lsn.epochID % _epochWindow;
+                Interlocked.Increment(ref _epochArray[index].appendCount);
+
+                // Wait until the message is actually hardened
+                var epochMin = Interlocked.Read(ref _epochLow);
+                while (epochMin != lsn.epochID)
+                {
+                    await Task.Yield();
+                    epochMin = Interlocked.Read(ref _epochLow);
+                }
+            }
+
             public async Task SleepAsync()
             {
                 // Pause the log, get back the last entry's LSN.
@@ -1626,9 +1654,9 @@ namespace Ambrosia
 
                 // Wait for prior epochs to be made durable.
                 var durableEpoch = Interlocked.Read(ref _epochLow);
-                while (durableEpoch != lastAppend.epochID - 1)
+                while (durableEpoch != lastAppend.epochID)
                 {
-                    Debug.Assert(lastAppend.epochID - 1 > durableEpoch);
+                    Debug.Assert(lastAppend.epochID > durableEpoch);
                     await Task.Yield();
                     durableEpoch = Interlocked.Read(ref _epochLow);
                 }
@@ -1643,7 +1671,7 @@ namespace Ambrosia
                 }
                 var index = lastAppend.epochID % _epochWindow;
                 var appendCount = _epochArray[index].appendCount;
-                var expectedAppends = lastAppend.sequenceID - _prevEpochSeqID;
+                var expectedAppends = lastAppend.sequenceID - _prevEpochLSN.sequenceID;
                 while (appendCount != expectedAppends)
                 {
                     await Task.Yield();
@@ -1654,7 +1682,7 @@ namespace Ambrosia
             // This method switches the log stream to the provided stream and removes the write lock on the old file
             public void SwitchLogStreams(ILogWriter newLogStream)
             {
-                if (_asyncLog.SleepStatus())
+                if (_asyncLog.SleepStatus() != SleepStatus.ASLEEP)
                 {
                     _myAmbrosia.OnError(5, "Committer is trying to switch log streams when awake");
                 }
@@ -1912,9 +1940,7 @@ namespace Ambrosia
                 _epochArray[index].uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
                 Interlocked.Increment(ref _epochArray[index].appendCount);
 
-                // XXX This needs to return the logstream's file size!
-                Debug.Assert(false);
-                return 0;
+                return _asyncLog.LogfileSize();
             }
 
             internal void ClearNextWrite()
@@ -1948,6 +1974,12 @@ namespace Ambrosia
 
             internal void QuiesceServiceWithSendCheckpointRequest(bool upgrading = false, bool becomingPrimary = false)
             {
+                // Check that the log is asleep. If not, we could run into a race condition on the workstream.
+                if (_asyncLog.SleepStatus() == SleepStatus.AWAKE)
+                {
+                    _myAmbrosia.OnError(0, "Requesting service checkpoint while log is still awake.");
+                }
+
                 _workStream.WriteIntFixed(_committerID);
                 var numMessageBytes = StreamCommunicator.IntSize(1) + 1;
                 var messageBuf = new byte[numMessageBytes];
@@ -2009,16 +2041,19 @@ namespace Ambrosia
                 _workStream.Flush();
             }
 
-            internal async Task AddInitialRowAsync(FlexReadBuffer serviceInitializationMessage)
+            internal void AddInitialRow(FlexReadBuffer serviceInitializationMessage)
             {
+                if (_serviceInitMessage != null)
+                {
+                    _myAmbrosia.OnError(0, "Initial row already exists!");
+                }
+                _serviceInitMessage = serviceInitializationMessage;
+
                 var numMessageBytes = serviceInitializationMessage.Length;
                 if (numMessageBytes > _buf.Length - HeaderSize)
                 {
                     _myAmbrosia.OnError(0, "Initial row is too many bytes");
                 }
-                Buffer.BlockCopy(serviceInitializationMessage.Buffer, 0, _buf, (int)HeaderSize, numMessageBytes);
-                _status = (HeaderSize + numMessageBytes) << SealedBits;
-                await SleepAsync();
             }
         }
 
@@ -2716,7 +2751,7 @@ namespace Ambrosia
                 if (firstStart)
                 {
                     while (ServiceInitializationMessage == null) { await Task.Yield(); };
-                    await _committer.AddInitialRowAsync(ServiceInitializationMessage);
+                    _committer.AddInitialRow(ServiceInitializationMessage);
                 }
                 await CheckpointAsync();
                 _checkpointWriter.Dispose();
@@ -2726,7 +2761,7 @@ namespace Ambrosia
             // This is a safe place to try to commit, because if this is called during recovery,
             // it's after replace and moving to the next log file. Note that this will also have the effect
             // of shaking loose the initialization message, ensuring liveliness.
-            await _committer.TryHardenAsync(_outputs, _inputs, _pageDependencies);
+            await _committer.TryHardenInitialMessageAsync();
             return oldVerLogHandle;
         }
 

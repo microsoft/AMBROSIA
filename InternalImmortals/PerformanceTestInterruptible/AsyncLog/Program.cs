@@ -23,13 +23,20 @@ namespace AsyncLog
         }
     }
 
+    public enum SleepStatus
+    {
+        ASLEEP = 0,
+        AWAKE = 1,
+    }
+
     public interface ILog
     {
         Task<LSN> AppendAsync(byte[] payload, int size, LSN[] dependencies, int numDependencies);
         Task<LSN> SleepAsync();
         Task WakeupAsync();
-        bool SleepStatus();
+        SleepStatus SleepStatus();
         void SwitchLogStreams(ILogWriter newLogStream);
+        long LogfileSize();
     }
 
     public interface ILogAppendClient
@@ -96,6 +103,24 @@ namespace AsyncLog
 
         ConcurrentDictionary<long, LSN> _pageDeps;
         ConcurrentDictionary<long, LSN> _pageDepsBak;
+
+        public AmbrosiaLog(Stream localListener, ILogAppendClient client, bool persistLogs, long maxBufSize = 8 * 1024 * 1024)
+        {
+            _status = 0;
+            _localListener = localListener;
+            _appendClient = client;
+            _persistLogs = persistLogs;
+            _maxBufSize = maxBufSize;
+
+            _buf = new byte[maxBufSize];
+            _bufbak = new byte[maxBufSize];
+
+            _pageDeps = new ConcurrentDictionary<long, LSN>();
+            _pageDepsBak = new ConcurrentDictionary<long, LSN>();
+
+            _epochID = 0;
+            _lastEpochSequenceID = -1;
+        }
 
         internal unsafe long CheckBytes(byte[] bufToCalc,
                                         int offset,
@@ -319,20 +344,20 @@ namespace AsyncLog
                 var newLength = oldBufLength + length;
 
                 // Assemble the new status 
-                long newLocalStatus;
+                long cmpxchngLocalStatus;
                 if ((newLength > _maxBufSize) || (_bufbak != null))
                 {
                     // We're going to try to seal the buffer
-                    newLocalStatus = localStatus + 1;
+                    cmpxchngLocalStatus = localStatus + 1;
                     sealing = true;
                 }
                 else
                 {
                     // We're going to try to add to the end of the existing buffer
                     var newWriteCount = (localStatus >> (64 - numWritesBits)) + 1;
-                    newLocalStatus = ((newWriteCount) << (64 - numWritesBits)) | (newLength << SealedBits);
+                    cmpxchngLocalStatus = ((newWriteCount) << (64 - numWritesBits)) | (newLength << SealedBits);
                 }
-                var origVal = Interlocked.CompareExchange(ref _status, newLocalStatus, localStatus);
+                var origVal = Interlocked.CompareExchange(ref _status, cmpxchngLocalStatus, localStatus);
 
                 // Check if the compare and swap succeeded, otherwise try again
                 if (origVal == localStatus)
@@ -364,7 +389,7 @@ namespace AsyncLog
                         _bufbak = null;
 
                         // Wait for in-flight writes to complete
-                        var expectedWrites = (newLocalStatus >> (64 - numWritesBits));
+                        var expectedWrites = (cmpxchngLocalStatus >> (64 - numWritesBits));
                         var completedWrites = Interlocked.Read(ref _completedWrites);
                         while (expectedWrites != completedWrites)
                         {
@@ -407,6 +432,7 @@ namespace AsyncLog
                         writeStream.WriteLongFixed(_lastEpochSequenceID + completedWrites + 1);
 
                         // Do the actual commit
+                        long newLocalStatus;
                         if (newLength <= _maxBufSize)
                         {
                             // add event to current buffer and commit
@@ -440,8 +466,8 @@ namespace AsyncLog
                         _completedWrites = 0;
 
                         // Unlock the log for new appends
-                        var oldStatus = Interlocked.Exchange(ref _status, (HeaderSize << SealedBits));
-                        Debug.Assert(oldStatus == newLocalStatus);
+                        var oldStatus = Interlocked.Exchange(ref _status, newLocalStatus);
+                        Debug.Assert(oldStatus == cmpxchngLocalStatus);
 
                         return retLSN;
                     }
@@ -458,7 +484,7 @@ namespace AsyncLog
                         await TryHardenAsync();
                     }
 
-                    retLSN.sequenceID = _lastEpochSequenceID + (newLocalStatus >> (64 - numWritesBits));
+                    retLSN.sequenceID = _lastEpochSequenceID + (cmpxchngLocalStatus >> (64 - numWritesBits));
                     return retLSN;
                 }
             }
@@ -538,9 +564,16 @@ namespace AsyncLog
             _logStream = newLogStream;
         }
 
-        public bool SleepStatus()
+        public SleepStatus SleepStatus()
         {
-            return !(_status % 2 != 1 || _bufbak == null);
+            if (_status % 2 != 1 || _bufbak == null)
+            {
+                return AsyncLog.SleepStatus.AWAKE;
+            }
+            else
+            {
+                return AsyncLog.SleepStatus.ASLEEP;
+            }
         }
 
         private async Task HardenAsync(byte[] firstBufToCommit,
@@ -677,6 +710,11 @@ namespace AsyncLog
                 newLocalStatus = HeaderSize << SealedBits;
                 Interlocked.Exchange(ref _status, newLocalStatus);
             }
+        }
+
+        public long LogfileSize()
+        {
+            return (long)_logStream.FileSize;
         }
     }
 }

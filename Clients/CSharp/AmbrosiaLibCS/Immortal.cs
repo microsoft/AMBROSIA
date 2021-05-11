@@ -335,12 +335,14 @@ namespace Ambrosia
                     }
                 }
 
-                if (bytesToRead <= 24)
+                if (bytesToRead <= 40)
                 {
                     int commitID = await this._ambrosiaReceiveFromStream.ReadIntFixedAsync(cancelTokenSource.Token);
                     bytesToRead = await this._ambrosiaReceiveFromStream.ReadIntFixedAsync(cancelTokenSource.Token);
                     long checkBytes = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
                     long writeSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
+                    long minSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
+                    long maxSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
 
                     // Tell the IC we're processing a new input log page.
                     if (writeSeqID >= 0)
@@ -362,7 +364,7 @@ namespace Ambrosia
                     }
                 }
 
-                while (bytesToRead > 24)
+                while (bytesToRead > 40)
                 {
                     //Console.WriteLine("Waiting for the deserialization of a message from the LAR");
 
