@@ -1472,7 +1472,7 @@ namespace Ambrosia
                     _buf = new byte[maxBufSize];
 
                     // AsyncLog-specific data.
-                    _asyncLog = new AmbrosiaLog(workStream, this, persistLogs, maxBufSize);
+                    _asyncLog = new AmbrosiaLog(_committerID, workStream, this, persistLogs, maxBufSize);
                     _epochArray = new EpochMetadata[outstandingEpochWindows];
                     _epochWindow = outstandingEpochWindows;
                     _prevEpochLSN.epochID = -1;
@@ -1879,11 +1879,11 @@ namespace Ambrosia
                 MemoryStream st = new MemoryStream(_epochArray[index].watermarkBufs);
                 await writeFullWaterMarksAsync(st, _epochArray[index].uncommittedWatermarks);
                 await writeSimpleWaterMarksAsync(st, _epochArray[index].trimWatermarksBak);
-                Debug.Assert(st.Length < int.MaxValue);
+                Debug.Assert(st.Position < int.MaxValue);
 
                 _prevEpochLSN = lsn;
                 Interlocked.Increment(ref _epochCursor);
-                ValueTuple<byte[], int> ret = (_epochArray[index].watermarkBufs, unchecked((int)st.Length));
+                ValueTuple<byte[], int> ret = (_epochArray[index].watermarkBufs, unchecked((int)st.Position));
                 return ret;
             }
 

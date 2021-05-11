@@ -12,7 +12,7 @@ namespace AsyncLog
     {
         public long sequenceID;
         public long epochID;
-        public long logID;
+        public int logID;
 
         public bool LessThanOrEqualTo(LSN other)
         {
@@ -52,7 +52,7 @@ namespace AsyncLog
         private Task _clientDurabilityTask;
 
         private ILogWriter _logStream;
-        private long _logID;
+        private int _logID;
         private long _lastEpochSequenceID;
         private long _epochID;
 
@@ -104,10 +104,10 @@ namespace AsyncLog
         ConcurrentDictionary<long, LSN> _pageDeps;
         ConcurrentDictionary<long, LSN> _pageDepsBak;
 
-        public AmbrosiaLog(Stream localListener, ILogAppendClient client, bool persistLogs, long maxBufSize = 8 * 1024 * 1024)
+        public AmbrosiaLog(int logID, Stream localListener, ILogAppendClient client, bool persistLogs, long maxBufSize = 8 * 1024 * 1024)
         {
-            _status = 0;
-            _localListener = localListener;
+            _logID = logID;
+            _status = HeaderSize << SealedBits;
             _appendClient = client;
             _persistLogs = persistLogs;
             _maxBufSize = maxBufSize;
@@ -120,6 +120,14 @@ namespace AsyncLog
 
             _epochID = 0;
             _lastEpochSequenceID = -1;
+
+            var memStream = new MemoryStream(_buf);
+            var memStreamBak = new MemoryStream(_bufbak);
+            memStream.WriteIntFixed(logID);
+            memStreamBak.WriteIntFixed(logID);
+
+            _logStream = null;
+            _localListener = localListener;
         }
 
         internal unsafe long CheckBytes(byte[] bufToCalc,
@@ -387,6 +395,7 @@ namespace AsyncLog
                         var newWriteBuf = _bufbak;
                         var newPageDeps = _pageDepsBak;
                         _bufbak = null;
+                        _pageDepsBak = null;
 
                         // Wait for in-flight writes to complete
                         var expectedWrites = (cmpxchngLocalStatus >> (64 - numWritesBits));
@@ -492,6 +501,8 @@ namespace AsyncLog
 
         private async Task HardenAsync(byte[] buf, int length, ConcurrentDictionary<long, LSN> pageDeps)
         {
+            Debug.Assert(_bufbak == null && _pageDepsBak == null);
+
             LSN lastLSN;
             lastLSN.sequenceID = _completedWrites + _lastEpochSequenceID + 1;
             lastLSN.epochID = _epochID;
@@ -582,6 +593,8 @@ namespace AsyncLog
                           int length2,
                           ConcurrentDictionary<long, LSN> pageDeps)
         {
+            Debug.Assert(_bufbak == null && _pageDepsBak == null);
+
             LSN lastLSN;
             lastLSN.sequenceID = _completedWrites + _lastEpochSequenceID + 1;
             lastLSN.epochID = _epochID;
