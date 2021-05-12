@@ -87,43 +87,65 @@ Note that the Immortal class defined above must be instantiated in a running C# 
             {
                 serviceName = args[0];
             }
-            var twoProc = false;
+            var iCExecutionStyle = ICExecutionStyle.InProc;
+            string logPath = null;
+            int checkpointToLoad = 0;
             if (args.Length >= 2)
             {
-                twoProc = true;
-            }
-            if (args.Length >= 3)
-            {
-                receivePort = int.Parse(args[2]);
-            }
-            if (args.Length >= 4)
-            {
-                sendPort = int.Parse(args[3]);
-            }
-
-            GenericLogsInterface.SetToGenericLogs();
-            if (!twoProc)
-            {
-                using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
+                if (args[1].ToUpper().Equals("TTD"))
                 {
-                    var iCListener = new TextWriterTraceListener(coordinatorOutput);
-                    Trace.Listeners.Add(iCListener);
-                    using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), coordinatorPort))
+                    iCExecutionStyle = ICExecutionStyle.TimeTravelDebugging;
+                    logPath = args[2];
+                    checkpointToLoad = int.Parse(args[3]);
+                }
+                else if (args[1].ToUpper().Equals("TWOPROC"))
+                {
+                    iCExecutionStyle = ICExecutionStyle.TwoProc;
+                    if (args.Length >= 3)
                     {
-                        Thread.Sleep(14 * 24 * 3600 * 1000);
+                        receivePort = int.Parse(args[2]);
+                    }
+                    if (args.Length >= 4)
+                    {
+                        sendPort = int.Parse(args[3]);
                     }
                 }
             }
-            else
+            GenericLogsInterface.SetToGenericLogs();
+            switch (iCExecutionStyle)
             {
-                using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
-                {
-                    Thread.Sleep(14 * 24 * 3600 * 1000);
-                }
+                case ICExecutionStyle.InProc:
+                    using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
+                    {
+                        var iCListener = new TextWriterTraceListener(coordinatorOutput);
+                        Trace.Listeners.Add(iCListener);
+                        using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), coordinatorPort))
+                        {
+                            Thread.Sleep(14 * 24 * 3600 * 1000);
+                        }
+                    }
+                    break;
+                case ICExecutionStyle.TwoProc:
+                    using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), receivePort, sendPort))
+                    {
+                        Thread.Sleep(14 * 24 * 3600 * 1000);
+                    }
+                    break;
+                case ICExecutionStyle.TimeTravelDebugging:
+                    using (var coordinatorOutput = new StreamWriter("CoordOut.txt", false))
+                    {
+                        var iCListener = new TextWriterTraceListener(coordinatorOutput);
+                        Trace.Listeners.Add(iCListener);
+                        using (AmbrosiaFactory.Deploy<IServer>(serviceName, new Server(), logPath, checkpointToLoad))
+                        {
+                            Thread.Sleep(14 * 24 * 3600 * 1000);
+                        }
+                    }
+                    break;
             }
         }
 ```
-Each time the Immortal is recovered or relocated, or an active replica created, the above Main will execute. The only really relevant lines from Ambrosia's point of view, are the using statements, which stand up the Ambrosia instance inside the process which is running Main. The appropriate using statement is selected based on whether the IC should be started in this process, or will be started in a separate process, and use tcp to communicate (see [HOWTO-WINDOWS-TwoProc.md](./HOWTO-WINDOWS-TwoProc.md)) for more detail). Note the Thread.Sleep, which puts the main thread to sleep for 14 days. This is just a simple convenience to keep the program from exiting early. In practice, something like an AsyncQueue can be used to put the main thread to sleep until the Immortal decides to complete and end. Client1 shows how this can be done. In this sense, Ambrosia can be used for both "jobs" and "services", where jobs logically terminate and services logically run forever.
+Each time the Immortal is recovered or relocated, or an active replica created, the above Main will execute. The only really relevant lines from Ambrosia's point of view, are the using statements, which stand up the Ambrosia instance inside the process which is running Main. The appropriate using statement is selected based on whether the IC should be started in this process for normal operation, will be started in this process for time travel debugging, or will be started in a separate process, and use tcp to communicate (see [HOWTO-WINDOWS-TwoProc.md](./HOWTO-WINDOWS-TwoProc.md)) for more detail). Note the Thread.Sleep, which puts the main thread to sleep for 14 days. This is just a simple convenience to keep the program from exiting early. In practice, something like an AsyncQueue can be used to put the main thread to sleep until the Immortal decides to complete and end. Client1 shows how this can be done. In this sense, Ambrosia can be used for both "jobs" and "services", where jobs logically terminate and services logically run forever.
 
 Note that currently, each process can only have one Immortal, due to global data structures which aren't currenly sharable. This limitation could, however, change eventually.
 
