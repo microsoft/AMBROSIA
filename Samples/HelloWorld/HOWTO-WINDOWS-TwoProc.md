@@ -70,7 +70,7 @@ To run the HelloWorld server, in the second console window:
 
 ```bat
 cd Server\bin\x64\Debug\netcoreapp3.1
-dotnet Server.dll server true
+dotnet Server.dll server TWOPROC
 ```
 
 To run the HelloWorld client, in the third console window:
