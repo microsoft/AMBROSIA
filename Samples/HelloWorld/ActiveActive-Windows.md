@@ -56,21 +56,21 @@ To run the HelloWorld server:
 
 ```bat
 cd Server\bin\x64\Debug\netcoreapp3.1
-dotnet Server.dll server true
+dotnet Server.dll server TWOPROC
 ```
 
 To run the HelloWorld server first replica:
 
 ```bat
 cd Server\bin\x64\Debug\netcoreapp3.1
-dotnet Server.dll server true 3001 3000
+dotnet Server.dll server TWOPROC 3001 3000
 ```
 
 To run the HelloWorld server second replica:
 
 ```bat
 cd Server\bin\x64\Debug\netcoreapp3.1
-dotnet Server.dll server true 4001 4000
+dotnet Server.dll server TWOPROC 4001 4000
 ```
 
 To run the HelloWorld client:
