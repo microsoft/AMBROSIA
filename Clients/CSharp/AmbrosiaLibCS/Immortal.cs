@@ -32,7 +32,8 @@ namespace Ambrosia
         private Stream _ambrosiaSendToStream;
         private OutputConnectionRecord _ambrosiaSendToConnectionRecord;
 
-        private long _prevWriteSeqID = -1;
+        private long _prevSequenceID = -1;
+        private long _prevEpochID = -1;
 
         protected string localAmbrosiaRuntime; // if at least one method in this API requires a return address
         protected byte[] localAmbrosiaBytes;
@@ -340,17 +341,18 @@ namespace Ambrosia
                     int commitID = await this._ambrosiaReceiveFromStream.ReadIntFixedAsync(cancelTokenSource.Token);
                     bytesToRead = await this._ambrosiaReceiveFromStream.ReadIntFixedAsync(cancelTokenSource.Token);
                     long checkBytes = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
-                    long writeSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
+                    long epochID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
                     long minSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
                     long maxSeqID = await this._ambrosiaReceiveFromStream.ReadLongFixedAsync(cancelTokenSource.Token);
 
                     // Tell the IC we're processing a new input log page.
-                    if (writeSeqID >= 0)
+                    if (epochID >= 0)
                     {
-                        Debug.Assert(writeSeqID > _prevWriteSeqID);
-                        _prevWriteSeqID = writeSeqID;
+                        Debug.Assert(epochID > _prevEpochID && minSeqID > _prevSequenceID && maxSeqID >= minSeqID);
+                        _prevEpochID = epochID;
+                        _prevSequenceID = maxSeqID;
 
-                        var msgSize = 1 + LongSize(_prevWriteSeqID);
+                        var msgSize = 1 + LongSize(_prevEpochID) + LongSize(_prevSequenceID);
                         // var totalMsgSize = msgSize + IntSize(msgSize);
                         var writeablePage = _ambrosiaSendToConnectionRecord.BufferedOutput.getWritablePage(msgSize, true);
                         writeablePage.NumMessages++;
@@ -358,7 +360,8 @@ namespace Ambrosia
 
                         writeablePage.curLength += writeBuffer.WriteInt(writeablePage.curLength, msgSize);
                         writeBuffer[writeablePage.curLength++] = AmbrosiaRuntimeLBConstants.CurrentLSNByte;
-                        writeablePage.curLength += writeBuffer.WriteLong(writeablePage.curLength, _prevWriteSeqID);
+                        writeablePage.curLength += writeBuffer.WriteLong(writeablePage.curLength, _prevEpochID);
+                        writeablePage.curLength += writeBuffer.WriteLong(writeablePage.curLength, _prevSequenceID);
 
                         ReleaseBufferAndSend();
                     }
