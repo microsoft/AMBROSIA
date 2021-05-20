@@ -1218,8 +1218,7 @@ namespace Ambrosia
 				if (p.Hidden)
 					continue;
 
-				Category c = p as Category;
-				if (c != null) {
+				if (p is Category c) {
 					WriteDescription (o, p.Description, "", 80, 80);
 					continue;
 				}
