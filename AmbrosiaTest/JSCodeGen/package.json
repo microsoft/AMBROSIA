@@ -7,7 +7,7 @@
     "name": ""
   },
   "dependencies": {
-    "ambrosia-node": "file:ambrosia-node-0.0.79.tgz",
+    "ambrosia-node": "file:ambrosia-node-0.0.80.tgz",
     "typescript": "^4.2.4"
   }
 }

@@ -1,4 +1,4 @@
-// Generated consumer-side API for the 'server' Ambrosia Node instance.
+// Generated consumer-side API for the 'TS_EventHandlerWarnings_Generated' Ambrosia Node app/service.
 // Publisher: Darren Gehring [darrenge@microsoft.com].
 // Note: This file was generated
 // Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
@@ -6,20 +6,64 @@ import Ambrosia = require("ambrosia-node");
 import IC = Ambrosia.IC;
 import Utils = Ambrosia.Utils;
 
-let DESTINATION_INSTANCE_NAME: string = "server";
-let POST_TIMEOUT_IN_MS: number = 8000; // -1 = Infinite
+let _destinationInstanceName: string = null;
+let _postTimeoutInMs: number = 8000; // -1 = Infinite
+
+/** 
+ * Sets the destination instance name that the API targets.\
+ * Must be called at least once (with the name of a registered Ambrosia instance that implements the 'TS_EventHandlerWarnings_Generated' API) before any other method in the API is used.
+ *
+ * **Warning:** When using post methods, it is strongly recommended to not change the initially set destination instance because it can cause postResultDispatcher() to not process the result.
+ */
+export function setDestinationInstance(instanceName: string): void
+{
+    _destinationInstanceName = instanceName.trim();
+}
+
+/** Returns the destination instance name that the API currently targets. */
+export function getDestinationInstance(): string
+{
+    return (_destinationInstanceName);
+}
+
+/** Throws if _destinationInstanceName has not been set. */
+function checkDestinationSet(): void
+{
+    if (!_destinationInstanceName)
+    {
+        throw new Error("setDestinationInstance() must be called to define the target destination before the 'TS_EventHandlerWarnings_Generated' API can be used.");
+    }
+}
+/**
+ * Sets the post method timeout interval (in milliseconds), which is how long to wait for a result from the destination instance before raising an error.\
+ * All post methods will use this timeout value. Specify -1 for no timeout. 
+ */
+export function setPostTimeoutInMs(timeoutInMs: number): void
+{
+    _postTimeoutInMs = Math.max(-1, timeoutInMs);
+}
+/**
+ * Returns the post method timeout interval (in milliseconds), which is how long to wait for a result from the destination instance before raising an error.\
+ * A value of -1 means there is no timeout.
+ */
+export function getPostTimeoutInMs(): number
+{
+    return (_postTimeoutInMs);
+}
 
 /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.* */
 export function unused_Post(callContextData: any): number
 {
-    const callID = IC.postFork(DESTINATION_INSTANCE_NAME, "unused", 1, POST_TIMEOUT_IN_MS, callContextData);
+    checkDestinationSet();
+    const callID = IC.postFork(_destinationInstanceName, "unused", 1, _postTimeoutInMs, callContextData);
     return (callID);
 }
 
 /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
 export function unused_PostByImpulse(callContextData: any): void
 {
-    IC.postByImpulse(DESTINATION_INSTANCE_NAME, "unused", 1, POST_TIMEOUT_IN_MS, callContextData);
+    checkDestinationSet();
+    IC.postByImpulse(_destinationInstanceName, "unused", 1, _postTimeoutInMs, callContextData);
 }
 
 /**
@@ -31,9 +75,9 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
     const sender: string = IC.isSelf(senderInstanceName) ? "local" : `'${senderInstanceName}'`;
     let handled: boolean = true;
 
-    if (senderInstanceName !== DESTINATION_INSTANCE_NAME)
+    if (senderInstanceName !== _destinationInstanceName)
     {
-        return (false); // Not handled (this post result is from a different instance than the one this consumer-side file is for)
+        return (false); // Not handled (this post result is from a different instance than the destination instance currently being targeted)
     }
 
     if (errorMsg)

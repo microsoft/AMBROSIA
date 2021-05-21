@@ -1,4 +1,4 @@
-// Generated publisher-side framework for the 'server' Ambrosia Node instance.
+// Generated publisher-side framework for the 'TS_EventHandlers_Generated' Ambrosia Node app/service.
 // Note: This file was generated
 // Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
 import * as PTM from "./JS_CodeGen_TestFiles/TS_EventHandlers"; // PTM = "Published Types and Methods", but this file can also include app-state and app-event handlers
@@ -17,8 +17,8 @@ export namespace State
         // TODO: Define your application state here
 
         /**
-         * @param restoredAppState Supplied only when loading (restoring) a checkpoint.\
-         * **WARNING:** restoredAppState will be an object literal, so you must use this to reinstantiate any members that are (or contain) class references.
+         * @param restoredAppState Supplied only when loading (restoring) a checkpoint, or (for a "VNext" AppState) when upgrading from the prior AppState.\
+         * **WARNING:** When loading a checkpoint, restoredAppState will be an object literal, so you must use this to reinstantiate any members that are (or contain) class references.
          */
         constructor(restoredAppState?: AppState)
         {
