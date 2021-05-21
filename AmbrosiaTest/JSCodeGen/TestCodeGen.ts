@@ -4,6 +4,7 @@
 import Ambrosia = require("ambrosia-node"); 
 import Utils = Ambrosia.Utils;
 import Meta = Ambrosia.Meta;
+import Path = require("path");
 
 
 main();
@@ -25,13 +26,14 @@ async function main()
         await Ambrosia.initializeAsync(Ambrosia.LBInitMode.CodeGen);
         let sourceFile: string = Utils.getCommandLineArg("sourceFile");
         let generatedFileName: string = Utils.getCommandLineArg("generatedFileName", "TestOutput") ?? "TestOutput";
+        let apiName: string = Path.basename(generatedFileName).replace(Path.extname(generatedFileName), "");
 
         // If want to run as separate generation steps for consumer and publisher
         //Meta.emitTypeScriptFileFromSource(sourceFile, { fileKind: Meta.GeneratedFileKind.Consumer, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFileName: generatedFileName+"_Consumer" });
         //Meta.emitTypeScriptFileFromSource(sourceFile, { fileKind: Meta.GeneratedFileKind.Publisher, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFileName: generatedFileName+"_Publisher" });
 
         // Use this for single call to generate both consumer and publisher
-        Meta.emitTypeScriptFileFromSource(sourceFile, { fileKind: Meta.GeneratedFileKind.All, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFilePrefix: generatedFileName  });
+        Meta.emitTypeScriptFileFromSource(sourceFile, { apiName: apiName, fileKind: Meta.GeneratedFileKind.All, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFilePrefix: generatedFileName  });
 
 
         // Something like this instead of just running them both
