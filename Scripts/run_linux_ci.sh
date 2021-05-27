@@ -70,6 +70,7 @@ case $mode in
 
 	  echo "********* Install DotNet (need to because build not self contained) ********************"
       cd "$AMBROSIA_ROOT"/Scripts
+      chmod +x dotnet-install.sh
       ./dotnet-install.sh
 
 	  echo "********* Build DotNet Core ********************"
