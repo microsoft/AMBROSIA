@@ -67,7 +67,11 @@ case $mode in
         
       echo "Executing raw-Linux, non-Docker build."
       export PATH="$PATH:$AMBROSIA_ROOT/bin"
-	  
+
+	  echo "********* Install DotNet (need to because build not self contained) ********************"
+      cd "$AMBROSIA_ROOT"/Scripts
+      ./dotnet-install.sh
+
 	  echo "********* Build DotNet Core ********************"
       cd "$AMBROSIA_ROOT"
       ./build_dotnetcore_bindist.sh
