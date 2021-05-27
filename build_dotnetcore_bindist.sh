@@ -29,13 +29,15 @@ else
 fi
 
 OUTDIR=`pwd`/bin
+# Do not want to publish self contained due to security reasons that .net security patches aren't applied
+# Since not self contained, any non windows scripts using this needs to make sure install .netcore
 # Shorthands:
 FMWK="${AMBROSIA_DOTNET_FRAMEWORK}"
 CONF="${AMBROSIA_DOTNET_CONF}"
 function buildit() {
     dir=$1
     shift
-    dotnet publish --self-contained -o $dir -c $CONF -f $FMWK -r $PLAT $*
+    dotnet publish --no-self-contained -o $dir -c $CONF -f $FMWK -r $PLAT $*
 }
 
 
