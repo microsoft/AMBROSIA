@@ -69,9 +69,9 @@ case $mode in
       export PATH="$PATH:$AMBROSIA_ROOT/bin"
 
 	  echo "********* Install DotNet (need to because build not self contained) ********************"
-      cd "$AMBROSIA_ROOT"/Scripts
-      chmod +x dotnet-install.sh
-      ./dotnet-install.sh
+      echo cd "$AMBROSIA_ROOT"/Scripts
+      echo chmod +x dotnet-install.sh
+      echo ./dotnet-install.sh
 
 	  echo "********* Build DotNet Core ********************"
       cd "$AMBROSIA_ROOT"
