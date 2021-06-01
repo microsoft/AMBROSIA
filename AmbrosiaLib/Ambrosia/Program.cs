@@ -222,6 +222,8 @@ namespace Ambrosia
             public long TotalReplayableMessages { get; internal set; }
             public LSN MaxLSN { get; internal set; }
 
+            internal LSN _maxLSN;
+
             public BufferPage(byte[] pageBytes)
             {
                 PageBytes = pageBytes;
@@ -230,6 +232,10 @@ namespace Ambrosia
                 LowestSeqNo = 0;
                 UnsentReplayableMessages = 0;
                 TotalReplayableMessages = 0;
+
+                _maxLSN.sequenceID = -1;
+                _maxLSN.epochID = -1;
+                _maxLSN.logID = -1;
             }
 
             public void CheckPageIntegrity()
@@ -545,7 +551,12 @@ namespace Ambrosia
                 }
                 int numRPCs = (int)(curBuffer.HighestSeqNo - curBuffer.LowestSeqNo + 1 - relSeqPos);
                 curBuffer.UnsentReplayableMessages = 0;
-                var bufferLSN = curBuffer.MaxLSN;
+
+                var bufferLSN = curBuffer._maxLSN;
+                // Debug.Assert(bufferLSN.epochID >= 0 && bufferLSN.sequenceID >= 0);
+                curBuffer._maxLSN.epochID = -1;
+                curBuffer._maxLSN.sequenceID = -1;
+
                 ReleaseAppendLock();
                 Debug.Assert((nextSeqNo == curBuffer.LowestSeqNo + relSeqPos) && (nextSeqNo >= curBuffer.LowestSeqNo) && ((nextSeqNo + numRPCs - 1) <= curBuffer.HighestSeqNo));
                 ReleaseTrimLock();
@@ -557,18 +568,17 @@ namespace Ambrosia
                     //StartupParamOverrides.OutputStream.WriteLine("Wrote from {0} to {1}, {2}", curBuffer.LowestSeqNo, curBuffer.HighestSeqNo, morePages);
                     int bytesInBatchData = pageLength - posToStart;
 
-                    var lsnSize = StreamCommunicator.IntSize(bufferLSN.logID);
-                    lsnSize += StreamCommunicator.LongSize(bufferLSN.epochID);
-                    lsnSize += StreamCommunicator.LongSize(bufferLSN.sequenceID);
+                    // Write out LSN
+                    outputStream.WriteIntFixed(bufferLSN.logID);
+                    outputStream.WriteLongFixed(bufferLSN.epochID);
+                    outputStream.WriteLongFixed(bufferLSN.sequenceID);
+
                     if (numRPCs > 1)
                     {
                         if (numReplayableMessagesToSend == numRPCs)
                         {
                             // writing a batch
-                            outputStream.WriteInt(bytesInBatchData + 1 + StreamCommunicator.IntSize(numRPCs) + lsnSize);
-                            outputStream.WriteInt(bufferLSN.logID);
-                            outputStream.WriteLong(bufferLSN.epochID);
-                            outputStream.WriteLong(bufferLSN.sequenceID);
+                            outputStream.WriteInt(bytesInBatchData + 1 + StreamCommunicator.IntSize(numRPCs));
                             outputStream.WriteByte(AmbrosiaRuntime.RPCBatchByte);
                             outputStream.WriteInt(numRPCs);
 #if DEBUG
@@ -589,10 +599,7 @@ namespace Ambrosia
                         else
                         {
                             // writing a mixed batch
-                            outputStream.WriteInt(bytesInBatchData + 1 + StreamCommunicator.IntSize(numRPCs) + StreamCommunicator.IntSize(numReplayableMessagesToSend) + lsnSize);
-                            outputStream.WriteInt(bufferLSN.logID);
-                            outputStream.WriteLong(bufferLSN.epochID);
-                            outputStream.WriteLong(bufferLSN.sequenceID);
+                            outputStream.WriteInt(bytesInBatchData + 1 + StreamCommunicator.IntSize(numRPCs) + StreamCommunicator.IntSize(numReplayableMessagesToSend));
                             outputStream.WriteByte(AmbrosiaRuntime.CountReplayableRPCBatchByte);
                             outputStream.WriteInt(numRPCs);
                             outputStream.WriteInt(numReplayableMessagesToSend);
@@ -616,11 +623,6 @@ namespace Ambrosia
                     else
                     {
                         // writing individual RPCs
-                        outputStream.WriteInt(bytesInBatchData + 1 + lsnSize);
-                        outputStream.WriteLong(bufferLSN.logID);
-                        outputStream.WriteLong(bufferLSN.epochID);
-                        outputStream.WriteLong(bufferLSN.sequenceID);
-                        outputStream.WriteByte(AmbrosiaRuntime.RPCByte);
                         await outputStream.WriteAsync(curBuffer.PageBytes, posToStart, bytesInBatchData);
                         await outputStream.FlushAsync();
                     }
@@ -1361,14 +1363,6 @@ namespace Ambrosia
                     _committerID = (int)((curTime << 33) >> 33);
                     _nextWriteID = 0;
                 }
-                /*
-                _bufbak = new byte[_maxBufSize];
-                var memWriter = new MemoryStream(_buf);
-                var memWriterBak = new MemoryStream(_bufbak);
-                memWriter.WriteIntFixed(_committerID);
-                memWriterBak.WriteIntFixed(_committerID);
-                _logStream = null;
-                */
                 _myAmbrosia._inputLSN.logID = _committerID;
                 _workStream = workStream;
             }
@@ -1721,9 +1715,8 @@ namespace Ambrosia
                                            string outputToUpdate,
                                            long newSeqNo,
                                            long newReplayableSeqNo,
-                                           ConcurrentDictionary<string, OutputConnectionRecord> outputs,
                                            ConcurrentDictionary<string, InputConnectionRecord> inputs,
-                                           ConcurrentDictionary<long, int> pageDependencies)
+                                           LSN[] deps)
             {
                 var copyFromBuffer = copyFromFlexBuffer.Buffer;
                 var length = copyFromFlexBuffer.Length;
@@ -3706,10 +3699,18 @@ namespace Ambrosia
             var bufferSize = 128 * 1024;
             byte[] bytes = new byte[bufferSize];
             byte[] bytesBak = new byte[bufferSize];
+            LSN[] dependencies = new LSN[1];
             while (true)
             {
+                var logID = inputRecord.DataConnectionStream.ReadIntFixed();
+                var epochID = inputRecord.DataConnectionStream.ReadLongFixed();
+                var sequenceID = inputRecord.DataConnectionStream.ReadLongFixed();
+                dependencies[0].logID = logID;
+                dependencies[0].epochID = epochID;
+                dependencies[0].sequenceID = sequenceID;
+
                 await FlexReadBuffer.DeserializeAsync(inputRecord.DataConnectionStream, inputFlexBuffer, ct);
-                await ProcessInputMessageAsync(inputRecord, inputName, inputFlexBuffer);
+                await ProcessInputMessageAsync(inputRecord, inputName, inputFlexBuffer, dependencies);
             }
         }
 
@@ -3765,19 +3766,10 @@ namespace Ambrosia
 
         private async Task ProcessInputMessageAsync(InputConnectionRecord inputRecord,
                                                     string inputName,
-                                                    FlexReadBuffer inputFlexBuffer)
+                                                    FlexReadBuffer inputFlexBuffer,
+                                                    LSN[] dependencyBuf)
         {
             var offset = inputFlexBuffer.LengthLength;
-
-            // Parse out the LSN
-            LSN messageLSN;
-            messageLSN.logID = inputFlexBuffer.Buffer.ReadBufferedInt(offset);
-            offset += StreamCommunicator.IntSize(messageLSN.logID);
-            messageLSN.epochID = inputFlexBuffer.Buffer.ReadBufferedLong(offset);
-            offset += StreamCommunicator.LongSize(messageLSN.epochID);
-            messageLSN.sequenceID = inputFlexBuffer.Buffer.ReadBufferedLong(offset);
-            offset += StreamCommunicator.LongSize(messageLSN.sequenceID);
-
             switch (inputFlexBuffer.Buffer[offset])
             {
                 case RPCByte:
@@ -3786,11 +3778,11 @@ namespace Ambrosia
                     long newFileSize;
                     if (inputFlexBuffer.Buffer[offset + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
                     {
-                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, _inputs, _pageDependencies);
+                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _inputs, dependencyBuf);
                     }
                     else
                     {
-                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID, _outputs, _inputs, _pageDependencies);
+                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID, _inputs, dependencyBuf);
                     }
                     inputFlexBuffer.ResetBuffer();
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
@@ -3810,7 +3802,7 @@ namespace Ambrosia
                     var memStream = new MemoryStream(inputFlexBuffer.Buffer, restOfBatchOffset, inputFlexBuffer.Length - restOfBatchOffset);
                     var numRPCs = memStream.ReadInt();
                     var numReplayableRPCs = memStream.ReadInt();
-                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numReplayableRPCs, _outputs, _inputs, _pageDependencies);
+                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numReplayableRPCs, _inputs, dependencyBuf);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
@@ -3829,7 +3821,7 @@ namespace Ambrosia
                     restOfBatchOffset = inputFlexBuffer.LengthLength + 1;
                     memStream = new MemoryStream(inputFlexBuffer.Buffer, restOfBatchOffset, inputFlexBuffer.Length - restOfBatchOffset);
                     numRPCs = memStream.ReadInt();
-                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numRPCs, _outputs, _inputs, _pageDependencies);
+                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numRPCs, _inputs, dependencyBuf);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
@@ -3851,7 +3843,7 @@ namespace Ambrosia
                     GetSystemTimePreciseAsFileTime(out time);
                     memStream.WriteLongFixed(time);
                     // Treat as RPC
-                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, _inputs, _pageDependencies);
+                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _inputs, dependencyBuf);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     break;
@@ -3862,7 +3854,7 @@ namespace Ambrosia
                     GetSystemTimePreciseAsFileTime(out time);
                     memStream.WriteLongFixed(time);
                     // Treat as RPC
-                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, _inputs, _pageDependencies);
+                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _inputs, dependencyBuf);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     break;
@@ -4064,6 +4056,10 @@ namespace Ambrosia
                        bool sharded
                        )
         {
+            _inputLSN.epochID = -1;
+            _inputLSN.logID = -1;
+            _inputLSN.sequenceID = -1;
+
             if (LogReaderStaticPicker.curStatic == null || LogWriterStaticPicker.curStatic == null)
             {
                 OnError(UnexpectedError, "Must specify log storage type");

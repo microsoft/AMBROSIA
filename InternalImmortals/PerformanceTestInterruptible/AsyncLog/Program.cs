@@ -380,6 +380,7 @@ namespace AsyncLog
                     if (sealing)
                     {
                         // We have just filled the backup buffer and must wait until any other commit finishes
+                        
                         int counter = 0;
                         while (_bufbak == null)
                         {
@@ -690,6 +691,7 @@ namespace AsyncLog
                 var newPageDeps = _pageDepsBak;
 
                 _bufbak = null;
+                _pageDepsBak = null;
 
                 // Wait for in-flight writes to complete
                 var expectedWrites = (newLocalStatus >> (64 - numWritesBits));
@@ -701,7 +703,7 @@ namespace AsyncLog
                 }
 
                 // Filling header with enough info to detect incomplete writes and also writing the page length
-                var writeStream = new MemoryStream(_buf, 4, 20);
+                var writeStream = new MemoryStream(_buf, 4, 36);
                 writeStream.WriteIntFixed((int)bufLength);
                 long checkBytes = CheckBytes(HeaderSize, (int)bufLength - HeaderSize);
                 writeStream.WriteLongFixed(checkBytes);
