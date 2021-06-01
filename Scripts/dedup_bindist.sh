@@ -4,8 +4,8 @@ set -euo pipefail
 # Our build consists of separate "dotnet publish" commands that are
 # directed to separate subdirectories of the output.
 
-primary="runtime"
-secondary=" coord codegen unsafedereg "
+primary="libraries"
+secondary=" immcoord clienttools unsafedereg "
 
 if [ $# -eq 0 ]; then
     mode=symlink
