@@ -85,7 +85,7 @@ for dir in $secondary; do
             while read f; do        
                 echo -ne "."
                 dirof=`dirname $f`
-                relativepath=$(getrelative "../runtime/$f" "$dirof")
+                relativepath=$(getrelative "../libraries/$f" "$dirof")
                 ln -sf $relativepath $f
             done < $dups
             echo
