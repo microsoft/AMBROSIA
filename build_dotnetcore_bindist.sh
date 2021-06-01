@@ -57,10 +57,16 @@ set -x
 buildit $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
 buildit $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
 buildit $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
+buildit $OUTDIR/azureblobslogpicker AzureBlobsLogPicker/AzureBlobsLogPicker.csproj
+buildit $OUTDIR/genericlogpicker GenericLogPicker/GenericLogPicker.csproj
+buildit $OUTDIR/sharedambrosiatools SharedAmbrosiaTools/SharedAmbrosiaTools.csproj
 pushd $OUTDIR
 ln -s runtime/Ambrosia Ambrosia
 ln -s coord/ImmortalCoordinator
 ln -s unsafedereg/UnsafeDeregisterInstance
+ln -s azureblobslogpicker/AzureBlobsLogPicker
+ln -s genericlogpicker/GenericLogPicker
+ln -s sharedambrosiatools/SharedAmbrosiaTools
 popd
 set +x
 
