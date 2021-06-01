@@ -54,19 +54,13 @@ echo
 echo "Building AMBROSIA libraries/binaries"
 echo "------------------------------------"
 set -x
-buildit $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
-buildit $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
+buildit $OUTDIR/libraries Ambrosia/Ambrosia/Ambrosia.csproj
+buildit $OUTDIR/immcoord ImmortalCoordinator/ImmortalCoordinator.csproj
 buildit $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
-buildit $OUTDIR/azureblobslogpicker AzureBlobsLogPicker/AzureBlobsLogPicker.csproj
-buildit $OUTDIR/genericlogpicker GenericLogPicker/GenericLogPicker.csproj
-buildit $OUTDIR/sharedambrosiatools SharedAmbrosiaTools/SharedAmbrosiaTools.csproj
 pushd $OUTDIR
-ln -s runtime/Ambrosia Ambrosia
-ln -s coord/ImmortalCoordinator
+ln -s libraries/Ambrosia Ambrosia
+ln -s immcoord/ImmortalCoordinator
 ln -s unsafedereg/UnsafeDeregisterInstance
-ln -s azureblobslogpicker/AzureBlobsLogPicker
-ln -s genericlogpicker/GenericLogPicker
-ln -s sharedambrosiatools/SharedAmbrosiaTools
 popd
 set +x
 
@@ -74,9 +68,9 @@ echo
 echo "Building C# client tools"
 echo "----------------------------------------"
 set -x
-buildit $OUTDIR/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
+buildit $OUTDIR/clienttools Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
 pushd $OUTDIR
-ln -s codegen/AmbrosiaCS
+ln -s clienttools/AmbrosiaCS
 popd
 set +x
 
