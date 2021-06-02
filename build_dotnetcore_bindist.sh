@@ -29,6 +29,7 @@ else
 fi
 
 OUTDIR=`pwd`/bin
+echo "Output Directory:" $OUTDIR
 # Do not want to publish self contained due to security reasons that .net security patches aren't applied
 # Since not self contained, any non windows scripts using this needs to make sure install .netcore
 # Shorthands:
@@ -54,13 +55,13 @@ echo
 echo "Building AMBROSIA libraries/binaries"
 echo "------------------------------------"
 set -x
-buildit $OUTDIR/libraries Ambrosia/Ambrosia/Ambrosia.csproj
-buildit $OUTDIR/immcoord ImmortalCoordinator/ImmortalCoordinator.csproj
-buildit $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
+buildit $OUTDIR Ambrosia/Ambrosia/Ambrosia.csproj
+buildit $OUTDIR ImmortalCoordinator/ImmortalCoordinator.csproj
+buildit $OUTDIR DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
 pushd $OUTDIR
-ln -s libraries/Ambrosia Ambrosia
-ln -s immcoord/ImmortalCoordinator
-ln -s unsafedereg/UnsafeDeregisterInstance
+# ln -s Ambrosia Ambrosia
+# ln -s ImmortalCoordinator
+# ln -s UnsafeDeregisterInstance
 popd
 set +x
 
@@ -68,9 +69,9 @@ echo
 echo "Building C# client tools"
 echo "----------------------------------------"
 set -x
-buildit $OUTDIR/clienttools Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
+buildit $OUTDIR Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
 pushd $OUTDIR
-ln -s clienttools/AmbrosiaCS
+# ln -s AmbrosiaCS
 popd
 set +x
 
@@ -101,14 +102,15 @@ fi
 # echo "----------------------------------------"
 # chmod -x ./bin/*.dll ./bin/*.so ./bin/*.dylib ./bin/*.a 2>/dev/null || echo
 
-echo
-echo "Deduplicating output produced by separate dotnet publish calls"
-echo "--------------------------------------------------------------"
-if [ ${OS:+defined} ] && [ "$OS" == "Windows_NT" ];
-then ./Scripts/dedup_bindist.sh squish
-elif [ "$UNAME" == Darwin ];
-then ./Scripts/dedup_bindist.sh symlink
-else ./Scripts/dedup_bindist.sh symlink
-fi
+# No longer needed because all output going to one folder
+#echo
+#echo "Deduplicating output produced by separate dotnet publish calls"
+#echo "--------------------------------------------------------------"
+#if [ ${OS:+defined} ] && [ "$OS" == "Windows_NT" ];
+#then ./Scripts/dedup_bindist.sh squish
+#elif [ "$UNAME" == Darwin ];
+#then ./Scripts/dedup_bindist.sh symlink
+#else ./Scripts/dedup_bindist.sh symlink
+#fi
 
 echo "$0 Finished"
