@@ -8,6 +8,14 @@ echo "*********  Running dedup_bindist.sh ********************"
 echo "Args: "$@
 echo "*******************************************************************"
 
+
+echo "**********  WARNING *******************************************"
+echo " Some scripts might call this but don't need it any more as build"
+echo " Goes to one folder. Keeping it here unchanged just in case. "
+echo "***************************************************************"
+exit 0
+
+
 primary="runtime"
 secondary=" coord codegen unsafedereg "
 
