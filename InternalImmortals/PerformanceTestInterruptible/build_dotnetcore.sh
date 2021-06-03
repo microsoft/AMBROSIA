@@ -3,6 +3,10 @@ set -euo pipefail
 
 # This is for non-dockerized, scripted builds.
 
+echo "*********  Running build_dotnetcore.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 UNAME=`uname`
 if [ "$UNAME" == Linux ];
 then PLAT=linux-x64

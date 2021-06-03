@@ -8,6 +8,10 @@ set -euo pipefail
 # This mostly DISPATCHES to other scripts.
 # ------------------------------------------------------------
 
+echo "*********  Running run_linux_ci.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 # Hack to deal with Azure Devops Pipelines:
 if ! [[ -e ./build_docker_images.sh ]]; then
     # For MOST CI environments, running this script in-place, this

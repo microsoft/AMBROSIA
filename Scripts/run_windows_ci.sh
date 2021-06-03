@@ -5,6 +5,10 @@ set -euo pipefail
 # A script to build and test under Windows (Azure DevOps) CI.
 # ------------------------------------------------------------
 
+echo "*********  Running run_windows_ci.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 # Hack to deal with Azure Devops Pipelines:
 if ! [[ -e ./build_docker_images.sh ]]; then
     # For MOST CI environments, running this script in-place, this
