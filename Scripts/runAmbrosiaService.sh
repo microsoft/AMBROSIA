@@ -21,6 +21,10 @@ set -euo pipefail
 #
 # ----------------------------------------------------------
 
+echo "*********  Running runAmbrosiaService.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 TAG="[runAmbrosiaService.sh]"
 
 if ! [ "${COORDTAG:+defined}" ];

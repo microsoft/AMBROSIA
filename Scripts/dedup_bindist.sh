@@ -4,6 +4,10 @@ set -euo pipefail
 # Our build consists of separate "dotnet publish" commands that are
 # directed to separate subdirectories of the output.
 
+echo "*********  Running dedup_bindist.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 primary="runtime"
 secondary=" coord codegen unsafedereg "
 

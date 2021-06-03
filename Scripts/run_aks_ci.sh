@@ -2,6 +2,10 @@
 set -euo pipefail
 
 # This script runs an end-to-end Azure/Kubernetes test.
+echo "*********  Running run_aks_ci.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 
 echo "Running in directory: "`pwd`
 cd ../Samples/AKS-scripts

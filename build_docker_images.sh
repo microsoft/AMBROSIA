@@ -11,6 +11,10 @@ set -euo pipefail
 # 
 # Run this inside a fresh working copy.
 
+echo "*********  Running build_docker_images.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 TAG1A=ambrosia/ambrosia-dev
 TAG1B=ambrosia/ambrosia
 TAG2=ambrosia/ambrosia-perftest

@@ -9,6 +9,11 @@ cd `dirname $0`
 # big build step instead of granular ones.
 # --------------------------------------------------------------------
 
+echo "*********  Running build_dotnetcore_bindist.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
+
 # Should be "net461" or "netcoreapp3.1".  Set a default if not set:
 export AMBROSIA_DOTNET_FRAMEWORK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp3.1}"
 # Release or Debug:
