@@ -78,8 +78,9 @@ case $mode in
       ./dotnet-install.sh
 
       # Have a switch where the build is already done and just run the ci on that build ... used by the build tgz scripts
-	  echo "********* Build DotNet Core ********************"
+	  
       if ! [[ ${AMBROSIA_CI_VERIFY_BUILD:+defined} ]]; then
+         echo "********* Build DotNet Core ********************"
          cd "$AMBROSIA_ROOT"
          ./build_dotnetcore_bindist.sh
       fi

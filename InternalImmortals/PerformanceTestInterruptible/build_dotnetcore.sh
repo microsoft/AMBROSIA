@@ -3,7 +3,7 @@ set -euo pipefail
 
 # This is for non-dockerized, scripted builds.
 
-echo "*********  Running build_dotnetcore.sh ********************"
+echo "*********  Running PTI build_dotnetcore.sh ********************"
 echo "Args: "$@
 echo "*******************************************************************"
 
