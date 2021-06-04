@@ -77,10 +77,13 @@ case $mode in
       chmod +x dotnet-install.sh
       ./dotnet-install.sh
 
+      # Have a switch where the build is already done and just run the ci on that build ... used by the build tgz scripts
 	  echo "********* Build DotNet Core ********************"
-      cd "$AMBROSIA_ROOT"
-      ./build_dotnetcore_bindist.sh
-
+      if ! [[ ${AMBROSIA_CI_VERIFY_BUILD:+defined} ]]; then
+         cd "$AMBROSIA_ROOT"
+         ./build_dotnetcore_bindist.sh
+      fi
+  
       # Build Application: PTI
       # ----------------------------------------
 	   echo "********* PTI ********************"
