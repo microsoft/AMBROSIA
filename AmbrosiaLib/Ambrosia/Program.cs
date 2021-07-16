@@ -157,6 +157,7 @@ namespace Ambrosia
         internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, OutputConnectionRecord> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
+            Console.WriteLine("[AmbrosiaSerialize-Connection] dictCount = {0}", dict.Count);
             foreach (var entry in dict)
             {
                 var keyEncoding = Encoding.UTF8.GetBytes(entry.Key);
@@ -177,10 +178,26 @@ namespace Ambrosia
             }
         }
 
+        internal static void AmbrosiaSerialize(this ConcurrentDictionary<int, string> dict, ILogWriter writeToStream)
+        {
+            writeToStream.WriteIntFixed(dict.Count);
+            Console.WriteLine("[AmbrosiaSerialize-ShardMapping] dictCount = {0}", dict.Count);
+            foreach (var entry in dict)
+            {
+                var shardKey = entry.Key;
+                writeToStream.WriteInt(shardKey);
+                var destEncoding = Encoding.UTF8.GetBytes(entry.Value);
+                writeToStream.WriteInt(destEncoding.Length);
+                writeToStream.Write(destEncoding, 0, destEncoding.Length);
+                Console.WriteLine("[AmbrosiaSerialize-ShardMapping] shardKey = {0}, destString = {1}", entry.Key, entry.Value);
+            }
+        }
+
         internal static ConcurrentDictionary<string, OutputConnectionRecord> AmbrosiaDeserialize(this ConcurrentDictionary<string, OutputConnectionRecord> dict, ILogReader readFromStream, AmbrosiaRuntime thisAmbrosia)
         {
             var _retVal = new ConcurrentDictionary<string, OutputConnectionRecord>();
             var dictCount = readFromStream.ReadIntFixed();
+            Console.WriteLine("[AmbrosiaDeserialize-Connection] dictCount = {0}", dictCount);
             for (int i = 0; i < dictCount; i++)
             {
                 var myString = Encoding.UTF8.GetString(readFromStream.ReadByteArray());
@@ -190,6 +207,21 @@ namespace Ambrosia
                 newRecord.ReplayableTrimTo = readFromStream.ReadLongFixed();
                 newRecord.BufferedOutput = EventBuffer.Deserialize(readFromStream, thisAmbrosia, newRecord);
                 _retVal.TryAdd(myString, newRecord);
+            }
+            return _retVal;
+        }
+
+        internal static ConcurrentDictionary<int, string> AmbrosiaDeserialize(this ConcurrentDictionary<int, string> dict, ILogReader readFromStream, AmbrosiaRuntime thisAmbrosia)
+        {
+            var _retVal = new ConcurrentDictionary<int, string>();
+            var dictCount = readFromStream.ReadIntFixed();
+            Console.WriteLine("[AmbrosiaDeserialize-ShardMapping] dictCount = {0}", dictCount);
+            for (int i = 0; i < dictCount; i++)
+            {
+                var shardKey = readFromStream.ReadInt();
+                var destString = Encoding.UTF8.GetString(readFromStream.ReadByteArray());
+                Console.WriteLine("[AmbrosiaDeserialize] ShardKey = {0}, destString = {1}", shardKey, destString);
+                _retVal.TryAdd(shardKey, destString);
             }
             return _retVal;
         }
@@ -1943,6 +1975,8 @@ namespace Ambrosia
             public AARole MyRole { get; set; }
             public ConcurrentDictionary<string, OutputConnectionRecord> Outputs { get; set; }
             public long ShardID { get; set; }
+            public int NumShards { get; set; }
+            public ConcurrentDictionary<int, string> ShardedOutputs { get; set; }
         }
 
         internal void LoadAmbrosiaState(MachineState state)
@@ -1954,6 +1988,8 @@ namespace Ambrosia
             state.LastLogFile = _lastLogFile;
             state.MyRole = _myRole;
             state.Outputs = _outputs;
+            state.NumShards = numShards;
+            state.ShardedOutputs = _shardedOutputs;
         }
 
         internal void UpdateAmbrosiaState(MachineState state)
@@ -1965,6 +2001,8 @@ namespace Ambrosia
             _lastLogFile = state.LastLogFile;
             _myRole = state.MyRole;
             _outputs = state.Outputs;
+            numShards = state.NumShards;
+            _shardedOutputs = state.ShardedOutputs;
         }
 
         public class AmbrosiaOutput : IAsyncVertexOutputEndpoint
@@ -2039,6 +2077,8 @@ namespace Ambrosia
 
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
         ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
+        int numShards;
+        ConcurrentDictionary<int, string> _shardedOutputs;
         internal int _localServiceReceiveFromPort;           // specifiable on the command line
         internal int _localServiceSendToPort;                // specifiable on the command line 
         internal string _serviceName;  // specifiable on the command line
@@ -2356,6 +2396,10 @@ namespace Ambrosia
                 // Recover output connections
                 state.Outputs = state.Outputs.AmbrosiaDeserialize(checkpointStream, this);
                 UnbufferNonreplayableCalls(state.Outputs);
+                // Recover number of shards
+                state.NumShards = checkpointStream.ReadInt();
+                // Recover shard mapping table
+                state.ShardedOutputs = state.ShardedOutputs.AmbrosiaDeserialize(checkpointStream, this);
                 // Restore new service from checkpoint
                 var serviceCheckpoint = new FlexReadBuffer();
                 FlexReadBuffer.Deserialize(checkpointStream, serviceCheckpoint);
@@ -2414,6 +2458,8 @@ namespace Ambrosia
             _lastLogFile = 0;
             _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
             _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
+            numShards = 4;
+            _shardedOutputs = new ConcurrentDictionary<int, string>();
             _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
 
             _myRole = AARole.Primary;
@@ -3029,6 +3075,13 @@ namespace Ambrosia
                         {
                             outputConnectionRecord = new OutputConnectionRecord(this);
                             state.Outputs[kv.Key] = outputConnectionRecord;
+                            if (kv.Key.Length != 0)
+                            {
+                                for (int i = 0; i < state.NumShards; i++)
+                                {
+                                    state.ShardedOutputs[i] = kv.Key;
+                                }
+                            }
                         }
                     }
                     // this lock prevents conflict with output arriving from the local service during replay and ensures maximal cleaning
@@ -3062,7 +3115,7 @@ namespace Ambrosia
                     firstByte = tempBufStream.ReadByte();
                     if (firstByte == AmbrosiaRuntimeLBConstants.RPCByte)
                     {
-                        Console.WriteLine("[Sekwon] This is RPCByte {0}", firstByte);
+                        //Console.WriteLine("[Sekwon] This is RPCByte {0}", firstByte);
                         var returnByte = tempBufStream.ReadByte();
                         var methodByte = tempBufStream.ReadInt();
                         var rpctypeByte = tempBufStream.ReadByte();
@@ -3079,23 +3132,23 @@ namespace Ambrosia
                         {
                             Console.WriteLine("[Sekwon] RPC not involved in the range of given shards {0}", grainIdByte);
                         }
-                        Console.WriteLine("[Sekwon] commitSize = {0}, tempBufStream.Position = {1}, totalRecordSize = {2}, filteredBufOffset = {3}", commitSize, tempBufStream.Position, totalRecordSize, filteredBufOffset);
+                        //Console.WriteLine("[Sekwon] commitSize = {0}, tempBufStream.Position = {1}, totalRecordSize = {2}, filteredBufOffset = {3}", commitSize, tempBufStream.Position, totalRecordSize, filteredBufOffset);
                     }
                     else if (firstByte == AmbrosiaRuntimeLBConstants.RPCBatchByte || firstByte == AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte)
                     {
-                        if (firstByte == AmbrosiaRuntimeLBConstants.RPCBatchByte)
-                            Console.WriteLine("[Sekwon] This is RPCBatchByte {0}", firstByte);
-                        else
-                            Console.WriteLine("[Sekwon] This is CountReplayableRPCBatchByte {0}", firstByte);
+                        //if (firstByte == AmbrosiaRuntimeLBConstants.RPCBatchByte)
+                        //    Console.WriteLine("[Sekwon] This is RPCBatchByte {0}", firstByte);
+                        //else
+                        //    Console.WriteLine("[Sekwon] This is CountReplayableRPCBatchByte {0}", firstByte);
 
                         long startPositionOfRPC = 0;
                         var numberOfRPCs = tempBufStream.ReadInt();
-                        Console.WriteLine("[Sekwon] number of RPCs = {0}", numberOfRPCs);
+                        //Console.WriteLine("[Sekwon] number of RPCs = {0}", numberOfRPCs);
 
                         if (firstByte == AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte)
                         {
                             var numReplayableRPCs = tempBufStream.ReadInt();
-                            Console.WriteLine("[Sekwon] number of replayable RPCs = {0}", numReplayableRPCs);
+                            //Console.WriteLine("[Sekwon] number of replayable RPCs = {0}", numReplayableRPCs);
                         }
 
                         int validNumOfRPCs = 0;
@@ -3152,7 +3205,7 @@ namespace Ambrosia
                                 startPositionOfRPC = tempBufStream.Position;
                             }
                         }
-                        Console.WriteLine("[Sekwon] commitSize = {0}, tempBufStream.Position = {1}, totalRecordSize = {2}, filteredBufOffset = {3}", commitSize, tempBufStream.Position, totalRecordSize, filteredBufOffset);
+                        //Console.WriteLine("[Sekwon] commitSize = {0}, tempBufStream.Position = {1}, totalRecordSize = {2}, filteredBufOffset = {3}", commitSize, tempBufStream.Position, totalRecordSize, filteredBufOffset);
 
                         if (validNumOfRPCs != numberOfRPCs)
                         {
@@ -3205,6 +3258,13 @@ namespace Ambrosia
                         {
                             outputConnectionRecord = new OutputConnectionRecord(this);
                             state.Outputs[kv.Key] = outputConnectionRecord;
+                            if (kv.Key.Length != 0)
+                            {
+                                for (int i = 0; i < state.NumShards; i++)
+                                {
+                                    state.ShardedOutputs[i] = kv.Key;
+                                }
+                            }
                         }
                     }
                     // this lock prevents conflict with output arriving from the local service during replay and ensures maximal cleaning
@@ -3505,6 +3565,15 @@ namespace Ambrosia
                     {
                         _shuffleOutputRecord = new OutputConnectionRecord(this);
                         _outputs[destination] = _shuffleOutputRecord;
+                        if (destBytesSize != 0)
+                        {
+                            Console.WriteLine("Destination = {0}", destination);
+                            for (int i = 0; i < numShards; i++)
+                            {
+                                if (!_shardedOutputs.ContainsKey(i))
+                                    _shardedOutputs[i] = destination;
+                            }
+                        }
                     }
                 }
             }
@@ -3513,6 +3582,16 @@ namespace Ambrosia
             int restOfRPCMessageSize = RpcBuffer.Length - restOfRPCOffset;
             var totalSize = StreamCommunicator.IntSize(1 + restOfRPCMessageSize) +
                             1 + restOfRPCMessageSize;
+
+            if (destBytesSize != 0)
+            {
+                int grainId = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1)) + 1);
+                if (!_outputs.TryGetValue(_shardedOutputs[grainId % numShards], out _shuffleOutputRecord))
+                {
+                    _shuffleOutputRecord = new OutputConnectionRecord(this);
+                    _outputs[_shardedOutputs[grainId % numShards]] = _shuffleOutputRecord;
+                }
+            }
 
             // lock to avoid conflict and ensure maximum memory cleaning during replay. No possible conflict during primary operation
             lock (_shuffleOutputRecord)
@@ -3576,6 +3655,14 @@ namespace Ambrosia
                     outputConnectionRecord = new OutputConnectionRecord(this);
                     _outputs[destString] = outputConnectionRecord;
                     Trace.TraceInformation("Adding output:{0}", destString);
+                    if (destString.Length != 0)
+                    {
+                        for (int i = 0; i < numShards; i++)
+                        {
+                            if (!_shardedOutputs.ContainsKey(i))
+                                _shardedOutputs[i] = destString;
+                        }
+                    }
                 }
                 else
                 {
@@ -3699,6 +3786,14 @@ namespace Ambrosia
                     outputConnectionRecord = new OutputConnectionRecord(this);
                     _outputs[destString] = outputConnectionRecord;
                     Trace.TraceInformation("Adding output:{0}", destString);
+                    if (destString.Length != 0)
+                    {
+                        for (int i = 0; i < numShards; i++)
+                        {
+                            if (!_shardedOutputs.ContainsKey(i))
+                                _shardedOutputs[i] = destString;
+                        }
+                    }
                 }
                 else
                 {
@@ -4079,6 +4174,10 @@ namespace Ambrosia
             _inputs.AmbrosiaSerialize(_checkpointWriter);
             // Serialize output connections
             _outputs.AmbrosiaSerialize(_checkpointWriter);
+            // Serialize number of shards (Presume fixed shards)
+            _checkpointWriter.WriteInt(numShards);
+            // Serialize mapping table of shards
+            _shardedOutputs.AmbrosiaSerialize(_checkpointWriter);
             foreach (var outputRecord in _outputs)
             {
                 outputRecord.Value.BufferedOutput.ReleaseAppendLock();
