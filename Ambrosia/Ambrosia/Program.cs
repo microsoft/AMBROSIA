@@ -39,6 +39,7 @@ namespace Ambrosia
         private static bool _isTestingUpgrade = false;
         private static AmbrosiaRecoveryModes _recoveryMode = AmbrosiaRecoveryModes.A;
         private static bool _isActiveActive = false;
+        private static int _initialNumShards = 0;
         private static bool _isPauseAtStart = false;
         private static bool _isPersistLogs = true;
         private static long _logTriggerSizeMB = 1000;
@@ -87,6 +88,7 @@ namespace Ambrosia
                     param.serviceLogPath = _serviceLogPath;
                     param.AmbrosiaBinariesLocation = _binariesLocation;
                     param.storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
+                    param.initialNumShards = _initialNumShards;
 
                     try
                     {
@@ -104,14 +106,35 @@ namespace Ambrosia
                             serializedParams = textWriter.ToString();
                         }
 
-                        if (client.InstantiateVertexAsync(replicaName, param.serviceName, param.AmbrosiaBinariesLocation, serializedParams).GetAwaiter().GetResult() != CRAErrorCode.Success)
+                        if (_initialNumShards == 0)
                         {
-                            throw new Exception();
+                            if (client.InstantiateVertexAsync(replicaName, param.serviceName, param.AmbrosiaBinariesLocation, serializedParams).GetAwaiter().GetResult() != CRAErrorCode.Success)
+                            {
+                                throw new Exception();
+                            }
+                            client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true).Wait();
+                            client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true).Wait();
+                            client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaControlInputsName, true, true).Wait();
+                            client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaControlOutputsName, false, true).Wait();
                         }
-                        client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true).Wait();
-                        client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true).Wait();
-                        client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaControlInputsName, true, true).Wait();
-                        client.AddEndpointAsync(param.serviceName, AmbrosiaRuntime.AmbrosiaControlOutputsName, false, true).Wait();
+                        else
+                        {
+                            for (int shardNum = 0; shardNum < _initialNumShards; shardNum++)
+                            {
+                                var shardedReplicaName = _instanceName + $"{_replicaNumber}"+"_S"+$"{ shardNum}";
+                                var shardedServiceName = param.serviceName + "_S" +$"{shardNum}";
+                                Console.WriteLine("Replica "+shardedReplicaName);
+                                Console.WriteLine("ServiceName " + shardedServiceName);
+                                if (client.InstantiateVertexAsync(shardedReplicaName, shardedServiceName, param.AmbrosiaBinariesLocation, serializedParams).GetAwaiter().GetResult() != CRAErrorCode.Success)
+                                {
+                                    throw new Exception();
+                                }
+                                client.AddEndpointAsync(shardedServiceName, AmbrosiaRuntime.AmbrosiaDataInputsName, true, true).Wait();
+                                client.AddEndpointAsync(shardedServiceName, AmbrosiaRuntime.AmbrosiaDataOutputsName, false, true).Wait();
+                                client.AddEndpointAsync(shardedServiceName, AmbrosiaRuntime.AmbrosiaControlInputsName, true, true).Wait();
+                                client.AddEndpointAsync(shardedServiceName, AmbrosiaRuntime.AmbrosiaControlOutputsName, false, true).Wait();
+                            }
+                        }
                     }
                     catch (Exception e)
                     {
@@ -158,6 +181,7 @@ namespace Ambrosia
                 {"npl|noPersistLogs", "Is persistent logging disabled.", ps => _isPersistLogs = false},
                 {"lts|logTriggerSize=", "Log trigger size (in MBs).", lts => _logTriggerSizeMB = long.Parse(lts)},
                 {"aa|activeActive", "Is active-active enabled.", aa => _isActiveActive = true},
+                {"ins|initialShards=", "The # of initial shards if this is a sharded instance", ins => _initialNumShards = int.Parse(ins) },
                 {"cv|currentVersion=", "The current version #.", cv => _currentVersion = int.Parse(cv)},
                 {"uv|upgradeVersion=", "The upgrade version #.", uv => _upgradeVersion = int.Parse(uv)},
             });

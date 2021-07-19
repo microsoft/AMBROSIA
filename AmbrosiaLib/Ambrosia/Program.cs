@@ -1077,6 +1077,7 @@ namespace Ambrosia
         public string storageConnectionString;
         public long currentVersion;
         public long upgradeToVersion;
+        public int initialNumShards;
     }
 
     public static class AmbrosiaRuntimeParms
@@ -1988,7 +1989,8 @@ namespace Ambrosia
             state.LastLogFile = _lastLogFile;
             state.MyRole = _myRole;
             state.Outputs = _outputs;
-            state.NumShards = numShards;
+            // BugBug Do we want this in here?
+            state.NumShards = _numShards;
             state.ShardedOutputs = _shardedOutputs;
         }
 
@@ -2001,7 +2003,7 @@ namespace Ambrosia
             _lastLogFile = state.LastLogFile;
             _myRole = state.MyRole;
             _outputs = state.Outputs;
-            numShards = state.NumShards;
+            _numShards = state.NumShards;
             _shardedOutputs = state.ShardedOutputs;
         }
 
@@ -2077,7 +2079,6 @@ namespace Ambrosia
 
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
         ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
-        int numShards;
         ConcurrentDictionary<int, string> _shardedOutputs;
         internal int _localServiceReceiveFromPort;           // specifiable on the command line
         internal int _localServiceSendToPort;                // specifiable on the command line 
@@ -2089,7 +2090,9 @@ namespace Ambrosia
         public const string AmbrosiaDataOutputsName = "Ambrosiadataout";
         public const string AmbrosiaControlOutputsName = "Ambrosiacontrolout";
         bool _persistLogs;
-        bool _sharded;
+        int _numShards;
+        bool Sharded { get { return _numShards > 0; } }
+
         internal bool _createService;
         long _shardID;
         bool _runningRepro;
@@ -2270,7 +2273,14 @@ namespace Ambrosia
             {
                 _storageAccount = CloudStorageAccount.Parse(_storageConnectionString);
                 _tableClient = _storageAccount.CreateCloudTableClient();
-                _serviceInstanceTable = _tableClient.GetTableReference(_serviceName);
+                if (!Sharded)
+                {
+                    _serviceInstanceTable = _tableClient.GetTableReference(_serviceName);
+                }
+                else
+                {
+                    _serviceInstanceTable = _tableClient.GetTableReference(_serviceName+"S"+$"{_shardID}");
+                }
                 if ((_storageAccount == null) || (_tableClient == null) || (_serviceInstanceTable == null))
                 {
                     OnError(AzureOperationError, "Error setting up initial connection to Azure");
@@ -2450,6 +2460,27 @@ namespace Ambrosia
             }
         }
 
+        private async Task CreateSelfConnectionsAsync()
+        {
+            if (!Sharded)
+            {
+                await ConnectAsync(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
+                await ConnectAsync(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+            }
+            else
+            {
+                for (int sourceIterations = 0; sourceIterations < _numShards; sourceIterations++)
+                {
+                    for (int destIterations = 0; destIterations < _numShards; destIterations++)
+                    {
+                        await ConnectAsync(_serviceName + "_S" + $"{sourceIterations}", AmbrosiaDataOutputsName, _serviceName + "_S" + $"{destIterations}", AmbrosiaDataInputsName);
+                        await ConnectAsync(_serviceName + "_S" + $"{sourceIterations}", AmbrosiaControlOutputsName, _serviceName + "_S" + $"{destIterations}", AmbrosiaControlInputsName);
+                    }
+                }
+
+            }
+        }
+
         private async Task StartAsync()
         {
             // We are starting for the first time. This is the primary
@@ -2458,7 +2489,6 @@ namespace Ambrosia
             _lastLogFile = 0;
             _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
             _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
-            numShards = 4;
             _shardedOutputs = new ConcurrentDictionary<int, string>();
             _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
 
@@ -2466,8 +2496,7 @@ namespace Ambrosia
 
             _checkpointWriter = null;
             _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
-            await ConnectAsync(ServiceName(), AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
-            await ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
+            await CreateSelfConnectionsAsync();
             await MoveServiceToNextLogFileAsync(true, true);
             InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
         }
@@ -2500,19 +2529,6 @@ namespace Ambrosia
             return await _coral.ConnectAsync(fromProcessName, fromEndpoint, toProcessName, toEndpoint);
         }
 
-        private string ServiceName(long shardID = -1)
-        {
-            if (_sharded)
-            {
-                if (shardID == -1)
-                {
-                    shardID = _shardID;
-                }
-                return _serviceName + "-" + shardID.ToString();
-            }
-            return _serviceName;
-        }
-
         private string RootDirectory(long version = -1)
         {
             if (version == -1)
@@ -2526,13 +2542,13 @@ namespace Ambrosia
         private string LogDirectory(long version = -1, long shardID = -1)
         {
             string shard = "";
-            if (_sharded)
+            if (Sharded)
             {
                 if (shardID == -1)
                 {
                     shardID = _shardID;
                 }
-                shard = shardID.ToString();
+                shard = "Shard"+shardID.ToString();
             }
 
             return Path.Combine(RootDirectory(version), shard);
@@ -2618,7 +2634,7 @@ namespace Ambrosia
         private string InfoTitle(string prefix, long shardID = -1)
         {
             var file = prefix;
-            if (_sharded)
+            if (Sharded)
             {
                 if (shardID == -1)
                 {
@@ -3375,13 +3391,14 @@ namespace Ambrosia
 
         void AttachTo(string destination)
         {
+            // Bug bug add pairwise connections for sharded scenariod
             while (true)
             {
                 Trace.TraceInformation("Attempting to attach to {0}", destination);
-                var connectionResult1 = ConnectAsync(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
-                var connectionResult2 = ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
-                var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName).GetAwaiter().GetResult();
-                var connectionResult4 = ConnectAsync(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName).GetAwaiter().GetResult();
+                var connectionResult1 = ConnectAsync(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
+                var connectionResult2 = ConnectAsync(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
+                var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName).GetAwaiter().GetResult();
+                var connectionResult4 = ConnectAsync(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName).GetAwaiter().GetResult();
                 if ((connectionResult1 == CRAErrorCode.Success) && (connectionResult2 == CRAErrorCode.Success) &&
                     (connectionResult3 == CRAErrorCode.Success) && (connectionResult4 == CRAErrorCode.Success))
                 {
@@ -3431,15 +3448,16 @@ namespace Ambrosia
                         }
                         else
                         {
+                            // Bugbug fix to handle sharded case
                             Trace.TraceInformation("Attaching to {0}", destination);
-                            var connectionResult1 = ConnectAsync(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
-                            var connectionResult2 = ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
-                            var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName).GetAwaiter().GetResult();
-                            var connectionResult4 = ConnectAsync(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName).GetAwaiter().GetResult();
+                            var connectionResult1 = ConnectAsync(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
+                            var connectionResult2 = ConnectAsync(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
+                            var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName).GetAwaiter().GetResult();
+                            var connectionResult4 = ConnectAsync(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName).GetAwaiter().GetResult();
                             if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
                                 (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
                             {
-                                Trace.TraceError("Error attaching " + ServiceName() + " to " + destination);
+                                Trace.TraceError("Error attaching " + _serviceName + " to " + destination);
                                 // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
                             }
                         }
@@ -3567,8 +3585,9 @@ namespace Ambrosia
                         _outputs[destination] = _shuffleOutputRecord;
                         if (destBytesSize != 0)
                         {
+                            // BugBug fix
                             Console.WriteLine("Destination = {0}", destination);
-                            for (int i = 0; i < numShards; i++)
+                            for (int i = 0; i < _numShards; i++)
                             {
                                 if (!_shardedOutputs.ContainsKey(i))
                                     _shardedOutputs[i] = destination;
@@ -3586,10 +3605,12 @@ namespace Ambrosia
             if (destBytesSize != 0)
             {
                 int grainId = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1)) + 1);
-                if (!_outputs.TryGetValue(_shardedOutputs[grainId % numShards], out _shuffleOutputRecord))
+                // BugBug fix
+                if (!_outputs.TryGetValue(_shardedOutputs[grainId % _numShards], out _shuffleOutputRecord))
                 {
+                    // BugBug fix
                     _shuffleOutputRecord = new OutputConnectionRecord(this);
-                    _outputs[_shardedOutputs[grainId % numShards]] = _shuffleOutputRecord;
+                    _outputs[_shardedOutputs[grainId % _numShards]] = _shuffleOutputRecord;
                 }
             }
 
@@ -3643,7 +3664,8 @@ namespace Ambrosia
 
         {
             OutputConnectionRecord outputConnectionRecord;
-            if (destString.Equals(ServiceName()))
+            // Bugbug need to handle sharded cases?
+            if (destString.Equals(_serviceName))
             {
                 destString = "";
             }
@@ -3657,7 +3679,8 @@ namespace Ambrosia
                     Trace.TraceInformation("Adding output:{0}", destString);
                     if (destString.Length != 0)
                     {
-                        for (int i = 0; i < numShards; i++)
+                        // BugBug fix
+                        for (int i = 0; i < _numShards; i++)
                         {
                             if (!_shardedOutputs.ContainsKey(i))
                                 _shardedOutputs[i] = destString;
@@ -3774,7 +3797,8 @@ namespace Ambrosia
 
         {
             OutputConnectionRecord outputConnectionRecord;
-            if (destString.Equals(ServiceName()))
+            // Bugbug need to handle sharded cases?
+            if (destString.Equals(_serviceName))
             {
                 destString = "";
             }
@@ -3788,7 +3812,8 @@ namespace Ambrosia
                     Trace.TraceInformation("Adding output:{0}", destString);
                     if (destString.Length != 0)
                     {
-                        for (int i = 0; i < numShards; i++)
+                        // BugBug fix
+                        for (int i = 0; i < _numShards; i++)
                         {
                             if (!_shardedOutputs.ContainsKey(i))
                                 _shardedOutputs[i] = destString;
@@ -3901,7 +3926,8 @@ namespace Ambrosia
                                                CancellationToken ct)
         {
             InputConnectionRecord inputConnectionRecord;
-            if (sourceString.Equals(ServiceName()))
+            // Bugbug need to handle sharded cases?
+            if (sourceString.Equals(_serviceName))
             {
                 sourceString = "";
             }
@@ -3929,7 +3955,8 @@ namespace Ambrosia
                                                   CancellationToken ct)
         {
             InputConnectionRecord inputConnectionRecord;
-            if (sourceString.Equals(ServiceName()))
+            // Bugbug need to handle sharded cases?
+            if (sourceString.Equals(_serviceName))
             {
                 sourceString = "";
             }
@@ -4175,7 +4202,7 @@ namespace Ambrosia
             // Serialize output connections
             _outputs.AmbrosiaSerialize(_checkpointWriter);
             // Serialize number of shards (Presume fixed shards)
-            _checkpointWriter.WriteInt(numShards);
+            _checkpointWriter.WriteInt(_numShards);
             // Serialize mapping table of shards
             _shardedOutputs.AmbrosiaSerialize(_checkpointWriter);
             foreach (var outputRecord in _outputs)
@@ -4244,7 +4271,7 @@ namespace Ambrosia
                 p = (AmbrosiaRuntimeParams)xmlSerializer.Deserialize(textReader);
             }
 
-            bool sharded = false;
+            _shardID = StartupParamOverrides.shardID;
 
             Initialize(
                 p.serviceReceiveFromPort,
@@ -4259,8 +4286,8 @@ namespace Ambrosia
                 p.storageConnectionString,
                 p.currentVersion,
                 p.upgradeToVersion,
-                sharded
-            );
+                p.initialNumShards
+            ) ;
             return;
         }
 
@@ -4317,13 +4344,14 @@ namespace Ambrosia
                        string storageConnectionString,
                        long currentVersion,
                        long upgradeToVersion,
-                       bool sharded
+                       int numShards
                        )
         {
             if (LogReaderStaticPicker.curStatic == null || LogWriterStaticPicker.curStatic == null)
             {
                 OnError(UnexpectedError, "Must specify log storage type");
             }
+            _numShards = numShards;
             _runningRepro = false;
             _currentVersion = currentVersion;
             _upgradeToVersion = upgradeToVersion;
@@ -4373,7 +4401,6 @@ namespace Ambrosia
             }
             _serviceName = serviceName;
             _storageConnectionString = storageConnectionString;
-            _sharded = sharded;
             _coral = ClientLibrary;
 
             Trace.TraceInformation("Logs directory: {0}", _serviceLogPath);
@@ -4413,7 +4440,8 @@ namespace Ambrosia
             _activeActive = true;
             _serviceLogPath = serviceLogPath;
             _serviceName = serviceName;
-            _sharded = false;
+            //            _sharded = false; // BugBug - Add support for sharding to repros.
+            _numShards = -1;
             _createService = false;
             InitializeLogWriterStatics();
             RecoverOrStartAsync(checkpointToLoad, testUpgrade).Wait();
