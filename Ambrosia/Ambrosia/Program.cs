@@ -45,6 +45,50 @@ namespace Ambrosia
         private static long _logTriggerSizeMB = 1000;
         private static int _currentVersion = 0;
         private static long _upgradeVersion = -1;
+        private static CloudStorageAccount _storageAccount;
+        private static CloudTableClient _tableClient;
+        private static CloudTable _serviceInstancePublicTable;
+
+        // Util
+        // Log metadata information record in _logMetadataTable
+        private class serviceInstanceEntity : TableEntity
+        {
+            public serviceInstanceEntity()
+            {
+            }
+
+            public serviceInstanceEntity(string key, string inValue)
+            {
+                this.PartitionKey = "(Default)";
+                this.RowKey = key;
+                this.value = inValue;
+
+            }
+
+            public string value { get; set; }
+        }
+
+        static private void InsertOrReplacePublicServiceInfoRecord(string infoTitle, string info)
+        {
+            try
+            {
+                serviceInstanceEntity ServiceInfoEntity = new serviceInstanceEntity(infoTitle, info);
+                TableOperation insertOrReplaceOperation = TableOperation.InsertOrReplace(ServiceInfoEntity);
+                var myTask = _serviceInstancePublicTable.ExecuteAsync(insertOrReplaceOperation);
+                myTask.Wait();
+                var retrievedResult = myTask.Result;
+                if (retrievedResult.HttpStatusCode < 200 || retrievedResult.HttpStatusCode >= 300)
+                {
+                    Console.WriteLine("Error replacing a record in an Azure public table");
+                    Environment.Exit(1);
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Error replacing a record in an Azure public table");
+                Environment.Exit(1);
+            }
+        }
 
         static void Main(string[] args)
         {
@@ -135,6 +179,11 @@ namespace Ambrosia
                                 client.AddEndpointAsync(shardedServiceName, AmbrosiaRuntime.AmbrosiaControlOutputsName, false, true).Wait();
                             }
                         }
+                        _storageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING"));
+                        _tableClient = _storageAccount.CreateCloudTableClient();
+                        _serviceInstancePublicTable = _tableClient.GetTableReference(param.serviceName + "Public");
+                        _serviceInstancePublicTable.CreateIfNotExistsAsync().Wait();
+                        InsertOrReplacePublicServiceInfoRecord("NumShards", _initialNumShards.ToString());
                     }
                     catch (Exception e)
                     {

@@ -1207,12 +1207,13 @@ namespace Ambrosia
             return null;
         }
 
-        private string RetrievePublicServiceInfo(string key)
+        private string RetrievePublicServiceInfo(CloudTable tableToRetrieveFrom,
+                                                 string key)
         {
-            if (this._serviceInstancePublicTable != null)
+            if (tableToRetrieveFrom != null)
             {
                 TableOperation retrieveOperation = TableOperation.Retrieve<serviceInstanceEntity>("(Default)", key);
-                var myTask = this._serviceInstancePublicTable.ExecuteAsync(retrieveOperation);
+                var myTask = tableToRetrieveFrom.ExecuteAsync(retrieveOperation);
                 myTask.Wait();
                 var retrievedResult = myTask.Result;
                 if (retrievedResult.Result != null)
@@ -2508,10 +2509,28 @@ namespace Ambrosia
             }
         }
 
+        private async Task<CRAErrorCode> TryToConnectNTimesAsync(int maxIterations,
+                                                                 string sourceVertex,
+                                                                 string sourceEndpoint,
+                                                                 string destVertex,
+                                                                 string destEndpoint)
+        {
+            CRAErrorCode connectResult = CRAErrorCode.Success;
+            for (int i = 0; i < maxIterations; i++)
+            {
+                connectResult = await ConnectAsync(sourceVertex, sourceEndpoint, destVertex, destEndpoint);
+                if (connectResult == CRAErrorCode.Success)
+                {
+                    return CRAErrorCode.Success;
+                }
+            }
+            return connectResult;
+        }
+
         private async Task AttachToAsync(string toAttachTo)
         {
             var attachToTableRef = _tableClient.GetTableReference(toAttachTo + "Public");
-            int numDestShards = int.Parse(RetrievePublicServiceInfo("NumShards"));
+            int numDestShards = int.Parse(RetrievePublicServiceInfo(attachToTableRef, "NumShards"));
 
             var myShardNames = new List<string>();
             if (!Sharded)
@@ -2547,12 +2566,12 @@ namespace Ambrosia
                     var connectionResult2 = CRAErrorCode.Success;
                     var connectionResult3 = CRAErrorCode.Success;
                     var connectionResult4 = CRAErrorCode.Success;
-                    connectionResult1 = await ConnectAsync(myShard, AmbrosiaDataOutputsName, destShard, AmbrosiaDataInputsName);
-                    connectionResult2 = await ConnectAsync(myShard, AmbrosiaControlOutputsName, destShard, AmbrosiaControlInputsName);
+                    connectionResult1 = await TryToConnectNTimesAsync(10, myShard, AmbrosiaDataOutputsName, destShard, AmbrosiaDataInputsName);
+                    connectionResult2 = await TryToConnectNTimesAsync(10, myShard, AmbrosiaControlOutputsName, destShard, AmbrosiaControlInputsName);
                     if (myShard.CompareTo(destShard) != 0)
                     {
-                        connectionResult3 = await ConnectAsync(destShard, AmbrosiaDataOutputsName, myShard, AmbrosiaDataInputsName);
-                        connectionResult4 = await ConnectAsync(destShard, AmbrosiaControlOutputsName, myShard, AmbrosiaControlInputsName);
+                        connectionResult3 = await TryToConnectNTimesAsync(10, destShard, AmbrosiaDataOutputsName, myShard, AmbrosiaDataInputsName);
+                        connectionResult4 = await TryToConnectNTimesAsync(10, destShard, AmbrosiaControlOutputsName, myShard, AmbrosiaControlInputsName);
                     }
                     if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
                         (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
@@ -2573,7 +2592,6 @@ namespace Ambrosia
             _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
             _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
             _shardedOutputs = new ConcurrentDictionary<int, string>();
-            _serviceInstancePublicTable.CreateIfNotExistsAsync().Wait();
             _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
 
             _myRole = AARole.Primary;
@@ -2583,7 +2601,6 @@ namespace Ambrosia
             await AttachToAsync(_serviceName);
             await MoveServiceToNextLogFileAsync(true, true);
             InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
-            InsertOrReplacePublicServiceInfoRecord("NumShards", _numShards.ToString());
         }
 
         private void UnbufferNonreplayableCalls(ConcurrentDictionary<string, OutputConnectionRecord> outputs)
@@ -4516,7 +4533,7 @@ namespace Ambrosia
             _serviceLogPath = serviceLogPath;
             _serviceName = serviceName;
             //            _sharded = false; // BugBug - Add support for sharding to repros.
-            _numShards = -1;
+            _numShards = 0;
             _createService = false;
             InitializeLogWriterStatics();
             RecoverOrStartAsync(checkpointToLoad, testUpgrade).Wait();
