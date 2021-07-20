@@ -1159,6 +1159,26 @@ namespace Ambrosia
             }
         }
 
+        private void InsertOrReplacePublicServiceInfoRecord(string infoTitle, string info)
+        {
+            try
+            {
+                serviceInstanceEntity ServiceInfoEntity = new serviceInstanceEntity(infoTitle, info);
+                TableOperation insertOrReplaceOperation = TableOperation.InsertOrReplace(ServiceInfoEntity);
+                var myTask = this._serviceInstancePublicTable.ExecuteAsync(insertOrReplaceOperation);
+                myTask.Wait();
+                var retrievedResult = myTask.Result;
+                if (retrievedResult.HttpStatusCode < 200 || retrievedResult.HttpStatusCode >= 300)
+                {
+                    OnError(AzureOperationError, "Error replacing a record in an Azure public table");
+                }
+            }
+            catch
+            {
+                OnError(AzureOperationError, "Error replacing a record in an Azure public table");
+            }
+        }
+
         // Retrieve info for a given key
         // If no key exists or _logMetadataTable does not exist, raise an exception
         private string RetrieveServiceInfo(string key)
@@ -1182,6 +1202,32 @@ namespace Ambrosia
             else
             {
                 OnError(AzureOperationError, "Error retrieving info from Azure. The reference to the server instance table was not initialized.");
+            }
+            // Make compiler happy
+            return null;
+        }
+
+        private string RetrievePublicServiceInfo(string key)
+        {
+            if (this._serviceInstancePublicTable != null)
+            {
+                TableOperation retrieveOperation = TableOperation.Retrieve<serviceInstanceEntity>("(Default)", key);
+                var myTask = this._serviceInstancePublicTable.ExecuteAsync(retrieveOperation);
+                myTask.Wait();
+                var retrievedResult = myTask.Result;
+                if (retrievedResult.Result != null)
+                {
+                    return ((serviceInstanceEntity)retrievedResult.Result).value;
+                }
+                else
+                {
+                    string taskExceptionString = myTask.Exception == null ? "" : " Task exception: " + myTask.Exception;
+                    OnError(AzureOperationError, "Error retrieving info from Azure public table." + taskExceptionString);
+                }
+            }
+            else
+            {
+                OnError(AzureOperationError, "Error retrieving info from Azure public table. The reference to the server instance table was not initialized.");
             }
             // Make compiler happy
             return null;
@@ -2137,6 +2183,7 @@ namespace Ambrosia
 
         // Azure table for service instance metadata information
         CloudTable _serviceInstanceTable;
+        CloudTable _serviceInstancePublicTable;
         long _lastCommittedCheckpoint;
 
         // Azure blob for writing commit log and checkpoint
@@ -2273,6 +2320,7 @@ namespace Ambrosia
             {
                 _storageAccount = CloudStorageAccount.Parse(_storageConnectionString);
                 _tableClient = _storageAccount.CreateCloudTableClient();
+                _serviceInstancePublicTable = _tableClient.GetTableReference(_serviceName + "Public");
                 if (!Sharded)
                 {
                     _serviceInstanceTable = _tableClient.GetTableReference(_serviceName);
@@ -2281,7 +2329,7 @@ namespace Ambrosia
                 {
                     _serviceInstanceTable = _tableClient.GetTableReference(_serviceName+"S"+$"{_shardID}");
                 }
-                if ((_storageAccount == null) || (_tableClient == null) || (_serviceInstanceTable == null))
+                if ((_storageAccount == null) || (_tableClient == null) || (_serviceInstanceTable == null) || (_serviceInstancePublicTable == null))
                 {
                     OnError(AzureOperationError, "Error setting up initial connection to Azure");
                 }
@@ -2460,26 +2508,61 @@ namespace Ambrosia
             }
         }
 
-        private async Task CreateSelfConnectionsAsync()
+        private async Task AttachToAsync(string toAttachTo)
         {
+            var attachToTableRef = _tableClient.GetTableReference(toAttachTo + "Public");
+            int numDestShards = int.Parse(RetrievePublicServiceInfo("NumShards"));
+
+            var myShardNames = new List<string>();
             if (!Sharded)
             {
-                await ConnectAsync(_serviceName, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName);
-                await ConnectAsync(_serviceName, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName);
+                myShardNames.Add(_serviceName);
             }
             else
             {
-                for (int sourceIterations = 0; sourceIterations < _numShards; sourceIterations++)
+                for (int shardNum = 0; shardNum < _numShards; shardNum++)
                 {
-                    for (int destIterations = 0; destIterations < _numShards; destIterations++)
+                    myShardNames.Add(_serviceName + "_S" + $"{shardNum}");
+                }
+            }
+
+            var destShardNames = new List<string>();
+            if (numDestShards <= 0)
+            {
+                destShardNames.Add(toAttachTo);
+            }
+            else
+            {
+                for (int shardNum = 0; shardNum < numDestShards; shardNum++)
+                {
+                    destShardNames.Add(toAttachTo + "_S" + $"{shardNum}");
+                }
+            }
+
+            foreach (string myShard in myShardNames)
+            {
+                foreach (string destShard in destShardNames)
+                {
+                    var connectionResult1 = CRAErrorCode.Success;
+                    var connectionResult2 = CRAErrorCode.Success;
+                    var connectionResult3 = CRAErrorCode.Success;
+                    var connectionResult4 = CRAErrorCode.Success;
+                    connectionResult1 = await ConnectAsync(myShard, AmbrosiaDataOutputsName, destShard, AmbrosiaDataInputsName);
+                    connectionResult2 = await ConnectAsync(myShard, AmbrosiaControlOutputsName, destShard, AmbrosiaControlInputsName);
+                    if (myShard.CompareTo(destShard) != 0)
                     {
-                        await ConnectAsync(_serviceName + "_S" + $"{sourceIterations}", AmbrosiaDataOutputsName, _serviceName + "_S" + $"{destIterations}", AmbrosiaDataInputsName);
-                        await ConnectAsync(_serviceName + "_S" + $"{sourceIterations}", AmbrosiaControlOutputsName, _serviceName + "_S" + $"{destIterations}", AmbrosiaControlInputsName);
+                        connectionResult3 = await ConnectAsync(destShard, AmbrosiaDataOutputsName, myShard, AmbrosiaDataInputsName);
+                        connectionResult4 = await ConnectAsync(destShard, AmbrosiaControlOutputsName, myShard, AmbrosiaControlInputsName);
+                    }
+                    if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
+                        (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
+                    {
+                        OnError(0, "Error attaching " + myShard + " to " + destShard);
                     }
                 }
-
             }
         }
+
 
         private async Task StartAsync()
         {
@@ -2490,15 +2573,17 @@ namespace Ambrosia
             _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
             _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
             _shardedOutputs = new ConcurrentDictionary<int, string>();
+            _serviceInstancePublicTable.CreateIfNotExistsAsync().Wait();
             _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
 
             _myRole = AARole.Primary;
 
             _checkpointWriter = null;
             _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
-            await CreateSelfConnectionsAsync();
+            await AttachToAsync(_serviceName);
             await MoveServiceToNextLogFileAsync(true, true);
             InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
+            InsertOrReplacePublicServiceInfoRecord("NumShards", _numShards.ToString());
         }
 
         private void UnbufferNonreplayableCalls(ConcurrentDictionary<string, OutputConnectionRecord> outputs)
@@ -3391,7 +3476,7 @@ namespace Ambrosia
 
         void AttachTo(string destination)
         {
-            // Bug bug add pairwise connections for sharded scenariod
+            // Bug bug add pairwise connections for sharded scenarios
             while (true)
             {
                 Trace.TraceInformation("Attempting to attach to {0}", destination);
@@ -3448,18 +3533,8 @@ namespace Ambrosia
                         }
                         else
                         {
-                            // Bugbug fix to handle sharded case
                             Trace.TraceInformation("Attaching to {0}", destination);
-                            var connectionResult1 = ConnectAsync(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
-                            var connectionResult2 = ConnectAsync(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
-                            var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName).GetAwaiter().GetResult();
-                            var connectionResult4 = ConnectAsync(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName).GetAwaiter().GetResult();
-                            if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
-                                (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
-                            {
-                                Trace.TraceError("Error attaching " + _serviceName + " to " + destination);
-                                // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
-                            }
+                            var connectionResult = AttachToAsync(destination).GetAwaiter();
                         }
                     }
                     break;
