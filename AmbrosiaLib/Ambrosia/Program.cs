@@ -4499,7 +4499,7 @@ namespace Ambrosia
 
             if (createService == null)
             {
-                if (_logWriterStatics.DirectoryExists(RootDirectory()))
+                if (_logWriterStatics.DirectoryExists(LogDirectory()))
                 {
                     createService = false;
                 }
