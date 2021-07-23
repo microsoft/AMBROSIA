@@ -2024,6 +2024,7 @@ namespace Ambrosia
             public ConcurrentDictionary<string, OutputConnectionRecord> Outputs { get; set; }
             public long ShardID { get; set; }
             public int NumShards { get; set; }
+            public int NumDestShards { get; set; }
             public ConcurrentDictionary<int, string> ShardedOutputs { get; set; }
         }
 
@@ -2038,6 +2039,7 @@ namespace Ambrosia
             state.Outputs = _outputs;
             // BugBug Do we want this in here?
             state.NumShards = _numShards;
+            state.NumDestShards = _numDestShards;
             state.ShardedOutputs = _shardedOutputs;
         }
 
@@ -2050,7 +2052,9 @@ namespace Ambrosia
             _lastLogFile = state.LastLogFile;
             _myRole = state.MyRole;
             _outputs = state.Outputs;
+            // BugBug Do we want this in here?
             _numShards = state.NumShards;
+            _numDestShards = state.NumDestShards;
             _shardedOutputs = state.ShardedOutputs;
         }
 
@@ -2127,6 +2131,7 @@ namespace Ambrosia
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
         ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
         ConcurrentDictionary<int, string> _shardedOutputs;
+        //ConcurrentDictionary<string, OutputConnectionRecord []> _shardedOutputs;
         internal int _localServiceReceiveFromPort;           // specifiable on the command line
         internal int _localServiceSendToPort;                // specifiable on the command line 
         internal string _serviceName;  // specifiable on the command line
@@ -2138,6 +2143,7 @@ namespace Ambrosia
         public const string AmbrosiaControlOutputsName = "Ambrosiacontrolout";
         bool _persistLogs;
         int _numShards;
+        int _numDestShards;
         bool Sharded { get { return _numShards > 0; } }
 
         internal bool _createService;
@@ -2455,8 +2461,10 @@ namespace Ambrosia
                 // Recover output connections
                 state.Outputs = state.Outputs.AmbrosiaDeserialize(checkpointStream, this);
                 UnbufferNonreplayableCalls(state.Outputs);
-                // Recover number of shards
+                // Recover number of local shards
                 state.NumShards = checkpointStream.ReadInt();
+                // Recover number of dest shards
+                state.NumDestShards = checkpointStream.ReadInt();
                 // Recover shard mapping table
                 state.ShardedOutputs = state.ShardedOutputs.AmbrosiaDeserialize(checkpointStream, this);
                 // Restore new service from checkpoint
@@ -2530,7 +2538,7 @@ namespace Ambrosia
         private async Task AttachToAsync(string toAttachTo)
         {
             var attachToTableRef = _tableClient.GetTableReference(toAttachTo + "Public");
-            int numDestShards = int.Parse(RetrievePublicServiceInfo(attachToTableRef, "NumShards"));
+            _numDestShards = int.Parse(RetrievePublicServiceInfo(attachToTableRef, "NumShards"));
 
             var myShardNames = new List<string>();
             if (!Sharded)
@@ -2546,15 +2554,16 @@ namespace Ambrosia
             }
 
             var destShardNames = new List<string>();
-            if (numDestShards <= 0)
+            if (_numDestShards <= 0)
             {
                 destShardNames.Add(toAttachTo);
             }
             else
             {
-                for (int shardNum = 0; shardNum < numDestShards; shardNum++)
+                for (int shardNum = 0; shardNum < _numDestShards; shardNum++)
                 {
                     destShardNames.Add(toAttachTo + "_S" + $"{shardNum}");
+                    _shardedOutputs.TryAdd(shardNum, toAttachTo + "_S" + $"{shardNum}");
                 }
             }
 
@@ -2592,6 +2601,7 @@ namespace Ambrosia
             _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
             _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
             _shardedOutputs = new ConcurrentDictionary<int, string>();
+            //_shardedOutputs = new ConcurrentDictionary<string, OutputConnectionRecord []> () ;
             _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
 
             _myRole = AARole.Primary;
@@ -3193,13 +3203,6 @@ namespace Ambrosia
                         {
                             outputConnectionRecord = new OutputConnectionRecord(this);
                             state.Outputs[kv.Key] = outputConnectionRecord;
-                            if (kv.Key.Length != 0)
-                            {
-                                for (int i = 0; i < state.NumShards; i++)
-                                {
-                                    state.ShardedOutputs[i] = kv.Key;
-                                }
-                            }
                         }
                     }
                     // this lock prevents conflict with output arriving from the local service during replay and ensures maximal cleaning
@@ -3376,13 +3379,6 @@ namespace Ambrosia
                         {
                             outputConnectionRecord = new OutputConnectionRecord(this);
                             state.Outputs[kv.Key] = outputConnectionRecord;
-                            if (kv.Key.Length != 0)
-                            {
-                                for (int i = 0; i < state.NumShards; i++)
-                                {
-                                    state.ShardedOutputs[i] = kv.Key;
-                                }
-                            }
                         }
                     }
                     // this lock prevents conflict with output arriving from the local service during replay and ensures maximal cleaning
@@ -3655,54 +3651,61 @@ namespace Ambrosia
             var sizeBytes = RpcBuffer.LengthLength;
             int destBytesSize = RpcBuffer.Buffer.ReadBufferedInt(sizeBytes + 1);
             var destOffset = sizeBytes + 1 + StreamCommunicator.IntSize(destBytesSize);
-            // Check to see if the _lastShuffleDest is the same as the one to process. Caching here avoids significant overhead.
-            if (_lastShuffleDest == null || (_lastShuffleDestSize != destBytesSize) || !EqualBytes(RpcBuffer.Buffer, destOffset, _lastShuffleDest, destBytesSize))
-            {
-                // Find the appropriate connection record
-                string destination;
-                if (_lastShuffleDest.Length < destBytesSize)
-                {
-                    _lastShuffleDest = new byte[destBytesSize];
-                }
-                Buffer.BlockCopy(RpcBuffer.Buffer, destOffset, _lastShuffleDest, 0, destBytesSize);
-                _lastShuffleDestSize = destBytesSize;
-                destination = Encoding.UTF8.GetString(RpcBuffer.Buffer, destOffset, destBytesSize);
-                // locking to avoid conflict with stream reconnection immediately after replay and trim during replay
-                lock (_outputs)
-                {
-                    // During replay, the output connection won't exist if this is the first message ever and no trim record has been processed yet.
-                    if (!_outputs.TryGetValue(destination, out _shuffleOutputRecord))
-                    {
-                        _shuffleOutputRecord = new OutputConnectionRecord(this);
-                        _outputs[destination] = _shuffleOutputRecord;
-                        if (destBytesSize != 0)
-                        {
-                            // BugBug fix
-                            Console.WriteLine("Destination = {0}", destination);
-                            for (int i = 0; i < _numShards; i++)
-                            {
-                                if (!_shardedOutputs.ContainsKey(i))
-                                    _shardedOutputs[i] = destination;
-                            }
-                        }
-                    }
-                }
-            }
 
             int restOfRPCOffset = destOffset + destBytesSize;
             int restOfRPCMessageSize = RpcBuffer.Length - restOfRPCOffset;
             var totalSize = StreamCommunicator.IntSize(1 + restOfRPCMessageSize) +
                             1 + restOfRPCMessageSize;
+            int grainId = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1)) + 1);
 
-            if (destBytesSize != 0)
+            // Check if destination is sharded or it is self-call
+            if (_numDestShards <= 0 || destBytesSize == 0)
             {
-                int grainId = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1)) + 1);
-                // BugBug fix
-                if (!_outputs.TryGetValue(_shardedOutputs[grainId % _numShards], out _shuffleOutputRecord))
+                // Check to see if the _lastShuffleDest is the same as the one to process. Caching here avoids significant overhead.
+                if (_lastShuffleDest == null || (_lastShuffleDestSize != destBytesSize) || !EqualBytes(RpcBuffer.Buffer, destOffset, _lastShuffleDest, destBytesSize))
                 {
-                    // BugBug fix
-                    _shuffleOutputRecord = new OutputConnectionRecord(this);
-                    _outputs[_shardedOutputs[grainId % _numShards]] = _shuffleOutputRecord;
+                    // Find the appropriate connection record
+                    string destination;
+                    if (_lastShuffleDest.Length < destBytesSize)
+                    {
+                        _lastShuffleDest = new byte[destBytesSize];
+                    }
+                    Buffer.BlockCopy(RpcBuffer.Buffer, destOffset, _lastShuffleDest, 0, destBytesSize);
+                    _lastShuffleDestSize = destBytesSize;
+                    destination = Encoding.UTF8.GetString(RpcBuffer.Buffer, destOffset, destBytesSize);
+                    // locking to avoid conflict with stream reconnection immediately after replay and trim during replay
+                    lock (_outputs)
+                    {
+                        // During replay, the output connection won't exist if this is the first message ever and no trim record has been processed yet.
+                        if (!_outputs.TryGetValue(destination, out _shuffleOutputRecord))
+                        {
+                            _shuffleOutputRecord = new OutputConnectionRecord(this);
+                            _outputs[destination] = _shuffleOutputRecord;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                string destination = _shardedOutputs[grainId % _numDestShards];
+                destBytesSize = destination.Length;
+                if (_lastShuffleDest == null || (_lastShuffleDestSize != destBytesSize) || !EqualBytes(Encoding.UTF8.GetBytes(destination), 0, _lastShuffleDest, destBytesSize))
+                {
+                    if (_lastShuffleDest.Length < destBytesSize)
+                    {
+                        _lastShuffleDest = new byte[destBytesSize];
+                    }
+                    Buffer.BlockCopy(Encoding.UTF8.GetBytes(destination), 0, _lastShuffleDest, 0, destBytesSize);
+                    _lastShuffleDestSize = destBytesSize;
+                    lock (_outputs)
+                    {
+                        // During replay, the output connection won't exist if this is the first message ever and no trim record has been processed yet.
+                        if (!_outputs.TryGetValue(destination, out _shuffleOutputRecord))
+                        {
+                            _shuffleOutputRecord = new OutputConnectionRecord(this);
+                            _outputs[destination] = _shuffleOutputRecord;
+                        }
+                    }
                 }
             }
 
@@ -3769,15 +3772,6 @@ namespace Ambrosia
                     outputConnectionRecord = new OutputConnectionRecord(this);
                     _outputs[destString] = outputConnectionRecord;
                     Trace.TraceInformation("Adding output:{0}", destString);
-                    if (destString.Length != 0)
-                    {
-                        // BugBug fix
-                        for (int i = 0; i < _numShards; i++)
-                        {
-                            if (!_shardedOutputs.ContainsKey(i))
-                                _shardedOutputs[i] = destString;
-                        }
-                    }
                 }
                 else
                 {
@@ -3902,15 +3896,6 @@ namespace Ambrosia
                     outputConnectionRecord = new OutputConnectionRecord(this);
                     _outputs[destString] = outputConnectionRecord;
                     Trace.TraceInformation("Adding output:{0}", destString);
-                    if (destString.Length != 0)
-                    {
-                        // BugBug fix
-                        for (int i = 0; i < _numShards; i++)
-                        {
-                            if (!_shardedOutputs.ContainsKey(i))
-                                _shardedOutputs[i] = destString;
-                        }
-                    }
                 }
                 else
                 {
@@ -4293,8 +4278,10 @@ namespace Ambrosia
             _inputs.AmbrosiaSerialize(_checkpointWriter);
             // Serialize output connections
             _outputs.AmbrosiaSerialize(_checkpointWriter);
-            // Serialize number of shards (Presume fixed shards)
+            // Serialize number of local shards (Presume fixed shards)
             _checkpointWriter.WriteInt(_numShards);
+            // Serialize number of dest shards (Presume fixed shards)
+            _checkpointWriter.WriteInt(_numDestShards);
             // Serialize mapping table of shards
             _shardedOutputs.AmbrosiaSerialize(_checkpointWriter);
             foreach (var outputRecord in _outputs)

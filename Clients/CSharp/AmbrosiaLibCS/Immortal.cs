@@ -42,6 +42,8 @@ namespace Ambrosia
         private static FlexReadBuffer _inputFlexBuffer;
         private static int _cursor;
 
+        private static int _grainIdGenerator = 0;
+
         public bool IsPrimary = false;
 
         [DataMember]
@@ -991,7 +993,7 @@ namespace Ambrosia
             int optionalPartSize = 0;
 
             // Grain ID (Sekwon)
-            int grainID = 133;
+            int grainID = _grainIdGenerator++;
 
             if (!rpcType.IsFireAndForget())
             {
