@@ -33,7 +33,7 @@ async function main()
         //Meta.emitTypeScriptFileFromSource(sourceFile, { fileKind: Meta.GeneratedFileKind.Publisher, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFileName: generatedFileName+"_Publisher" });
 
         // Use this for single call to generate both consumer and publisher
-        Meta.emitTypeScriptFileFromSource(sourceFile, { apiName: apiName, fileKind: Meta.GeneratedFileKind.All, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFilePrefix: generatedFileName,strictCompilerChecks: false });
+        Meta.emitTypeScriptFileFromSource(sourceFile, { apiName: apiName, fileKind: Meta.GeneratedFileKind.All, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFilePrefix: generatedFileName,strictCompilerChecks: true });
 
 
         // Something like this instead of just running them both

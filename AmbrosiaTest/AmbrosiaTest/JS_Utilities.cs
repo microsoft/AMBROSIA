@@ -126,7 +126,7 @@ namespace AmbrosiaTest
             }
             catch (Exception e)
             {
-                Assert.Fail("<BuildTSApp> Failure! Exception:" + e.Message);
+                Assert.Fail("<Test_CodeGen_TSFile> Failure! Exception:" + e.Message);
             }
         }
 

@@ -39,6 +39,7 @@ export namespace Test
         if (  mediaName === 'Forbes' || mediaName === 'Outlook') {
             return PrintMedia.Magazine;
         }
+        return PrintMedia.Magazine;
      }
 
     /**********  Enum type (Reverse Mapped enum - can access the value of a member and also a member name from its value) *************
@@ -118,8 +119,8 @@ export namespace Test
      */
     export function makeName(firstName: string = "John", lastName: string /** Foo */ = "Doe"): Names
     {
-        let names: Names;
         let name: Name = { first: firstName, last: lastName };
+        let names: Names = [];
         names.push(name);
         return (names);
     }
@@ -134,6 +135,8 @@ export namespace Test
         {
             return 99;
         }
+
+        return 0;
     }  
 
     /********* Function returning string ****
@@ -145,20 +148,22 @@ export namespace Test
        {
            return '99';
        }
+
+       return '0';
    }  
 
-    /********* Function with missing types  ****
+    /********* Function with missing types -- FAILS compiler check when strict compiler check is on so comment out but do not delete so know it was considered as a test  ****
      * Function with missing type information
      * @ambrosia publish=true 
      */
-    export function fnWithMissingType(p1, p2: number): void {
-    }
+    //export function fnWithMissingType(p1, p2: number): void {
+    //}
 
     /** 
      * Type with missing type information
      * @ambrosia publish=true 
      */
-    export type typeWithMissingType = { p1, p2: number };
+    //export type typeWithMissingType = { p1, p2: number };
 
 
 }

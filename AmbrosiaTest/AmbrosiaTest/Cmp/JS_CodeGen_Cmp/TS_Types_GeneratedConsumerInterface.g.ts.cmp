@@ -102,21 +102,6 @@ export namespace Test
     }
 
     /**
-     * Type with missing type information
-     */
-    export class typeWithMissingType
-    {
-        p1: any;
-        p2: number;
-
-        constructor(p1: any, p2: number)
-        {
-            this.p1 = p1;
-            this.p2 = p2;
-        }
-    }
-
-    /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
      * 
      * *********** Primitives - bool, string, number, array
@@ -269,35 +254,6 @@ export namespace Test
         checkDestinationSet();
         IC.postByImpulse(_destinationInstanceName, "returnstring", 1, _postTimeoutInMs, callContextData, IC.arg("numvalue", numvalue));
     }
-
-    /**
-     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
-     * 
-     * ******* Function with missing types ****
-     * Function with missing type information
-     */
-    export function fnWithMissingType_Post(callContextData: any, p1: any, p2: number): number
-    {
-        checkDestinationSet();
-        const callID = IC.postFork(_destinationInstanceName, "fnWithMissingType", 1, _postTimeoutInMs, callContextData, 
-            IC.arg("p1", p1), 
-            IC.arg("p2", p2));
-        return (callID);
-    }
-
-    /**
-     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
-     * 
-     * ******* Function with missing types ****
-     * Function with missing type information
-     */
-    export function fnWithMissingType_PostByImpulse(callContextData: any, p1: any, p2: number): void
-    {
-        checkDestinationSet();
-        IC.postByImpulse(_destinationInstanceName, "fnWithMissingType", 1, _postTimeoutInMs, callContextData, 
-            IC.arg("p1", p1), 
-            IC.arg("p2", p2));
-    }
 }
 
 /**
@@ -324,7 +280,6 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
             case "makeName":
             case "return_number":
             case "returnstring":
-            case "fnWithMissingType":
                 Utils.log(`Error: ${errorMsg}`);
                 break;
             default:
@@ -362,10 +317,6 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
             case "returnstring":
                 const returnstring_Result: string = result;
                 // TODO: Handle the result, optionally using the callContextData passed in the call
-                Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
-                break;
-            case "fnWithMissingType":
-                // TODO: Handle the method completion (it returns void), optionally using the callContextData passed in the call
                 Utils.log(`Post method '${methodName}' from ${sender} IC succeeded`);
                 break;
             default:
