@@ -40,7 +40,7 @@ export namespace State
      * Only assign this using the return value of IC.start(), the return value of the upgrade() method of your AmbrosiaAppState
      * instance, and [if not using the generated checkpointConsumer()] in the 'onFinished' callback of an IncomingCheckpoint object.
      */
-    export let _appState: AppState = null;
+    export let _appState: AppState;
 }
 
 /** Returns an OutgoingCheckpoint object used to serialize app state to a checkpoint. */
@@ -56,10 +56,14 @@ export function checkpointProducer(): Streams.OutgoingCheckpoint
 /** Returns an IncomingCheckpoint object used to receive a checkpoint of app state. */
 export function checkpointConsumer(): Streams.IncomingCheckpoint
 {
-    function onCheckpointReceived(appState: Ambrosia.AmbrosiaAppState, error?: Error): void
+    function onCheckpointReceived(appState?: Ambrosia.AmbrosiaAppState, error?: Error): void
     {
         if (!error)
         {
+            if (!appState) // Should never happen
+            {
+                throw new Error(`An appState object was expected, not ${appState}`);
+            }
             State._appState = appState as State.AppState;
         }
         Utils.log(`checkpointConsumer: ${error ? `Failed (reason: ${error.message})` : "Checkpoint loaded"}`);
@@ -139,10 +143,11 @@ function dispatcher(message: Messages.DispatchedMessage): void
                                     break;
                             }
                         }
-                        catch (error)
+                        catch (error: unknown)
                         {
-                            Utils.log(error);
-                            IC.postError(rpc, error);
+                            const err: Error = Utils.makeError(error);
+                            Utils.log(err);
+                            IC.postError(rpc, err);
                         }
                         break;
 
@@ -222,10 +227,10 @@ function dispatcher(message: Messages.DispatchedMessage): void
                 break;
         }
     }
-    catch (error)
+    catch (error: unknown)
     {
-        let messageName: string = (message.type === Messages.DispatchedMessageType.AppEvent) ? `AppEvent:${Messages.AppEventType[(message as Messages.AppEvent).eventType]}` : Messages.DispatchedMessage[message.type];
+        let messageName: string = (message.type === Messages.DispatchedMessageType.AppEvent) ? `AppEvent:${Messages.AppEventType[(message as Messages.AppEvent).eventType]}` : Messages.DispatchedMessageType[message.type];
         Utils.log(`Error: Failed to process ${messageName} message`);
-        Utils.log(error);
+        Utils.log(Utils.makeError(error));
     }
 }

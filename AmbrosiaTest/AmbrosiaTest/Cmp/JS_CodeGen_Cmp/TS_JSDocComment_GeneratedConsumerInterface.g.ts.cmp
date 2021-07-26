@@ -1,23 +1,26 @@
 // Generated consumer-side API for the 'TS_JSDocComment_Generated' Ambrosia Node app/service.
-// Publisher: Darren Gehring [darrenge@microsoft.com].
+// Publisher: (Not specified).
 // Note: This file was generated
 // Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
 import Ambrosia = require("ambrosia-node");
 import IC = Ambrosia.IC;
 import Utils = Ambrosia.Utils;
 
-let _destinationInstanceName: string = null;
+const _knownDestinations: string[] = []; // All previously used destination instances (the 'TS_JSDocComment_Generated' Ambrosia app/service can be running on multiple instances, potentially simultaneously)
+let _destinationInstanceName: string = ""; // The current destination instance
 let _postTimeoutInMs: number = 8000; // -1 = Infinite
 
 /** 
  * Sets the destination instance name that the API targets.\
  * Must be called at least once (with the name of a registered Ambrosia instance that implements the 'TS_JSDocComment_Generated' API) before any other method in the API is used.
- *
- * **Warning:** When using post methods, it is strongly recommended to not change the initially set destination instance because it can cause postResultDispatcher() to not process the result.
  */
 export function setDestinationInstance(instanceName: string): void
 {
     _destinationInstanceName = instanceName.trim();
+    if (_destinationInstanceName && (_knownDestinations.indexOf(_destinationInstanceName) === -1))
+    {
+        _knownDestinations.push(_destinationInstanceName);
+    }
 }
 
 /** Returns the destination instance name that the API currently targets. */
@@ -31,19 +34,21 @@ function checkDestinationSet(): void
 {
     if (!_destinationInstanceName)
     {
-        throw new Error("setDestinationInstance() must be called to define the target destination before the 'TS_JSDocComment_Generated' API can be used.");
+        throw new Error("setDestinationInstance() must be called to specify the target destination before the 'TS_JSDocComment_Generated' API can be used.");
     }
 }
+
 /**
- * Sets the post method timeout interval (in milliseconds), which is how long to wait for a result from the destination instance before raising an error.\
+ * Sets the post method timeout interval (in milliseconds), which is how long to wait for a post result from the destination instance before raising an error.\
  * All post methods will use this timeout value. Specify -1 for no timeout. 
  */
 export function setPostTimeoutInMs(timeoutInMs: number): void
 {
     _postTimeoutInMs = Math.max(-1, timeoutInMs);
 }
+
 /**
- * Returns the post method timeout interval (in milliseconds), which is how long to wait for a result from the destination instance before raising an error.\
+ * Returns the post method timeout interval (in milliseconds), which is how long to wait for a post result from the destination instance before raising an error.\
  * A value of -1 means there is no timeout.
  */
 export function getPostTimeoutInMs(): number
@@ -79,9 +84,9 @@ export function postResultDispatcher(senderInstanceName: string, methodName: str
     const sender: string = IC.isSelf(senderInstanceName) ? "local" : `'${senderInstanceName}'`;
     let handled: boolean = true;
 
-    if (senderInstanceName !== _destinationInstanceName)
+    if (_knownDestinations.indexOf(senderInstanceName) === -1)
     {
-        return (false); // Not handled (this post result is from a different instance than the destination instance currently being targeted)
+        return (false); // Not handled: this post result is from a different instance than the destination instance currently (or previously) targeted by the 'TS_JSDocComment_Generated' API
     }
 
     if (errorMsg)

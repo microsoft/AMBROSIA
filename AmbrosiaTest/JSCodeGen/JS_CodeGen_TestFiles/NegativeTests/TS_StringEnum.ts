@@ -10,8 +10,7 @@ export module Test
         BookStringEnum = "BOOK"
    }
 
-   PrintMediaString.NewspaperStringEnum; //returns NEWSPAPER
-   PrintMediaString['Magazine'];//returns MAGAZINE
+    let enumValue1: PrintMediaString = PrintMediaString.NewspaperStringEnum; // returns NEWSPAPER
+    let enumValue2: PrintMediaString = PrintMediaString["MagazineStringEnum"]; // returns MAGAZINE
 
 }
-
