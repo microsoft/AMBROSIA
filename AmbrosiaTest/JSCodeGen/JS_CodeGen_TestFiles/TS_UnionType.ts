@@ -1,9 +1,7 @@
 export module Test
 {
-    /**********  Negative Test *************
-
     /** 
-     * Union types are not supported
+     * Union type
      * @ambrosia publish=true
      */
     export type MyUnionType = string | number;

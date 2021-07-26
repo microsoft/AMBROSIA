@@ -62,6 +62,8 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName);
         }
 
+
+
         [TestMethod]
         public void JS_CG_AmbrosiaTag_Test()
         {
@@ -183,6 +185,17 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             string testfileName = "TS_StaticMethod.ts";
+
+            // Generate the consumer and publisher files and verify output and the generated files to cmp files
+            JSUtils.Test_CodeGen_TSFile(testfileName);
+        }
+
+        [TestMethod]
+        public void JS_CG_UnionType_Test()
+        {
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testfileName = "TS_UnionType.ts";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName);
