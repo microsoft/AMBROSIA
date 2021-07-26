@@ -20,10 +20,11 @@ export namespace Test {
         */
         string
     }
+
     {
-        return (null);
+
+        return ({ r1: " ", r2: " " });
     }
 
-
-
 }
+
