@@ -142,7 +142,7 @@ namespace Job
             var curCallNum = StreamCommunicator.ReadBufferedLong(arg, 0);
             if (_lastCallNum + 1 != curCallNum)
             {
-//                Console.WriteLine("*X* Out of order message. Expected {0}, got {1}", _lastCallNum + 1, curCallNum);
+                //Console.WriteLine("*X* Out of order message. Expected {0}, got {1}", _lastCallNum + 1, curCallNum);
             }
             _lastCallNum = curCallNum;
         }
