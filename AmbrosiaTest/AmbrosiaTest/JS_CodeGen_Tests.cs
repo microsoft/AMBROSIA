@@ -18,7 +18,7 @@ namespace AmbrosiaTest
         {
             // Build the JS app first from a JS file
             JS_Utilities JSUtils = new JS_Utilities();
-//*#*#*# COMMENT OUT FOR NOW - EASIER WITH TEST WRITING ETC .. JSUtils.BuildJSTestApp();
+            JSUtils.BuildJSTestApp();
         }
 
         // NOTE: Make sure all names be "Azure Safe". No capital letters and no underscore.

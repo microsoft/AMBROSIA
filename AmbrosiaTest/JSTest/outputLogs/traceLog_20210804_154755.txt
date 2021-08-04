@@ -1,0 +1,24 @@
+2021/08/04 15:47:55.120: Logging output to D:\Ambrosia\AmbrosiaTest\JSTest\outputLogs\traceLog_20210804_154755.txt
+2021/08/04 15:47:55.124: Ambrosia configuration loaded from 'ambrosiaConfig.json'
+2021/08/04 15:47:55.127: Generating TypeScript files for Consumer and Publisher...
+2021/08/04 15:47:55.127: Publishing types and methods from D:\Ambrosia\AmbrosiaTest\JSTest\JS_CodeGen_TestFiles\TS_Types.ts...
+2021/08/04 15:48:02.107: Warning: The parameter 'notSure?' of method 'BasicTypes' uses type 'any' which is too general to determine if it can be safely serialized; it is strongly recommended to use a more specific type
+2021/08/04 15:48:02.107: Successfully published function 'BasicTypes' as a post method
+2021/08/04 15:48:02.113: Successfully published enum 'PrintMedia' as a type
+2021/08/04 15:48:02.115: Successfully published function 'getMedia' as a post method
+2021/08/04 15:48:02.117: Successfully published enum 'PrintMediaReverse' as a type
+2021/08/04 15:48:02.118: Successfully published enum 'MyEnumAA' as a type
+2021/08/04 15:48:02.119: Successfully published enum 'MyEnumBBB' as a type
+2021/08/04 15:48:02.120: Successfully published function 'warnUser' as a post method
+2021/08/04 15:48:02.124: Successfully published type alias 'Name' as a type
+2021/08/04 15:48:02.125: Successfully published type alias 'Names' as a type
+2021/08/04 15:48:02.128: Successfully published type alias 'Nested' as a type
+2021/08/04 15:48:02.129: Successfully published function 'makeName' as a post method
+2021/08/04 15:48:02.133: Successfully published function 'return_number' as a post method
+2021/08/04 15:48:02.134: Successfully published function 'returnstring' as a post method
+2021/08/04 15:48:02.135: Publishing finished: 13 entities published
+2021/08/04 15:48:02.141: Code file generated: D:\Ambrosia\AmbrosiaTest\JSTest\TS_Types_GeneratedConsumerInterface.g.ts
+2021/08/04 15:48:06.471: Success: No TypeScript errors found in generated file TS_Types_GeneratedConsumerInterface.g.ts
+2021/08/04 15:48:06.478: Code file generated: D:\Ambrosia\AmbrosiaTest\JSTest\TS_Types_GeneratedPublisherFramework.g.ts
+2021/08/04 15:48:10.597: Success: No TypeScript errors found in generated file TS_Types_GeneratedPublisherFramework.g.ts
+2021/08/04 15:48:10.597: Code file generation SUCCEEDED: 2 of 2 files generated; 0 TypeScript errors, 0 merge conflicts

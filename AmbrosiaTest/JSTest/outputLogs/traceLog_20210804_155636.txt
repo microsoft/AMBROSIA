@@ -1,0 +1,11 @@
+2021/08/04 15:56:36.252: Logging output to D:\Ambrosia\AmbrosiaTest\JSTest\outputLogs\traceLog_20210804_155636.txt
+2021/08/04 15:56:36.256: Ambrosia configuration loaded from 'ambrosiaConfig.json'
+2021/08/04 15:56:36.259: Generating TypeScript files for Consumer and Publisher...
+2021/08/04 15:56:36.259: Publishing types and methods from D:\Ambrosia\AmbrosiaTest\JSTest\JS_CodeGen_TestFiles\TS_CustomSerialParamNoRawParam.ts...
+2021/08/04 15:56:43.100: Successfully published function 'takesCustomSerializedParams' as a non-post method
+2021/08/04 15:56:43.101: Publishing finished: 1 entities published
+2021/08/04 15:56:43.106: Code file generated: D:\Ambrosia\AmbrosiaTest\JSTest\TS_CustomSerialParamNoRawParam_GeneratedConsumerInterface.g.ts
+2021/08/04 15:56:47.243: Success: No TypeScript errors found in generated file TS_CustomSerialParamNoRawParam_GeneratedConsumerInterface.g.ts
+2021/08/04 15:56:47.249: Code file generated: D:\Ambrosia\AmbrosiaTest\JSTest\TS_CustomSerialParamNoRawParam_GeneratedPublisherFramework.g.ts
+2021/08/04 15:56:51.237: Success: No TypeScript errors found in generated file TS_CustomSerialParamNoRawParam_GeneratedPublisherFramework.g.ts
+2021/08/04 15:56:51.238: Code file generation SUCCEEDED: 2 of 2 files generated; 0 TypeScript errors, 0 merge conflicts
