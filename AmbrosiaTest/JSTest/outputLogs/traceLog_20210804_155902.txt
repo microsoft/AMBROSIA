@@ -1,0 +1,11 @@
+2021/08/04 15:59:02.412: Logging output to D:\Ambrosia\AmbrosiaTest\JSTest\outputLogs\traceLog_20210804_155902.txt
+2021/08/04 15:59:02.417: Ambrosia configuration loaded from 'ambrosiaConfig.json'
+2021/08/04 15:59:02.420: Generating TypeScript files for Consumer and Publisher...
+2021/08/04 15:59:02.421: Publishing types and methods from D:\Ambrosia\AmbrosiaTest\JSTest\JS_CodeGen_TestFiles\TS_GenType1.ts...
+2021/08/04 15:59:08.728: Successfully published type alias 'NameToNumberDictionary' as a type
+2021/08/04 15:59:08.729: Publishing finished: 1 entities published
+2021/08/04 15:59:08.733: Code file generated: D:\Ambrosia\AmbrosiaTest\JSTest\TS_GenType1_GeneratedConsumerInterface.g.ts
+2021/08/04 15:59:12.704: Success: No TypeScript errors found in generated file TS_GenType1_GeneratedConsumerInterface.g.ts
+2021/08/04 15:59:12.711: Code file generated: D:\Ambrosia\AmbrosiaTest\JSTest\TS_GenType1_GeneratedPublisherFramework.g.ts
+2021/08/04 15:59:15.998: Success: No TypeScript errors found in generated file TS_GenType1_GeneratedPublisherFramework.g.ts
+2021/08/04 15:59:15.998: Code file generation SUCCEEDED: 2 of 2 files generated; 0 TypeScript errors, 0 merge conflicts

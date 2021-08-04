@@ -179,7 +179,7 @@ async function dispatcherAsync(message: Messages.DispatchedMessage)
 
                     case Messages.AppEventType.UpgradeStateAndCode:
                         // TODO: Add an exported [non-async] function 'onUpgradeStateAndCode(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/PI.ts, then (after the next code-gen) a call to it will be generated here
-                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/PI.ts in order to reference the 'Messages' namespace.
+                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSTest/JS_CodeGen_TestFiles/PI.ts in order to reference the 'Messages' namespace.
                         //       Also, your handler should call IC.upgrade() [to upgrade code] and _appState.upgrade() [to upgrade state].
                         break;
 

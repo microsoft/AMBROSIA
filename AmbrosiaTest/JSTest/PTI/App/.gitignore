@@ -1,0 +1,5 @@
+/out
+/node_modules
+/ambrosiaConfig.json.old
+/ambrosiaConfig-schema.json
+/outputLogs

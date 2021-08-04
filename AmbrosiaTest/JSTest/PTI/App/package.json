@@ -1,0 +1,23 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": ".out/Main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Microsoft Research",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://msrfranklin.visualstudio.com/_git/Franklin"
+  },
+  "dependencies": {
+    "ambrosia-node": "file:../../Ambrosia-Node/ambrosia-node-0.0.82.tgz"
+  },
+  "devDependencies": {
+    "typescript": "^4.3.5"
+  }
+}

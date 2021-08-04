@@ -30,15 +30,18 @@ namespace AmbrosiaTest
                 // Test Name is just the file without the extension
                 string TestName = TestFile.Substring(0, TestFile.Length - 3);
 
+                //string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
+
+
                 // Launch the client job process with these values
-                string testfileDir = @"../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/";
+                string testfileDir = @"../../AmbrosiaTest/JSTest/JS_CodeGen_TestFiles/";
                 if (NegTest)
                 {
-                    testfileDir = @"../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/NegativeTests/";
+                    testfileDir = @"../../AmbrosiaTest/JSTest/JS_CodeGen_TestFiles/NegativeTests/";
                 }
                 if (UsingSrcTestFile)
                 {
-                    testfileDir = @"../../AmbrosiaTest/JSCodeGen/node_modules/ambrosia-node/src/";
+                    testfileDir = @"../../AmbrosiaTest/JSTest/node_modules/ambrosia-node/src/";
                     TestName = "SRC_" + TestName;
                 }
 
@@ -156,8 +159,6 @@ namespace AmbrosiaTest
             return processID;
         }
 
-
-        // *### These will be for the JS PTI calls 
         // Build JS Test App - easiest to call external powershell script.
         // ** TO DO - maybe make this a generic "build .TS file" or something like that
         // ** For now - this is only .ts that is required to be built
@@ -166,7 +167,10 @@ namespace AmbrosiaTest
             try
             {
 
-                  Utilities MyUtils = new Utilities();
+                //*#*#* TO DO - Build this ... 
+
+                /*
+                Utilities MyUtils = new Utilities();
 
                 // For some reason, the powershell script does NOT work if called from bin/x64/debug directory. Setting working directory to origin fixes it
                 string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest";
@@ -189,6 +193,7 @@ namespace AmbrosiaTest
                     MyUtils.FailureSupport("");
                     Assert.Fail("<BuildJSTestApp> " + expectedjsfile + " was not built");
                 }
+                */
             }
             catch (Exception e)
             {

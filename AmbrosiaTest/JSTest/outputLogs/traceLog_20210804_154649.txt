@@ -1,0 +1,6 @@
+2021/08/04 15:46:49.592: Logging output to D:\Ambrosia\AmbrosiaTest\JSTest\outputLogs\traceLog_20210804_154649.txt
+2021/08/04 15:46:49.596: Ambrosia configuration loaded from 'ambrosiaConfig.json'
+2021/08/04 15:46:49.598: Generating TypeScript files for Consumer and Publisher...
+2021/08/04 15:46:49.599: Publishing types and methods from D:\Ambrosia\AmbrosiaTest\JSTest\JS_CodeGen_TestFiles\NegativeTests\TS_VersionInt.ts...
+2021/08/04 15:46:56.105: Error: The value ('Hello') supplied for @ambrosia attribute 'version' is not an integer (at D:\Ambrosia\AmbrosiaTest\JSTest\JS_CodeGen_TestFiles\NegativeTests\TS_VersionInt.ts:7:8) [origin: node_modules\ambrosia-node\src\Meta.ts:4444:23]
+2021/08/04 15:46:56.106: Code file generation FAILED: 0 of 2 files generated

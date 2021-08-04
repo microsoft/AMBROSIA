@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30621.155
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmbrosiaTest", "AmbrosiaTest\AmbrosiaTest.csproj", "{F9AA4F89-945C-4118-99CF-FDC7AA142601}"
 EndProject
-Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "JSCodeGen", "JSCodeGen\JSCodeGen.njsproj", "{61917A12-2BE6-4465-BB76-B467295B972D}"
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "JSTest", "JSTest\JSTest.njsproj", "{61917A12-2BE6-4465-BB76-B467295B972D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

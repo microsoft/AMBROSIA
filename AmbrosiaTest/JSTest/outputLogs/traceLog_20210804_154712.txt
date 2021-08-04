@@ -1,0 +1,11 @@
+2021/08/04 15:47:12.753: Logging output to D:\Ambrosia\AmbrosiaTest\JSTest\outputLogs\traceLog_20210804_154712.txt
+2021/08/04 15:47:12.757: Ambrosia configuration loaded from 'ambrosiaConfig.json'
+2021/08/04 15:47:12.759: Generating TypeScript files for Consumer and Publisher...
+2021/08/04 15:47:12.759: Publishing types and methods from D:\Ambrosia\AmbrosiaTest\JSTest\JS_CodeGen_TestFiles\TS_StaticMethod.ts...
+2021/08/04 15:47:19.214: Successfully published static method 'hello' as a post method
+2021/08/04 15:47:19.215: Publishing finished: 1 entities published
+2021/08/04 15:47:19.219: Code file generated: D:\Ambrosia\AmbrosiaTest\JSTest\TS_StaticMethod_GeneratedConsumerInterface.g.ts
+2021/08/04 15:47:23.001: Success: No TypeScript errors found in generated file TS_StaticMethod_GeneratedConsumerInterface.g.ts
+2021/08/04 15:47:23.007: Code file generated: D:\Ambrosia\AmbrosiaTest\JSTest\TS_StaticMethod_GeneratedPublisherFramework.g.ts
+2021/08/04 15:47:26.806: Success: No TypeScript errors found in generated file TS_StaticMethod_GeneratedPublisherFramework.g.ts
+2021/08/04 15:47:26.806: Code file generation SUCCEEDED: 2 of 2 files generated; 0 TypeScript errors, 0 merge conflicts

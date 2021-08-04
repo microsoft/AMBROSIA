@@ -1,0 +1,6 @@
+2021/08/04 15:46:03.253: Logging output to D:\Ambrosia\AmbrosiaTest\JSTest\outputLogs\traceLog_20210804_154603.txt
+2021/08/04 15:46:03.256: Ambrosia configuration loaded from 'ambrosiaConfig.json'
+2021/08/04 15:46:03.258: Generating TypeScript files for Consumer and Publisher...
+2021/08/04 15:46:03.259: Publishing types and methods from D:\Ambrosia\AmbrosiaTest\JSTest\JS_CodeGen_TestFiles\NegativeTests\TS_UnknownAtt_Method.ts...
+2021/08/04 15:46:09.687: Error: Unknown @ambrosia attribute 'published' at D:\Ambrosia\AmbrosiaTest\JSTest\JS_CodeGen_TestFiles\NegativeTests\TS_UnknownAtt_Method.ts:6:8; valid attributes are: publish, version, methodID, doRuntimeTypeChecking [origin: node_modules\ambrosia-node\src\Meta.ts:4391:39]
+2021/08/04 15:46:09.688: Code file generation FAILED: 0 of 2 files generated
