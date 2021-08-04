@@ -1,5 +1,0 @@
-2021/08/04 14:23:19.359: Logging output to D:\Ambrosia\AmbrosiaTest\JSTest\outputLogs\traceLog_20210804_142319.txt
-2021/08/04 14:23:19.363: Ambrosia configuration loaded from 'ambrosiaConfig.json'
-2021/08/04 14:23:19.365: Generating TypeScript files for Consumer and Publisher...
-2021/08/04 14:23:19.453: Error: The TypeScript file specified (D:\Ambrosia\AmbrosiaTest\JSCodeGen\JS_CodeGen_TestFiles\NegativeTests\TS_VersionInt.ts) does not exist [origin: node_modules\ambrosia-node\src\Meta.ts:3768:19]
-2021/08/04 14:23:19.454: Code file generation FAILED: 0 of 2 files generated

@@ -1,5 +1,0 @@
-2021/08/04 14:22:54.037: Logging output to D:\Ambrosia\AmbrosiaTest\JSTest\outputLogs\traceLog_20210804_142254.txt
-2021/08/04 14:22:54.040: Ambrosia configuration loaded from 'ambrosiaConfig.json'
-2021/08/04 14:22:54.042: Generating TypeScript files for Consumer and Publisher...
-2021/08/04 14:22:54.129: Error: The TypeScript file specified (D:\Ambrosia\AmbrosiaTest\JSCodeGen\JS_CodeGen_TestFiles\TS_StaticMethod.ts) does not exist [origin: node_modules\ambrosia-node\src\Meta.ts:3768:19]
-2021/08/04 14:22:54.129: Code file generation FAILED: 0 of 2 files generated
