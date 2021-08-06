@@ -43,6 +43,7 @@ namespace Ambrosia
         private static int _cursor;
 
         private static int _grainIdGenerator = 0;
+        private static int _numGrains = 1000;
 
         public bool IsPrimary = false;
 
@@ -993,7 +994,7 @@ namespace Ambrosia
             int optionalPartSize = 0;
 
             // Grain ID (Sekwon)
-            int grainID = _grainIdGenerator++;
+            int grainID = (_grainIdGenerator++ % _numGrains);
 
             if (!rpcType.IsFireAndForget())
             {
