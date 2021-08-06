@@ -83,10 +83,14 @@ namespace Ambrosia
         internal static void AmbrosiaSerialize(this ConcurrentDictionary<ValueTuple<string, int>, long> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
+#if Debug
             Console.WriteLine("[Serialize Trim Watermarks] dict count = {0}", dict.Count);
+#endif
             foreach (var entry in dict)
             {
+#if Debug
                 Console.WriteLine("[Serialize Trim Watermarks] Destination = {0}, ShardNum = {1}", entry.Key.Item1, entry.Key.Item2);
+#endif
                 var encodedKey = Encoding.UTF8.GetBytes(entry.Key.Item1);
                 writeToStream.WriteInt(encodedKey.Length);
                 writeToStream.Write(encodedKey, 0, encodedKey.Length);
@@ -99,12 +103,16 @@ namespace Ambrosia
         {
             var _retVal = new ConcurrentDictionary<ValueTuple<string, int>, long>(new ValueTupleEqualityComparer());
             var dictCount = readFromStream.ReadIntFixed();
+#if Debug
             Console.WriteLine("[Deserialize Trim Watermarks] dict count = {0}", dictCount);
+#endif
             for (int i = 0; i < dictCount; i++)
             {
                 var myString = Encoding.UTF8.GetString(readFromStream.ReadByteArray());
                 var shardNum = readFromStream.ReadIntFixed();
+#if Debug
                 Console.WriteLine("[Deserialize Trim Watermarks] Destination = {0}, ShardNum = {1}", myString, shardNum);
+#endif
                 long seqNo = readFromStream.ReadLongFixed();
                 _retVal.TryAdd(new ValueTuple<string, int>(myString, shardNum), seqNo);
             }
@@ -142,10 +150,14 @@ namespace Ambrosia
         internal static void AmbrosiaSerialize(this ConcurrentDictionary<ValueTuple<string, int>, LongPair> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
+#if Debug
             Console.WriteLine("[Serialize Uncommitted Watermarks] dict Count = {0}", dict.Count);
+#endif
             foreach (var entry in dict)
             {
+#if Debug
                 Console.WriteLine("[Serialize Uncommitted Watermarks] Destination = {0}, ShardNum = {1}", entry.Key.Item1, entry.Key.Item2);
+#endif
                 var encodedKey = Encoding.UTF8.GetBytes(entry.Key.Item1);
                 writeToStream.WriteInt(encodedKey.Length);
                 writeToStream.Write(encodedKey, 0, encodedKey.Length);
@@ -159,12 +171,16 @@ namespace Ambrosia
         {
             var _retVal = new ConcurrentDictionary<ValueTuple<string, int>, LongPair>(new ValueTupleEqualityComparer());
             var dictCount = readFromStream.ReadIntFixed();
+#if Debug
             Console.WriteLine("[Deserialize Uncommitted Watermarks] dict Count = {0}", dictCount);
+#endif
             for (int i = 0; i < dictCount; i++)
             {
                 var myString = Encoding.UTF8.GetString(readFromStream.ReadByteArray());
                 var shardNum = readFromStream.ReadIntFixed();
+#if Debug
                 Console.WriteLine("[Deserialize Uncommitted Watermarks] Destination = {0}, ShardNum = {1}", myString, shardNum);
+#endif
                 var newLongPair = new LongPair();
                 newLongPair.First = readFromStream.ReadLongFixed();
                 newLongPair.Second = readFromStream.ReadLongFixed();
@@ -209,10 +225,14 @@ namespace Ambrosia
         internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, InputConnectionRecord> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
+#if Debug
             Console.WriteLine("[Serialize inputs] dict Count = {0}", dict.Count);
+#endif
             foreach (var entry in dict)
             {
+#if Debug
                 Console.WriteLine("[Serialize inputs] Destination = {0}", entry.Key);
+#endif
                 var keyEncoding = Encoding.UTF8.GetBytes(entry.Key);
                 Trace.TraceInformation("input {0} seq no: {1}", entry.Key, entry.Value.LastProcessedID);
                 Trace.TraceInformation("input {0} replayable seq no: {1}", entry.Key, entry.Value.LastProcessedReplayableID);
@@ -227,11 +247,15 @@ namespace Ambrosia
         {
             var _retVal = new ConcurrentDictionary<string, InputConnectionRecord>();
             var dictCount = readFromStream.ReadIntFixed();
+#if Debug
             Console.WriteLine("[Deserialize inputs] dict Count = {0}", dictCount);
+#endif
             for (int i = 0; i < dictCount; i++)
             {
                 var myString = Encoding.UTF8.GetString(readFromStream.ReadByteArray());
+#if Debug
                 Console.WriteLine("[Deserialize inputs] Destination = {0}", myString);
+#endif
                 long seqNo = readFromStream.ReadLongFixed();
                 var newRecord = new InputConnectionRecord();
                 newRecord.LastProcessedID = seqNo;
@@ -285,7 +309,9 @@ namespace Ambrosia
         internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, OutputConnectionRecord[]> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
+#if Debug
             Console.WriteLine("[Serialize Outputs] dict count = {0}", dict.Count);
+#endif
             foreach (var entry in dict)
             {
                 var keyEncoding = Encoding.UTF8.GetBytes(entry.Key);
@@ -293,7 +319,9 @@ namespace Ambrosia
                 writeToStream.Write(keyEncoding, 0, keyEncoding.Length);
 
                 writeToStream.WriteIntFixed(entry.Value.Length);
+#if Debug
                 Console.WriteLine("[Serialize Outputs] Destination = {0}, Shard numbers = {1}", entry.Key, entry.Value.Length);
+#endif
                 foreach (var subentry in entry.Value)
                 {
                     writeToStream.WriteLongFixed(subentry.LastSeqNoFromLocalService);
@@ -316,12 +344,16 @@ namespace Ambrosia
         {
             var _retVal = new ConcurrentDictionary<string, OutputConnectionRecord[]>();
             var dictCount = readFromStream.ReadIntFixed();
+#if Debug
             Console.WriteLine("[Deserialize Outputs] dict count = {0}", dictCount);
+#endif
             for (int i = 0; i < dictCount; i++)
             {
                 var myString = Encoding.UTF8.GetString(readFromStream.ReadByteArray());
                 int arrSize = readFromStream.ReadIntFixed();
+#if Debug
                 Console.WriteLine("[Deserialize Outputs] destination = {0}, total shard number = {1}", myString, arrSize);
+#endif
                 OutputConnectionRecord[] newRecordArr = new OutputConnectionRecord[arrSize];
                 for (int j = 0; j < arrSize; j++)
                 {
@@ -3919,8 +3951,12 @@ namespace Ambrosia
             var totalSize = StreamCommunicator.IntSize(1 + restOfRPCMessageSize) +
                             1 + restOfRPCMessageSize;
             int grainId = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1)) + 1);
+            var rpcType = RpcBuffer.Buffer[restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1))];
 
-            _shuffleOutputRecord = _lastShuffleShards[grainId % _lastShuffleShards.Length];
+            if (rpcType != (byte)RpcTypes.RpcType.Impulse)
+                _shuffleOutputRecord = _lastShuffleShards[grainId % _lastShuffleShards.Length];
+            else
+                _shuffleOutputRecord = _lastShuffleShards[_shardID != -1 ? _shardID : 0];
 
             // lock to avoid conflict and ensure maximum memory cleaning during replay. No possible conflict during primary operation
             lock (_shuffleOutputRecord)
@@ -3933,7 +3969,7 @@ namespace Ambrosia
                     writablePage.HighestSeqNo = _shuffleOutputRecord.LastSeqNoFromLocalService + 1;
 
                     var methodID = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1);
-                    if (RpcBuffer.Buffer[restOfRPCOffset + 1 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
+                    if (rpcType != (byte)RpcTypes.RpcType.Impulse)
                     {
                         writablePage.UnsentReplayableMessages++;
                         writablePage.TotalReplayableMessages++;
