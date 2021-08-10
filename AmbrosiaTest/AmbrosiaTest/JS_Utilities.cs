@@ -30,8 +30,9 @@ namespace AmbrosiaTest
                 // Test Name is just the file without the extension
                 string TestName = TestFile.Substring(0, TestFile.Length - 3);
 
-                //string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
-
+                //*#*#* TO DO: Use the directories in the App.config file and not hard coded
+                //string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
+                //*#*#* TO DO: Use the directories in the App.config file and not hard coded
 
                 // Launch the client job process with these values
                 string testfileDir = @"../../AmbrosiaTest/JSTest/JS_CodeGen_TestFiles/";
@@ -51,7 +52,7 @@ namespace AmbrosiaTest
                 bool pass = true;  // not actually used in this test but it is a generic utility fctn return
 
 
-                string testappdir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
+                string testappdir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
                 string sourcefile = testfileDir + TestFile;
                 string generatedfile = TestName + "_Generated";
                 string fileNameExe = "node.exe";
@@ -174,7 +175,7 @@ namespace AmbrosiaTest
 
                 // For some reason, the powershell script does NOT work if called from bin/x64/debug directory. Setting working directory to origin fixes it
                 string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest";
-                string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
+                string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
                 string fileName = "pwsh.exe";
                 string parameters = "-file BuildJSTestApp.ps1 " + scriptDir;
                 bool waitForExit = true;
@@ -209,7 +210,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
             string fileNameExe = "node.exe";
             string argString = "out\\TestApp.js";
 

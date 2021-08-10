@@ -456,7 +456,7 @@ namespace AmbrosiaTest
             string testName = "unittestinproctcp";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();
@@ -542,7 +542,7 @@ namespace AmbrosiaTest
             string testName = "unittestinprocpipe";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();

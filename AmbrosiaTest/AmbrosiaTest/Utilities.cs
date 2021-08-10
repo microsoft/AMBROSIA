@@ -52,7 +52,7 @@ namespace AmbrosiaTest
         // .NET CORE only has DLLs, so no AMB exe so run by using "dotnet"
         // The two strings (NetFramework and NetCoreFramework) are part of the path when calling PTI and PT - called in helper functions
         //*********
-        public bool NetFrameworkTestRun = true;
+        public bool NetFrameworkTestRun = false;
         public string NetFramework = "net461";
         public string NetCoreFramework = "netcoreapp3.1";
 
@@ -318,6 +318,8 @@ namespace AmbrosiaTest
 
             try
             {
+                string currentDir = Directory.GetCurrentDirectory();
+
                 // If failures in queue then do not want to do anything (init, run test, clean up) 
                 if (CheckStopQueueFlag())
                 {
@@ -342,7 +344,7 @@ namespace AmbrosiaTest
                 }
 
                 // Clean up the InProc files now.  Since InProc, they are relative to PTI
-                string PTIAmbrosiaLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+                string PTIAmbrosiaLogDir = "..\\"+ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
                 if (Directory.Exists(PTIAmbrosiaLogDir))
                 {
                     Directory.Delete(PTIAmbrosiaLogDir, true);
@@ -357,7 +359,7 @@ namespace AmbrosiaTest
                 }
 
                 // job IC output file and any blob log files
-                string PTI_Job_Dir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ CurrentFramework;
+                string PTI_Job_Dir = currentDir+"\\"+ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ CurrentFramework;
                 var jobdir = new DirectoryInfo(PTI_Job_Dir);
                 foreach (var file in jobdir.EnumerateFiles(InProcICOutputFile))
                 {
@@ -452,46 +454,46 @@ namespace AmbrosiaTest
 
             // used in PT and PTI - set here by default and change below if need to
             string current_framework = NetFramework;
+            string currentDir = Directory.GetCurrentDirectory();
 
             // Verify logging directory ... if doesn't exist, create it
             string testLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             if (Directory.Exists(testLogDir) == false)
             {
-                System.IO.Directory.CreateDirectory(testLogDir);
+                Directory.CreateDirectory(testLogDir);
             }
 
             string cmpLogDir = ConfigurationManager.AppSettings["TestCMPDirectory"];
             if (Directory.Exists(cmpLogDir) == false)
                 Assert.Fail("<VerifyTestEnvironment> Cmp directory does not exist. Expecting:" + cmpLogDir);
 
+
             if (NetFrameworkTestRun)
             {
                 // File is in same directory as test because part of AMB build
-                string ImmCoordExe = "ImmortalCoordinator.exe";
+                string ImmCoordExe = currentDir+"\\" + NetFramework + "\\ImmortalCoordinator.exe";
                 if (File.Exists(ImmCoordExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing ImmortalCoordinator.exe. Expecting:" + ImmCoordExe);
 
                 // File is in same directory as test 
-                string AMBExe = "Ambrosia.exe";
+                string AMBExe = currentDir + "\\" + NetFramework + "\\Ambrosia.exe";
                 if (File.Exists(AMBExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing AMB exe. Expecting:" + AMBExe);
-
             }
             else  // .net core only has dll ...
             {
                 // File is in same directory as test because part of AMB build
-                string ImmCoordExe = "ImmortalCoordinator.dll";
+                string ImmCoordExe = currentDir + "\\" +NetCoreFramework+"\\ImmortalCoordinator.dll";
                 if (File.Exists(ImmCoordExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing ImmortalCoordinator.dll. Expecting:" + ImmCoordExe);
 
                 // File is in same directory as test 
-                string AMBExe = "Ambrosia.dll";
+                string AMBExe = currentDir + "\\" + NetCoreFramework + "\\Ambrosia.dll";
                 if (File.Exists(AMBExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing AMB dll. Expecting:" + AMBExe);
 
                 // used in PTI and PT calls 
                 current_framework = NetCoreFramework;
-
             }
 
             // Don't need AmbrosiaLibCS.exe as part of tests
@@ -499,11 +501,11 @@ namespace AmbrosiaTest
             // if (File.Exists(AmbrosiaLibCSExe) == false)
             //     Assert.Fail("<VerifyTestEnvironment> Missing AmbrosiaLibcs dll. Expecting:" + AmbrosiaLibCSExe);
 
-            string perfTestJobFile = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
+            string perfTestJobFile = currentDir + "\\"+ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
             if (File.Exists(perfTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
 
-            string perfTestServerFile = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
+            string perfTestServerFile = currentDir + "\\" + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
             if (File.Exists(perfTestServerFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
 
@@ -553,7 +555,7 @@ namespace AmbrosiaTest
             if (JSTest)
             {
                 // Test Log Output
-                testLogDir = ConfigurationManager.AppSettings["AmbrosiaJSCodeGenDirectory"];
+                testLogDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
                 logOutputDirFileName = testLogDir +"\\"+ testOutputLogFile;  
                 cmpLogDir = ConfigurationManager.AppSettings["TestCMPDirectory"] + "\\JS_CodeGen_Cmp";
                 cmpDirFile = cmpLogDir + "\\" + testOutputLogFile +".cmp";
@@ -617,6 +619,7 @@ namespace AmbrosiaTest
         //*********************************************************************
         public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false, bool checkForDoneString = true)
         {
+            string currentDir = Directory.GetCurrentDirectory();
 
             // Doing this for multi client situations
             string optionalMultiClientStartingPoint = "";
@@ -631,16 +634,17 @@ namespace AmbrosiaTest
 
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
+            string ambrosiaLogDir = currentDir+"\\"+ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
             string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
+            string ambServiceLogPath = ambrosiaLogDir + "\\";
 
             // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
             if (Directory.Exists(ambrosiaLogDir) ==false)
             {
                 ambrosiaLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
-                ambrosiaLogDirFromPTI = "..\\..\\"+ambrosiaLogDir+"\\";   // feels like there has to be better way of determing this
+                ambrosiaLogDirFromPTI = "..\\..\\" + ambrosiaLogDir+"\\";   // feels like there has to be better way of determining this - used for TTD
+                ambServiceLogPath = "..\\..\\"+ambrosiaLogDir + "\\";
             }
-
 
             // used to get log file
             string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_0";  // client is always 0 so don't use + CurrentVersion;
@@ -670,7 +674,7 @@ namespace AmbrosiaTest
             }
             else
             {
-                Assert.Fail("<VerifyAmbrosiaLogFile> Unable to find directory: " + ambrosiaClientLogDir);
+                Assert.Fail("<VerifyAmbrosiaLogFile> Unable to find Client Log directory: " + ambrosiaClientLogDir);
             }
 
             // can get first file or most recent
@@ -713,6 +717,11 @@ namespace AmbrosiaTest
                     serverLogFile = file.Name;
                 }
             }
+            else
+            {
+                Assert.Fail("<VerifyAmbrosiaLogFile> Unable to find Server Log directory: " + ambrosiaClientLogDir);
+            }
+
 
             // can get first file or most recent
             if (startWithFirstFile)
@@ -737,7 +746,7 @@ namespace AmbrosiaTest
             AMB_Settings AMB1 = new AMB_Settings
             {
                 AMB_ServiceName = clientJobName,
-                AMB_ServiceLogPath = ambrosiaLogDir + "\\",
+                AMB_ServiceLogPath = ambServiceLogPath,
                 AMB_StartingCheckPointNum = startingClientChkPtVersionNumber,
                 AMB_Version = "0",   // always 0 CurrentVersion.ToString(),
                 AMB_TestingUpgrade = "N",
@@ -751,7 +760,7 @@ namespace AmbrosiaTest
             AMB_Settings AMB2 = new AMB_Settings
             {
                 AMB_ServiceName = serverName,
-                AMB_ServiceLogPath = ambrosiaLogDir + "\\",
+                AMB_ServiceLogPath = ambServiceLogPath,
                 AMB_StartingCheckPointNum = startingServerChkPtVersionNumber,
                 AMB_Version = CurrentVersion.ToString(),
                 AMB_TestingUpgrade = "N",
@@ -841,10 +850,13 @@ namespace AmbrosiaTest
         {
 
             // Launch the AMB process with these values
-            string workingDir = "";
+            string currentDir = Directory.GetCurrentDirectory();
+            string workingDir = currentDir + "\\" + NetFramework + "\\";
             string fileNameExe = "ImmortalCoordinator.exe";
+
             if (NetFrameworkTestRun == false)
             {
+                workingDir = currentDir + "\\" + NetCoreFramework + "\\";
                 fileNameExe = "ImmortalCoordinator.dll";
             }
 
@@ -904,11 +916,15 @@ namespace AmbrosiaTest
         //*** Don't return a ProcessID because the process only lasts quick second. Then no longer there so killprocess would cause error
         public void CallAMB(AMB_Settings AMBSettings, string testOutputLogFile, AMB_ModeConsts AMBMode)
         {
+
             // Launch the AMB process with these values
-            string workingDir = "";
+            string currentDir = Directory.GetCurrentDirectory();
+            string workingDir = currentDir + "\\" + NetFramework + "\\";
             string fileNameExe = "Ambrosia.exe";
+
             if (NetFrameworkTestRun == false)
             {
+                workingDir = currentDir + "\\" + NetCoreFramework + "\\";
                 fileNameExe = "Ambrosia.dll";
             }
 
