@@ -52,7 +52,7 @@ namespace AmbrosiaTest
         // .NET CORE only has DLLs, so no AMB exe so run by using "dotnet"
         // The two strings (NetFramework and NetCoreFramework) are part of the path when calling PTI and PT - called in helper functions
         //*********
-        public bool NetFrameworkTestRun = false;
+        public bool NetFrameworkTestRun = true;
         public string NetFramework = "net461";
         public string NetCoreFramework = "netcoreapp3.1";
 
