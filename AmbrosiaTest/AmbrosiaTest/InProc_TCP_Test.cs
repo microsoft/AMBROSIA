@@ -52,7 +52,7 @@ namespace AmbrosiaTest
             string testName = "inproctcpclientonly";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();
@@ -140,7 +140,7 @@ namespace AmbrosiaTest
             string testName = "inproctcpserveronly";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();
@@ -226,7 +226,7 @@ namespace AmbrosiaTest
             string testName = "inprocclienttcpserverpipe";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();
@@ -305,7 +305,7 @@ namespace AmbrosiaTest
             string testName = "inprocclientpipeservertcp";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();
@@ -385,7 +385,7 @@ namespace AmbrosiaTest
             string testName = "inproctcpkilljobtest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "13958643712";
 
             Utilities MyUtils = new Utilities();
@@ -486,7 +486,7 @@ namespace AmbrosiaTest
             string testName = "inproctcpkillservertest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "13958643712";
 
             Utilities MyUtils = new Utilities();
@@ -577,7 +577,7 @@ namespace AmbrosiaTest
             string testName = "inproctcpupgradeserver";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "13958643712";
 
             Utilities MyUtils = new Utilities();
@@ -685,7 +685,7 @@ namespace AmbrosiaTest
             string testName = "inproctcpmigrateclient";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "13958643712";
             //string killJobMessage = "Migrating or upgrading. Must commit suicide since I'm the primary";
 

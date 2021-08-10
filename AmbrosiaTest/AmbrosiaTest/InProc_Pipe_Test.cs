@@ -52,7 +52,7 @@ namespace AmbrosiaTest
             string testName = "inprocpipeclientonly";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();
@@ -136,7 +136,7 @@ namespace AmbrosiaTest
             string testName = "inprocpipeserveronly";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();
@@ -220,7 +220,7 @@ namespace AmbrosiaTest
             string testName = "inprocbasictest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "3221225472";
 
             Utilities MyUtils = new Utilities();
@@ -295,7 +295,7 @@ namespace AmbrosiaTest
             string testName = "inprocmigrateclient";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "13958643712";
            // string killJobMessage = "Migrating or upgrading. Must commit suicide since I'm the primary";
 
@@ -397,7 +397,7 @@ namespace AmbrosiaTest
             string testName = "inprocgiantcheckpointtest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "1073741824";
             long giantCheckpointSize = 2000483648;// 2147483648; 
 
@@ -475,7 +475,7 @@ namespace AmbrosiaTest
             string testName = "inprocgiantmessagetest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "5368709120";
 
             Utilities MyUtils = new Utilities();
@@ -552,7 +552,7 @@ namespace AmbrosiaTest
             string testName = "inprocdoublekilljob";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "13958643712";
 
             Utilities MyUtils = new Utilities();
@@ -648,7 +648,7 @@ namespace AmbrosiaTest
             string testName = "inprocdoublekillserver";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "13958643712";
 
             Utilities MyUtils = new Utilities();
@@ -745,7 +745,7 @@ namespace AmbrosiaTest
             string testName = "inprockilljobtest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "13958643712";
 
             Utilities MyUtils = new Utilities();
@@ -842,7 +842,7 @@ namespace AmbrosiaTest
             string testName = "inprockillservertest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "13958643712";  
 
             Utilities MyUtils = new Utilities();
@@ -928,7 +928,7 @@ namespace AmbrosiaTest
             string testName = "inprocmultipleclientsperserver";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "12884901888";
 
             Utilities MyUtils = new Utilities();
@@ -1075,7 +1075,7 @@ namespace AmbrosiaTest
             string testName = "inprocupgradeafterserverdone";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "4294967296";
             string newUpgradedPrimary = "becoming upgraded primary";
 
@@ -1179,7 +1179,7 @@ namespace AmbrosiaTest
             string testName = "inprocupgradebeforeserverdone";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
             string byteSize = "13958643712";
 
             Utilities MyUtils = new Utilities();
