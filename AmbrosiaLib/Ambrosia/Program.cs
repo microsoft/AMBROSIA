@@ -3934,7 +3934,7 @@ namespace Ambrosia
             // Check to see if the _lastShuffleDest is the same as the one to process. Caching here avoids significant overhead.
             if (_lastShuffleDest == null || (_lastShuffleDestSize != destBytesSize) || !EqualBytes(RpcBuffer.Buffer, destOffset, _lastShuffleDest, destBytesSize))
             {
-                string destination, shardedDest;
+                string destination;
                 if (_lastShuffleDest.Length < destBytesSize)
                 {
                     _lastShuffleDest = new byte[destBytesSize];
@@ -3953,10 +3953,15 @@ namespace Ambrosia
             int grainId = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1)) + 1);
             var rpcType = RpcBuffer.Buffer[restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1))];
 
-            if (rpcType != (byte)RpcTypes.RpcType.Impulse)
+            if (destBytesSize != 0)
                 _shuffleOutputRecord = _lastShuffleShards[grainId % _lastShuffleShards.Length];
             else
-                _shuffleOutputRecord = _lastShuffleShards[_shardID != -1 ? _shardID : 0];
+            {
+                if (rpcType == (byte)RpcTypes.RpcType.Impulse)
+                    _shuffleOutputRecord = _lastShuffleShards[_shardID != -1 ? _shardID : 0];
+                else
+                    _shuffleOutputRecord = _lastShuffleShards[grainId % _lastShuffleShards.Length];
+            }
 
             // lock to avoid conflict and ensure maximum memory cleaning during replay. No possible conflict during primary operation
             lock (_shuffleOutputRecord)
