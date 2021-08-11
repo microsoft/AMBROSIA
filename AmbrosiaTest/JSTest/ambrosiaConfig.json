@@ -1,28 +1,27 @@
 {
-    "$schema": "./ambrosiaConfig-schema.json",
-    "autoRegister": false,
-    "instanceName": "server",
-    "icCraPort": 2500,
-    "icReceivePort": 2000,
-    "icSendPort": 2001,
-    "icLogFolder": "C:/logs/",
-    "icBinFolder": "C:/src/Git/PostSledgehammer/AMBROSIA/ImmortalCoordinator/bin/x64/Release;C:/src/Git/PostSledgehammer/AMBROSIA/Ambrosia/Ambrosia/bin/x64/Release",
-    "useNetCore": false,
-    "logTriggerSizeInMB": 1024,
-    "debugStartCheckpoint": 0,
-    "debugTestUpgrade": false,
-    "appVersion": 0,
-    "upgradeVersion": 0,
-    "activeCode": "VCurrent",
-    "lbOptions": 
-    {
-        "deleteLogs": true, 
-        "deleteRemoteCRAConnections": false,
-        "outputLogDestination": "ConsoleAndFile",
-        "outputLogFolder": "./outputLogs",
-        "outputLoggingLevel": "Normal",
-        "allowDisplayOfRpcParams": true,
-        "allowPostMethodTimeouts": true,
-        "enableTypeScriptStackTraces": true
-    }
+  "$schema": "./ambrosiaConfig-schema.json",
+  "autoRegister": true,
+  "instanceName": "server",
+  "icCraPort": 2500,
+  "icReceivePort": 2000,
+  "icSendPort": 2001,
+  "icLogFolder": "D:/AmbrosiaTest/logs/",
+  "icBinFolder": "D:/Ambrosia/AmbrosiaTest/AmbrosiaTest/bin/x64/Release",
+  "useNetCore": false,
+  "logTriggerSizeInMB": 1024,
+  "debugStartCheckpoint": 0,
+  "debugTestUpgrade": false,
+  "appVersion": 0,
+  "upgradeVersion": 0,
+  "activeCode": "VCurrent",
+  "lbOptions": {
+    "deleteLogs": true,
+    "deleteRemoteCRAConnections": false,
+    "outputLogDestination": "ConsoleAndFile",
+    "outputLogFolder": "./outputLogs",
+    "outputLoggingLevel": "Normal",
+    "allowDisplayOfRpcParams": true,
+    "allowPostMethodTimeouts": true,
+    "enableTypeScriptStackTraces": true
+  }
 }
