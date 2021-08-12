@@ -3950,18 +3950,9 @@ namespace Ambrosia
             int restOfRPCMessageSize = RpcBuffer.Length - restOfRPCOffset;
             var totalSize = StreamCommunicator.IntSize(1 + restOfRPCMessageSize) +
                             1 + restOfRPCMessageSize;
-            int grainId = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1)) + 1);
-            var rpcType = RpcBuffer.Buffer[restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1))];
 
-            if (destBytesSize != 0)
-                _shuffleOutputRecord = _lastShuffleShards[grainId % _lastShuffleShards.Length];
-            else
-            {
-                if (rpcType == (byte)RpcTypes.RpcType.Impulse)
-                    _shuffleOutputRecord = _lastShuffleShards[_shardID != -1 ? _shardID : 0];
-                else
-                    _shuffleOutputRecord = _lastShuffleShards[grainId % _lastShuffleShards.Length];
-            }
+            int grainId = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1)) + 1);
+            _shuffleOutputRecord = _lastShuffleShards[grainId % _lastShuffleShards.Length];
 
             // lock to avoid conflict and ensure maximum memory cleaning during replay. No possible conflict during primary operation
             lock (_shuffleOutputRecord)
@@ -3974,7 +3965,7 @@ namespace Ambrosia
                     writablePage.HighestSeqNo = _shuffleOutputRecord.LastSeqNoFromLocalService + 1;
 
                     var methodID = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1);
-                    if (rpcType != (byte)RpcTypes.RpcType.Impulse)
+                    if (RpcBuffer.Buffer[restOfRPCOffset + 1 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
                     {
                         writablePage.UnsentReplayableMessages++;
                         writablePage.TotalReplayableMessages++;
