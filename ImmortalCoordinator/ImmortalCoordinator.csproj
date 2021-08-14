@@ -107,7 +107,7 @@
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="Microsoft.CRA" Version="2020.9.24.1" />
+    <PackageReference Include="Microsoft.CRA" Version="2021.3.29.3" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">

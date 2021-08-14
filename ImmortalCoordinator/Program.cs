@@ -26,6 +26,7 @@ namespace CRA.Worker
         private static string _secureNetworkClassName;
         private static bool _isActiveActive = false;
         private static int _replicaNumber = 0;
+        private static int _shardID = -1;
         private static LogStorageOptions _logStorageType = LogStorageOptions.Files;
         
         public static void main(string[] args)
@@ -42,7 +43,15 @@ namespace CRA.Worker
                     break;
             }
 
-            var replicaName = $"{_instanceName}{_replicaNumber}";
+            string replicaName;
+            if (_shardID == -1)
+            {
+                replicaName = $"{_instanceName}{_replicaNumber}";
+            }
+            else
+            {
+                replicaName = _instanceName + $"{_replicaNumber}" + "_S" + $"{ _shardID}";
+            }
 
             if (_ipAddress == null)
             {
@@ -152,6 +161,7 @@ namespace CRA.Worker
                 { "sp|sendPort=", "The service send to port override.", sp => StartupParamOverrides.sendPort = int.Parse(sp) },
                 { "l|log=", "The service log path override.", l => StartupParamOverrides.ICLogLocation = l},
                 { "lts|logTriggerSize=", "Log trigger size (in MBs).", lts => StartupParamOverrides.LogTriggerSizeMB = long.Parse(lts) },
+                { "sid|shardID=", "ID of the shard for this IC instance.", sid => { _shardID = int.Parse(sid); StartupParamOverrides.shardID = int.Parse(sid); } },
                 { "lst|logStorageType=", "Can be set to files or blobs. Defaults to files", lst => _logStorageType = (LogStorageOptions) Enum.Parse(typeof(LogStorageOptions), lst, true)},
             };
 
