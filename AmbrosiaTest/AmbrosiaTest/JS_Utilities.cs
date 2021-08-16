@@ -7,6 +7,8 @@ using System.Threading;
 using System.Windows.Forms; // need this to handle threading issue on sleeps
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AmbrosiaTest
 {
@@ -17,6 +19,25 @@ namespace AmbrosiaTest
         public string CodeGenSuccessMessage = "Code file generation SUCCEEDED: 2 of 2 files generated; 0 TypeScript errors, 0 merge conflicts";
         public string CodeGenFailMessage = "Code file generation FAILED: 0 of 2 files generated";
         public string CodeGenNoTypeScriptErrorsMessage = "Success: No TypeScript errors found in generated file ";
+
+        public string JSPTI_CombinedInstanceRole = "Combined";
+        public string JSPTI_ClientInstanceRole = "Client";
+        public string JSPTI_ServerInstanceRole = "Server";
+
+        //** Config Settings in ambrosiaConfig.json
+        public string JSConfig_autoRegister = "autoRegister";
+        public string JSConfig_instanceName = "instanceName";
+        public string JSConfig_icCraPort = "icCraPort";
+        public string JSConfig_icReceivePort = "icReceivePort";
+        public string JSConfig_icLogFolder = "icLogFolder";
+        public string JSConfig_icBinFolder = "icBinFolder";
+        public string JSConfig_useNetCore = "useNetCore";
+        public string JSConfig_logTriggerSizeinMB = "logTriggerSizeInMB";
+        public string JSConfig_debugStartCheckpoint = "debugStartCheckpoint";
+        public string JSConfig_debugTestUpgrade = "debugTestUpgrade";
+        public string JSConfig_appVersion = "appVersion";
+        public string JSConfig_upgradeVersion = "upgradeVersion";
+
 
         // Runs a TS file through the JS LB and verifies code gen works correctly
         // Handles  valid tests one way, Negative tests from a different directory and Source Files as negative tests
@@ -204,15 +225,18 @@ namespace AmbrosiaTest
 
 
         // Start Javascript Test App
-        public int StartJSTestApp(string testOutputLogFile)
+        public int StartJSTestApp(string instanceRole, string testOutputLogFile)
         {
+
+            //node.\out\main.js - ir = Combined - n = 2 - bpr = 128 - mms = 32 - bsc = 32 - bd - nhc
+            // instanceRole role  == Client, Server or Combined
 
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"]+"\\PTI\\App";
             string fileNameExe = "node.exe";
-            string argString = "out\\TestApp.js";
+            string argString = "out\\main.js -ir="+instanceRole+" -n=2 -bpr=128 -mms=32 -bsc=32 -bd -nhc -efb=256 -eeb=256";
 
             int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
@@ -222,11 +246,58 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(6000);
+            Thread.Sleep(5000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             return processID;
         }
+
+
+        //** Restores the JS Config file for the test app from the golden config file
+        //** Probably called in init
+        public void JS_RestoreJSConfigFile()
+        {
+            Utilities MyUtils = new Utilities();
+
+            //*#*#* TO DO
+            //*#*#* Finish this 
+            //*#*#* Update Init of JS to add this
+            //*#*# Update Init to set Auto Register
+
+            // Copy from JSTest\ambrosiaConfigGOLD.json to PTI\App\ambrosiaConfig.json
+
+        }
+
+
+        //** Sets a JS Config File (ambrosiaConfig.json) setting
+        public void JS_UpdateJSConfigFile(string key, string newValue)
+        {
+            try
+            {
+                string data = string.Empty;
+                string basePath =  ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
+                string ambrosiaConfigfileName = "ambrosiaConfig.json";
+                string ConfigFile = basePath+"\\"+ambrosiaConfigfileName;
+
+                //** Read JSON config file
+                data = File.ReadAllText(ConfigFile);
+                var jo1 = JObject.Parse(data);
+                var tz = jo1[key];
+                var currentValue = ((Newtonsoft.Json.Linq.JValue)tz).Value;
+                var typeOfCurrentValue = currentValue.GetType();
+                ((Newtonsoft.Json.Linq.JValue)tz).Value = Convert.ChangeType(newValue, typeOfCurrentValue); 
+
+                //** Write the key \ value 
+                string dataObj = JsonConvert.SerializeObject(jo1, Formatting.Indented);
+                Directory.CreateDirectory(basePath);
+                File.WriteAllText(Path.Combine(basePath, ambrosiaConfigfileName), dataObj);
+            }
+            catch (Exception e)
+            {
+                Assert.Fail("<JS_UpdateJSConfigFile> Failure! " + e.Message);
+            }
+        }
+
 
         //** Clean up all the left overs from JS tests. 
         public void JS_TestCleanup()
@@ -242,6 +313,10 @@ namespace AmbrosiaTest
             // Stop all running processes that hung or were left behind
             MyUtils.StopAllAmbrosiaProcesses();
 
+            Thread.Sleep(2000);
+
+            // Clean up Azure - this is called after each test so put all test names in for azure tables
+            MyUtils.CleanupAzureTables("jsptibidiendtoendtest");
             Thread.Sleep(2000);
         }
 

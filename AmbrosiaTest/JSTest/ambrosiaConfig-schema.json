@@ -15,7 +15,7 @@
         },
         "instanceName": {
             "type": "string",
-            "description": "The name this Ambrosia Immortal instance will be referred to by all instances (including itself).",
+            "description": "The name this Ambrosia Immortal instance will be referred to by all instances (including itself).\nSee https://github.com/microsoft/AMBROSIA#ambrosia-concepts",
             "default": "myInstance"
         },
         "icCraPort": {
@@ -37,7 +37,7 @@
         "icLogStorageType" : {
             "type": "string",
             "enum": [ "Files", "Blobs" ],
-            "description": "The storage type that the Immortal Coordinator (IC) logs will be persisted in. Defaults to \"Files\".",
+            "description": "The storage type that the Immortal Coordinator (IC) logs will be persisted in. When set to \"Blobs\", icLogFolder can be an empty string. Defaults to \"Files\".",
             "default": "Files"
         },
         "icBinFolder": {
@@ -128,9 +128,9 @@
                 },
                 "outputLoggingLevel": {
                     "type": "string",
-                    "enum": [ "Minimal", "Normal", "Verbose" ],
-                    "default": "Normal",
-                    "description": "The level of detail to include in the language-binding output log. Defaults to \"Normal\"."
+                    "enum": [ "Minimal", "Verbose", "Debug" ],
+                    "default": "Minimal",
+                    "description": "The level of detail to include in the language-binding output log. Defaults to \"Minimal\".\nWARNING: Any value other than \"Minimal\" will significantly degrade performance."
                 },
                 "outputLogDestination": {
                     "type": "string",
