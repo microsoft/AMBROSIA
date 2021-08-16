@@ -268,3 +268,6 @@ CodeGenDependencies
 /BuildAmbrosiaAfterNugetChange.ps1
 /AmbrosiaBak
 /AmbrosiaTest/JSCodeGen/out
+/AmbrosiaTest/JSTest/PTI
+/AmbrosiaTest/JSTest/out
+/AmbrosiaTest/JSTest/ambrosiaConfig.json.old
