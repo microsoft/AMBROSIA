@@ -51,10 +51,6 @@ namespace AmbrosiaTest
                 // Test Name is just the file without the extension
                 string TestName = TestFile.Substring(0, TestFile.Length - 3);
 
-                //*#*#* TO DO: Use the directories in the App.config file and not hard coded
-                //string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
-                //*#*#* TO DO: Use the directories in the App.config file and not hard coded
-
                 // Launch the client job process with these values
                 string testfileDir = @"../../AmbrosiaTest/JSTest/JS_CodeGen_TestFiles/";
                 if (NegTest)
@@ -67,11 +63,9 @@ namespace AmbrosiaTest
                     TestName = "SRC_" + TestName;
                 }
 
-
                 string ConSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName + "_GeneratedConsumerInterface.g.ts";
                 string PubSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName + "_GeneratedPublisherFramework.g.ts";
                 bool pass = true;  // not actually used in this test but it is a generic utility fctn return
-
 
                 string testappdir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
                 string sourcefile = testfileDir + TestFile;
@@ -146,8 +140,6 @@ namespace AmbrosiaTest
                 {
                     pass = MyUtils.WaitForProcessToFinish(testOutputLogFile, SecondaryErrorMessage, 1, false, TestFile, true,false);
                 }
-
-
             }
             catch (Exception e)
             {
@@ -159,7 +151,6 @@ namespace AmbrosiaTest
         // Run JS Node Unit Tests
         public int StartJSNodeUnitTests(string testOutputLogFile)
         {
-
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
@@ -181,55 +172,17 @@ namespace AmbrosiaTest
             return processID;
         }
 
-        // Build JS Test App - easiest to call external powershell script.
-        // ** TO DO - maybe make this a generic "build .TS file" or something like that
-        // ** For now - this is only .ts that is required to be built
-        public void BuildJSTestApp()
-        {
-            try
-            {
-
-                //*#*#* TO DO - Build this ... 
-
-                /*
-                Utilities MyUtils = new Utilities();
-
-                // For some reason, the powershell script does NOT work if called from bin/x64/debug directory. Setting working directory to origin fixes it
-                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest";
-                string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
-                string fileName = "pwsh.exe";
-                string parameters = "-file BuildJSTestApp.ps1 " + scriptDir;
-                bool waitForExit = true;
-                string testOutputLogFile = "BuildJSTestApp.log";
-
-                int powerShell_PID = MyUtils.LaunchProcess(scriptWorkingDir, fileName, parameters, waitForExit, testOutputLogFile);
-
-                // Give it a few seconds to be sure
-                Thread.Sleep(2000);
-                Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
-
-                // Verify .js file exists
-                string expectedjsfile = scriptDir + "\\out\\TestApp.js";
-                if (File.Exists(expectedjsfile) == false)
-                {
-                    MyUtils.FailureSupport("");
-                    Assert.Fail("<BuildJSTestApp> " + expectedjsfile + " was not built");
-                }
-                */
-            }
-            catch (Exception e)
-            {
-                Assert.Fail("<BuildJSTestApp> Failure! " + e.Message);
-            }
-        }
-
 
         // Start Javascript Test App
         public int StartJSTestApp(string instanceRole, string testOutputLogFile)
         {
+            //**#*#*#*
+            // TO DO: Have the settings in argstring as parameters so not hard coded
+            //**#*#*#*
 
+            // Example call 
             //node.\out\main.js - ir = Combined - n = 2 - bpr = 128 - mms = 32 - bsc = 32 - bd - nhc
-            // instanceRole role  == Client, Server or Combined
+            // instanceRole role (ir)  == Client, Server or Combined
 
             Utilities MyUtils = new Utilities();
 
@@ -254,23 +207,46 @@ namespace AmbrosiaTest
 
 
         //** Restores the JS Config file for the test app from the golden config file
-        //** Probably called in init
-        public void JS_RestoreJSConfigFile()
+        public void JS_RestoreJSConfigFile(bool SetAutoRegister = true)
         {
-            Utilities MyUtils = new Utilities();
+            try
+            {
+                Utilities MyUtils = new Utilities();
 
-            //*#*#* TO DO
-            //*#*#* Finish this 
-            //*#*#* Update Init of JS to add this
-            //*#*# Update Init to set Auto Register
+                // ** Restore Config file from golden one
+                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
+                string ambrosiaGoldConfigfileName = "ambrosiaConfigGOLD.json";
+                string ambrosiaConfigfileName = "ambrosiaConfig.json";
 
-            // Copy from JSTest\ambrosiaConfigGOLD.json to PTI\App\ambrosiaConfig.json
+                // Copy fromThe Gold Config to App Config
+                File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + "\\PTI\\App\\" + ambrosiaConfigfileName, true);
+
+                //** Set defaults that are test run specific
+                string CurrentFramework = MyUtils.NetFramework;
+                if (MyUtils.NetFrameworkTestRun == false)
+                {
+                    CurrentFramework = MyUtils.NetCoreFramework;
+                }
+
+                string icBinDirectory = Directory.GetCurrentDirectory()+ "\\"+CurrentFramework;
+                string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+
+                // Set the defaults based on current system
+                Directory.CreateDirectory(logDirectory);  // can't load JSon if the log path doesn't exist
+                JS_UpdateJSConfigFile(JSConfig_autoRegister, SetAutoRegister.ToString());
+                JS_UpdateJSConfigFile(JSConfig_icLogFolder, logDirectory);
+                JS_UpdateJSConfigFile(JSConfig_icBinFolder, icBinDirectory);
+            }
+            catch (Exception e)
+            {
+                Assert.Fail("<JS_RestoreJSConfigFile> Failure! " + e.Message);
+            }
 
         }
 
 
-        //** Sets a JS Config File (ambrosiaConfig.json) setting
-        public void JS_UpdateJSConfigFile(string key, string newValue)
+        //** Updates a property setting in a the JS Config File (ambrosiaConfig.json)
+        public void JS_UpdateJSConfigFile(string property, string newValue)
         {
             try
             {
@@ -282,7 +258,7 @@ namespace AmbrosiaTest
                 //** Read JSON config file
                 data = File.ReadAllText(ConfigFile);
                 var jo1 = JObject.Parse(data);
-                var tz = jo1[key];
+                var tz = jo1[property];
                 var currentValue = ((Newtonsoft.Json.Linq.JValue)tz).Value;
                 var typeOfCurrentValue = currentValue.GetType();
                 ((Newtonsoft.Json.Linq.JValue)tz).Value = Convert.ChangeType(newValue, typeOfCurrentValue); 
@@ -318,6 +294,49 @@ namespace AmbrosiaTest
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             MyUtils.CleanupAzureTables("jsptibidiendtoendtest");
             Thread.Sleep(2000);
+        }
+
+        // Build JS Test App - easiest to call external powershell script.
+        public void BuildJSTestApp()
+        {
+            try
+            {
+
+                //*#*#* TO DO - Finish this ... 
+                // ** TO DO - maybe make this a generic "build .TS file" or something like that
+                // ** For now - this is only .ts that is required to be built
+                //*## Maybe not do this at all in code and just have it a requirement before running the tests
+
+                /*
+                Utilities MyUtils = new Utilities();
+
+                // For some reason, the powershell script does NOT work if called from bin/x64/debug directory. Setting working directory to origin fixes it
+                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest";
+                string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
+                string fileName = "pwsh.exe";
+                string parameters = "-file BuildJSTestApp.ps1 " + scriptDir;
+                bool waitForExit = true;
+                string testOutputLogFile = "BuildJSTestApp.log";
+
+                int powerShell_PID = MyUtils.LaunchProcess(scriptWorkingDir, fileName, parameters, waitForExit, testOutputLogFile);
+
+                // Give it a few seconds to be sure
+                Thread.Sleep(2000);
+                Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+                // Verify .js file exists
+                string expectedjsfile = scriptDir + "\\out\\TestApp.js";
+                if (File.Exists(expectedjsfile) == false)
+                {
+                    MyUtils.FailureSupport("");
+                    Assert.Fail("<BuildJSTestApp> " + expectedjsfile + " was not built");
+                }
+                */
+            }
+            catch (Exception e)
+            {
+                Assert.Fail("<BuildJSTestApp> Failure! " + e.Message);
+            }
         }
 
 

@@ -21,6 +21,9 @@ namespace AmbrosiaTest
 
             MyUtils.TestInitialize();
             //JSUtils.BuildJSTestApp(); -- maybe don't do this - not needed to build every time ... could assume it is built as well
+
+            // Set config file back to the way it was 
+            JSUtils.JS_RestoreJSConfigFile();
         }
         //************* Init Code *****************
 
@@ -36,23 +39,27 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_BasicBiDiEndToEnd_Test()
         {
-            // ** Probably set in Init
-            // ** Set AUtoregister = true, Log dirs, binary directory
-
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
+            string byteSize = "256";
             string testName = "jsptibidiendtoendtest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
 
-
             JSUtils.StartJSTestApp(JSUtils.JSPTI_CombinedInstanceRole, logOutputFileName_TestApp);
 
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: 256", 5, false, testName, true); // number of bytes processed
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of bytes (256) have been received", 5, false, testName, true); // number of bytes processed
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of echoed bytes (256) have been received", 5, false, testName, true); // number of bytes processed
+            // Verify the data in the output file
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: "+ byteSize, 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of bytes ("+byteSize+") have been received", 5, false, testName, true); 
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of echoed bytes ("+ byteSize + ") have been received", 5, false, testName, true);
 
+            //*#*#*#
+            //  TO DO: Write the VerifyAmbrosiaLogFile for JS. JS and C# versions too different for this one function as no TTD etc.
+            //*#*#*#
+
+            // Verify integrity of Ambrosia logs by replaying
+            //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0");
         }
     }
 }
