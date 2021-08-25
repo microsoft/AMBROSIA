@@ -19,7 +19,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            MyUtils.TestInitialize();
+//*#*#*#*#*#                        MyUtils.TestInitialize();
             //JSUtils.BuildJSTestApp(); -- maybe don't do this - not needed to build every time ... could assume it is built as well
 
             // Set config file back to the way it was 
@@ -45,8 +45,8 @@ namespace AmbrosiaTest
             string byteSize = "256";
             string testName = "jsptibidiendtoendtest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
 
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
             JSUtils.StartJSTestApp(JSUtils.JSPTI_CombinedInstanceRole, logOutputFileName_TestApp);
 
             // Verify the data in the output file
@@ -54,12 +54,8 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of bytes ("+byteSize+") have been received", 5, false, testName, true); 
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of echoed bytes ("+ byteSize + ") have been received", 5, false, testName, true);
 
-            //*#*#*#
-            //  TO DO: Write the VerifyAmbrosiaLogFile for JS. JS and C# versions too different for this one function as no TTD etc.
-            //*#*#*#
-
             // Verify integrity of Ambrosia logs by replaying
-            //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0");
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, Convert.ToInt64(byteSize), true, true);
         }
     }
 }

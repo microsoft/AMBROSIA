@@ -16,7 +16,7 @@
     "activeCode": "VCurrent",
     "lbOptions": 
     {
-        "deleteLogs": true, 
+        "deleteLogs": false, 
         "deleteRemoteCRAConnections": false,
         "outputLogDestination": "ConsoleAndFile",
         "outputLogFolder": "./outputLogs",

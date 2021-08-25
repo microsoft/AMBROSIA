@@ -177,7 +177,7 @@ namespace AmbrosiaTest
         public int StartJSTestApp(string instanceRole, string testOutputLogFile)
         {
             //**#*#*#*
-            // TO DO: Have the settings in argstring as parameters so not hard coded
+            // TO DO: Have the settings in argstring as parameters so not hard coded - also need to do for VerifyTTD
             //**#*#*#*
 
             // Example call 
@@ -295,6 +295,115 @@ namespace AmbrosiaTest
             MyUtils.CleanupAzureTables("jsptibidiendtoendtest");
             Thread.Sleep(2000);
         }
+
+
+        //*********************************************************************
+        // Modeled after the C# version of "VerifyAmbrosiaLogFile & JS_VerifyTimeTravelDebugging" but too different to expand that for this.
+        //
+        // Verifies the integrity of the Ambrosia for JS generated log file by doing Time Travel Debugging of the log file. 
+        // Instead of using Ambrosia.exe to verify log, this uses node.exe to verify it (which calls Ambrosia.exe under the covers).
+        //
+        // NOTE: For JS created log files, can NOT use ambrosia.exe (with debugInstance flag) with C# PTI client / server because JS log files (like VerifyAmbrosiaLogFile)
+        //  because there is different messaging in JS log files than C# generated log files. Therefore, Verify TTD  is the only verification of JS log files.
+        //*********************************************************************
+        public void JS_VerifyTimeTravelDebugging(string testName, long numBytes,  bool startWithFirstFile, bool checkForDoneString = true)
+        {
+
+            //#*#*#*#
+            //*#*#*#*# TO DO: FIGURE OUT - parameters that are passed here and how they should match what was originall sent - also need to do for StartJSTestApp
+            //#*#*#*#
+
+            Utilities MyUtils = new Utilities();
+
+            string currentDir = Directory.GetCurrentDirectory();
+            string bytesReceivedString = "Bytes received: " + numBytes.ToString();
+            string successString = "SUCCESS: The expected number of bytes (" + numBytes.ToString() + ") have been received";
+            string successEchoString = "SUCCESS: The expected number of echoed bytes (" + numBytes.ToString() + ") have been received";
+
+            string logOutputFileName_TestApp = testName + "_VerifyTTD.log";
+
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
+            string fileNameExe = "node.exe";
+            string argString = "out\\main.js -ir=Combined -n=2 -bpr=128 -mms=32 -bsc=32 -bd -nhc -efb=" + numBytes.ToString() + " -eeb=" + numBytes.ToString();
+
+            string ambrosiaBaseLogDir = currentDir + "\\" + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
+            string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
+            string ambServiceLogPath = ambrosiaBaseLogDir + "\\";
+
+            // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
+            if (Directory.Exists(ambrosiaBaseLogDir) == false)
+            {
+                ambrosiaBaseLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+                ambrosiaLogDirFromPTI = "..\\..\\" + ambrosiaBaseLogDir + "\\";   // feels like there has to be better way of determining this - used for TTD
+                ambServiceLogPath = "..\\..\\" + ambrosiaBaseLogDir + "\\";
+            }
+
+            // used to get log file
+            string ambrosiaFullLogDir = ambrosiaBaseLogDir + "\\" + testName + "_0";   
+            string startingChkPtVersionNumber = "1";
+            string logFirstFile = "";
+
+            // Get most recent version of log file and check point
+            string actualLogFile = "";
+            if (Directory.Exists(ambrosiaFullLogDir))
+            {
+                DirectoryInfo d = new DirectoryInfo(ambrosiaFullLogDir);
+                FileInfo[] files = d.GetFiles().OrderBy(p => p.CreationTime).ToArray();
+
+                foreach (FileInfo file in files)
+                {
+                    // Sets the first (oldest) file
+                    if (logFirstFile == "")
+                    {
+                        logFirstFile = file.Name;
+                    }
+
+                    // This will be most recent file
+                    actualLogFile = file.Name;
+                }
+            }
+            else
+            {
+                Assert.Fail("<JS_VerifyTimeTravelDebugging> Unable to find Log directory: " + ambrosiaFullLogDir);
+            }
+
+            // can get first file or most recent
+            if (startWithFirstFile)
+            {
+                actualLogFile = logFirstFile;
+            }
+
+            // determine if log or chkpt file
+            if (actualLogFile.Contains("chkpt"))
+            {
+                int chkPtPos = actualLogFile.IndexOf("chkpt");
+                startingChkPtVersionNumber = actualLogFile.Substring(chkPtPos + 5);
+            }
+            else
+            {
+                int LogPos = actualLogFile.IndexOf("log");
+                startingChkPtVersionNumber = actualLogFile.Substring(LogPos + 3);
+            }
+
+            JS_UpdateJSConfigFile(JSConfig_debugStartCheckpoint, startingChkPtVersionNumber);
+
+            int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, logOutputFileName_TestApp);
+            if (processID <= 0)
+            {
+                MyUtils.FailureSupport("");
+                Assert.Fail("<JS_VerifyTimeTravelDebugging> JS TestApp was not started.  ProcessID <=0 ");
+            }
+
+            // Give it a few seconds to start
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // Wait for it to finish and verify some of the output
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, numBytes.ToString(), 5, false, testName, true, checkForDoneString);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 5, false, testName, true, checkForDoneString);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 5, false, testName, true, checkForDoneString);
+        }
+
 
         // Build JS Test App - easiest to call external powershell script.
         public void BuildJSTestApp()
