@@ -11,7 +11,6 @@ namespace AmbrosiaTest
     public class JS_PTI_BasicUnitTests
     {
         //************* Init Code *****************
-
         // NOTE: Make sure all names be "Azure Safe". No capital letters and no underscore.
         [TestInitialize()]
         public void Initialize()
@@ -19,8 +18,8 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-//*#*#*#*#*#                        MyUtils.TestInitialize();
-            //JSUtils.BuildJSTestApp(); -- maybe don't do this - not needed to build every time ... could assume it is built as well
+            // generic Ambrosia init 
+            MyUtils.TestInitialize();
 
             // Set config file back to the way it was 
             JSUtils.JS_RestoreJSConfigFile();
@@ -42,20 +41,27 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string byteSize = "256";
+            int numRounds = 2;
+            long totalBytes = 256;
+            int bytesPerRound = 128;
+            int maxMessageSize = 32;
+            int batchSizeCutoff = 32;
+
             string testName = "jsptibidiendtoendtest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
-            JSUtils.StartJSTestApp(JSUtils.JSPTI_CombinedInstanceRole, logOutputFileName_TestApp);
+            JSUtils.StartJSTestApp(numRounds, totalBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, logOutputFileName_TestApp);
 
-            // Verify the data in the output file
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: "+ byteSize, 5, false, testName, true); // number of bytes processed
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of bytes ("+byteSize+") have been received", 5, false, testName, true); 
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of echoed bytes ("+ byteSize + ") have been received", 5, false, testName, true);
+            // Verify the data in the output file - too many changing rows in output to do a cmp file so verify some of the key lines
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: "+ totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of bytes ("+ totalBytes.ToString() + ") have been received", 1, false, testName, true); 
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of echoed bytes ("+ totalBytes.ToString() + ") have been received", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "All rounds complete (12 messages sent)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, Convert.ToInt64(byteSize), true, true);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds,totalBytes, bytesPerRound,maxMessageSize,batchSizeCutoff, true, true);
         }
     }
 }
