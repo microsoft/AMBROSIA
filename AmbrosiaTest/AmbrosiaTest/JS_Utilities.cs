@@ -174,7 +174,7 @@ namespace AmbrosiaTest
 
 
         // Start Javascript Test App
-        public int StartJSTestApp(int numRounds, long totalBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, string testOutputLogFile )
+        public int StartJSPTI(int numRounds, long totalBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile )
         {
 
 /*   *** For reference - PTI parameters
@@ -203,7 +203,13 @@ namespace AmbrosiaTest
             // Launch the client job process with these values
             string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"]+"\\PTI\\App";
             string fileNameExe = "node.exe";
-            string argString = "out\\main.js -ir="+ JSPTI_CombinedInstanceRole + " -n="+ numRounds.ToString()+ " -bpr="+ bytesPerRound.ToString()+ " -mms="+ maxMessageSize.ToString()+ " -bsc="+ batchSizeCutoff.ToString()+ " -bd -nhc -efb="+ totalBytes + " -eeb="+ totalBytes;
+            string argString = "out\\main.js -ir="+ JSPTI_CombinedInstanceRole + " -n="+ numRounds.ToString()+ " -bpr="+ bytesPerRound.ToString()+ " -mms="+ maxMessageSize.ToString()+ " -bsc="+ batchSizeCutoff.ToString()+ " -nhc -efb="+ totalBytes + " -eeb="+ totalBytes;
+
+            // Enables echoing the 'doWork' method call back to the client
+            if (bidi)
+            {
+                argString = argString + " -bd";
+            }
 
             int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
@@ -258,7 +264,6 @@ namespace AmbrosiaTest
 
         }
 
-
         //** Updates a property setting in a the JS Config File (ambrosiaConfig.json)
         public void JS_UpdateJSConfigFile(string property, string newValue)
         {
@@ -289,28 +294,6 @@ namespace AmbrosiaTest
         }
 
 
-        //** Clean up all the left overs from JS tests. 
-        public void JS_TestCleanup()
-        {
-            Utilities MyUtils = new Utilities();
-
-            // If failures in queue then do not want to do anything (init, run test, clean up) 
-            if (MyUtils.CheckStopQueueFlag())
-            {
-                return;
-            }
-
-            // Stop all running processes that hung or were left behind
-            MyUtils.StopAllAmbrosiaProcesses();
-
-            Thread.Sleep(2000);
-
-            // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("jsptibidiendtoendtest");
-            Thread.Sleep(2000);
-        }
-
-
         //*********************************************************************
         // Modeled after the C# version of "VerifyAmbrosiaLogFile & JS_VerifyTimeTravelDebugging" but this need too different to just expand those.
         //
@@ -322,7 +305,7 @@ namespace AmbrosiaTest
         //
         // NOTE: data is too volatile for cmp file method so verify specific strings
         //*********************************************************************
-        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "")
+        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "")
         {
 
             Utilities MyUtils = new Utilities();
@@ -411,19 +394,55 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(5000);
+            Thread.Sleep(3000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // Wait for it to finish and verify some of the output - data is too volatile to do cmp files so verify specific strings
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, totalBytes.ToString(), 5, false, testName, true, checkForDoneString);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 2, false, testName, true, false);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 1, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, allRoundsComplete, 1, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, argForTTD, 1, false, testName, true, false); 
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, startingCheckPoint, 1, false, testName, true, false); 
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, startingCheckPoint, 1, false, testName, true, false);
+
+            // Verify that echo is NOT part of the output when not bidi - won't pop assert on fail so check return value
+            if (bidi == false)
+            {
+                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 0, true, testName, false, false);
+                if (pass == true)
+                    Assert.Fail("<JS_VerifyTimeTravelDebugging> Echoed string should NOT have been found in the output but it was.");
+            }
+            else // do echo string check if bidi
+                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 1, false, testName, true, false);
+
             if (specialVerifyString != "")  // used for special strings that are not generic enough to hard code and is more test specific
                 pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, specialVerifyString, 1, false, testName, true, false);
         }
+
+
+        //** Clean up all the left overs from JS tests. 
+        public void JS_TestCleanup()
+        {
+            Utilities MyUtils = new Utilities();
+
+            // If failures in queue then do not want to do anything (init, run test, clean up) 
+            if (MyUtils.CheckStopQueueFlag())
+            {
+                return;
+            }
+
+            // Stop all running processes that hung or were left behind
+            MyUtils.StopAllAmbrosiaProcesses();
+
+            Thread.Sleep(2000);
+
+            // Clean up Azure - this is called after each test so put all test names in for azure tables
+            MyUtils.CleanupAzureTables("jsptiendtoendtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptibidiendtoendtest");
+            Thread.Sleep(2000);
+
+        }
+
 
     }
 }
