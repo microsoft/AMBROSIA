@@ -174,22 +174,36 @@ namespace AmbrosiaTest
 
 
         // Start Javascript Test App
-        public int StartJSTestApp(string instanceRole, string testOutputLogFile)
+        public int StartJSTestApp(int numRounds, long totalBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, string testOutputLogFile )
         {
-            //**#*#*#*
-            // TO DO: Have the settings in argstring as parameters so not hard coded - also need to do for VerifyTTD
-            //**#*#*#*
 
-            // Example call 
-            //node.\out\main.js - ir = Combined - n = 2 - bpr = 128 - mms = 32 - bsc = 32 - bd - nhc
-            // instanceRole role (ir)  == Client, Server or Combined
+/*   *** For reference - PTI parameters
+ 
+        -h | --help                    : [Common] Displays this help message
+        -ir | --instanceRole =          : [Common] The role of this instance in the test('Server', 'Client', or 'Combined'); defaults to 'Combined'
+        - m | --memoryUsed =             : [Common] Optional "padding"(in bytes) used to simulate large checkpoints by being included in app state; defaults to 0
+        - c | --autoContinue =           : [Common] Whether to continue automatically at startup(if true), or wait for the 'Enter' key(if false) ; defaults to true
+        - sin | --serverInstanceName =   : [Client] The name of the instance that's acting in the 'Server' role for the test; only required when --role is 'Client'
+        - bpr | --bytesPerRound =        : [Client] The total number of message payload bytes that will be sent in a single round; defaults to 1 GB
+        - bsc | --batchSizeCutoff =      : [Client] Once the total number of message payload bytes queued reaches(or exceeds) this limit, then the batch will be sent; defaults to 10 MB
+        - mms | --maxMessageSize =       : [Client] The maximum size(in bytes) of the message payload; must be a power of 2(eg. 65536), and be at least 16; defaults to 64KB
+        - n | --numOfRounds =            : [Client] The number of rounds(of size bytesPerRound) to work through; each round will use a[potentially] different message size; defaults to 1
+        - nds | --noDescendingSize      : [Client] Disables descending(halving) the message size after each round; instead, a random size[power of 2] between 16 and--maxMessageSize will be used
+        -fms | --fixedMessageSize      : [Client] All messages(in all rounds) will be of size --maxMessageSize; --noDescendingSize(if also supplied) will be ignored
+        - eeb | --expectedEchoedBytes =  : [Client] The total number of "echoed" bytes expected to be received from the server when--bidirectional is specified; the client will report a "success" message when this number of bytes have been received
+        -cin | --clientInstanceName =   : [Server] The name of the instance that's acting in the 'Client' role for the test; only required when --role is 'Server' and --bidirectional is specified
+        - nhc | --noHealthCheck         : [Server] Disables the periodic server health check(requested via an Impulse message)
+        -bd | --bidirectional          : [Server] Enables echoing the 'doWork' method call back to the client
+        -efb | --expectedFinalBytes =   : [Server] The total number of bytes expected to be received from all clients; the server will report a "success" message when this number of bytes have been received
+*/
+
 
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
             string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"]+"\\PTI\\App";
             string fileNameExe = "node.exe";
-            string argString = "out\\main.js -ir="+instanceRole+" -n=2 -bpr=128 -mms=32 -bsc=32 -bd -nhc -efb=256 -eeb=256";
+            string argString = "out\\main.js -ir="+ JSPTI_CombinedInstanceRole + " -n="+ numRounds.ToString()+ " -bpr="+ bytesPerRound.ToString()+ " -mms="+ maxMessageSize.ToString()+ " -bsc="+ batchSizeCutoff.ToString()+ " -bd -nhc -efb="+ totalBytes + " -eeb="+ totalBytes;
 
             int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
@@ -199,7 +213,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(5000);
+            Thread.Sleep(3000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             return processID;
@@ -298,33 +312,34 @@ namespace AmbrosiaTest
 
 
         //*********************************************************************
-        // Modeled after the C# version of "VerifyAmbrosiaLogFile & JS_VerifyTimeTravelDebugging" but too different to expand that for this.
+        // Modeled after the C# version of "VerifyAmbrosiaLogFile & JS_VerifyTimeTravelDebugging" but this need too different to just expand those.
         //
         // Verifies the integrity of the Ambrosia for JS generated log file by doing Time Travel Debugging of the log file. 
         // Instead of using Ambrosia.exe to verify log, this uses node.exe to verify it (which calls Ambrosia.exe under the covers).
         //
         // NOTE: For JS created log files, can NOT use ambrosia.exe (with debugInstance flag) with C# PTI client / server because JS log files (like VerifyAmbrosiaLogFile)
-        //  because there is different messaging in JS log files than C# generated log files. Therefore, Verify TTD  is the only verification of JS log files.
+        //  because there is different messaging in JS log files than C# generated log files. Therefore, Verify TTD is the only verification of JS log files.
+        //
+        // NOTE: data is too volatile for cmp file method so verify specific strings
         //*********************************************************************
-        public void JS_VerifyTimeTravelDebugging(string testName, long numBytes,  bool startWithFirstFile, bool checkForDoneString = true)
+        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "")
         {
-
-            //#*#*#*#
-            //*#*#*#*# TO DO: FIGURE OUT - parameters that are passed here and how they should match what was originall sent - also need to do for StartJSTestApp
-            //#*#*#*#
 
             Utilities MyUtils = new Utilities();
 
             string currentDir = Directory.GetCurrentDirectory();
-            string bytesReceivedString = "Bytes received: " + numBytes.ToString();
-            string successString = "SUCCESS: The expected number of bytes (" + numBytes.ToString() + ") have been received";
-            string successEchoString = "SUCCESS: The expected number of echoed bytes (" + numBytes.ToString() + ") have been received";
+            string bytesReceivedString = "Bytes received: " + totalBytes.ToString();
+            string successString = "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received";
+            string successEchoString = "SUCCESS: The expected number of echoed bytes (" + totalBytes.ToString() + ") have been received";
+            string allRoundsComplete = "All rounds complete";
+            string argForTTD = "Args: DebugInstance instanceName="+ testName;
+            string startingCheckPoint = "checkpoint="; // append the number below after calculated
 
             string logOutputFileName_TestApp = testName + "_VerifyTTD.log";
 
             string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
             string fileNameExe = "node.exe";
-            string argString = "out\\main.js -ir=Combined -n=2 -bpr=128 -mms=32 -bsc=32 -bd -nhc -efb=" + numBytes.ToString() + " -eeb=" + numBytes.ToString();
+            string argString = "out\\main.js -ir=Combined -n="+ numRounds.ToString()+ " -bpr="+ bytesPerRound.ToString()+ " -mms="+ maxMessageSize.ToString()+ " -bsc="+ batchSizeCutoff.ToString()+ " -bd -nhc -efb=" + totalBytes.ToString() + " -eeb=" + totalBytes.ToString();
 
             string ambrosiaBaseLogDir = currentDir + "\\" + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
             string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
@@ -385,6 +400,7 @@ namespace AmbrosiaTest
                 startingChkPtVersionNumber = actualLogFile.Substring(LogPos + 3);
             }
 
+            startingCheckPoint = startingCheckPoint + startingChkPtVersionNumber;  // used in verification of output log
             JS_UpdateJSConfigFile(JSConfig_debugStartCheckpoint, startingChkPtVersionNumber);
 
             int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, logOutputFileName_TestApp);
@@ -398,56 +414,16 @@ namespace AmbrosiaTest
             Thread.Sleep(5000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
-            // Wait for it to finish and verify some of the output
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, numBytes.ToString(), 5, false, testName, true, checkForDoneString);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 5, false, testName, true, checkForDoneString);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 5, false, testName, true, checkForDoneString);
+            // Wait for it to finish and verify some of the output - data is too volatile to do cmp files so verify specific strings
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, totalBytes.ToString(), 5, false, testName, true, checkForDoneString);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 2, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, allRoundsComplete, 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, argForTTD, 1, false, testName, true, false); 
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, startingCheckPoint, 1, false, testName, true, false); 
+            if (specialVerifyString != "")  // used for special strings that are not generic enough to hard code and is more test specific
+                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, specialVerifyString, 1, false, testName, true, false);
         }
-
-
-        // Build JS Test App - easiest to call external powershell script.
-        public void BuildJSTestApp()
-        {
-            try
-            {
-
-                //*#*#* TO DO - Finish this ... 
-                // ** TO DO - maybe make this a generic "build .TS file" or something like that
-                // ** For now - this is only .ts that is required to be built
-                //*## Maybe not do this at all in code and just have it a requirement before running the tests
-
-                /*
-                Utilities MyUtils = new Utilities();
-
-                // For some reason, the powershell script does NOT work if called from bin/x64/debug directory. Setting working directory to origin fixes it
-                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest";
-                string scriptDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
-                string fileName = "pwsh.exe";
-                string parameters = "-file BuildJSTestApp.ps1 " + scriptDir;
-                bool waitForExit = true;
-                string testOutputLogFile = "BuildJSTestApp.log";
-
-                int powerShell_PID = MyUtils.LaunchProcess(scriptWorkingDir, fileName, parameters, waitForExit, testOutputLogFile);
-
-                // Give it a few seconds to be sure
-                Thread.Sleep(2000);
-                Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
-
-                // Verify .js file exists
-                string expectedjsfile = scriptDir + "\\out\\TestApp.js";
-                if (File.Exists(expectedjsfile) == false)
-                {
-                    MyUtils.FailureSupport("");
-                    Assert.Fail("<BuildJSTestApp> " + expectedjsfile + " was not built");
-                }
-                */
-            }
-            catch (Exception e)
-            {
-                Assert.Fail("<BuildJSTestApp> Failure! " + e.Message);
-            }
-        }
-
 
     }
 }
