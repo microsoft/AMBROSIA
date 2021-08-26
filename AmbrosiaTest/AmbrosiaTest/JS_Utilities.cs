@@ -174,7 +174,7 @@ namespace AmbrosiaTest
 
 
         // Start Javascript Test App
-        public int StartJSPTI(int numRounds, long totalBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile )
+        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile )
         {
 
 /*   *** For reference - PTI parameters
@@ -203,7 +203,7 @@ namespace AmbrosiaTest
             // Launch the client job process with these values
             string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"]+"\\PTI\\App";
             string fileNameExe = "node.exe";
-            string argString = "out\\main.js -ir="+ JSPTI_CombinedInstanceRole + " -n="+ numRounds.ToString()+ " -bpr="+ bytesPerRound.ToString()+ " -mms="+ maxMessageSize.ToString()+ " -bsc="+ batchSizeCutoff.ToString()+ " -nhc -efb="+ totalBytes + " -eeb="+ totalBytes;
+            string argString = "out\\main.js -ir="+ JSPTI_CombinedInstanceRole + " -n="+ numRounds.ToString()+ " -bpr="+ bytesPerRound.ToString()+ " -mms="+ maxMessageSize.ToString()+ " -bsc="+ batchSizeCutoff.ToString()+ " -nhc -efb="+ totalBytes.ToString() + " -eeb="+ totalEchoBytes.ToString();
 
             // Enables echoing the 'doWork' method call back to the client
             if (bidi)
@@ -305,7 +305,7 @@ namespace AmbrosiaTest
         //
         // NOTE: data is too volatile for cmp file method so verify specific strings
         //*********************************************************************
-        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "")
+        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "")
         {
 
             Utilities MyUtils = new Utilities();
@@ -322,7 +322,7 @@ namespace AmbrosiaTest
 
             string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
             string fileNameExe = "node.exe";
-            string argString = "out\\main.js -ir=Combined -n="+ numRounds.ToString()+ " -bpr="+ bytesPerRound.ToString()+ " -mms="+ maxMessageSize.ToString()+ " -bsc="+ batchSizeCutoff.ToString()+ " -bd -nhc -efb=" + totalBytes.ToString() + " -eeb=" + totalBytes.ToString();
+            string argString = "out\\main.js -ir=Combined -n="+ numRounds.ToString()+ " -bpr="+ bytesPerRound.ToString()+ " -mms="+ maxMessageSize.ToString()+ " -bsc="+ batchSizeCutoff.ToString()+ " -bd -nhc -efb=" + totalBytes.ToString() + " -eeb=" + totalEchoBytes.ToString();
 
             string ambrosiaBaseLogDir = currentDir + "\\" + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
             string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
@@ -403,6 +403,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, allRoundsComplete, 1, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, argForTTD, 1, false, testName, true, false); 
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, startingCheckPoint, 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
             // Verify that echo is NOT part of the output when not bidi - won't pop assert on fail so check return value
             if (bidi == false)
