@@ -24,6 +24,7 @@
         "allowDisplayOfRpcParams": true,
         "allowPostMethodTimeouts": true,
         "enableTypeScriptStackTraces": true,
-        "messageBytePoolSizeInMB": 2
+        "messageBytePoolSizeInMB": 2,
+        "maxMessageQueueSizeInMB": 64
     }
 }
