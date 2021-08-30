@@ -37,6 +37,7 @@ namespace AmbrosiaTest
         public string JSConfig_debugTestUpgrade = "debugTestUpgrade";
         public string JSConfig_appVersion = "appVersion";
         public string JSConfig_upgradeVersion = "upgradeVersion";
+        public string JSConfig_LBOpt_msgQueueSize = "lbOptionsmaxMessageQueueSizeInMB";  // NOTE: all lbOptions settings need "lbOptions" at beginning so know it is nested there
 
 
         // Runs a TS file through the JS LB and verifies code gen works correctly
@@ -174,7 +175,7 @@ namespace AmbrosiaTest
 
 
         // Start Javascript Test App
-        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile )
+        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile, int memoryUsed = 0)
         {
 
 /*   *** For reference - PTI parameters
@@ -198,6 +199,8 @@ namespace AmbrosiaTest
 */
 
 
+            //*#*#*# TO DO:  Add tests for large check point, other non basic end to end tests using the various parameters 
+
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
@@ -210,6 +213,13 @@ namespace AmbrosiaTest
             {
                 argString = argString + " -bd";
             }
+
+            // memory used setting for checkpoint testing
+            if (memoryUsed > 0 )
+            {
+                argString = argString + " -m="+ memoryUsed.ToString();
+            }
+
 
             int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
@@ -265,10 +275,15 @@ namespace AmbrosiaTest
         }
 
         //** Updates a property setting in a the JS Config File (ambrosiaConfig.json)
+        //*
+        //*  NOTE - if property in lbOptions section, make sure property name has lbOptions prepended to it
+        //* 
         public void JS_UpdateJSConfigFile(string property, string newValue)
         {
+
             try
             {
+                string lbOptionsHeader = "lbOptions";
                 string data = string.Empty;
                 string basePath =  ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
                 string ambrosiaConfigfileName = "ambrosiaConfig.json";
@@ -278,6 +293,14 @@ namespace AmbrosiaTest
                 data = File.ReadAllText(ConfigFile);
                 var jo1 = JObject.Parse(data);
                 var tz = jo1[property];
+
+                // Checks if property is in nested area of lbOptions - if it is then handle it differently
+                if (property.Contains(lbOptionsHeader))
+                {
+                    property = property.Replace(lbOptionsHeader, "");
+                    tz = jo1[lbOptionsHeader][property];
+                }
+
                 var currentValue = ((Newtonsoft.Json.Linq.JValue)tz).Value;
                 var typeOfCurrentValue = currentValue.GetType();
                 ((Newtonsoft.Json.Linq.JValue)tz).Value = Convert.ChangeType(newValue, typeOfCurrentValue); 
@@ -398,7 +421,7 @@ namespace AmbrosiaTest
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // Wait for it to finish and verify some of the output - data is too volatile to do cmp files so verify specific strings
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, totalBytes.ToString(), 5, false, testName, true, checkForDoneString);
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, totalBytes.ToString(), 15, false, testName, true, checkForDoneString);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 2, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, allRoundsComplete, 1, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, argForTTD, 1, false, testName, true, false); 
@@ -440,6 +463,12 @@ namespace AmbrosiaTest
             MyUtils.CleanupAzureTables("jsptiendtoendtest");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptibidiendtoendtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptigiantmessagebiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptigiantmessagetest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptigiantcheckpointtest");
             Thread.Sleep(2000);
 
         }
