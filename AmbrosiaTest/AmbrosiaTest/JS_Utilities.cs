@@ -175,7 +175,7 @@ namespace AmbrosiaTest
 
 
         // Start Javascript Test App
-        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile, int memoryUsed = 0)
+        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile, int memoryUsed = 0, bool fms = false)
         {
 
 /*   *** For reference - PTI parameters
@@ -198,9 +198,6 @@ namespace AmbrosiaTest
         -efb | --expectedFinalBytes =   : [Server] The total number of bytes expected to be received from all clients; the server will report a "success" message when this number of bytes have been received
 */
 
-
-            //*#*#*# TO DO:  Add tests for large check point, other non basic end to end tests using the various parameters 
-
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
@@ -218,6 +215,12 @@ namespace AmbrosiaTest
             if (memoryUsed > 0 )
             {
                 argString = argString + " -m="+ memoryUsed.ToString();
+            }
+
+            // fixed message size
+            if (fms)
+            {
+                argString = argString + " -fms";
             }
 
 
@@ -470,7 +473,12 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptigiantcheckpointtest");
             Thread.Sleep(2000);
-
+            MyUtils.CleanupAzureTables("jsptigiantcheckpointbiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptibidifmstest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptifmstest");
+            Thread.Sleep(2000);
         }
 
 

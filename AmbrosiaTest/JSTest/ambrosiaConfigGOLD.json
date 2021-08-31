@@ -14,6 +14,9 @@
     "appVersion": 0,
     "upgradeVersion": 0,
     "activeCode": "VCurrent",
+    "icLogStorageType": "Files",
+    "isActiveActive": false,
+    "replicaNumber": 0,
     "lbOptions": 
     {
         "deleteLogs": false, 
