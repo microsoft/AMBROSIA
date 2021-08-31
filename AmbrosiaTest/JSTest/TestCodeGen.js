@@ -70,7 +70,7 @@ function main() {
                     //Meta.emitTypeScriptFileFromSource(sourceFile, { fileKind: Meta.GeneratedFileKind.Consumer, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFileName: generatedFileName+"_Consumer" });
                     //Meta.emitTypeScriptFileFromSource(sourceFile, { fileKind: Meta.GeneratedFileKind.Publisher, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFileName: generatedFileName+"_Publisher" });
                     // Use this for single call to generate both consumer and publisher
-                    Meta.emitTypeScriptFileFromSource(sourceFile, { apiName: apiName, fileKind: Meta.GeneratedFileKind.All, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFilePrefix: generatedFileName });
+                    Meta.emitTypeScriptFileFromSource(sourceFile, { apiName: apiName, fileKind: Meta.GeneratedFileKind.All, mergeType: Meta.FileMergeType.None, emitGeneratedTime: false, generatedFilePrefix: generatedFileName, strictCompilerChecks: false });
                     return [3 /*break*/, 3];
                 case 2:
                     error_1 = _b.sent();

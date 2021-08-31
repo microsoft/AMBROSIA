@@ -1,4 +1,8 @@
 #!/bin/bash
+echo "*********  Running run_in_tmux_then_exit.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 
 echo "This test will look ugly, but it is a way to make sure that the interactive demo doesn't become rotted."
 echo 

@@ -9,6 +9,11 @@ cd `dirname $0`
 # big build step instead of granular ones.
 # --------------------------------------------------------------------
 
+echo "*********  Running build_dotnetcore_bindist.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
+
 # Should be "net461" or "netcoreapp3.1".  Set a default if not set:
 export AMBROSIA_DOTNET_FRAMEWORK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp3.1}"
 # Release or Debug:
@@ -29,6 +34,7 @@ else
 fi
 
 OUTDIR=`pwd`/bin
+echo "Output Directory:" $OUTDIR
 # Do not want to publish self contained due to security reasons that .net security patches aren't applied
 # Since not self contained, any non windows scripts using this needs to make sure install .netcore
 # Shorthands:
@@ -54,13 +60,13 @@ echo
 echo "Building AMBROSIA libraries/binaries"
 echo "------------------------------------"
 set -x
-buildit $OUTDIR/runtime Ambrosia/Ambrosia/Ambrosia.csproj
-buildit $OUTDIR/coord ImmortalCoordinator/ImmortalCoordinator.csproj
-buildit $OUTDIR/unsafedereg DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
+buildit $OUTDIR Ambrosia/Ambrosia/Ambrosia.csproj
+buildit $OUTDIR ImmortalCoordinator/ImmortalCoordinator.csproj
+buildit $OUTDIR DevTools/UnsafeDeregisterInstance/UnsafeDeregisterInstance.csproj
 pushd $OUTDIR
-ln -s runtime/Ambrosia Ambrosia
-ln -s coord/ImmortalCoordinator
-ln -s unsafedereg/UnsafeDeregisterInstance
+# ln -s Ambrosia Ambrosia
+# ln -s ImmortalCoordinator
+# ln -s UnsafeDeregisterInstance
 popd
 set +x
 
@@ -68,9 +74,9 @@ echo
 echo "Building C# client tools"
 echo "----------------------------------------"
 set -x
-buildit $OUTDIR/codegen Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
+buildit $OUTDIR Clients/CSharp/AmbrosiaCS/AmbrosiaCS.csproj
 pushd $OUTDIR
-ln -s codegen/AmbrosiaCS
+# ln -s AmbrosiaCS
 popd
 set +x
 
@@ -101,14 +107,15 @@ fi
 # echo "----------------------------------------"
 # chmod -x ./bin/*.dll ./bin/*.so ./bin/*.dylib ./bin/*.a 2>/dev/null || echo
 
-echo
-echo "Deduplicating output produced by separate dotnet publish calls"
-echo "--------------------------------------------------------------"
-if [ ${OS:+defined} ] && [ "$OS" == "Windows_NT" ];
-then ./Scripts/dedup_bindist.sh squish
-elif [ "$UNAME" == Darwin ];
-then ./Scripts/dedup_bindist.sh symlink
-else ./Scripts/dedup_bindist.sh symlink
-fi
+# No longer needed because all output going to one folder
+#echo
+#echo "Deduplicating output produced by separate dotnet publish calls"
+#echo "--------------------------------------------------------------"
+#if [ ${OS:+defined} ] && [ "$OS" == "Windows_NT" ];
+#then ./Scripts/dedup_bindist.sh squish
+#elif [ "$UNAME" == Darwin ];
+#then ./Scripts/dedup_bindist.sh symlink
+#else ./Scripts/dedup_bindist.sh symlink
+#fi
 
 echo "$0 Finished"

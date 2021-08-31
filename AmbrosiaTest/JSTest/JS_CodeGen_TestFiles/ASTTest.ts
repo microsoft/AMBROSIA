@@ -64,7 +64,7 @@ export namespace Test
      */
     export function makeName(firstName: string = "John", lastName: string /** Foo */ = "Doe"): Names
     {
-        let names: Names;
+        let names: Names = [];
         let name: Name = { first: firstName, last: lastName };
         names.push(name);
         return (names);

@@ -20,7 +20,7 @@
         "deleteRemoteCRAConnections": false,
         "outputLogDestination": "ConsoleAndFile",
         "outputLogFolder": "./outputLogs",
-        "outputLoggingLevel": "Normal",
+        "outputLoggingLevel": "Verbose",
         "allowDisplayOfRpcParams": true,
         "allowPostMethodTimeouts": true,
         "enableTypeScriptStackTraces": true

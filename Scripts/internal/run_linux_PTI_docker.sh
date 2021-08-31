@@ -18,6 +18,10 @@ set -euo pipefail
 #
 # --------------------------------------------------------------------------------
 
+echo "*********  Running run_linux_PTI_docker.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 echo "Running a single Docker container with PerformanceTestInterruptable."
 echo "Using AZURE_STORAGE_CONN_STRING from your environment."
 

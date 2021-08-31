@@ -1,5 +1,9 @@
 # Sourced by CI scripts.
 
+echo "*********  Running ci_common_defs.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 export AMBROSIA_ROOT=`pwd`
 
 # Gather a bit of info about where we are:

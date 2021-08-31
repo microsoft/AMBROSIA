@@ -124,7 +124,7 @@ namespace AmbrosiaTest
 
             // Consumer and Publisher error msg the same ... since part of message has path (which can differ from machine to machine) - verify first part of message in conumser string and second part in Publisher
             string PrimaryErrorMessage = "Unable to publish function 'generic'";
-            string SecondaryErrorMessage = "TS_GenericType.ts:8:5) as a post method (reason: Generic functions are not supported)";
+            string SecondaryErrorMessage = "as a post method (reason: Generic functions are not supported; since the type of 'T' will not be known until runtime, Ambrosia cannot determine [at code-gen time] if the type(s) can be serialized)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -138,8 +138,8 @@ namespace AmbrosiaTest
             string testfileName = "TS_NoIntersectionType.ts";
 
             // Consumer and Publisher error msg the same ... since part of message has path (which can differ from machine to machine) - verify first part of message in conumser string and second part in Publisher
-            string PrimaryErrorMessage = "Error: Unable to publish type alias 'IntersectionType'";
-            string SecondaryErrorMessage = "as a type (reason: The published type 'IntersectionType' has an invalid type ('FullName[] & ShortName[]'); intersection types are not supported)";
+            string PrimaryErrorMessage = "Error: The following types are referenced by other types, but have not been published: 'FullName' found in intersection-type component #1 of published type 'IntersectionType', 'ShortName' found in intersection-type component #2 of published type 'IntersectionType'";
+            string SecondaryErrorMessage = "";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -246,7 +246,7 @@ namespace AmbrosiaTest
 
             string testfileName = "TS_NoFunctionComplexType.ts";
             string PrimaryErrorMessage = "Error: Unable to publish type alias 'myComplexType'";
-            string SecondaryErrorMessage = "as a type (reason: The published type 'myComplexType' [property 'fn'] has an invalid type ('() => void'); function types are not supported";
+            string SecondaryErrorMessage = "(reason: The published type 'myComplexType' [property 'fn'] has an invalid type ('()=>void'); function types are not supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -397,17 +397,14 @@ namespace AmbrosiaTest
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
         }
 
-
         [TestMethod]
         public void JS_CG_Neg_StringEnum()
         {
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testfileName = "TS_StringEnum.ts";
-
-            // Consumer and Publisher error msg the same ... since part of message has path (which can differ from machine to machine) - verify first part of message in conumser string and second part in Publisher
+            string testfileName = "TS_StringEnum.ts";  // Can't publish a private static method
             string PrimaryErrorMessage = "Error: Unable to publish enum 'PrintMediaString'";
-            string SecondaryErrorMessage = "TS_StringEnum.ts:6:5) as a type (reason: Unable to parse enum value 'NewspaperStringEnum' (\"NEWSPAPER\"); only integers are supported)";
+            string SecondaryErrorMessage = "reason: Unable to parse enum value 'NewspaperStringEnum' (\"NEWSPAPER\"); only integers are supported)";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
@@ -462,32 +459,6 @@ namespace AmbrosiaTest
             string testfileName = "TS_TwoAmbrTags.ts";
             string PrimaryErrorMessage = "Error: The @ambrosia tag is defined more than once";
             string SecondaryErrorMessage = "";
-
-            // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
-        }
-
-        [TestMethod]
-        public void JS_CG_Neg_UnionType()
-        {
-            JS_Utilities JSUtils = new JS_Utilities();
-
-            string testfileName = "TS_UnionType.ts";
-            string PrimaryErrorMessage = "Error: Unable to publish type alias 'MyUnionType'";
-            string SecondaryErrorMessage = "as a type (reason: The published type 'MyUnionType' has an invalid type ('string | number'); union types are not supported)";
-                                        
-            // Generate the consumer and publisher files and verify output and the generated files to cmp files
-            JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);
-        }
-
-        [TestMethod]
-        public void JS_CG_Neg_UnionTypeCommented()
-        {
-            JS_Utilities JSUtils = new JS_Utilities();
-
-            string testfileName = "TS_UnionTypeCommented.ts";
-            string PrimaryErrorMessage = "Error: Unable to publish function 'myComplexReturnFunction'";
-            string SecondaryErrorMessage = "as a post method (reason: The return type of method 'myComplexReturnFunction' [property 'r2'] has an invalid type ('number | string'); union types are not supported) ";
 
             // Generate the consumer and publisher files and verify output and the generated files to cmp files
             JSUtils.Test_CodeGen_TSFile(testfileName, true, PrimaryErrorMessage, SecondaryErrorMessage);

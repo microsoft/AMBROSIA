@@ -15,6 +15,10 @@ set -euo pipefail
 #
 # ------------------------------------------------------------------------------
 
+echo "*********  Running run_small_PTI_and_shutdown.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 cd `dirname $0`
 source ./default_var_settings.sh
 

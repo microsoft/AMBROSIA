@@ -4,6 +4,18 @@ set -euo pipefail
 # Our build consists of separate "dotnet publish" commands that are
 # directed to separate subdirectories of the output.
 
+echo "*********  Running dedup_bindist.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
+
+echo "**********  WARNING *******************************************"
+echo " Some scripts might call this but don't need it any more as build"
+echo " Goes to one folder. Keeping it here unchanged just in case. "
+echo "***************************************************************"
+exit 0
+
+
 primary="runtime"
 secondary=" coord codegen unsafedereg "
 
@@ -85,7 +97,7 @@ for dir in $secondary; do
             while read f; do        
                 echo -ne "."
                 dirof=`dirname $f`
-                relativepath=$(getrelative "../runtime/$f" "$dirof")
+                relativepath=$(getrelative "../libraries/$f" "$dirof")
                 ln -sf $relativepath $f
             done < $dups
             echo

@@ -24,20 +24,39 @@ namespace AmbrosiaTest
         [TestMethod]
         public void Help_ShowHelp_Ambrosia_Test()
         {
-            // Don't need to check for framework as proper file is in AmbrosiaTest ... bin directory
+            Utilities MyUtils = new Utilities();
+
+            string current_framework;
+            if (MyUtils.NetFrameworkTestRun)
+                current_framework = MyUtils.NetFramework;
+            else
+                current_framework = MyUtils.NetCoreFramework;
+
             string testName = "showhelpambrosia";
             string fileName = "Ambrosia";
-            GenericVerifyHelp(testName, fileName, "");
+            string workingDir = current_framework;
+
+            GenericVerifyHelp(testName, fileName, workingDir);
         }
 
         //**** Show Immortal Coord Help 
         [TestMethod]
         public void Help_ShowHelp_ImmCoord_Test()
         {
-            // Don't need to check for framework as proper file is in AmbrosiaTest ... bin directory
+
+            Utilities MyUtils = new Utilities();
+
+            string current_framework;
+            if (MyUtils.NetFrameworkTestRun)
+                current_framework = MyUtils.NetFramework;
+            else
+                current_framework = MyUtils.NetCoreFramework;
+
             string testName = "showhelpimmcoord";
             string fileName = "ImmortalCoordinator";
-            GenericVerifyHelp(testName, fileName, "");
+            string workingDir = current_framework;
+
+            GenericVerifyHelp(testName, fileName, workingDir);
         }
 
         //**** Show PTI Job Help 

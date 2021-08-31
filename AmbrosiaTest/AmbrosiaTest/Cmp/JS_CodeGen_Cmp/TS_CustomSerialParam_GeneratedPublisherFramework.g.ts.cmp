@@ -40,7 +40,7 @@ export namespace State
      * Only assign this using the return value of IC.start(), the return value of the upgrade() method of your AmbrosiaAppState
      * instance, and [if not using the generated checkpointConsumer()] in the 'onFinished' callback of an IncomingCheckpoint object.
      */
-    export let _appState: AppState = null;
+    export let _appState: AppState;
 }
 
 /** Returns an OutgoingCheckpoint object used to serialize app state to a checkpoint. */
@@ -56,10 +56,14 @@ export function checkpointProducer(): Streams.OutgoingCheckpoint
 /** Returns an IncomingCheckpoint object used to receive a checkpoint of app state. */
 export function checkpointConsumer(): Streams.IncomingCheckpoint
 {
-    function onCheckpointReceived(appState: Ambrosia.AmbrosiaAppState, error?: Error): void
+    function onCheckpointReceived(appState?: Ambrosia.AmbrosiaAppState, error?: Error): void
     {
         if (!error)
         {
+            if (!appState) // Should never happen
+            {
+                throw new Error(`An appState object was expected, not ${appState}`);
+            }
             State._appState = appState as State.AppState;
         }
         Utils.log(`checkpointConsumer: ${error ? `Failed (reason: ${error.message})` : "Checkpoint loaded"}`);
@@ -137,16 +141,17 @@ function dispatcher(message: Messages.DispatchedMessage): void
                                     break;
                             }
                         }
-                        catch (error)
+                        catch (error: unknown)
                         {
-                            Utils.log(error);
-                            IC.postError(rpc, error);
+                            const err: Error = Utils.makeError(error);
+                            Utils.log(err);
+                            IC.postError(rpc, err);
                         }
                         break;
 
                     case 2:
                         {
-                            const rawParams: Uint8Array = rpc.rawParams;
+                            const rawParams: Uint8Array = rpc.getRawParams();
                             PTM.Test.takesCustomSerializedParams(rawParams);
                         }
                         break;
@@ -186,14 +191,14 @@ function dispatcher(message: Messages.DispatchedMessage): void
 
                     case Messages.AppEventType.UpgradeState:
                         // TODO: Add an exported [non-async] function 'onUpgradeState(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParam.ts, then (after the next code-gen) a call to it will be generated here
-                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_CustomSerialParam.ts in order to reference the 'Messages' namespace.
+                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSTest/JS_CodeGen_TestFiles/TS_CustomSerialParam.ts in order to reference the 'Messages' namespace.
                         //       Upgrading is performed by calling _appState.upgrade(), for example:
                         //       _appState = _appState.upgrade<AppStateVNext>(AppStateVNext);
                         break;
 
                     case Messages.AppEventType.UpgradeCode:
                         // TODO: Add an exported [non-async] function 'onUpgradeCode(upgradeMode: Messages.AppUpgradeMode): void' to ./JS_CodeGen_TestFiles/TS_CustomSerialParam.ts, then (after the next code-gen) a call to it will be generated here
-                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSCodeGen/JS_CodeGen_TestFiles/TS_CustomSerialParam.ts in order to reference the 'Messages' namespace.
+                        // Note: You will need to import Ambrosia to ../../AmbrosiaTest/JSTest/JS_CodeGen_TestFiles/TS_CustomSerialParam.ts in order to reference the 'Messages' namespace.
                         //       Upgrading is performed by calling IC.upgrade(), passing the new handlers from the "upgraded" PublisherFramework.g.ts,
                         //       which should be part of your app (alongside your original PublisherFramework.g.ts).
                         break;
@@ -225,10 +230,10 @@ function dispatcher(message: Messages.DispatchedMessage): void
                 break;
         }
     }
-    catch (error)
+    catch (error: unknown)
     {
-        let messageName: string = (message.type === Messages.DispatchedMessageType.AppEvent) ? `AppEvent:${Messages.AppEventType[(message as Messages.AppEvent).eventType]}` : Messages.DispatchedMessage[message.type];
+        let messageName: string = (message.type === Messages.DispatchedMessageType.AppEvent) ? `AppEvent:${Messages.AppEventType[(message as Messages.AppEvent).eventType]}` : Messages.DispatchedMessageType[message.type];
         Utils.log(`Error: Failed to process ${messageName} message`);
-        Utils.log(error);
+        Utils.log(Utils.makeError(error));
     }
 }

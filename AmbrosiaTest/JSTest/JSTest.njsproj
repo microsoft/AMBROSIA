@@ -2,7 +2,7 @@
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <Name>JSCodeGen</Name>
+    <Name>JSTest</Name>
     <RootNamespace>JSCodeGen</RootNamespace>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -10,7 +10,8 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>61917a12-2be6-4465-bb76-b467295b972d</ProjectGuid>
-    <ProjectHome>.</ProjectHome>
+    <ProjectHome>
+    </ProjectHome>
     <StartupFile>
     </StartupFile>
     <StartWebBrowser>False</StartWebBrowser>
@@ -30,6 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="ambrosiaConfig.json" />
+    <Content Include="ambrosiaConfigGOLD.json" />
     <Content Include="package.json" />
   </ItemGroup>
   <ItemGroup>
@@ -56,7 +58,7 @@
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod3.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod2.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StaticMethod1.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnionTypeCommented.ts" />
+    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StringEnum.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnknownAtt_Type.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_VersionInt.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_RunTimeBool.ts" />
@@ -66,10 +68,8 @@
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_PublishClass.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnknownAtt_Method.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TwoAmbrTags.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_UnionType.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TupleType.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_OptionalProperties.ts" />
-    <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_StringEnum.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TagInterface.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\NegativeTests\TS_TagMethod.ts" />
     <TypeScriptCompile Include="JS_CodeGen_TestFiles\TS_JSDocComment2.ts" />

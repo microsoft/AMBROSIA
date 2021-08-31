@@ -8,6 +8,10 @@ set -euo pipefail
 # This mostly DISPATCHES to other scripts.
 # ------------------------------------------------------------
 
+echo "*********  Running run_linux_ci.sh ********************"
+echo "Args: "$@
+echo "*******************************************************************"
+
 # Hack to deal with Azure Devops Pipelines:
 if ! [[ -e ./build_docker_images.sh ]]; then
     # For MOST CI environments, running this script in-place, this
@@ -73,10 +77,14 @@ case $mode in
       chmod +x dotnet-install.sh
       ./dotnet-install.sh
 
-	  echo "********* Build DotNet Core ********************"
-      cd "$AMBROSIA_ROOT"
-      ./build_dotnetcore_bindist.sh
-
+      # Have a switch where the build is already done and just run the ci on that build ... used by the build tgz scripts
+	  
+      if ! [[ ${AMBROSIA_CI_VERIFY_BUILD:+defined} ]]; then
+         echo "********* Build DotNet Core ********************"
+         cd "$AMBROSIA_ROOT"
+         ./build_dotnetcore_bindist.sh
+      fi
+  
       # Build Application: PTI
       # ----------------------------------------
 	   echo "********* PTI ********************"
