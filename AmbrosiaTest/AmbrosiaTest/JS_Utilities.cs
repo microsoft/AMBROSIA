@@ -37,7 +37,10 @@ namespace AmbrosiaTest
         public string JSConfig_debugTestUpgrade = "debugTestUpgrade";
         public string JSConfig_appVersion = "appVersion";
         public string JSConfig_upgradeVersion = "upgradeVersion";
-        public string JSConfig_LBOpt_msgQueueSize = "lbOptionsmaxMessageQueueSizeInMB";  // NOTE: all lbOptions settings need "lbOptions" at beginning so know it is nested there
+
+        // NOTE: all lbOptions settings need "lbOptions" at beginning so know it is nested there
+        public string JSConfig_LBOpt_msgQueueSize = "lbOptionsmaxMessageQueueSizeInMB";  
+        public string JSConfig_LBOpt_deleteLogs = "lbOptionsdeleteLogs";  
 
 
         // Runs a TS file through the JS LB and verifies code gen works correctly
@@ -479,6 +482,17 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptifmstest");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptideletefilelogtruetest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptideletefilelogfalsetest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptirestartendtoendtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptirestartendtoendbiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptirestartafterfinishesbiditest");
+            Thread.Sleep(2000);
+
         }
 
 
