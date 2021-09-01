@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading;
 using System.Windows.Forms; // need this to handle threading issue on sleeps
 using System.Configuration;
+using System.IO;
 
 
 namespace AmbrosiaTest
@@ -36,11 +37,9 @@ namespace AmbrosiaTest
         }
 
 
-
+        //**
         //** Setting the largest maxMessageSize and batchSizeCutoff since maxMessageSize is the size of payload and batchSizeCutoff is the number of message - this is not Fixed message size so as it is descending
         //** C# LB uses 64 MB for GiantMessageTest
-        //**
-        //**  NOTE - this test takes kind of a long time (15+ mins) to run especially do more than 2 rounds. Maybe longer than it should:  Bug #166 - Large Messages have poor performance
         //**
         [TestMethod]
         public void JS_PTI_GiantMessage_BiDi_Test()
@@ -121,6 +120,10 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
+
+            //*#*#*# DEBUG
+            Assert.Fail("Bug #170");
+            //*#*#*#
             
             int numRounds = 2;
             long totalBytes = 134217728;
@@ -164,6 +167,10 @@ namespace AmbrosiaTest
         {
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
+
+            //*#*#*# DEBUG
+            Assert.Fail("Bug #170");
+            //*#*#*#
 
             int numRounds = 5;
             long totalBytes = 640;
@@ -279,6 +286,162 @@ namespace AmbrosiaTest
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
         }
 
+
+        //** Simple test to verify DeleteLog = true for files works
+        [TestMethod]
+        public void JS_PTI_DeleteFileLogTrue_Test()
+        {
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+
+            int numRounds = 4;
+            long totalBytes = 512;
+            long totalEchoBytes = 512;
+            int bytesPerRound = 128;
+            int maxMessageSize = 32;
+            int batchSizeCutoff = 32;
+            bool bidi = false;
+
+            string testName = "jsptideletefilelogtruetest";
+            string logOutputFileName_TestApp = testName + "_TestApp.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
+
+            // creates the log files
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
+
+            // Wait until finish
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true);
+
+            //Get date of the serverlog1 and serverchkpt1
+            DateTime serveroriglogDate = File.GetCreationTime(logDirectory + "\\jsptideletefilelogtruetest_0\\serverlog1");
+            DateTime serverorigcheckptDate = File.GetCreationTime(logDirectory + "\\jsptideletefilelogtruetest_0\\serverchkpt1");
+
+            // set to delete the log
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "true");
+
+            // call it again 
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
+
+            // Wait until finish
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true);
+
+            DateTime servernewlogDate = File.GetCreationTime(logDirectory + "\\jsptideletefilelogtruetest_0\\serverlog1");
+            DateTime servernewcheckptDate = File.GetCreationTime(logDirectory + "\\jsptideletefilelogtruetest_0\\serverchkpt1");
+
+            // Verify that new log files were created
+            if (serveroriglogDate == servernewlogDate)
+                Assert.Fail("Original Log Date and New Log Date were the same which means it was NOT deleted.");
+
+            if (serverorigcheckptDate == servernewcheckptDate)
+                Assert.Fail("Original CheckPoint Date and New CheckPoint Date were the same which means it was NOT deleted.");
+
+        }
+
+        //** Simple test to verify DeleteLog = FALSE for files works
+        [TestMethod]
+        public void JS_PTI_DeleteFileLogFalse_Test()
+        {
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+
+            int numRounds = 4;
+            long totalBytes = 512;
+            long totalEchoBytes = 512;
+            int bytesPerRound = 128;
+            int maxMessageSize = 32;
+            int batchSizeCutoff = 32;
+            bool bidi = false;
+
+            string testName = "jsptideletefilelogfalsetest";
+            string logOutputFileName_TestApp = testName + "_TestApp.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
+
+            // creates the log files
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
+
+            // Wait until finish
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true);
+
+            //Get date of the serverlog1 and serverchkpt1
+            DateTime serveroriglogDate = File.GetCreationTime(logDirectory + "\\jsptideletefilelogfalsetest_0\\serverlog1");
+            DateTime serverorigcheckptDate = File.GetCreationTime(logDirectory + "\\jsptideletefilelogfalsetest_0\\serverchkpt1");
+
+            // set to NOT delete the log
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false");
+
+            // call it again 
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
+
+            // Wait until finish
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true);
+
+            DateTime servernewlogDate = File.GetCreationTime(logDirectory + "\\jsptideletefilelogfalsetest_0\\serverlog1");
+            DateTime servernewcheckptDate = File.GetCreationTime(logDirectory + "\\jsptideletefilelogfalsetest_0\\serverchkpt1");
+
+            // Verify that new log files were NOT created
+            if (serveroriglogDate != servernewlogDate)
+                Assert.Fail("Original Log Date and New Log Date were NOT the same which means they were deleted when they shouldn't have been.");
+
+            if (serverorigcheckptDate != servernewcheckptDate)
+                Assert.Fail("Original CheckPoint Date and New CheckPoint Date were NOT the same which means they were deleted when they shouldn't have been.");
+
+        }
+
+
+        //** Test that restarts after the run finishes. Test to show that it can start up on log files that "completed"
+        [TestMethod]
+        public void JS_PTI_RestartAfterFinishes_BiDi_Test()
+        {
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 5;
+            long totalBytes = 640;
+            long totalEchoBytes = 640;
+            int bytesPerRound = 128;
+            int maxMessageSize = 32;
+            int batchSizeCutoff = 32;
+            int messagesSent = 36;
+            bool bidi = true;
+
+            string testName = "jsptirestartafterfinishesbiditest";
+            string logOutputFileName_TestApp = testName + "_TestApp.log";
+            string logOutputFileNameRestarted_TestApp = testName + "_TestApp_Restarted.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false");   // default is false but ok to specifically state in case default changes
+
+            // Start it once
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
+
+            // Wait until it finishes
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+
+
+            // Restart it and make sure it runs ok
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestarted_TestApp);
+
+            // Verify the data in the restarted output file
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "[IC] I'm a checkpointer", 1, false, testName, true);  // since it is done, it looks like it is a check pointer instead of doing connection
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
+
+            // Verify integrity of Ambrosia logs by replaying
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+        }
+
+
+
+        //*#*## TO DO:  Add the "deleteLogs" tests for Blobs *#*#*#*
 
         //** Runs the built in unit tests 
         [TestMethod]

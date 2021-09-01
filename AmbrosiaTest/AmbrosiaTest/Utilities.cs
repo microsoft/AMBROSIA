@@ -1047,7 +1047,7 @@ namespace AmbrosiaTest
         }
 
         // Starts the server.exe from PerformanceTestUninterruptible.  
-        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0, string deployMode = "", string ICPort = "", string TTDLog = "", string TTDCheckpointNum = "", string currentVersion = "")
+        public int StartPerfServer(string receivePort, string sendPort, string perfJobName, string perfServerName, string testOutputLogFile, int NumClients, bool upgrade, long optionalMemoryAllocat = 0, string deployMode = "", string ICPort = "", string TTDLog = "", string TTDCheckpointNum = "", string currentVersion = "", string biDirectional="" )
         {
 
             // Configure upgrade properly
@@ -1116,6 +1116,13 @@ namespace AmbrosiaTest
             if (upgradeString != null && upgradeString != "N")
                 argString = argString + " -u";
 
+
+            // Disable bidirectional communication
+            if (biDirectional != "")
+            {
+                argString = argString + " -nbd";
+            }
+
             int processID = LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
             {
@@ -1164,7 +1171,7 @@ namespace AmbrosiaTest
 
 
         // Perf Client from PerformanceTestInterruptible 
-        public int StartPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfMessageSize, string perfNumberRounds, string testOutputLogFile, string deployMode="", string ICPort="", string TTDLog="", string TTDCheckpointNum="")
+        public int StartPerfClientJob(string receivePort, string sendPort, string perfJobName, string perfServerName, string perfMessageSize, string perfNumberRounds, string testOutputLogFile, string deployMode="", string ICPort="", string TTDLog="", string TTDCheckpointNum="", string NonDescending="")
         {
 
             // Set path by using proper framework
@@ -1211,6 +1218,12 @@ namespace AmbrosiaTest
                 argString = "-j=" + perfJobName + " -s=" + perfServerName + " -rp=" + receivePort + " -sp=" + sendPort
                     + " -mms=" + perfMessageSize + " -n=" + perfNumberRounds + " -c" + " -d=" + deployModeInProcTimeTravel  
                     + " -l=" + TTDLog + " -ch=" + TTDCheckpointNum;
+            }
+
+            // Disable message descending size - basically makes it a fixed size message
+            if (NonDescending != "")
+            {
+                argString = argString + " -nds";
             }
 
             // Start process
@@ -1509,7 +1522,11 @@ namespace AmbrosiaTest
             CleanupAzureTables("savelogtoblob");
             Thread.Sleep(2000);
             CleanupAzureTables("savelogtofileandblob");
-
+            Thread.Sleep(2000);
+            CleanupAzureTables("fixedmessagetest");
+            Thread.Sleep(2000);
+            CleanupAzureTables("nobiditest");
+            
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
