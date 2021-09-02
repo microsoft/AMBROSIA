@@ -43,12 +43,12 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             int numRounds = 2;
-            long totalBytes = 256;
-            long totalEchoBytes = 256;
-            int bytesPerRound = 128;
-            int maxMessageSize = 32;
-            int batchSizeCutoff = 32;
-            int messagesSent = 12;
+            long totalBytes = 2147483648;
+            long totalEchoBytes = 2147483648;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
+            int messagesSent = 49152;
             bool bidi = true;
 
             string testName = "jsptibidiendtoendtest";
@@ -71,6 +71,7 @@ namespace AmbrosiaTest
 
 
         //** Basic End to End that is NOT bidirectional
+        //** A zero value is flag to take default value
         [TestMethod]
         public void JS_PTI_BasicEndToEnd_Test()
         {
@@ -78,12 +79,12 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             int numRounds = 4;
-            long totalBytes = 512;
-            long totalEchoBytes = 512;
-            int bytesPerRound = 128;
-            int maxMessageSize = 32;
-            int batchSizeCutoff = 32;
-            int messagesSent = 28;
+            long totalBytes = 4294967296;
+            long totalEchoBytes = 4294967296;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0; 
+            int messagesSent = 245760;
             bool bidi = false;
 
             string testName = "jsptiendtoendtest";
@@ -122,7 +123,7 @@ namespace AmbrosiaTest
             long totalEchoBytes = 2560;
             int bytesPerRound = 128;
             int maxMessageSize = 32;
-            int batchSizeCutoff = 32;
+            int batchSizeCutoff = 10485760;
             int messagesSent = 156;
             bool bidi = false;
 
@@ -172,13 +173,13 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 30;
-            long totalBytes = 30720;
-            long totalEchoBytes = 30720;
-            int bytesPerRound = 1024;
-            int maxMessageSize = 128;
-            int batchSizeCutoff = 128;
-            int messagesSent = 1784;
+            int numRounds = 6;
+            long totalBytes = 6442450944;
+            long totalEchoBytes = 6442450944;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
+            int messagesSent = 1032192;
             bool bidi = true;
 
             string testName = "jsptirestartendtoendbiditest";
@@ -191,8 +192,8 @@ namespace AmbrosiaTest
             // Start it once
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
-            // Give it 10 seconds to do something before killing it
-            Thread.Sleep(10000);
+            // Give it 15 seconds to do something before killing it
+            Thread.Sleep(15000);
             Application.DoEvents();  
 
             // Kill it 

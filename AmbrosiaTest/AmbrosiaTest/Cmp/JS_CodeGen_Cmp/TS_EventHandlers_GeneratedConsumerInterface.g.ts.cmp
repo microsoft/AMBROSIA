@@ -1,5 +1,5 @@
 // Generated consumer-side API for the 'TS_EventHandlers_Generated' Ambrosia Node app/service.
-// Publisher: (Not specified).
+// Publisher: Darren Gehring [darrenge@microsoft.com].
 // Note: This file was generated
 // Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
 import Ambrosia = require("ambrosia-node");
