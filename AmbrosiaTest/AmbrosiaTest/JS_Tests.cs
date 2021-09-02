@@ -52,7 +52,7 @@ namespace AmbrosiaTest
             long totalEchoBytes = 805306368;
             int bytesPerRound = 268435456; // 256 MB
             int maxMessageSize = 67108864;  // 64 MBs
-            int batchSizeCutoff = 1;
+            int batchSizeCutoff = 0;
             int messagesSent = 28;
             bool bidi = true;
 
@@ -90,7 +90,7 @@ namespace AmbrosiaTest
             long totalEchoBytes = 536870912;  // not needed since not bi directional
             int bytesPerRound = 268435456; // 256 MB
             int maxMessageSize = 67108864;  // 64 MBs
-            int batchSizeCutoff = 1;
+            int batchSizeCutoff = 0;
             int messagesSent = 12;
             bool bidi = false;
 
@@ -261,7 +261,7 @@ namespace AmbrosiaTest
             long totalEchoBytes = 201326592;
             int bytesPerRound = 67108864;  
             int maxMessageSize = 4194304;
-            int batchSizeCutoff = 128;
+            int batchSizeCutoff = 0;
             int messagesSent = 48;
             bool bidi = false;
             bool fixedMsgSize = true;
