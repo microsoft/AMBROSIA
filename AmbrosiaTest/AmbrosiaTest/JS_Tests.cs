@@ -120,26 +120,17 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-
-            //*#*#*# DEBUG
-            Assert.Fail("Bug #170");
-            //*#*#*#
-            
             int numRounds = 2;
             long totalBytes = 134217728;
             long totalEchoBytes = 134217728; 
             int bytesPerRound = 67108864;  //64 MB
             int maxMessageSize = 33554432; 
-            int batchSizeCutoff = 32;
-            int messagesSent = 22;
+            int batchSizeCutoff = 0;
+            int messagesSent = 6;
             bool bidi = false;
+            int memoryUsed = 104857600; // padding"(in bytes) used to simulate large checkpoints by being included in app state-- 1GB (1073741824) is what C# PTI uses. Will get OOM issue if do much more than 100 MB so just use 100 MB.  See bug #170 for details.  -  
 
-
-            //*#*#*# TO DO - Get this working ... should work with 1120MB as that is what the error message said ...
-            //*#*#* Update bidi test too
-            int memoryUsed = 65536; //Bug #170   1073741824 =  1GB // 1174405120;  //1120MB --  C# LB is 2000483648 (can't do full 2147483648) -  padding"(in bytes) used to simulate large checkpoints by being included in app state; defaults to 0
-
-            int checkPointSize = 750; // 750 when have 0 memory used
+            int checkPointSize = 209716012;
 
             string testName = "jsptigiantcheckpointtest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
@@ -152,7 +143,6 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
-
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Reading a checkpoint "+ checkPointSize.ToString() + " bytes", 1, false, testName, true);
 
@@ -168,10 +158,6 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            //*#*#*# DEBUG
-            Assert.Fail("Bug #170");
-            //*#*#*#
-
             int numRounds = 5;
             long totalBytes = 640;
             long totalEchoBytes = 640;
@@ -180,9 +166,9 @@ namespace AmbrosiaTest
             int batchSizeCutoff = 32;
             int messagesSent = 36;
 
-            int memoryUsed = 1024;  //*#*#*#* UPDATE THIS  1073741824; //1GB // 1174405120;  //1120MB --  C# LB is 2000483648 (can't do full 2147483648) -  padding"(in bytes) used to simulate large checkpoints by being included in app state; defaults to 0
+            int memoryUsed = 104857600;  // padding"(in bytes) used to simulate large checkpoints by being included in app state-- 1GB (1073741824) is what C# PTI uses. Will get OOM issue if do much more than 100 MB so just use 100 MB.  See bug #170 for details.  -  
 
-            int checkPointSize = 2821; // 750 when have 0 memory used -- 2821 when meme used = 1024 //*#*#*#*#*#*  Update this !!!!!
+            int checkPointSize = 209715990;
             bool bidi = true;
 
             string testName = "jsptigiantcheckpointbiditest";
