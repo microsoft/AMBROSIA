@@ -206,7 +206,7 @@ namespace AmbrosiaTest
             // Launch the client job process with these values
             string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"]+"\\PTI\\App";
             string fileNameExe = "node.exe";
-            string argString = "out\\main.js -ir="+ JSPTI_CombinedInstanceRole + " -n="+ numRounds.ToString()+ " -bpr="+ bytesPerRound.ToString()+ " -mms="+ maxMessageSize.ToString()+ " -bsc="+ batchSizeCutoff.ToString()+ " -nhc -efb="+ totalBytes.ToString() + " -eeb="+ totalEchoBytes.ToString();
+            string argString = "out\\main.js -ir="+ JSPTI_CombinedInstanceRole + " -n="+ numRounds.ToString()+ " -nhc -efb="+ totalBytes.ToString() + " -eeb="+ totalEchoBytes.ToString();
 
             // Enables echoing the 'doWork' method call back to the client
             if (bidi)
@@ -220,12 +220,29 @@ namespace AmbrosiaTest
                 argString = argString + " -m="+ memoryUsed.ToString();
             }
 
+            // Max Message Size
+            if (maxMessageSize > 0)
+            {
+                argString = argString + " -mms=" + maxMessageSize.ToString();
+            }
+
+            // bytes per round
+            if (bytesPerRound > 0)
+            {
+                argString = argString + " -bpr=" + bytesPerRound.ToString();
+            }
+
+            // batch size cutoff ... if 0 then use default
+            if (batchSizeCutoff > 0 )
+            {
+                argString = argString + " -bsc=" + batchSizeCutoff.ToString();
+            }
+
             // fixed message size
             if (fms)
             {
                 argString = argString + " -fms";
             }
-
 
             int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
@@ -350,12 +367,37 @@ namespace AmbrosiaTest
             string logOutputFileName_TestApp = testName + "_VerifyTTD.log";
 
             string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
-            string fileNameExe = "node.exe";
-            string argString = "out\\main.js -ir=Combined -n="+ numRounds.ToString()+ " -bpr="+ bytesPerRound.ToString()+ " -mms="+ maxMessageSize.ToString()+ " -bsc="+ batchSizeCutoff.ToString()+ " -bd -nhc -efb=" + totalBytes.ToString() + " -eeb=" + totalEchoBytes.ToString();
-
             string ambrosiaBaseLogDir = currentDir + "\\" + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
             string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
             string ambServiceLogPath = ambrosiaBaseLogDir + "\\";
+
+            string fileNameExe = "node.exe";
+            string argString = "out\\main.js -ir=Combined -n="+ numRounds.ToString()+ " -nhc -efb=" + totalBytes.ToString() + " -eeb=" + totalEchoBytes.ToString();
+
+            // Enables echoing the 'doWork' method call back to the client
+            if (bidi)
+            {
+                argString = argString + " -bd";
+            }
+
+            // If passing zero then just use the default value.
+            // Max Message Size
+            if (maxMessageSize > 0)
+            {
+                argString = argString + " -mms=" + maxMessageSize.ToString();
+            }
+
+            // bytes per round
+            if (bytesPerRound > 0)
+            {
+                argString = argString + " -bpr=" + bytesPerRound.ToString();
+            }
+
+            // batch size cutoff ... if 0 then use default
+            if (batchSizeCutoff > 0)
+            {
+                argString = argString + " -bsc=" + batchSizeCutoff.ToString();
+            }
 
             // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
             if (Directory.Exists(ambrosiaBaseLogDir) == false)

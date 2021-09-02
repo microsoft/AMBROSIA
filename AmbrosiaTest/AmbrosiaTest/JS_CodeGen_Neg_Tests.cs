@@ -45,7 +45,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
 
             // get ambrosia-node source files
-            string AmbrosiaNodeDir = @"../../../../JSCodeGen/node_modules/ambrosia-node/src/";
+            string AmbrosiaNodeDir = @"../../../../JSTest/node_modules/ambrosia-node/src/";
 
             // loop through all the Ambrosia JS src files and generate them
             foreach (string currentSrcFile in Directory.GetFiles(AmbrosiaNodeDir, "*.ts"))
