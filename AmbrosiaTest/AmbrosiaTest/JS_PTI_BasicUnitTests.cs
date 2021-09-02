@@ -119,12 +119,12 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             int numRounds = 20;
-            long totalBytes = 2560;
-            long totalEchoBytes = 2560;
-            int bytesPerRound = 128;
+            long totalBytes = 327680;
+            long totalEchoBytes = 327680;
+            int bytesPerRound = 16384;
             int maxMessageSize = 32;
-            int batchSizeCutoff = 10485760;
-            int messagesSent = 156;
+            int batchSizeCutoff = 16384;
+            int messagesSent = 19968;
             bool bidi = false;
 
             string testName = "jsptirestartendtoendtest";
@@ -159,9 +159,9 @@ namespace AmbrosiaTest
             }
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "[IC] Connected!", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
+            //pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
-            // Verify integrity of Ambrosia logs by replaying
+            // Verify integrity of Ambrosia logs by replaying 
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
         }
 
