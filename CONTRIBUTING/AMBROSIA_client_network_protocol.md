@@ -114,6 +114,7 @@ Message types and associated data which may be sent to or received by services/a
 
  * 5 – `RPCBatch` (Sent/Received): Data is a count (ZigZagInt) of the number of RPC messages in the batch, followed by the corresponding RPC messages.
    When sent by the LB, this message is essentially a performance hint to the IC that enables optimized processing of the RPCs, even for as few as 2 RPCs.
+   During recovery, the LB is free to change how outgoing RPC messages are batched using `RPCBatch`, so it's valid to use `RPCBatch` non-deterministically.
 
  * 2 – `TakeCheckpoint` (Sent/Received): No data. 
    When sent by the LB, this message requests the IC to take a checkpoint immediately rather than waiting until the log reaches the IC's `--logTriggerSize` (which defaults to 1024 MB).
