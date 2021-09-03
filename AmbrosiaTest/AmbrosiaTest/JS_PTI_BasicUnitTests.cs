@@ -137,7 +137,7 @@ namespace AmbrosiaTest
             // Start it once
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
-            // Give it 5 seconds to do something before killing it
+            // Give it 5 seconds where it tries to connect but doesn't
             Thread.Sleep(5000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
@@ -170,6 +170,11 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_BasicRestartEndToEnd_BiDi_Test()
         {
+
+            //*#*#*#*
+            Assert.Fail("Bug #172: Restart fails to work when kill node and restart it after it has connected already. Replays what was left but does not continue where it was left off.");
+            //#*#*#*
+
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -192,8 +197,8 @@ namespace AmbrosiaTest
             // Start it once
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
-            // Give it 15 seconds to do something before killing it
-            Thread.Sleep(15000);
+            // Give it 25 seconds to do something before killing it
+            Thread.Sleep(25000);
             Application.DoEvents();  
 
             // Kill it 
