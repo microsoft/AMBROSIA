@@ -99,51 +99,29 @@ namespace AmbrosiaTest
             GenericVerifyHelp(testName, fileName, workingDir);
         }
 
-        //**** Show PT Job Help 
-        /*
+        //**** Show JS PTI Help 
         [TestMethod]
-        public void Help_ShowHelp_PTJob_Test()
+        public void JS_PTI_ShowHelp_Test()
         {
             Utilities MyUtils = new Utilities();
+            string testName = "jsptishowhelptest";
 
-            // add proper framework 
-            string current_framework;
-            if (MyUtils.NetFrameworkTestRun)
-                current_framework = MyUtils.NetFramework;
-            else
-                current_framework = MyUtils.NetCoreFramework;
+            string TestLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+            string logOutputFileName = testName + ".log";
+            string LogOutputDirFileName = TestLogDir + "\\" + logOutputFileName;
 
-            string testName = "showhelpptjob";
-            string fileName = "job";
-            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + current_framework;
-            GenericVerifyHelp(testName, fileName, workingDir);
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
+            string fileName = "node";
+            string argString = "/C node.exe out\\main.js -h > " + LogOutputDirFileName + " 2>&1";
+
+            GenericVerifyHelp(testName, fileName, workingDir, argString);
         }
-
-        //**** Show PT Server Help 
-        [TestMethod]
-        public void Help_ShowHelp_PTServer_Test()
-        {
-            Utilities MyUtils = new Utilities();
-
-            // add proper framework 
-            string current_framework;
-            if (MyUtils.NetFrameworkTestRun)
-                current_framework = MyUtils.NetFramework;
-            else
-                current_framework = MyUtils.NetCoreFramework;
-
-            string testName = "showhelpptserver";
-            string fileName = "server";
-            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + current_framework;
-            GenericVerifyHelp(testName, fileName, workingDir);
-        }
-        */
 
 
         //************* Helper Method *****************
         // basic helper method to call and exe with no params so shows help - verify getting proper help screen
         //*********************************************
-        public void GenericVerifyHelp(string testName, string fileName, string workingDir)
+        public void GenericVerifyHelp(string testName, string fileName, string workingDir, string argString="")
         {
             Utilities MyUtils = new Utilities();
             string TestLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
@@ -158,6 +136,12 @@ namespace AmbrosiaTest
             }
             string LogOutputDirFileName = TestLogDir + "\\" + logOutputFileName;
 
+            // this makes it more generic where can supply full argstring if want
+            if (argString=="")
+            {
+                argString = "/C " + fileNameExe + " > " + LogOutputDirFileName + " 2>&1";
+            }
+
             // Use ProcessStartInfo class
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
@@ -167,11 +151,11 @@ namespace AmbrosiaTest
                 CreateNoWindow = false,
                 WorkingDirectory = workingDir,
                 FileName = "cmd.exe",
-                Arguments = "/C " + fileNameExe + " > " + LogOutputDirFileName + " 2>&1"
-            };
+                Arguments = argString
+                };
 
             // Log the info to debug
-            string logInfo = "<LaunchProcess> " + workingDir + "\\" + fileNameExe;
+            string logInfo = "<LaunchProcess> " + workingDir + "\\" + fileNameExe+ " "+ argString; 
             MyUtils.LogDebugInfo(logInfo);
 
             // Start cmd.exe process that launches proper exe
