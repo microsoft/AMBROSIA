@@ -29,6 +29,7 @@ namespace AmbrosiaTest
         public string JSConfig_instanceName = "instanceName";
         public string JSConfig_icCraPort = "icCraPort";
         public string JSConfig_icReceivePort = "icReceivePort";
+        public string JSConfig_icSendPort = "icSendPort";
         public string JSConfig_icLogFolder = "icLogFolder";
         public string JSConfig_icBinFolder = "icBinFolder";
         public string JSConfig_useNetCore = "useNetCore";
@@ -178,7 +179,7 @@ namespace AmbrosiaTest
 
 
         // Start Javascript Test App
-        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile, int memoryUsed = 0, bool fms = false)
+        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile, int memoryUsed = 0, bool fms = false, string instanceRole= "", string serverInstanceName = "", string clientInstanceName = "")
         {
 
 /*   *** For reference - PTI parameters
@@ -206,10 +207,45 @@ namespace AmbrosiaTest
             // Launch the client job process with these values
             string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"]+"\\PTI\\App";
             string fileNameExe = "node.exe";
-            string argString = "out\\main.js -ir="+ JSPTI_CombinedInstanceRole + " -n="+ numRounds.ToString()+ " -nhc -efb="+ totalBytes.ToString() + " -eeb="+ totalEchoBytes.ToString();
+            string argString = "out\\main.js";
+
+            // Instance Role defaults to Combined
+            if (instanceRole=="")
+            {
+                argString = argString + " -ir="+ JSPTI_CombinedInstanceRole;
+            }
+            else
+            {
+                argString = argString + " -ir=" + instanceRole;
+            }
+
+            // set the -n and -eeb parameter only for non server
+            if (instanceRole != JSPTI_ServerInstanceRole)
+            {
+                argString = argString + " -n=" + numRounds.ToString()+" -eeb="+ totalEchoBytes.ToString();
+            }
+
+            // set the -nhc and -efb for anything that is not client (server or combined)
+            if (instanceRole != JSPTI_ClientInstanceRole) 
+            {
+                argString = argString + " -nhc -efb=" + totalBytes.ToString();
+            }
+
+            // set the serverInstance if set (only used for client)
+            if (serverInstanceName != "")
+            {
+                argString = argString + " -sin=" + serverInstanceName;
+            }
+
+            // set the clientInstanceName if set (only used for server)
+            if (clientInstanceName != "")
+            {
+                argString = argString + " -cin=" + clientInstanceName;
+            }
+
 
             // Enables echoing the 'doWork' method call back to the client
-            if (bidi)
+            if ((bidi) && (instanceRole != JSPTI_ClientInstanceRole))
             {
                 argString = argString + " -bd";
             }
@@ -244,6 +280,16 @@ namespace AmbrosiaTest
                 argString = argString + " -fms";
             }
 
+            // use client config file for client and server for server
+            if (instanceRole == JSPTI_ClientInstanceRole)
+            {
+                argString = argString + " ambrosiaConfigFile=..\\Client\\ambrosiaConfig.json";
+            }
+            if (instanceRole == JSPTI_ServerInstanceRole)
+            {
+                argString = argString + " ambrosiaConfigFile=..\\Server\\ambrosiaConfig.json";
+            }
+
             int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
             if (processID <= 0)
             {
@@ -271,9 +317,6 @@ namespace AmbrosiaTest
                 string ambrosiaGoldConfigfileName = "ambrosiaConfigGOLD.json";
                 string ambrosiaConfigfileName = "ambrosiaConfig.json";
 
-                // Copy fromThe Gold Config to App Config
-                File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + "\\PTI\\App\\" + ambrosiaConfigfileName, true);
-
                 //** Set defaults that are test run specific
                 string CurrentFramework = MyUtils.NetFramework;
                 if (MyUtils.NetFrameworkTestRun == false)
@@ -281,14 +324,39 @@ namespace AmbrosiaTest
                     CurrentFramework = MyUtils.NetCoreFramework;
                 }
 
-                string icBinDirectory = Directory.GetCurrentDirectory()+ "\\"+CurrentFramework;
+                string icBinDirectory = Directory.GetCurrentDirectory() + "\\" + CurrentFramework;
                 string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+
+                //*** Copy from The Gold Config to App Config ***
+                File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + "\\PTI\\App\\" + ambrosiaConfigfileName, true);
 
                 // Set the defaults based on current system
                 Directory.CreateDirectory(logDirectory);  // can't load JSon if the log path doesn't exist
                 JS_UpdateJSConfigFile(JSConfig_autoRegister, SetAutoRegister.ToString());
                 JS_UpdateJSConfigFile(JSConfig_icLogFolder, logDirectory);
                 JS_UpdateJSConfigFile(JSConfig_icBinFolder, icBinDirectory);
+
+                //*** Copy from The Gold Config to Client Config ***
+                File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + "\\PTI\\Client\\" + ambrosiaConfigfileName, true);
+
+                // Set the defaults based on current system
+                JS_UpdateJSConfigFile(JSConfig_autoRegister, SetAutoRegister.ToString(), JSPTI_ClientInstanceRole);  
+                JS_UpdateJSConfigFile(JSConfig_icLogFolder, logDirectory, JSPTI_ClientInstanceRole);
+                JS_UpdateJSConfigFile(JSConfig_icBinFolder, icBinDirectory, JSPTI_ClientInstanceRole);
+                JS_UpdateJSConfigFile(JSConfig_icCraPort, "2510", JSPTI_ClientInstanceRole);
+                JS_UpdateJSConfigFile(JSConfig_icReceivePort, "2010", JSPTI_ClientInstanceRole);
+                JS_UpdateJSConfigFile(JSConfig_icSendPort, "2011", JSPTI_ClientInstanceRole);
+
+                //*** Copy from The Gold Config to Server Config ***
+                File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + "\\PTI\\Server\\" + ambrosiaConfigfileName, true);
+
+                // Set the defaults based on current system
+                JS_UpdateJSConfigFile(JSConfig_autoRegister, SetAutoRegister.ToString(), JSPTI_ServerInstanceRole);  
+                JS_UpdateJSConfigFile(JSConfig_icLogFolder, logDirectory, JSPTI_ServerInstanceRole);
+                JS_UpdateJSConfigFile(JSConfig_icBinFolder, icBinDirectory, JSPTI_ServerInstanceRole);
+                JS_UpdateJSConfigFile(JSConfig_icCraPort, "2500", JSPTI_ServerInstanceRole);
+                JS_UpdateJSConfigFile(JSConfig_icReceivePort, "2000", JSPTI_ServerInstanceRole);
+                JS_UpdateJSConfigFile(JSConfig_icSendPort, "2001", JSPTI_ServerInstanceRole);
             }
             catch (Exception e)
             {
@@ -301,14 +369,26 @@ namespace AmbrosiaTest
         //*
         //*  NOTE - if property in lbOptions section, make sure property name has lbOptions prepended to it
         //* 
-        public void JS_UpdateJSConfigFile(string property, string newValue)
+        public void JS_UpdateJSConfigFile(string property, string newValue, string instanceRole= "")
         {
 
             try
             {
                 string lbOptionsHeader = "lbOptions";
                 string data = string.Empty;
-                string basePath =  ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
+
+                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
+
+                // change it if client or server
+                if (instanceRole==JSPTI_ClientInstanceRole)
+                {
+                    basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\Client";
+                }
+                if (instanceRole == JSPTI_ServerInstanceRole)
+                {
+                    basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\Server";
+                }
+
                 string ambrosiaConfigfileName = "ambrosiaConfig.json";
                 string ConfigFile = basePath+"\\"+ambrosiaConfigfileName;
 
@@ -351,33 +431,58 @@ namespace AmbrosiaTest
         //
         // NOTE: data is too volatile for cmp file method so verify specific strings
         //*********************************************************************
-        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "")
+        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "", string instanceRole = "", string serverInstanceName = "", string clientInstanceName = "")
         {
 
             Utilities MyUtils = new Utilities();
+
 
             string currentDir = Directory.GetCurrentDirectory();
             string bytesReceivedString = "Bytes received: " + totalBytes.ToString();
             string successString = "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received";
             string successEchoString = "SUCCESS: The expected number of echoed bytes (" + totalBytes.ToString() + ") have been received";
             string allRoundsComplete = "All rounds complete";
-            string argForTTD = "Args: DebugInstance instanceName="+ testName;
+            string argForTTD = "Args: DebugInstance instanceName=" + testName+instanceRole.ToLower();
             string startingCheckPoint = "checkpoint="; // append the number below after calculated
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";  // defaults to Combined (app)
+            string logOutputFileName_TestApp = testName + "_" + instanceRole + "_VerifyTTD.log";
+            string fileNameExe = "node.exe";
+            string argString = "out\\main.js";
+            string strLogFileInstanceRole = "";  // app instanceRole is blank
 
-            string logOutputFileName_TestApp = testName + "_VerifyTTD.log";
+            // Make sure all node etc are stopped 
+            MyUtils.StopAllAmbrosiaProcesses();
 
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
+            // Instance Role defaults to Combined
+            if (instanceRole == "")
+            {
+                argString = argString + " -ir=" + JSPTI_CombinedInstanceRole;
+            }
+            else
+            {
+                argString = argString + " -ir=" + instanceRole;
+                strLogFileInstanceRole = instanceRole;  // used in the file name of the log
+            }
             string ambrosiaBaseLogDir = currentDir + "\\" + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
             string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
             string ambServiceLogPath = ambrosiaBaseLogDir + "\\";
 
-            string fileNameExe = "node.exe";
-            string argString = "out\\main.js -ir=Combined -n="+ numRounds.ToString()+ " -nhc -efb=" + totalBytes.ToString() + " -eeb=" + totalEchoBytes.ToString();
-
             // Enables echoing the 'doWork' method call back to the client
-            if (bidi)
+            if ((bidi) && (instanceRole != JSPTI_ClientInstanceRole))
             {
                 argString = argString + " -bd";
+            }
+
+            // set the -n and -eeb parameter only for non server
+            if (instanceRole != JSPTI_ServerInstanceRole)
+            {
+                argString = argString + " -n=" + numRounds.ToString() + " -eeb=" + totalEchoBytes.ToString();
+            }
+
+            // set the -nhc and -efb for anything that is not client (server or combined)
+            if (instanceRole != JSPTI_ClientInstanceRole)
+            {
+                argString = argString + " -nhc -efb=" + totalBytes.ToString();
             }
 
             // If passing zero then just use the default value.
@@ -399,6 +504,19 @@ namespace AmbrosiaTest
                 argString = argString + " -bsc=" + batchSizeCutoff.ToString();
             }
 
+            // set the serverInstance if set (only used for client)
+            if (serverInstanceName != "")
+            {
+                argString = argString + " -sin=" + serverInstanceName;
+            }
+
+            // set the clientInstanceName if set (only used for server)
+            if (clientInstanceName != "")
+            {
+                argString = argString + " -cin=" + clientInstanceName;
+            }
+
+
             // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
             if (Directory.Exists(ambrosiaBaseLogDir) == false)
             {
@@ -408,7 +526,7 @@ namespace AmbrosiaTest
             }
 
             // used to get log file
-            string ambrosiaFullLogDir = ambrosiaBaseLogDir + "\\" + testName + "_0";   
+            string ambrosiaFullLogDir = ambrosiaBaseLogDir + "\\" + testName + strLogFileInstanceRole + "_0";
             string startingChkPtVersionNumber = "1";
             string logFirstFile = "";
 
@@ -456,6 +574,7 @@ namespace AmbrosiaTest
 
             startingCheckPoint = startingCheckPoint + startingChkPtVersionNumber;  // used in verification of output log
             JS_UpdateJSConfigFile(JSConfig_debugStartCheckpoint, startingChkPtVersionNumber);
+            JS_UpdateJSConfigFile(JSConfig_instanceName, testName + strLogFileInstanceRole.ToLower());  // need to update this so know where the log files are at
 
             int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, logOutputFileName_TestApp);
             if (processID <= 0)
@@ -468,26 +587,49 @@ namespace AmbrosiaTest
             Thread.Sleep(3000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
-            // Wait for it to finish and verify some of the output - data is too volatile to do cmp files so verify specific strings
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, totalBytes.ToString(), 15, false, testName, true, checkForDoneString);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 2, false, testName, true, false);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, allRoundsComplete, 1, false, testName, true, false);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, argForTTD, 1, false, testName, true, false); 
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, startingCheckPoint, 1, false, testName, true, false);
+            bool pass = true;
 
-            // Verify that echo is NOT part of the output when not bidi - won't pop assert on fail so check return value
-            if (bidi == false)
+            if (instanceRole == JSPTI_CombinedInstanceRole)
             {
-                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 0, true, testName, false, false);
-                if (pass == true)
-                    Assert.Fail("<JS_VerifyTimeTravelDebugging> Echoed string should NOT have been found in the output but it was.");
+                // Combined Instance role puts client and server in one log file
+                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, totalBytes.ToString(), 15, false, testName, true, checkForDoneString);
+                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 2, false, testName, true, false);
+                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, allRoundsComplete, 1, false, testName, true, false);
+
+                // Since client and server in same log file, have to check if bidi is here
+                if (bidi == false)
+                {
+                    pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 0, true, testName, false, false);
+                    if (pass == true)
+                        Assert.Fail("<JS_VerifyTimeTravelDebugging> Echoed string should NOT have been found in the output but it was.");
+                }
+                else // do echo string check if bidi
+                    pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 1, false, testName, true, false);
+
             }
-            else // do echo string check if bidi
-                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 1, false, testName, true, false);
+
+            if (instanceRole == JSPTI_ServerInstanceRole)
+            {
+                // Verify the TTD outptut  of the server
+                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, bytesReceivedString, 10, false, testName, true);
+                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 1, false, testName, true);
+            }
+
+            if (instanceRole == JSPTI_ClientInstanceRole)
+            {
+                // Verify the data in the output file of the CLIENT - if NOT bidi the TTD won't work for client only any ways so can assume if doing it, then it is bidi
+                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successEchoString, 10, false, testName, true, false);
+                pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, allRoundsComplete, 1, false, testName, true, false);
+            }
 
             if (specialVerifyString != "")  // used for special strings that are not generic enough to hard code and is more test specific
                 pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, specialVerifyString, 1, false, testName, true, false);
+
+            // double check to make sure actually TTD and not just normal run
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, argForTTD, 1, false, testName, true, false);
         }
+
+
 
 
         //** Clean up all the left overs from JS tests. 
@@ -532,6 +674,10 @@ namespace AmbrosiaTest
             MyUtils.CleanupAzureTables("jsptirestartendtoendbiditest");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptirestartafterfinishesbiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptitwoproctest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptitwoproctestbidi");
             Thread.Sleep(2000);
 
         }
