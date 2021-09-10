@@ -174,7 +174,7 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             int numRounds = 6;
-            long totalBytes = 6442450944;
+            long totalBytes = 6442450944;  // 
             long totalEchoBytes = 6442450944;
             int bytesPerRound = 0;
             int maxMessageSize = 0;
@@ -206,7 +206,7 @@ namespace AmbrosiaTest
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestarted_TestApp);
 
             // Verify the data in the restarted output file
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 10, false, testName, true); // number of bytes processed
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 15, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
