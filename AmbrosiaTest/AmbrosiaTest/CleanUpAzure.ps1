@@ -79,11 +79,12 @@ Get-AzTableRow -table $storageTable.CloudTable | Where-Object -Property “Parti
 Write-host 
 
 
-Write-host "------------- Delete items in Azure table: cravertextable filtered on $ObjectName -------------"
+Write-host "------------- Delete items in Azure table: cravertextable filtered on $ObjectName and deleting the AmbrosiaBinaries entry too -------------"
 $tableName = "cravertextable"
 $storageTable = Get-AzStorageTable  -Name $tableName -Context $ctx 
 Get-AzTableRow -table $storageTable.CloudTable | Where-Object -Property “PartitionKey” -CLike $ObjectName | Remove-AzTableRow -table $storageTable.CloudTable
-Write-host 
+Get-AzTableRow -table $storageTable.CloudTable | Where-Object -Property “RowKey” -CLike "AmbrosiaBinaries" | Remove-AzTableRow -table $storageTable.CloudTable
+
 
 # Delete the tables created by the Ambrosia
 Write-host "------------- Delete Ambrosia created tables filtered on $ObjectName -------------"
@@ -97,6 +98,12 @@ $blobs | ForEach-Object{$_.ICloudBlob.BreakLease()}
 
 #Delete blobs in a specified container.
 $blobs| Remove-AzStorageBlob
+
+
+Write-host "------------- Delete all Azure Blobs in cra container - AmbrosiaBinaries folder -------------"
+$FolderName = "AmbrosiaBinaries"
+$ContainerName = "cra"
+Get-AzStorageBlob -Container "$ContainerName" -Context $ctx -Prefix $FolderName/ | Remove-AzStorageBlob
 
 #Write-host "------------- Clean Up Azure File Share -------------"
 #Write-host 
