@@ -406,6 +406,13 @@ namespace AmbrosiaTest
 
                 var currentValue = ((Newtonsoft.Json.Linq.JValue)tz).Value;
                 var typeOfCurrentValue = currentValue.GetType();
+                
+                // Special case where auto register is a string that is normally a boolean
+                // Easier to just be creative and put this check in vs create a whole new function to handle this one off
+                if (newValue == "TrueAndExit")
+                {
+                    typeOfCurrentValue = newValue.GetType();
+                }
                 ((Newtonsoft.Json.Linq.JValue)tz).Value = Convert.ChangeType(newValue, typeOfCurrentValue); 
 
                 //** Write the key \ value 
@@ -678,6 +685,8 @@ namespace AmbrosiaTest
             MyUtils.CleanupAzureTables("jsptitwoproctest");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptitwoproctestbidi");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiautoregexittest");
             Thread.Sleep(2000);
 
         }

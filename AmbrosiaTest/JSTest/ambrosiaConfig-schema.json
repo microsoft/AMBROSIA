@@ -9,8 +9,9 @@
             "description": "The location of the matching JSON schema file, which is required for IntelliSense and auto-completion when editing using VSCode/VS2019+."
         },
         "autoRegister": {
-            "type": "boolean",
-            "description": "Whether to automatically [re]register this Ambrosia Immortal instance at startup. When true, the following settings must also be explicitly set: icReceivePort, icSendPort, icLogFolder. If [re]registration succeeds, this setting automatically resets to false. Defaults to false.",
+            "type": ["boolean", "string"],
+            "enum": [ true, false, "TrueAndExit" ],
+            "description": "Whether to automatically [re]register this Ambrosia Immortal instance at startup. When true (or \"TrueAndExit\"), the following settings must also be explicitly set: icReceivePort, icSendPort, icLogFolder. If [re]registration succeeds, this setting automatically resets to false. Defaults to false.",
             "default": false
         },
         "instanceName": {
@@ -74,11 +75,11 @@
         },
         "isActiveActive": {
             "type": "boolean",
-            "description": "Whether this [primary] instance will run in an active-active configuration. If specified, overrides the registered value."
+            "description": "Whether this instance will run in an active/active configuration. MUST be set to true when 'replicaNumber' is greater than 0, and MUST match the value used when the instance/replica was registered."
         },
         "replicaNumber": {
             "type": "number",
-            "description": "The replica (secondary) ID this instance will use in an active-active configuration. MUST match the value used when registering the replica with 'AddReplica'."
+            "description": "The replica (secondary) ID this instance will use in an active/active configuration. MUST match the value used when the replica was registered."
         },
         "appVersion": {
             "type": "number",
