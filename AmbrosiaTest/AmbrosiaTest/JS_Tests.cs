@@ -426,6 +426,68 @@ namespace AmbrosiaTest
         }
 
 
+        //** Test that if you call AutoRegister with "TrueAndExit" parameter it will just register it and not go any further
+        [TestMethod]
+        public void JS_PTI_AutoRegisterAndExit_Test()
+        {
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 5;
+            long totalBytes = 640;
+            long totalEchoBytes = 640;
+            int bytesPerRound = 128;
+            int maxMessageSize = 32;
+            int batchSizeCutoff = 32;
+            bool bidi = false;
+
+            string testName = "jsptiautoregexittest";
+            string logOutputFileName_Register = testName + "_Register.log";
+            string logOutputFileName_StartTesttApp = testName + "_Start.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "TrueAndExit");   // The actual test
+            
+            // Launch the app where it just registers it
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
+            string fileNameExe = "node.exe";
+            string argString = "out\\main.js -ir=Combined -n="+ numRounds.ToString() + "-eeb="+ totalBytes.ToString() + " -nhc -efb="+ totalBytes.ToString() + " -mms="+ maxMessageSize.ToString() + " -bpr="+ bytesPerRound.ToString() + " -bsc="+ batchSizeCutoff.ToString();
+
+            int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, logOutputFileName_Register);
+            if (processID <= 0)
+            {
+                MyUtils.FailureSupport("");
+                Assert.Fail("<JS_PTI_AutoRegisterAndExit_Test> JS TestApp was not started.  ProcessID <=0 ");
+            }
+
+            // Give it a few seconds to start
+            Thread.Sleep(3000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // Just make sure registered part ran and configured it
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Register, "Ambrosia configuration loaded from 'ambrosiaConfig.json'", 1, false, testName, true, false);
+
+            // Starting it a second time should just start right up fine - if it doesn't then we know it wasn't registered from the first call
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_StartTesttApp);
+
+            // Wait until it finishes
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_StartTesttApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_StartTesttApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
+
+            // Also make sure the first run only registerd and did NOT actually run through IC calls or anything else
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Register, "SUCCESS: ", 0, false, testName, false, false);
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_AutoRegisterAndExit_Test> Found a SUCCESS string, but should not have.");
+            }
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Register, "[IC]: ", 0, false, testName, false, false);
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_AutoRegisterAndExit_Test> Found a [IC] string, but should not have.");
+            }
+        }
+
+
 
         //*#*## TO DO:  Add the "deleteLogs" tests for Blobs *#*#*#*
 
