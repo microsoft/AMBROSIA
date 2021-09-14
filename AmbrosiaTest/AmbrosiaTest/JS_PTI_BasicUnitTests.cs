@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading;
 using System.Windows.Forms; // need this to handle threading issue on sleeps
 using System.Configuration;
-
+using System.IO;
 
 namespace AmbrosiaTest
 {
@@ -169,7 +169,6 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_BasicRestartEndToEnd_BiDi_Test()
         {
-
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -305,11 +304,9 @@ namespace AmbrosiaTest
             // Verify the data in the output file of the server
             bool pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 10, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
-            //pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
 
             // Verify the data in the output file of the CLIENT 
-            // Verify that echo is NOT part of the output for client
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 5, true, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);

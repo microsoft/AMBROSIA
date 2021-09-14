@@ -38,6 +38,10 @@ namespace AmbrosiaTest
         public string JSConfig_debugTestUpgrade = "debugTestUpgrade";
         public string JSConfig_appVersion = "appVersion";
         public string JSConfig_upgradeVersion = "upgradeVersion";
+        public string JSConfig_icLogStorageType = "icLogStorageType";
+        public string JSConfig_isActiveActive = "isActiveActive";
+        public string JSConfig_replicaNumber = "replicaNumber";
+
 
         // NOTE: all lbOptions settings need "lbOptions" at beginning so know it is nested there
         public string JSConfig_LBOpt_msgQueueSize = "lbOptionsmaxMessageQueueSizeInMB";  
@@ -257,19 +261,19 @@ namespace AmbrosiaTest
             }
 
             // Max Message Size
-            if (maxMessageSize > 0)
+            if ((maxMessageSize > 0) && (instanceRole != JSPTI_ServerInstanceRole))
             {
                 argString = argString + " -mms=" + maxMessageSize.ToString();
             }
 
             // bytes per round
-            if (bytesPerRound > 0)
+            if ((bytesPerRound > 0) && (instanceRole != JSPTI_ServerInstanceRole))
             {
                 argString = argString + " -bpr=" + bytesPerRound.ToString();
             }
 
             // batch size cutoff ... if 0 then use default
-            if (batchSizeCutoff > 0 )
+            if ((batchSizeCutoff > 0) && (instanceRole != JSPTI_ServerInstanceRole))
             {
                 argString = argString + " -bsc=" + batchSizeCutoff.ToString();
             }
@@ -443,7 +447,6 @@ namespace AmbrosiaTest
 
             Utilities MyUtils = new Utilities();
 
-
             string currentDir = Directory.GetCurrentDirectory();
             string bytesReceivedString = "Bytes received: " + totalBytes.ToString();
             string successString = "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received";
@@ -494,19 +497,19 @@ namespace AmbrosiaTest
 
             // If passing zero then just use the default value.
             // Max Message Size
-            if (maxMessageSize > 0)
+            if ((maxMessageSize > 0) && (instanceRole != JSPTI_ServerInstanceRole))
             {
                 argString = argString + " -mms=" + maxMessageSize.ToString();
             }
 
             // bytes per round
-            if (bytesPerRound > 0)
+            if ((bytesPerRound > 0) && (instanceRole != JSPTI_ServerInstanceRole))
             {
                 argString = argString + " -bpr=" + bytesPerRound.ToString();
             }
 
             // batch size cutoff ... if 0 then use default
-            if (batchSizeCutoff > 0)
+            if ((batchSizeCutoff > 0) && (instanceRole != JSPTI_ServerInstanceRole))
             {
                 argString = argString + " -bsc=" + batchSizeCutoff.ToString();
             }
@@ -596,7 +599,7 @@ namespace AmbrosiaTest
 
             bool pass = true;
 
-            if (instanceRole == JSPTI_CombinedInstanceRole)
+            if ((instanceRole == JSPTI_CombinedInstanceRole) || (instanceRole == ""))
             {
                 // Combined Instance role puts client and server in one log file
                 pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, totalBytes.ToString(), 15, false, testName, true, checkForDoneString);
@@ -688,7 +691,22 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptiautoregexittest");
             Thread.Sleep(2000);
-
+            MyUtils.CleanupAzureTables("jsptisavetoblobtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptisavetoblobbiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiblobnoblankictest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiblobtwoproctest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiblobtwoprocbiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiblobclientfiletwoproctest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiblobserverfiletwoproctest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiblobdeletelogtest");
+            Thread.Sleep(2000);
         }
 
 
