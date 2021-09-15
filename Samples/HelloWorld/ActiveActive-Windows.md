@@ -20,7 +20,8 @@ dotnet Ambrosia.dll RegisterInstance -i=server -rp=2000 -sp=2001 -l=C:\logs\ -aa
 dotnet Ambrosia.dll AddReplica -i=server -rp=3000 -sp=3001 -l=C:\logs\ -r=1
 dotnet Ambrosia.dll AddReplica -i=server -rp=4000 -sp=4001 -l=C:\logs\ -r=2
 ```
-Above, we see the two RegisterInstance gestures which define client and server. The only modification is that we added the -aa flag to the server registration call, which indicates that we will add at least one replica. Note that Active/Active requires at least 2 running instances, as all but the first checkpoint will be taken by a secondary, avoiding loss of primary availability during checkpointing.
+Above, we see the two RegisterInstance gestures which define client and server. The only modification is that we added the -aa flag to the server registration call, which indicates that we will add at least one replica. Note that Active/Active requires at least 2 running instances, as all but the first checkpoint will be taken by a secondary.
+There's no failover capability with 2 instances, but there is higher availability (compared to a standalone instance) due to offloading the checkpointing to the active secondary, which eliminates unavailability of the primary during checkpointing.
 
 After the two RegisterInstance gestures, we see two AddReplica gestures for the first and second replicas of server. Note that we are choosing unique receive and send ports for each replica, since we intend to run all four instance runtimes (client, server0, server1, server2) on a single machine. Redundantly, we could add -aa flags to the AddReplica calls, but since all replicas, are by definition associated with active/active deployments, this is redundant.
 
