@@ -58,7 +58,7 @@ namespace AmbrosiaTest
 
         //*********
         // LogType
-        // This is type \ location of the logs.. "files" or "blobs" in the ImmortalCoordinator
+        // This is type \ location of the logs.. "Files" or "Blobs" in the ImmortalCoordinator
         //*********
         public string logTypeFiles = "files";
         public string logTypeBlobs = "blobs";
@@ -599,7 +599,7 @@ namespace AmbrosiaTest
 
         //*********************************************************************
         // Verifies the integrity of the Ambrosia generated log file by replaying the log file. This replay is how it would recover
-        // using the log file.
+        // using the log file (using Ambrosia). It also does Time Travel Debugging (using PTI).
         // 
         // checkCMPFile: is flag set because MTF change from run to run which would make invalid cmp files so don't check cmp files there
         // startWithFirstFile: this is what determines verify ... if log files haven't been truncated then use first log file. In some cases (long MTF) use most recent
@@ -802,10 +802,12 @@ namespace AmbrosiaTest
 
         }
 
-        //** Basically same as VerifyAmbrosiaLogFile but instead of using Ambrosia.exe to verify log, this uses
-        //** job.exe and server.exe to verify it. Porbably easiest to call from VerifyAmbrosiaLogFile since that does
-        //** all the work to get the log files and checkpoint numbers
-        //** Assumption that this is called at the end of a test where Ambrosia.exe was already called to register for this test
+        //*********************************************************************
+        // Basically same as VerifyAmbrosiaLogFile but instead of using Ambrosia.exe to verify log, this uses
+        // job.exe and server.exe to verify it. Porbably easiest to call from VerifyAmbrosiaLogFile since that does
+        // all the work to get the log files and checkpoint numbers
+        // Assumption that this is called at the end of a test where Ambrosia.exe was already called to register for this test
+        //*********************************************************************
         public void VerifyTimeTravelDebugging(string testName, long numBytes, string clientJobName, string serverName, string ambrosiaLogDir, string startingClientChkPtVersionNumber, string startingServerChkPtVersionNumber, string optionalNumberOfClient = "", string currentVersion = "", bool checkCmpFile = true, bool checkForDoneString = true)
         {
 

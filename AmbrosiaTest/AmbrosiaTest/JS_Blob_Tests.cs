@@ -57,7 +57,7 @@ namespace AmbrosiaTest
 
             // update config values for test 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "");
 
             // Launch but it is using blobs instead of files
@@ -108,7 +108,7 @@ namespace AmbrosiaTest
 
             // update config values for test 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "");
 
             // Launch but it is using blobs instead of files
@@ -154,7 +154,7 @@ namespace AmbrosiaTest
 
             // update config values for test 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, testName);  // This is a big part of test - do NOT make this blank or leave in the path. Have it as 
 
             // Launch but it is using blobs instead of files
@@ -211,9 +211,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs, JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ClientInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs, JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ServerInstanceRole);
 
             // Launch the client and the server as separate procs 
@@ -279,9 +279,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs, JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ClientInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs, JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ServerInstanceRole);
 
             // Launch the client and the server as separate procs 
@@ -330,9 +330,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs, JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ClientInstanceRole);
-            //  JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs", JSUtils.JSPTI_ServerInstanceRole);  // Keep Server as a File
+            //  JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs, JSUtils.JSPTI_ServerInstanceRole);  // Keep Server as a File
             //  JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ServerInstanceRole);
 
             // Launch the client and the server as separate procs 
@@ -402,9 +402,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
-            // JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs", JSUtils.JSPTI_ClientInstanceRole);  // keep client as a file
+            // JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs, JSUtils.JSPTI_ClientInstanceRole);  // keep client as a file
             // JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ClientInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs", JSUtils.JSPTI_ServerInstanceRole);  
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs, JSUtils.JSPTI_ServerInstanceRole);  
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ServerInstanceRole);
 
             // Launch the client and the server as separate procs 
@@ -465,7 +465,7 @@ namespace AmbrosiaTest
 
             // update config values for test 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, "Blobs");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogStorageType, JSUtils.logTypeBlobs);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "");
 
             // Launch it once
