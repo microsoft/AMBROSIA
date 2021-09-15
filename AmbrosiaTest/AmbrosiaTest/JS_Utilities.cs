@@ -45,7 +45,14 @@ namespace AmbrosiaTest
 
         // NOTE: all lbOptions settings need "lbOptions" at beginning so know it is nested there
         public string JSConfig_LBOpt_msgQueueSize = "lbOptionsmaxMessageQueueSizeInMB";  
-        public string JSConfig_LBOpt_deleteLogs = "lbOptionsdeleteLogs";  
+        public string JSConfig_LBOpt_deleteLogs = "lbOptionsdeleteLogs";
+
+        //*********
+        // LogType
+        // This is type \ location of the logs.. "Files" or "Blobs" for JS
+        //*********
+        public string logTypeFiles = "Files";
+        public string logTypeBlobs = "Blobs";
 
 
         // Runs a TS file through the JS LB and verifies code gen works correctly
