@@ -274,51 +274,6 @@ namespace AmbrosiaTest
 
 
 
-        //** Test that restarts after the run finishes. Test to show that it can start up on log files that "completed"
-        [TestMethod]
-        public void JS_PTI_RestartAfterFinishes_BiDi_Test()
-        {
-            Utilities MyUtils = new Utilities();
-            JS_Utilities JSUtils = new JS_Utilities();
-
-            int numRounds = 5;
-            long totalBytes = 640;
-            long totalEchoBytes = 640;
-            int bytesPerRound = 128;
-            int maxMessageSize = 32;
-            int batchSizeCutoff = 32;
-            int messagesSent = 36;
-            bool bidi = true;
-
-            string testName = "jsptirestartafterfinishesbiditest";
-            string logOutputFileName_TestApp = testName + "_TestApp.log";
-            string logOutputFileNameRestarted_TestApp = testName + "_TestApp_Restarted.log";
-
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false");   // default is false but ok to specifically state in case default changes
-
-            // Start it once
-            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
-
-            // Wait until it finishes
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
-
-            // Restart it and make sure it runs ok
-            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestarted_TestApp);
-
-            // Verify the data in the restarted output file
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Checkpoint loaded", 1, false, testName, true);  // since it is restarted, it loads the check point
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
-
-            // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
-        }
-
-
         //** Test that if you call AutoRegister with "TrueAndExit" parameter it will just register it and not go any further
         [TestMethod]
         public void JS_PTI_AutoRegisterAndExit_Test()
