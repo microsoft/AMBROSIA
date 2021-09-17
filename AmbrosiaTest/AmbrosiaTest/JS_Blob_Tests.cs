@@ -33,7 +33,7 @@ namespace AmbrosiaTest
         {
             // Kill all exes associated with tests
             JS_Utilities JSUtils = new JS_Utilities();
-            JSUtils.JS_TestCleanup();
+            JSUtils.JS_TestCleanup_Blob();
         }
 
         //** Test of saving the log to the blob instead of file
