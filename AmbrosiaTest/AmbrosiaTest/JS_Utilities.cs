@@ -647,53 +647,6 @@ namespace AmbrosiaTest
         }
 
 
-
-
-        //** Clean up all the left overs from JS tests. 
-        public void JS_TestCleanup()
-        {
-            Utilities MyUtils = new Utilities();
-
-            // If failures in queue then do not want to do anything (init, run test, clean up) 
-            if (MyUtils.CheckStopQueueFlag())
-            {
-                return;
-            }
-
-            // Stop all running processes that hung or were left behind
-            MyUtils.StopAllAmbrosiaProcesses();
-            Thread.Sleep(2000);
-
-            // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("jsptiendtoendtest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptibidiendtoendtest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptigiantmessagebiditest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptigiantmessagetest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptigiantcheckpointtest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptigiantcheckpointbiditest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptibidifmstest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptifmstest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptideletefilelogtruetest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptideletefilelogfalsetest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptitwoproctest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptitwoproctestbidi");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiautoregexittest");
-            Thread.Sleep(2000);
-        }
-
-
         //** Clean up all the left overs from JS tests that are related to Blobs. 
         public void JS_TestCleanup_Blob()
         {
@@ -760,9 +713,85 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptirestartkillbothbidi");
             Thread.Sleep(2000);
-
         }
 
+        //** Clean up all the left overs from JS tests that are related to JS Basic tests (JS_PTI_BasicUnitTests.cs)
+        public void JS_TestCleanup_Basic()
+        {
+            Utilities MyUtils = new Utilities();
+
+            // If failures in queue then do not want to do anything (init, run test, clean up) 
+            if (MyUtils.CheckStopQueueFlag())
+            {
+                return;
+            }
+
+            // Stop all running processes that hung or were left behind
+            MyUtils.StopAllAmbrosiaProcesses();
+
+            Thread.Sleep(2000);
+
+            // Clean up Azure - this is called after each test so put all test names in for azure tables
+            MyUtils.CleanupAzureTables("jsptibidiendtoendtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiendtoendtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptirestartendtoendbiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptirestartendtoendtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptitwoproctest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptitwoproctestbidi");
+            Thread.Sleep(2000);
+        }
+
+
+        //** Clean up all the left overs from JS tests. 
+        public void JS_TestCleanup()
+        {
+            Utilities MyUtils = new Utilities();
+
+            // If failures in queue then do not want to do anything (init, run test, clean up) 
+            if (MyUtils.CheckStopQueueFlag())
+            {
+                return;
+            }
+
+            // Stop all running processes that hung or were left behind
+            MyUtils.StopAllAmbrosiaProcesses();
+            Thread.Sleep(2000);
+
+            // Clean up Azure - this is called after each test so put all test names in for azure tables
+            MyUtils.CleanupAzureTables("jsptigiantmessagebiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptigiantmessagetest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptigiantcheckpointtest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptigiantcheckpointbiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptibidifmstest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptifmstest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptideletefilelogtruetest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptideletefilelogfalsetest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiautoregexittest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptimigrateclienttwoproctest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptimigrateclienttwoprocbiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptimigrateclienttest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptimigrateclientbiditest");
+            Thread.Sleep(2000);
+            
+
+        }
 
 
 

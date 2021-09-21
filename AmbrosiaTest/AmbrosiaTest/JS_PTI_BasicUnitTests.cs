@@ -32,7 +32,7 @@ namespace AmbrosiaTest
         {
             // Kill all exes associated with tests
             JS_Utilities JSUtils = new JS_Utilities();
-            JSUtils.JS_TestCleanup();
+            JSUtils.JS_TestCleanup_Basic();
         }
 
         //** Basic End to End that is bidirectional where ehoing the 'doWork' method call back to the client
@@ -173,7 +173,7 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             int numRounds = 6;
-            long totalBytes = 6442450944;  // 
+            long totalBytes = 6442450944;  
             long totalEchoBytes = 6442450944;
             int bytesPerRound = 0;
             int maxMessageSize = 0;
@@ -315,6 +315,29 @@ namespace AmbrosiaTest
             // Verify integrity of Ambrosia logs by replaying server and client side of things (do both since bidi)
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true,"",JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+
+        }
+
+
+        //** Runs the built in unit tests 
+        [TestMethod]
+        public void JS_NodeUnitTests()
+        {
+
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testName = "jsnodeunittest";
+            string finishedString = "UNIT TESTS COMPLETE";
+            string successString = "SUMMARY: 114 passed (100%), 0 failed (0%)";
+            string logOutputFileName_TestApp = testName + "_TestApp.log";
+
+            // Launched all the unit tests for JS Node (npm run unittests)
+            int JSTestAppID = JSUtils.StartJSNodeUnitTests(logOutputFileName_TestApp);
+
+            // Wait until summary at the end and if not there, then know not finished
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, finishedString, 2, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 1, false, testName, true, false);
 
         }
 

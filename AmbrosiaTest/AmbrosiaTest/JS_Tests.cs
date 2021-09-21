@@ -441,26 +441,272 @@ namespace AmbrosiaTest
                 Assert.Fail("Original CheckPoint Date and New CheckPoint Date were the same which means it was NOT deleted.");
         }
 
-        //** Runs the built in unit tests 
-        [TestMethod]
-        public void JS_NodeUnitTests()
-        {
 
+        //**  Similar to restart after both killed, but this is case where the process is NOT killed and the process is just restarted. 
+        //** The second process takes over and the original processes die. It is the way would migrate the client version.
+        [TestMethod]
+        public void JS_PTI_MigrateClientTwoProc_Test()
+        {
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testName = "jsnodeunittest";
-            string finishedString = "UNIT TESTS COMPLETE";
-            string successString = "SUMMARY: 114 passed (100%), 0 failed (0%)";
+            int numRounds = 15;
+            long totalBytes = 122880;
+            long totalEchoBytes = 122880;
+            int bytesPerRound = 8192;
+            int maxMessageSize = 32;
+            int batchSizeCutoff = 8192;
+            int messagesSent = 7424;
+            bool bidi = false;
+
+            string testName = "jsptimigrateclienttwoproctest";
+            string clientInstanceName = testName + "client";
+            string serverInstanceName = testName + "server";
+            string logOutputClientFileName_TestApp = testName + "Client_TestApp.log";
+            string logOutputServerFileName_TestApp = testName + "Server_TestApp.log";
+            string logOutputClientRestartedFileName_TestApp = testName + "Client_TestApp_Restarted.log";
+            string logOutputServerRestartedFileName_TestApp = testName + "Server_TestApp_Restarted.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
+
+            // Start it once - Launch the client and the server as separate procs 
+            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+            int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            // Give it 5 seconds where it tries to connect 
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // DO NOT Kill both Client and Server 
+            // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
+            // MyUtils.KillProcess(serverProcessID);
+            // MyUtils.KillProcess(clientProcessID);
+
+            // Change the ports in the config files before restarting a new server and client
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3510", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "3020", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3021", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "4500", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "4020", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "4021", JSUtils.JSPTI_ServerInstanceRole);
+
+            // Restart the server and client and make sure it continues
+            clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            // Give it a sec or so to get client started up again
+            Thread.Sleep(2000);
+            Application.DoEvents();  
+
+            serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+
+            // Verify the data in the restarted output file
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
+
+            // Verify that echo is NOT part of the output - won't pop assert on fail so check return value
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 0, true, testName, false, false);
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_MigrateClientTwoProc_Test> Echoed string should NOT have been found in the output but it was.");
+            }
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
+
+            // Verify integrity of Ambrosia logs by replaying 
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+        }
+
+
+        //**  Similar to restart after both killed, but this is case where the process is NOT killed and the process is just restarted. 
+        //** The second process takes over and the original processes die. It is the way would migrate the client version.
+        //** This is for the BI DIRECTIONAL aspect of two proc
+        [TestMethod]
+        public void JS_PTI_MigrateClientTwoProc_BiDi_Test()
+        {
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 5;
+            long totalBytes = 40960;
+            long totalEchoBytes = 40960;
+            int bytesPerRound = 8192;
+            int maxMessageSize = 32;
+            int batchSizeCutoff = 8192;
+            int messagesSent = 2304; // 7424;
+            bool bidi = true;
+
+            string testName = "jsptimigrateclienttwoprocbiditest";
+            string clientInstanceName = testName + "client";
+            string serverInstanceName = testName + "server";
+            string logOutputClientFileName_TestApp = testName + "Client_TestApp.log";
+            string logOutputServerFileName_TestApp = testName + "Server_TestApp.log";
+            string logOutputClientRestartedFileName_TestApp = testName + "Client_TestApp_Restarted.log";
+            string logOutputServerRestartedFileName_TestApp = testName + "Server_TestApp_Restarted.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
+
+            // Start it once - Launch the client and the server as separate procs 
+            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+            int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            // Give it 5 seconds where it tries to connect 
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // DO NOT Kill both Client and Server 
+            // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
+            // MyUtils.KillProcess(serverProcessID);
+            // MyUtils.KillProcess(clientProcessID);
+
+            // Change the ports in the config files before restarting a new server and client
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3510", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "3020", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3021", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "4500", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "4020", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "4021", JSUtils.JSPTI_ServerInstanceRole);
+
+            // Restart the server and client and make sure it continues
+            clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            // Give it 5 seconds where it tries to connect 
+            Thread.Sleep(5000);
+            Application.DoEvents();
+
+            serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+
+            // Verify the data in the restarted output file
+            // Verify the data in the restarted output file
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true, false);
+
+            // Verify that echo is part of the output
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
+
+            // Verify integrity of Ambrosia logs by replaying 
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+        }
+
+        //**  Similar to restart after both killed, but this is case where the process is NOT killed and the process is just restarted. 
+        //** The second process takes over and the original processes die. It is the way would migrate the client version.
+        [TestMethod]
+        public void JS_PTI_MigrateClient_Test()
+        {
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 20;
+            long totalBytes = 327680;
+            long totalEchoBytes = 327680;
+            int bytesPerRound = 16384;
+            int maxMessageSize = 32;
+            int batchSizeCutoff = 16384;
+            int messagesSent = 19968;
+            bool bidi = false;
+
+            string testName = "jsptimigrateclienttest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
+            string logOutputFileNameRestarted_TestApp = testName + "_TestApp_Restarted.log";
 
-            // Launched all the unit tests for JS Node (npm run unittests)
-            int JSTestAppID = JSUtils.StartJSNodeUnitTests(logOutputFileName_TestApp);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false");   // default is false but ok to specifically state in case default changes
 
-            // Wait until summary at the end and if not there, then know not finished
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, finishedString, 2, false, testName, true,false);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 1, false, testName, true,false);
+            // Start it once
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
+            // Give it 5 seconds where it tries to connect but doesn't
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // DO NOT Kill both app 
+            // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
+            // MyUtils.KillProcess("node");
+
+            // Change the ports in the config files before restarting so doesn't conflict port numbers
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3520");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "3020");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3021");
+
+            // Restart it and make sure it continues
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestarted_TestApp);
+
+            // Verify the data in the restarted output file
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
+
+            // Verify that echo is NOT part of the output - won't pop assert on fail so check return value
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 0, true, testName, false, false);
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_MigrateClient_Test> Echoed string should NOT have been found in the output but it was.");
+            }
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "[IC] Connected!", 1, false, testName, true);
+
+            // Verify integrity of Ambrosia logs by replaying 
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+        }
+
+        //**  Similar to restart after both killed, but this is case where the process is NOT killed and the process is just restarted. 
+        //** The second process takes over and the original processes die. It is the way would migrate the client version.
+        //* For the Bidirectional option
+        [TestMethod]
+        public void JS_PTI_MigrateClient_BiDi_Test()
+        {
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 6;
+            long totalBytes = 6442450944;
+            long totalEchoBytes = 6442450944;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
+            int messagesSent = 1032192;
+            bool bidi = true;
+
+            string testName = "jsptimigrateclientbiditest";
+            string logOutputFileName_TestApp = testName + "_TestApp.log";
+            string logOutputFileNameRestarted_TestApp = testName + "_TestApp_Restarted.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false");   // default is false but ok to specifically state in case default changes
+
+            // Start it once
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
+
+            // Give it 5 seconds where it tries to connect but doesn't
+            Thread.Sleep(5000);
+            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+
+            // DO NOT Kill both app 
+            // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
+            // MyUtils.KillProcess("node");
+
+            // Change the ports in the config files before restarting so doesn't conflict port numbers
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3520");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "3020");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3021");
+
+            // Restart it and make sure it continues
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestarted_TestApp);
+
+            // Verify the data in the restarted output file
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 15, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "[IC] Connected!", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
+
+            // Verify integrity of Ambrosia logs by replaying
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
         }
 
 
