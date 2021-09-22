@@ -262,13 +262,13 @@ namespace AmbrosiaTest
 
             string testName = "jsptiblobtwoprocbiditest";
 
-            int numRounds = 4;
-            long totalBytes = 16384;
-            long totalEchoBytes = 16384;
+            int numRounds = 2;
+            long totalBytes = 8192;
+            long totalEchoBytes = 8192;
             int bytesPerRound = 4096;
             int maxMessageSize = 256;
             int batchSizeCutoff = 256;
-            int messagesSent = 240;
+            int messagesSent = 48;
             bool bidi = true;
             string clientInstanceName = testName + "client";
             string serverInstanceName = testName + "server";
