@@ -8,7 +8,7 @@ using System.IO;
 namespace AmbrosiaTest
 {
     [TestClass]
-    public class JS_PTI_BasicUnitTests
+    public class JS_BasicUnitTests
     {
         //************* Init Code *****************
         // NOTE: Make sure all names be "Azure Safe". No capital letters and no underscore.
@@ -321,7 +321,7 @@ namespace AmbrosiaTest
 
         //** Runs the built in unit tests 
         [TestMethod]
-        public void JS_NodeUnitTests()
+        public void JS_Node_UnitTests()
         {
 
             Utilities MyUtils = new Utilities();

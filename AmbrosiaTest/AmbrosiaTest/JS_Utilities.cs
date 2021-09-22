@@ -41,6 +41,7 @@ namespace AmbrosiaTest
         public string JSConfig_icLogStorageType = "icLogStorageType";
         public string JSConfig_isActiveActive = "isActiveActive";
         public string JSConfig_replicaNumber = "replicaNumber";
+        public string JSConfig_hostingMode = "icHostingMode";
 
 
         // NOTE: all lbOptions settings need "lbOptions" at beginning so know it is nested there
@@ -746,6 +747,33 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
         }
 
+        //** Clean up all the left overs from JS tests that are related to JS Hosting Mode tests (JS_HostingMode.cs)
+        public void JS_TestCleanup_HostingMode()
+        {
+            Utilities MyUtils = new Utilities();
+
+            // If failures in queue then do not want to do anything (init, run test, clean up) 
+            if (MyUtils.CheckStopQueueFlag())
+            {
+                return;
+            }
+
+            // Stop all running processes that hung or were left behind
+            MyUtils.StopAllAmbrosiaProcesses();
+
+            Thread.Sleep(2000);
+
+            // Clean up Azure - this is called after each test so put all test names in for azure tables
+            MyUtils.CleanupAzureTables("jsptihostmodeseparatetesttwoproc");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptihostmodeseparatetest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptihostmodeseparatebiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptihostmodeseparateptifirsttest");
+            Thread.Sleep(2000);
+        }
+
 
         //** Clean up all the left overs from JS tests. 
         public void JS_TestCleanup()
@@ -789,11 +817,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptimigrateclientbiditest");
             Thread.Sleep(2000);
-            
-
         }
-
-
 
     }
 }

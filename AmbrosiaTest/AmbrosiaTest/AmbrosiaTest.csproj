@@ -81,8 +81,9 @@
     <Compile Include="InProc_TCP_Test.cs" />
     <Compile Include="JS_CodeGen_Neg_Tests.cs" />
     <Compile Include="JS_CodeGen_Tests.cs" />
-    <Compile Include="JS_PTI_BasicUnitTests.cs" />
+    <Compile Include="JS_BasicUnitTests.cs" />
     <Compile Include="JS_Blob_Tests.cs" />
+    <Compile Include="JS_HostingMode_Tests.cs" />
     <Compile Include="JS_Restart_Tests.cs" />
     <Compile Include="MTF_Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

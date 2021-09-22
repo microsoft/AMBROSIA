@@ -17,6 +17,7 @@
   "icLogStorageType": "Files",
   "isActiveActive": false,
   "replicaNumber": 0,
+  "icHostingMode": "Integrated",
   "lbOptions": {
     "deleteLogs": false,
     "deleteRemoteCRAConnections": false,
