@@ -38,7 +38,7 @@ namespace AmbrosiaTest
 
         //** Test of saving the log to the blob instead of file
         [TestMethod]
-        public void JS_PTI_Blob_Basic_Test()
+        public void JS_PTI_Blob_Test()
         {
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -89,7 +89,7 @@ namespace AmbrosiaTest
 
         //** Test of saving the log to the blob instead of file for bi directional 
         [TestMethod]
-        public void JS_PTI_Blob_Basic_BiDi_Test()
+        public void JS_PTI_Blob_BiDi_Test()
         {
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -187,7 +187,7 @@ namespace AmbrosiaTest
 
         //** Basic End to End that is NOT bidirectional where Client and Server are in separate Procs and saving to a blob
         [TestMethod]
-        public void JS_PTI_Blob_BasicTwoProc_Test()
+        public void JS_PTI_Blob_TwoProc_Test()
         {
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -255,7 +255,7 @@ namespace AmbrosiaTest
 
         //** Basic End to End that is bidirectional where Client and Server are in separate Procs and saving to a blob
         [TestMethod]
-        public void JS_PTI_Blob_BasicTwoProc_BiDi_Test()
+        public void JS_PTI_Blob_TwoProc_BiDi_Test()
         {
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -306,7 +306,7 @@ namespace AmbrosiaTest
 
         //** Basic End to End that is NOT bidirectional and Client saves to Blob and Server saves to File
         [TestMethod]
-        public void JS_PTI_BlobClientFile_BasicTwoProc_Test()
+        public void JS_PTI_BlobClientFile_TwoProc_Test()
         {
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -378,7 +378,7 @@ namespace AmbrosiaTest
 
         //** Basic End to End that is NOT bidirectional and Client saves to file and Server saves to blob
         [TestMethod]
-        public void JS_PTI_BlobServerFile_BasicTwoProc_Test()
+        public void JS_PTI_BlobServerFile_TwoProc_Test()
         {
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();

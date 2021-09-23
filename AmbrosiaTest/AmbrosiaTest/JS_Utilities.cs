@@ -37,6 +37,7 @@ namespace AmbrosiaTest
         public string JSConfig_debugStartCheckpoint = "debugStartCheckpoint";
         public string JSConfig_debugTestUpgrade = "debugTestUpgrade";
         public string JSConfig_appVersion = "appVersion";
+        public string JSConfig_activeCode = "activeCode";
         public string JSConfig_upgradeVersion = "upgradeVersion";
         public string JSConfig_icLogStorageType = "icLogStorageType";
         public string JSConfig_isActiveActive = "isActiveActive";
@@ -768,9 +769,9 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptihostmodeseparatetest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptihostmodeseparatebiditest");
+            MyUtils.CleanupAzureTables("jsptihostmodesepbiditest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptihostmodeseparateptifirsttest");
+            MyUtils.CleanupAzureTables("jsptihostmodesepptifirsttest");
             Thread.Sleep(2000);
         }
 
@@ -817,6 +818,13 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptimigrateclientbiditest");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiupgradeservertest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiupgradeserverbiditest");
+            Thread.Sleep(2000);
+
+
+
         }
 
     }
