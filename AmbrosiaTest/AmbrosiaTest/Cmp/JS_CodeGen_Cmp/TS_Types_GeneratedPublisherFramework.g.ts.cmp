@@ -206,6 +206,15 @@ function dispatcher(message: Messages.DispatchedMessage): void
                 switch (appEvent.eventType)
                 {
                     case Messages.AppEventType.ICStarting:
+                        // TODO: Add an exported [non-async] function 'onICStarting(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.ICStarted:
+                        // TODO: Add an exported [non-async] function 'onICStarted(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.ICConnected:
+                        // Note: Types and methods are published in this handler so that they're available regardless of the 'icHostingMode'
                         Meta.publishType("PrintMedia", "number");
                         Meta.publishType("PrintMediaReverse", "number");
                         Meta.publishType("MyEnumAA", "number");
@@ -219,11 +228,7 @@ function dispatcher(message: Messages.DispatchedMessage): void
                         Meta.publishPostMethod("makeName", 1, ["firstName?: string", "lastName?: string"], "Names");
                         Meta.publishPostMethod("return_number", 1, ["strvalue: string"], "number");
                         Meta.publishPostMethod("returnstring", 1, ["numvalue: number"], "string");
-                        // TODO: Add an exported [non-async] function 'onICStarting(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
-                        break;
-
-                    case Messages.AppEventType.ICStarted:
-                        // TODO: Add an exported [non-async] function 'onICStarted(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported [non-async] function 'onICConnected(): void' to ./JS_CodeGen_TestFiles/TS_Types.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStopped:

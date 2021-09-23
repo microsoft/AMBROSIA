@@ -715,8 +715,9 @@ namespace AmbrosiaTest
         {
 
             //***#*#
-            Assert.Fail("NOT DONE!");
+            Assert.Fail("NOT DONE! Bug #180");
             //***#*#
+
 
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -744,11 +745,15 @@ namespace AmbrosiaTest
 
             // Give it 10 seconds where it tries to connect but doesn't
             Thread.Sleep(10000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            Application.DoEvents();  
 
             // Kill Server
              MyUtils.KillProcessByName("node");
 
+            //*#*#*
+            //*#*#*# TO DO - This might cause a failure if upgradeVersion option in config file to start
+            //*#*#*
+            //Set the Upgrade Version
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "11");
 
             // Restart it and make sure it continues
@@ -777,7 +782,7 @@ namespace AmbrosiaTest
         public void JS_PTI_UpgradeServer_BiDi_Test()
         {
             //***#*#
-            Assert.Fail("NOT DONE!");
+            Assert.Fail("NOT DONE! Bug #180");
             //***#*#
 
 
