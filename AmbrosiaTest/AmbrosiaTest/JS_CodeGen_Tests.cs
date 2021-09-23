@@ -32,9 +32,15 @@ namespace AmbrosiaTest
         [TestCleanup()]
         public void Cleanup()
         {
+
+            // No need to do all the test clean up .. just need to stop the processes
+            Utilities MyUtils = new Utilities();
+            MyUtils.StopAllAmbrosiaProcesses();
+
             // Kill all exes associated with tests
-            JS_Utilities JSUtils = new JS_Utilities();
-            JSUtils.JS_TestCleanup();
+            //JS_Utilities JSUtils = new JS_Utilities();
+            //JSUtils.JS_TestCleanup();
+
         }
 
 

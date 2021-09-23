@@ -163,14 +163,19 @@ function dispatcher(message: Messages.DispatchedMessage): void
                 switch (appEvent.eventType)
                 {
                     case Messages.AppEventType.ICStarting:
-                        Meta.publishType("EmployeeWithGenerics", "{ firstNames: Set<{ name: string, nickNames: NickNames }>, lastName: string, birthYear: number }");
-                        Meta.publishType("NickNames", "{ name: string }[]");
-                        // Code-gen: Published methods will go here
                         // TODO: Add an exported [non-async] function 'onICStarting(): void' to ./JS_CodeGen_TestFiles/TS_GenType2.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStarted:
                         // TODO: Add an exported [non-async] function 'onICStarted(): void' to ./JS_CodeGen_TestFiles/TS_GenType2.ts, then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.ICConnected:
+                        // Note: Types and methods are published in this handler so that they're available regardless of the 'icHostingMode'
+                        Meta.publishType("EmployeeWithGenerics", "{ firstNames: Set<{ name: string, nickNames: NickNames }>, lastName: string, birthYear: number }");
+                        Meta.publishType("NickNames", "{ name: string }[]");
+                        // Code-gen: Published methods will go here
+                        // TODO: Add an exported [non-async] function 'onICConnected(): void' to ./JS_CodeGen_TestFiles/TS_GenType2.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStopped:

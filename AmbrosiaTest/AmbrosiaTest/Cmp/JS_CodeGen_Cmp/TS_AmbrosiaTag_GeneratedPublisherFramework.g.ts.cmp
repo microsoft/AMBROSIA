@@ -192,6 +192,15 @@ function dispatcher(message: Messages.DispatchedMessage): void
                 switch (appEvent.eventType)
                 {
                     case Messages.AppEventType.ICStarting:
+                        // TODO: Add an exported [non-async] function 'onICStarting(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.ICStarted:
+                        // TODO: Add an exported [non-async] function 'onICStarted(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.ICConnected:
+                        // Note: Types and methods are published in this handler so that they're available regardless of the 'icHostingMode'
                         // Code-gen: Published types will go here
                         Meta.publishPostMethod("OneLineNoComment", 1, [], "void");
                         Meta.publishPostMethod("MultiLineCommentBeforeTag", 1, [], "void");
@@ -200,11 +209,7 @@ function dispatcher(message: Messages.DispatchedMessage): void
                         Meta.publishPostMethod("SpacingAroundTag", 1, [], "void");
                         Meta.publishPostMethod("JSDOcTag", 1, [], "void");
                         Meta.publishPostMethod("fnOverload", 1, ["name?: string"], "void");
-                        // TODO: Add an exported [non-async] function 'onICStarting(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
-                        break;
-
-                    case Messages.AppEventType.ICStarted:
-                        // TODO: Add an exported [non-async] function 'onICStarted(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
+                        // TODO: Add an exported [non-async] function 'onICConnected(): void' to ./JS_CodeGen_TestFiles/TS_AmbrosiaTag.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStopped:

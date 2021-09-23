@@ -165,13 +165,18 @@ function dispatcher(message: Messages.DispatchedMessage): void
                 switch (appEvent.eventType)
                 {
                     case Messages.AppEventType.ICStarting:
-                        // Code-gen: Published types will go here
-                        Meta.publishPostMethod("unused", 1, [], "void");
                         // TODO: Add an exported [non-async] function 'onICStarting(): void' to ./JS_CodeGen_TestFiles/TS_EventHandlerWarnings.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStarted:
                         // TODO: Add an exported [non-async] function 'onICStarted(): void' to ./JS_CodeGen_TestFiles/TS_EventHandlerWarnings.ts, then (after the next code-gen) a call to it will be generated here
+                        break;
+
+                    case Messages.AppEventType.ICConnected:
+                        // Note: Types and methods are published in this handler so that they're available regardless of the 'icHostingMode'
+                        // Code-gen: Published types will go here
+                        Meta.publishPostMethod("unused", 1, [], "void");
+                        // TODO: Add an exported [non-async] function 'onICConnected(): void' to ./JS_CodeGen_TestFiles/TS_EventHandlerWarnings.ts, then (after the next code-gen) a call to it will be generated here
                         break;
 
                     case Messages.AppEventType.ICStopped:

@@ -12,7 +12,6 @@
   "debugStartCheckpoint": 0,
   "debugTestUpgrade": false,
   "appVersion": 0,
-  "upgradeVersion": 0,
   "activeCode": "VCurrent",
   "icLogStorageType": "Files",
   "isActiveActive": false,
