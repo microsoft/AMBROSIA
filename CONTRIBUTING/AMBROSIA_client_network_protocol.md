@@ -76,7 +76,7 @@ Each log record has a 24 byte header, followed by the actual record contents. Th
  * Bytes [0-3]: The committer ID for the service, this should be constant for all records for the lifetime of the service. The format is IntFixed.
  * Bytes [4-7]: The size of the whole log record, in bytes, including the header. The format is IntFixed.
  * Bytes [8-15]: The check bytes to check the integrity of the log record. The format is LongFixed.
- * Bytes [16-23]: The log record sequence ID. Excluding records labeled with sequence ID “-1”, these should be in order. The format is LongFixed.
+ * Bytes [16-23]: The log record sequence ID. Excluding records that have sequence ID -1 or -2, the ID's will be in ascending order. The format is LongFixed.
 
 The rest of the record is a sequence of messages, packed tightly, each with the following format:
 
