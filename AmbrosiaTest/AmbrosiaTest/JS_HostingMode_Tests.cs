@@ -84,11 +84,6 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_HostingModeSeparate_TwoProc_Test()
         {
-
-            //*#*#*#*#
-            Assert.Fail("Bug #179 - HostingMode set to Separated is not running to completion.");
-            //*#*#*#*#
-
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -177,11 +172,15 @@ namespace AmbrosiaTest
             {
                 Assert.Fail("<JS_PTI_HostingModeSeparate_TwoProc_Test> Echoed string should NOT have been found in the output but it was.");
             }
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName,true,false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC]", 0, true, testName, false, false);  // shouldn't be any IC comments
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_HostingModeSeparate_TwoProc_Test> There shouldn't be any Imm Coord messages in output since separate process");
+            }
 
-            // Verify integrity of Ambrosia logs by replaying 
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+            // Do not verify logs as the setting 'debugStartCheckpoint' is not allowed for Separate host mode
+            //JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
         }
 
 
@@ -190,10 +189,6 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_HostingModeSeparate_Test()
         {
-
-            //*#*#*#*#
-            Assert.Fail("Bug #179 - HostingMode set to Separated is not running to completion.");
-            //*#*#*#*#
 
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -217,7 +212,6 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1500");
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1000");
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1001");
-
 
             // Manually register the instance
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -253,20 +247,18 @@ namespace AmbrosiaTest
                 Assert.Fail("<JS_PTI_HostingModeSeparate_Test> Echoed string should NOT have been found in the output but it was.");
             }
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC]", 0, true, testName, false, false);  // shouldn't be any IC comments
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_HostingModeSeparate_Test> There shouldn't be any Imm Coord messages in output since separate process");
+            }
 
-            // Verify integrity of Ambrosia logs by replaying 
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
         }
 
         //**  Testing the "Separate" option for the feature in ambrosiaConfig.json ( "icHostingMode": "Separated",) but with BiDi turned on 
         [TestMethod]
         public void JS_PTI_HostingModeSeparate_BiDi_Test()
         {
-
-            //*#*#*#*#
-            Assert.Fail("Bug #179 - HostingMode set to Separated is not running to completion.");
-            //*#*#*#*#
 
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -280,14 +272,16 @@ namespace AmbrosiaTest
             int messagesSent = 48;
             bool bidi = true;
 
-            string testName = "jsptihostmodeseparatebiditest";
+            string testName = "jsptihostmodesepbiditest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
 
+            // Set name and ports to match IC call
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_hostingMode, "Separated");
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1500");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1000");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1001");
 
             // Manually register the instance
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -317,23 +311,21 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
-            // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC]", 0, true, testName, false, false);  // shouldn't be any IC comments
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_HostingModeSeparate_BiDi_Test> There shouldn't be any Imm Coord messages in output since separate process");
+            }
         }
 
 
         //**  Testing the "Separate" option for the feature in ambrosiaConfig.json ( "icHostingMode": "Separated")
         //** This starts PTI before IC is started
         [TestMethod]
-        public void JS_PTI_HostingModeSeparateStartPTIFirst_Test()
+        public void JS_PTI_HostingModeSeparateStartPTIFirst_BiDi_Test()
         {
-
-            //*#*#*#*#
-            Assert.Fail("Bug #179 - HostingMode set to Separated is not running to completion.");
-            //*#*#*#*#
 
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -347,14 +339,15 @@ namespace AmbrosiaTest
             int messagesSent = 48;
             bool bidi = true;
 
-            string testName = "jsptihostmodeseparateptifirsttest";
+            string testName = "jsptihostmodesepptifirsttest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_hostingMode, "Separated");
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1500");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1000");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1001");
 
             // Manually register the instance
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -384,11 +377,13 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
-            // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC]", 0, true, testName, false, false);  // shouldn't be any IC comments
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_HostingModeSeparateStartPTIFirst_Test> There shouldn't be any Imm Coord messages in output since separate process");
+            }
         }
 
     }
