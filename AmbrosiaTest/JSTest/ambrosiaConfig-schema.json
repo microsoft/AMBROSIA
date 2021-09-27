@@ -83,17 +83,17 @@
         },
         "appVersion": {
             "type": "number",
-            "description": "The nominal version of this Immortal instance. Used to identify the log sub-folder name (ie. &lt;icInstanceName>_&lt;appVersion>) that will be logged to (or read from if debugStartCheckpoint is specified)."
+            "description": "The nominal version of this Immortal instance. Used to identify the log sub-folder name (ie. &lt;icInstanceName>_&lt;appVersion>) that will be logged to (or read from if debugStartCheckpoint is specified).\n See https://msrfranklin.visualstudio.com/_git/Franklin?path=/AmbrosiaJS/Ambrosia-Node/docs/Upgrade.md"
         },
         "upgradeVersion": {
             "type": "number",
-            "description": "The nominal version this Immortal instance should upgrade (migrate) to at startup. Must be greater than 'appVersion' to trigger an upgrade. Test the upgrade first by setting 'debugTestUpgrade' to true."
+            "description": "The nominal version this Immortal instance should upgrade (migrate) to at startup. Must be greater than 'appVersion' to trigger an upgrade. Test the upgrade first by setting 'debugTestUpgrade' to true.\n See https://msrfranklin.visualstudio.com/_git/Franklin?path=/AmbrosiaJS/Ambrosia-Node/docs/Upgrade.md"
         },
         "activeCode": {
             "type": "string",
             "enum": [ "VCurrent", "VNext" ],
             "default": "VCurrent",
-            "description": "Which version of application code is currently active (before an upgrade: \"VCurrent\"; immediately after an upgrade: \"VNext\"). This setting is changed automatically during an upgrade, but must be manually changed back to 'VCurrent' (along with updating the code) when preparing for a subsequent upgrade. Defaults to \"VCurrent\"."
+            "description": "Which version of application code is currently active (before an upgrade: \"VCurrent\"; immediately after an upgrade: \"VNext\"). This setting is changed automatically during an upgrade, but must be manually changed back to 'VCurrent' (along with updating the code) when preparing for a subsequent upgrade. Defaults to \"VCurrent\".\n See https://msrfranklin.visualstudio.com/_git/Franklin?path=/AmbrosiaJS/Ambrosia-Node/docs/Upgrade.md"
         },
         "secureNetworkAssemblyName" : {
             "type": "string",

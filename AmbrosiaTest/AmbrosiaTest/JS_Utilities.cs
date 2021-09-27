@@ -319,7 +319,7 @@ namespace AmbrosiaTest
 
 
         //** Restores the JS Config file for the test app from the golden config file
-        public void JS_RestoreJSConfigFile(bool SetAutoRegister = true)
+        public void JS_RestoreJSConfigFile(bool SetAutoRegister = true, string altGOLDConfigFile = "")
         {
             try
             {
@@ -329,6 +329,11 @@ namespace AmbrosiaTest
                 string basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
                 string ambrosiaGoldConfigfileName = "ambrosiaConfigGOLD.json";
                 string ambrosiaConfigfileName = "ambrosiaConfig.json";
+
+                if (altGOLDConfigFile != "")
+                {
+                    ambrosiaGoldConfigfileName = altGOLDConfigFile;
+                 }
 
                 //** Set defaults that are test run specific
                 string CurrentFramework = MyUtils.NetFramework;
@@ -822,9 +827,12 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptiupgradeserverbiditest");
             Thread.Sleep(2000);
-
-
-
+            MyUtils.CleanupAzureTables("jsptiupgradeservertwoproctest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiupgradeservertwoprocbiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiupgradeserverbacktobacktest");
+            Thread.Sleep(2000);
         }
 
     }

@@ -713,22 +713,15 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_UpgradeServer_Test()
         {
-
-            //***#*#
-            Assert.Fail("NOT DONE! Bug #180");
-            //***#*#
-
-
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 5;
-            long totalBytes = 81920;
-            long totalEchoBytes = 81920;
+            int numRounds = 15;
+            long totalBytes = 245760;
+            long totalEchoBytes = 245760;
             int bytesPerRound = 16384;
             int maxMessageSize = 32;
             int batchSizeCutoff = 16384;
-            int messagesSent = 19968;
             bool bidi = false;
 
             string testName = "jsptiupgradeservertest";
@@ -738,42 +731,38 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false");   // default is false but ok to specifically state in case default changes
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_activeCode, "VCurrent");  // should be the default but just in case not
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_appVersion, "10");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_appVersion, "0");
 
             // Start it once
-            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
+            int ptiID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
-            // Give it 10 seconds where it tries to connect but doesn't
-            Thread.Sleep(10000);
-            Application.DoEvents();  
+            // Once it connects we know it is registered so kill it
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Ready ...", 1, false, testName, true,false);
 
-            // Kill Server
-             MyUtils.KillProcessByName("node");
+            // Kill Server which will kill the IC too
+            MyUtils.KillProcess(ptiID);
 
-            //*#*#*
-            //*#*#*# TO DO - This might cause a failure if upgradeVersion option in config file to start
-            //*#*#*
             //Set the Upgrade Version
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "11");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false");
 
             // Restart it and make sure it continues
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestarted_TestApp);
 
             // Verify the data in the restarted output file
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
 
             // Verify that echo is NOT part of the output - won't pop assert on fail so check return value
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 0, true, testName, false, false);
             if (pass == true)
             {
-                Assert.Fail("<JS_PTI_MigrateClient_Test> Echoed string should NOT have been found in the output but it was.");
+                Assert.Fail("<JS_PTI_UpgradeServer_Test> Echoed string should NOT have been found in the output but it was.");
             }
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "[IC] Connected!", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Upgrade complete", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "VNext: Successfully upgraded!", 1, false, testName, true);
 
-            // Verify integrity of Ambrosia logs by replaying 
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
         }
 
         //** Upgrades the version number of server
@@ -781,10 +770,6 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_UpgradeServer_BiDi_Test()
         {
-            //***#*#
-            Assert.Fail("NOT DONE! Bug #180");
-            //***#*#
-
 
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -795,7 +780,6 @@ namespace AmbrosiaTest
             int bytesPerRound = 0;
             int maxMessageSize = 0;
             int batchSizeCutoff = 0;
-            int messagesSent = 1032192;
             bool bidi = true;
 
             string testName = "jsptiupgradeserverbiditest";
@@ -803,43 +787,252 @@ namespace AmbrosiaTest
             string logOutputFileNameRestarted_TestApp = testName + "_TestApp_Restarted.log";
 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false");   // default is false but ok to specifically state in case default changes
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_activeCode, "VCurrent");  // should be the default but just in case not
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_appVersion, "0");
 
             // Start it once
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
-            // Give it 5 seconds where it tries to connect but doesn't
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            // wait for it to connect so know it is registered
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Ready ...", 1, false, testName, true, false);
 
-            // DO NOT Kill both app 
-            // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
-            // MyUtils.KillProcess("node");
+            // Kill Server and any corresponding IC
+            MyUtils.StopAllAmbrosiaProcesses();
 
-            // Change the ports in the config files before restarting so doesn't conflict port numbers
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3520");
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "3020");
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3021");
+            //Set the Upgrade Version
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "1");
 
             // Restart it and make sure it continues
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestarted_TestApp);
 
             // Verify the data in the restarted output file
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 15, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 15, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "[IC] Connected!", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Upgrade complete", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "VNext: Successfully upgraded!", 1, false, testName, true);
 
-            // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
         }
 
 
-        //*#*#* TO DO - Two Proc Upgrade Server
-        //*#*#* TO DO - Two Proc Upgrade Server BiDi
+        //**  End to End for Two Proc that is NOT bidirectional and where the Server is stopped and restarted 
+        [TestMethod]
+        public void JS_PTI_UpgradeServerTwoProc_Test()
+        {
 
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 6;
+            long totalBytes = 6442450944;
+            long totalEchoBytes = 6442450944;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
+            bool bidi = false;
+
+            string testName = "jsptiupgradeservertwoproctest";
+            string clientInstanceName = testName + "client";
+            string serverInstanceName = testName + "server";
+            string logOutputClientFileName_TestApp = testName + "Client_TestApp.log";
+            string logOutputServerFileName_TestApp = testName + "Server_TestApp.log";
+            string logOutputServerRestartedFileName_TestApp = testName + "Server_TestApp_Restarted.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
+
+            // Update the client config file
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false", JSUtils.JSPTI_ClientInstanceRole); 
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_activeCode, "VCurrent", JSUtils.JSPTI_ClientInstanceRole);  
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_appVersion, "0", JSUtils.JSPTI_ClientInstanceRole);
+
+            // Update the server config file
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_activeCode, "VCurrent", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_appVersion, "0", JSUtils.JSPTI_ServerInstanceRole);
+
+            // Start it once - Launch the client and the server as separate procs 
+            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+            int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            // Give it 10 seconds to get some going 
+            Thread.Sleep(10000);
+            Application.DoEvents();  
+
+            // Kill server
+            MyUtils.KillProcess(serverProcessID);
+
+            //Set the Upgrade Version
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "120", JSUtils.JSPTI_ServerInstanceRole);
+
+            // Restart the server and make sure it continues
+            serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+
+            // Verify the data in the restarted output file
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
+
+            // Verify that echo is NOT part of the output - won't pop assert on fail so check return value
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 0, true, testName, false, false);
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_RestartTwoProcKillClient_Test> Echoed string should NOT have been found in the output but it was.");
+            }
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "All rounds complete", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "Upgrade complete", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "VNext: Successfully upgraded!", 1, false, testName, true);
+        }
+
+
+        //**  End to End for Two Proc that is bidirectional and where the Server is stopped and restarted 
+        [TestMethod]
+        public void JS_PTI_UpgradeServerTwoProc_BiDi_Test()
+        {
+
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 4;
+            long totalBytes = 4294967296;
+            long totalEchoBytes = 4294967296;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
+            bool bidi = true;
+
+            string testName = "jsptiupgradeservertwoprocbiditest";
+            string clientInstanceName = testName + "client";
+            string serverInstanceName = testName + "server";
+            string logOutputClientFileName_TestApp = testName + "Client_TestApp.log";
+            string logOutputServerFileName_TestApp = testName + "Server_TestApp.log";
+            string logOutputServerRestartedFileName_TestApp = testName + "Server_TestApp_Restarted.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
+
+            // Update the client config file
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_activeCode, "VCurrent", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_appVersion, "0", JSUtils.JSPTI_ClientInstanceRole);
+
+            // Update the server config file
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_activeCode, "VCurrent", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_appVersion, "119", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "119", JSUtils.JSPTI_ServerInstanceRole);
+
+
+            // Start it once - Launch the client and the server as separate procs 
+            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+            int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            // Give it 10 seconds to get some going 
+            Thread.Sleep(10000);
+            Application.DoEvents();
+
+            // Kill server
+            MyUtils.KillProcess(serverProcessID);
+
+            //Set the Upgrade Version
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "120", JSUtils.JSPTI_ServerInstanceRole);
+
+            // Restart the server and make sure it continues
+            serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+
+            // Verify the data in the output file of the server
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 10, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "Upgrade complete", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerRestartedFileName_TestApp, "VNext: Successfully upgraded!", 1, false, testName, true);
+
+
+            // Verify the data in the output file of the CLIENT 
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 5, true, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "All rounds complete", 5, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true, false);
+
+        }
+
+
+        //** Upgrade Server test - tests that the version number of the server can be upgraded and then ran again to make sure it uses the updated server number
+        [TestMethod]
+        public void JS_PTI_UpgradeServerBackToBack_Test()
+        {
+
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 15;
+            long totalBytes = 245760;
+            long totalEchoBytes = 245760;
+            int bytesPerRound = 16384;
+            int maxMessageSize = 32;
+            int batchSizeCutoff = 16384;
+            bool bidi = false;
+
+            string testName = "jsptiupgradeserverbacktobacktest";
+            string logOutputFileName_TestApp = testName + "_TestApp.log";
+            string logOutputFileNameRestarted_TestApp = testName + "_TestApp_Restarted.log";
+            string logOutputFileNameRestartedAgain_TestApp = testName + "_TestApp_Restarted_Again.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false");   // default is false but ok to specifically state in case default changes
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_activeCode, "VCurrent");  // should be the default but just in case not
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_appVersion, "50");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "50");
+
+            // Start it once
+            int ptiID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
+
+            // Once it connects we know it is registered so kill it
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Ready ...", 1, false, testName, true, false);
+
+            // Kill Server which will kill the IC too
+            MyUtils.KillProcess(ptiID);
+
+            //Set the Upgrade Version
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "51");
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false");
+
+            // Restart it once and make sure it continues
+            int ptiID2 = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestarted_TestApp);
+
+            // Make sure all upgraded and ran fine
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Upgrade complete", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "VNext: Successfully upgraded!", 1, false, testName, true);
+
+            // Kill Server which will kill the IC too
+            MyUtils.KillProcess(ptiID2);
+
+            // Restart it once and make sure it continues with the new version
+            int ptiID3 = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestartedAgain_TestApp);
+
+            // Verify the data in the restarted output file
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestartedAgain_TestApp, "VNext: Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestartedAgain_TestApp, "VNext: SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
+
+            // Verify that echo is NOT part of the output - won't pop assert on fail so check return value
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestartedAgain_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 0, true, testName, false, false);
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_UpgradeServerBackToBack_Test> Echoed string should NOT have been found in the output but it was.");
+            }
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestartedAgain_TestApp, "VNext: All rounds complete", 1, false, testName, true);
+
+        }
 
     }
 }
