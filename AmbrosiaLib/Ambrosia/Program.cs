@@ -2207,7 +2207,7 @@ namespace Ambrosia
             mySocket.Listen(1);
             var socket = mySocket.Accept();
             _localServiceReceiveFromStream = new NetworkStream(socket);
-
+            mySocket.Dispose(); // Don't wait for a GC
 
             // Note that the local service must setup the listener and sender in reverse order or there will be a deadlock
             // First establish receiver - Use fast IP6 loopback
@@ -2222,6 +2222,7 @@ namespace Ambrosia
             mySocket.Listen(1);
             socket = mySocket.Accept();
             _localServiceSendToStream = new NetworkStream(socket);
+            mySocket.Dispose(); // Don't wait for a GC
         }
 
         private void SetupAzureConnections()
