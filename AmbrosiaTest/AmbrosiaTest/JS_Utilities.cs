@@ -833,6 +833,12 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptiupgradeserverbacktobacktest");
             Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptimultipleclienttest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptimultipleclientbiditest");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptinoupgradeversiontest");
+            Thread.Sleep(2000);
         }
 
     }

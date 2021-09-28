@@ -768,7 +768,6 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_UpgradeServer_BiDi_Test()
         {
-
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -822,7 +821,6 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_UpgradeServerTwoProc_Test()
         {
-
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -894,7 +892,6 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_UpgradeServerTwoProc_BiDi_Test()
         {
-
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -1031,6 +1028,237 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestartedAgain_TestApp, "VNext: All rounds complete", 1, false, testName, true);
 
         }
+
+
+        //** End to End test with a server and 3 clients
+        [TestMethod]
+        public void JS_PTI_MultipleClients_Test()
+        {
+
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 4;
+            long totalBytes = 4294967296;
+            long totalEchoBytes = 4294967296;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
+            int messagesSent = 245760;
+            bool bidi = false;
+
+            string testName = "jsptimultipleclienttest";
+            string clientInstanceName = testName + "client";
+            string serverInstanceName = testName + "server";
+
+            string logOutputClientFileName_TestApp1 = testName + "Client_TestApp_1.log";
+            string logOutputClientFileName_TestApp2 = testName + "Client_TestApp_2.log";
+            string logOutputClientFileName_TestApp3 = testName + "Client_TestApp_3.log";
+            string logOutputServerFileName_TestApp = testName + "Server_TestApp.log";
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
+
+            // Launch the server
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.StartJSPTI(numRounds, totalBytes*3, totalEchoBytes*3, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+
+            // Launch Clients
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName+"1", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "2600", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "2610", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "2611", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp1, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "true", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName + "2", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3500", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "3010", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3011", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp2, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "true", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName + "3", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "4500", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "4010", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "4011", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp3, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            // Verify the data in the output file of the server
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "Bytes received: "+ (totalBytes*3).ToString(), 10, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "SUCCESS: The expected number of bytes (" + (totalBytes*3).ToString() + ") have been received", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
+
+            // Client 1
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp1, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 0, true, testName, false, false);
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_MultipleClients_Test> Echoed string should NOT have been found in the CLIENT1 output but it was.");
+            }
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp1, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp1, "[IC] Connected!", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp1, "round #" + numRounds.ToString(), 1, false, testName, true, false);
+
+            // Client 2
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp2, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 0, true, testName, false, false);
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_MultipleClients_Test> Echoed string should NOT have been found in the CLIENT2 output but it was.");
+            }
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp2, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp2, "[IC] Connected!", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp2, "round #" + numRounds.ToString(), 1, false, testName, true, false);
+
+            // Client 3
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 0, true, testName, false, false);
+            if (pass == true)
+            {
+                Assert.Fail("<JS_PTI_MultipleClients_Test> Echoed string should NOT have been found in the CLIENT3 output but it was.");
+            }
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "[IC] Connected!", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "round #" + numRounds.ToString(), 1, false, testName, true, false);
+
+            // Verify -- reminder total bytes for everything is 3 times clients
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes*3, totalEchoBytes*3, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+        }
+
+        //** End to End test with a server and 3 clients with BiDirectional
+        [TestMethod]
+        public void JS_PTI_MultipleClients_BiDi_Test()
+        {
+
+            Assert.Fail("Bug #186 - JS - Starting a second client on a server in BiDirectional mode causes error in the server");
+
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 4;
+            long totalBytes = 4294967296;
+            long totalEchoBytes = 4294967296;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
+            int messagesSent = 245760;
+            bool bidi = true;
+
+            string testName = "jsptimultipleclientbiditest";
+            string clientInstanceName = testName + "client";
+            string serverInstanceName = testName + "server";
+
+            string logOutputClientFileName_TestApp1 = testName + "Client_TestApp_1.log";
+            string logOutputClientFileName_TestApp2 = testName + "Client_TestApp_2.log";
+            string logOutputClientFileName_TestApp3 = testName + "Client_TestApp_3.log";
+            string logOutputServerFileName_TestApp = testName + "Server_TestApp.log";
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
+
+            // Launch the server
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.StartJSPTI(numRounds, totalBytes * 3, totalEchoBytes * 3, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+
+            // Launch Clients
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName + "1", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "2600", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "2610", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "2611", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp1, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "true", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName + "2", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3500", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "3010", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3011", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp2, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "true", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName + "3", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "4500", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "4010", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "4011", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp3, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+            // Verify the data in the output file of the server
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "Bytes received: " + (totalBytes * 3).ToString(), 10, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "SUCCESS: The expected number of bytes (" + (totalBytes * 3).ToString() + ") have been received", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
+
+            // Client 1
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp1, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 5, true, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp1, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp1, "[IC] Connected!", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp1, "round #" + numRounds.ToString(), 1, false, testName, true, false);
+
+            // Client 2
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp2, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 5, true, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp2, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp2, "[IC] Connected!", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp2, "round #" + numRounds.ToString(), 1, false, testName, true, false);
+
+            // Client 3
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 5, true, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "[IC] Connected!", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "round #" + numRounds.ToString(), 1, false, testName, true, false);
+
+            // Verify integrity of Ambrosia logs by replaying server and client side of things (do both since bidi) -- reminder too - total bytes *3 since 3 clients
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes * 3, totalEchoBytes * 3, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes * 3, totalEchoBytes * 3, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+
+        }
+
+        //** Test that auto registers even though the upgradeVersion setting in the config file is omitted on initial registration
+        [TestMethod]
+        public void JS_PTI_NoUpgradeVersion_Test()
+        {
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            int numRounds = 4;
+            long totalBytes = 4294967296;
+            long totalEchoBytes = 4294967296;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
+            int messagesSent = 245760;
+            bool bidi = false;
+
+            string testName = "jsptinoupgradeversiontest";
+            string logOutputFileName_TestApp = testName + "_TestApp.log";
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
+
+            // Remove the  "upgradeVersion": 0, from config file - whole basis of the test is to not have it there
+            string configFile = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App\\ambrosiaConfig.json";
+            string tempFile = Path.GetTempFileName();
+
+            using (var sr = new StreamReader(configFile)) 
+            using (var sw = new StreamWriter(tempFile))
+            {
+                string line;
+
+                while ((line = sr.ReadLine()) != null)
+                {
+                    if (line.Contains("upgradeVersion")!=true)
+                        sw.WriteLine(line);
+                }
+            }
+
+            File.Delete(configFile);
+            File.Move(tempFile, configFile);
+
+            // Start PTI with the updated config file
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
+
+            // Verify the data in the output file - too many changing rows in output to do a cmp file so verify some of the key lines
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
+
+            // Verify integrity of Ambrosia logs by replaying
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+        }
+
+
 
     }
 }
