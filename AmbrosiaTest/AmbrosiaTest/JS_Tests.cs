@@ -601,13 +601,13 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 20;
-            long totalBytes = 327680;
-            long totalEchoBytes = 327680;
-            int bytesPerRound = 16384;
-            int maxMessageSize = 32;
-            int batchSizeCutoff = 16384;
-            int messagesSent = 19968;
+            int numRounds = 6;
+            long totalBytes = 6442450944;
+            long totalEchoBytes = 6442450944;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
+            int messagesSent = 1032192;
             bool bidi = false;
 
             string testName = "jsptimigrateclienttest";
@@ -620,9 +620,8 @@ namespace AmbrosiaTest
             // Start it once
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
-            // Give it 5 seconds where it tries to connect but doesn't
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            // wait until check point saved then restart it 
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Checkpoint saved", 5, false, testName, true); // number of bytes processed
 
             // DO NOT Kill both app 
             // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
@@ -637,7 +636,7 @@ namespace AmbrosiaTest
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestarted_TestApp);
 
             // Verify the data in the restarted output file
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
 
             // Verify that echo is NOT part of the output - won't pop assert on fail so check return value
@@ -647,7 +646,6 @@ namespace AmbrosiaTest
                 Assert.Fail("<JS_PTI_MigrateClient_Test> Echoed string should NOT have been found in the output but it was.");
             }
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "[IC] Connected!", 1, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying 
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
@@ -716,9 +714,9 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 15;
-            long totalBytes = 245760;
-            long totalEchoBytes = 245760;
+            int numRounds = 20;
+            long totalBytes = 327680;
+            long totalEchoBytes = 327680;
             int bytesPerRound = 16384;
             int maxMessageSize = 32;
             int batchSizeCutoff = 16384;
