@@ -97,8 +97,9 @@ namespace AmbrosiaTest
                 if (processID <= 0)
                 {
                     MyUtils.FailureSupport("");
-                    Assert.Fail("<StartJSTestApp> JS TestApp was not started.  ProcessID <=0 ");
+                    Assert.Fail("<Test_CodeGen_TSFile> JS TestApp was not started.  ProcessID <=0 ");
                 }
+
 
                 // Verify things differently if it is a negative test
                 if (NegTest)
@@ -108,11 +109,13 @@ namespace AmbrosiaTest
                     // Verify the log file only has the one error (one that is related to not being annotated)
                     if (UsingSrcTestFile)
                     {
+                        // just give a breath for file to close 
+                        Thread.Sleep(500);
 
                         string TestLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
                         string outputFile = TestLogDir + "\\" + testOutputLogFile;
-
                         var total = 0;
+
                         using (StreamReader sr = new StreamReader(outputFile))
                         {
 
