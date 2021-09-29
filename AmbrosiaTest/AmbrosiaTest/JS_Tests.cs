@@ -714,12 +714,12 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 20;
-            long totalBytes = 327680;
-            long totalEchoBytes = 327680;
-            int bytesPerRound = 16384;
-            int maxMessageSize = 32;
-            int batchSizeCutoff = 16384;
+            int numRounds = 3;
+            long totalBytes = 3221225472;
+            long totalEchoBytes = 3221225472;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
             bool bidi = false;
 
             string testName = "jsptiupgradeservertest";
@@ -1126,7 +1126,7 @@ namespace AmbrosiaTest
         public void JS_PTI_MultipleClients_BiDi_Test()
         {
 
-            Assert.Fail("Bug #186 - JS - Starting a second client on a server in BiDirectional mode causes error in the server");
+            Assert.Fail("Bug #186 JS - Starting a second client on a server in BiDirectional mode causes error in the server");
 
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();

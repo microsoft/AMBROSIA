@@ -58,6 +58,7 @@ namespace AmbrosiaTest
 
                 // Generate the consumer and publisher files and verify output and the generated files to cmp files
                 JSUtils.Test_CodeGen_TSFile(fileName, true, PrimaryErrorMessage, SecondaryErrorMessage,true);
+
             }
         }
 
