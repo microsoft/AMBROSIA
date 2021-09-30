@@ -200,7 +200,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 4096;
             int maxMessageSize = 256;
             int batchSizeCutoff = 256;
-            int messagesSent = 240;
+            int messagesSent = 176;
             bool bidi = false;
             string clientInstanceName = testName + "client";
             string serverInstanceName = testName + "server";
@@ -217,7 +217,7 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ServerInstanceRole);
 
             // Launch the client and the server as separate procs 
-            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Verify the data in the output file of the server
@@ -285,7 +285,7 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ServerInstanceRole);
 
             // Launch the client and the server as separate procs 
-            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Verify the data in the output file of the server
@@ -319,7 +319,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 4096;
             int maxMessageSize = 256;
             int batchSizeCutoff = 256;
-            int messagesSent = 240;
+            int messagesSent = 176;
             bool bidi = false;
             string clientInstanceName = testName + "client";
             string serverInstanceName = testName + "server";
@@ -336,7 +336,7 @@ namespace AmbrosiaTest
             //  JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ServerInstanceRole);
 
             // Launch the client and the server as separate procs 
-            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Verify the data in the output file of the server
@@ -371,7 +371,7 @@ namespace AmbrosiaTest
             }
 
             // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true,"", JSUtils.JSPTI_ServerInstanceRole,"", clientInstanceName);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true,"", JSUtils.JSPTI_ServerInstanceRole);
 
         }
 
@@ -391,7 +391,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 4096;
             int maxMessageSize = 256;
             int batchSizeCutoff = 256;
-            int messagesSent = 240;
+            int messagesSent = 176;
             bool bidi = false;
             string clientInstanceName = testName + "client";
             string serverInstanceName = testName + "server";
@@ -408,7 +408,7 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icLogFolder, "", JSUtils.JSPTI_ServerInstanceRole);
 
             // Launch the client and the server as separate procs 
-            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole, "", clientInstanceName);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Verify the data in the output file of the server
