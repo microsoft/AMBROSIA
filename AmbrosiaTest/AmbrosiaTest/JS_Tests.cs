@@ -1125,19 +1125,16 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_MultipleClients_BiDi_Test()
         {
-
-            Assert.Fail("Bug #186 JS - Starting a second client on a server in BiDirectional mode causes error in the server");
-
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 4;
-            long totalBytes = 4294967296;
-            long totalEchoBytes = 4294967296;
-            int bytesPerRound = 0;
-            int maxMessageSize = 0;
-            int batchSizeCutoff = 0;
-            int messagesSent = 245760;
+            int numRounds = 5;
+            long totalBytes = 640;
+            long totalEchoBytes = 640;
+            int bytesPerRound = 128;
+            int maxMessageSize = 64;
+            int batchSizeCutoff = 32;
+            int messagesSent = 10;
             bool bidi = true;
 
             string testName = "jsptimultipleclientbiditest";
@@ -1146,16 +1143,15 @@ namespace AmbrosiaTest
 
             string logOutputClientFileName_TestApp1 = testName + "Client_TestApp_1.log";
             string logOutputClientFileName_TestApp2 = testName + "Client_TestApp_2.log";
-            string logOutputClientFileName_TestApp3 = testName + "Client_TestApp_3.log";
             string logOutputServerFileName_TestApp = testName + "Server_TestApp.log";
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
 
             // Launch the server
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.StartJSPTI(numRounds, totalBytes * 3, totalEchoBytes * 3, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.StartJSPTI(numRounds, totalBytes * 2, totalEchoBytes * 2, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Launch Clients
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName + "1", JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "2600", JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "2610", JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "2611", JSUtils.JSPTI_ClientInstanceRole);
@@ -1168,16 +1164,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3011", JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp2, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "true", JSUtils.JSPTI_ClientInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName + "3", JSUtils.JSPTI_ClientInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "4500", JSUtils.JSPTI_ClientInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "4010", JSUtils.JSPTI_ClientInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "4011", JSUtils.JSPTI_ClientInstanceRole);
-            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp3, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
-
             // Verify the data in the output file of the server
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "Bytes received: " + (totalBytes * 3).ToString(), 10, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "SUCCESS: The expected number of bytes (" + (totalBytes * 3).ToString() + ") have been received", 1, false, testName, true);
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "Bytes received: " + (totalBytes * 2).ToString(), 10, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "SUCCESS: The expected number of bytes (" + (totalBytes * 2).ToString() + ") have been received", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
 
             // Client 1
@@ -1192,15 +1181,9 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp2, "[IC] Connected!", 1, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp2, "round #" + numRounds.ToString(), 1, false, testName, true, false);
 
-            // Client 3
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 5, true, testName, true, false);
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5, false, testName, true, false);
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "[IC] Connected!", 1, false, testName, true, false);
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp3, "round #" + numRounds.ToString(), 1, false, testName, true, false);
-
-            // Verify integrity of Ambrosia logs by replaying server and client side of things (do both since bidi) -- reminder too - total bytes *3 since 3 clients
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes * 3, totalEchoBytes * 3, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes * 3, totalEchoBytes * 3, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+            // Verify integrity of Ambrosia logs by replaying server and client side of things (do both since bidi) -- reminder for server - total bytes *2 since 2 clients
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes * 2, totalEchoBytes * 2, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
         }
 
