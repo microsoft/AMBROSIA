@@ -36,10 +36,6 @@ namespace AmbrosiaTest
             JSUtils.JS_TestCleanup_Restart();
         }
 
-
-
-
-
         //** Test that restarts after the run finishes. Test to show that it can start up on log files that "completed"
         [TestMethod]
         public void JS_PTI_RestartAfterFinishes_BiDi_Test()
@@ -51,9 +47,9 @@ namespace AmbrosiaTest
             long totalBytes = 640;
             long totalEchoBytes = 640;
             int bytesPerRound = 128;
-            int maxMessageSize = 32;
+            int maxMessageSize = 64;
             int batchSizeCutoff = 32;
-            int messagesSent = 36;
+            int messagesSent = 30;
             bool bidi = true;
 
             string testName = "jsptirestartafterfinishesbiditest";
@@ -96,9 +92,9 @@ namespace AmbrosiaTest
             long totalBytes = 163840;
             long totalEchoBytes = 163840;
             int bytesPerRound = 16384;
-            int maxMessageSize = 32;
+            int maxMessageSize = 64;
             int batchSizeCutoff = 16384;
-            int messagesSent = 9728;
+            int messagesSent = 8960;
             bool bidi = false;
 
             string testName = "jsptirestartkillclient";
@@ -154,9 +150,9 @@ namespace AmbrosiaTest
             long totalBytes = 163840;
             long totalEchoBytes = 163840;
             int bytesPerRound = 16384;
-            int maxMessageSize = 32;
+            int maxMessageSize = 64;
             int batchSizeCutoff = 16384;
-            int messagesSent = 9728;
+            int messagesSent = 8960;
             bool bidi = true;
 
             string testName = "jsptirestartkillclientbidi";

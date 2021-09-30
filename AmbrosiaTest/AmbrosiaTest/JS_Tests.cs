@@ -162,9 +162,9 @@ namespace AmbrosiaTest
             long totalBytes = 640;
             long totalEchoBytes = 640;
             int bytesPerRound = 128;
-            int maxMessageSize = 32;
+            int maxMessageSize = 64;
             int batchSizeCutoff = 32;
-            int messagesSent = 36;
+            int messagesSent = 30;
 
             int memoryUsed = 104857600;  // padding"(in bytes) used to simulate large checkpoints by being included in app state-- 1GB (1073741824) is what C# PTI uses. Will get OOM issue if do much more than 100 MB so just use 100 MB.  See bug #170 for details.  -  
 
@@ -204,9 +204,9 @@ namespace AmbrosiaTest
             long totalBytes = 896;
             long totalEchoBytes = 896;
             int bytesPerRound = 128;
-            int maxMessageSize = 32;
-            int batchSizeCutoff = 32;
-            int messagesSent = 28;
+            int maxMessageSize = 64;
+            int batchSizeCutoff = 64;
+            int messagesSent = 14;
             bool bidi = true;
             bool fixedMsgSize = true;
 
@@ -223,13 +223,13 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 7 rounds left) of 4 messages of 32 bytes each", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 6 rounds left) of 4 messages of 32 bytes each", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 5 rounds left) of 4 messages of 32 bytes each", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 4 rounds left) of 4 messages of 32 bytes each", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 3 rounds left) of 4 messages of 32 bytes each", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 2 rounds left) of 4 messages of 32 bytes each", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 1 round left) of 4 messages of 32 bytes each", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 7 rounds left) of 2 messages of 64 bytes each", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 6 rounds left) of 2 messages of 64 bytes each", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 5 rounds left) of 2 messages of 64 bytes each", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 4 rounds left) of 2 messages of 64 bytes each", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 3 rounds left) of 2 messages of 64 bytes each", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 2 rounds left) of 2 messages of 64 bytes each", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Starting new round (with 1 round left) of 2 messages of 64 bytes each", 1, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
@@ -285,7 +285,7 @@ namespace AmbrosiaTest
             long totalBytes = 640;
             long totalEchoBytes = 640;
             int bytesPerRound = 128;
-            int maxMessageSize = 32;
+            int maxMessageSize = 64;
             int batchSizeCutoff = 32;
             bool bidi = false;
 
@@ -345,12 +345,12 @@ namespace AmbrosiaTest
 
             string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
 
-            int numRounds = 4;
-            long totalBytes = 512;
-            long totalEchoBytes = 512;
-            int bytesPerRound = 128;
-            int maxMessageSize = 32;
-            int batchSizeCutoff = 32;
+            int numRounds = 2;
+            long totalBytes = 2147483648;
+            long totalEchoBytes = 2147483648;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
             bool bidi = false;
 
             string testName = "jsptideletefilelogfalsetest";
@@ -398,12 +398,12 @@ namespace AmbrosiaTest
 
             string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
 
-            int numRounds = 4;
-            long totalBytes = 512;
-            long totalEchoBytes = 512;
-            int bytesPerRound = 128;
-            int maxMessageSize = 32;
-            int batchSizeCutoff = 32;
+            int numRounds = 3;
+            long totalBytes = 3221225472;
+            long totalEchoBytes = 3221225472;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
             bool bidi = false;
 
             string testName = "jsptideletefilelogtruetest";
@@ -454,9 +454,9 @@ namespace AmbrosiaTest
             long totalBytes = 122880;
             long totalEchoBytes = 122880;
             int bytesPerRound = 8192;
-            int maxMessageSize = 32;
+            int maxMessageSize = 64;
             int batchSizeCutoff = 8192;
-            int messagesSent = 7424;
+            int messagesSent = 7040;
             bool bidi = false;
 
             string testName = "jsptimigrateclienttwoproctest";
@@ -532,9 +532,9 @@ namespace AmbrosiaTest
             long totalBytes = 40960;
             long totalEchoBytes = 40960;
             int bytesPerRound = 8192;
-            int maxMessageSize = 32;
+            int maxMessageSize = 64;
             int batchSizeCutoff = 8192;
-            int messagesSent = 2304; // 7424;
+            int messagesSent = 1920; 
             bool bidi = true;
 
             string testName = "jsptimigrateclienttwoprocbiditest";
@@ -969,12 +969,12 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 15;
-            long totalBytes = 245760;
-            long totalEchoBytes = 245760;
-            int bytesPerRound = 16384;
-            int maxMessageSize = 32;
-            int batchSizeCutoff = 16384;
+            int numRounds = 4;
+            long totalBytes = 4294967296;
+            long totalEchoBytes = 4294967296;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
             bool bidi = false;
 
             string testName = "jsptiupgradeserverbacktobacktest";
