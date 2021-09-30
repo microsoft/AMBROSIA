@@ -3226,18 +3226,8 @@ namespace Ambrosia
                             if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
                                 (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
                             {
-                                string errMsg = "Error attaching " + ServiceName() + " to " + destination;
-                                bool runningCSPTI = Environment.GetCommandLineArgs().Contains("-CSPTI", StringComparer.CurrentCultureIgnoreCase); // "-CSPTI" is for internal use and should not be documented
-                                if (runningCSPTI)
-                                {
-                                    // BUGBUG: Workaround for C# PTI tests [Not exiting here was part of the original IC behavior, which is how it got baked into C# PTI tests;
-                                    //         a later error handling cleanup fixed cases like this, but this particular exit point turned out to be problematic for C# PTI]
-                                    Trace.TraceError(errMsg);
-                                }
-                                else
-                                {
-                                    OnError(0, errMsg);
-                                }
+                                Trace.TraceError("Error attaching " + ServiceName() + " to " + destination);
+                                // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
                             }
                         }
                     }
