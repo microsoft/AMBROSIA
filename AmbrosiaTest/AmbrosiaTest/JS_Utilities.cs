@@ -195,7 +195,7 @@ namespace AmbrosiaTest
 
 
         // Start Javascript Test App
-        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile, int memoryUsed = 0, bool fms = false, string instanceRole= "", string serverInstanceName = "", string clientInstanceName = "")
+        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile, int memoryUsed = 0, bool fms = false, string instanceRole= "", string serverInstanceName = "")
         {
 
 /*   *** For reference - PTI parameters
@@ -252,13 +252,6 @@ namespace AmbrosiaTest
             {
                 argString = argString + " -sin=" + serverInstanceName;
             }
-
-            // set the clientInstanceName if set (only used for server)
-            if (clientInstanceName != "")
-            {
-                argString = argString + " -cin=" + clientInstanceName;
-            }
-
 
             // Enables echoing the 'doWork' method call back to the client
             if ((bidi) && (instanceRole != JSPTI_ClientInstanceRole))
@@ -459,7 +452,7 @@ namespace AmbrosiaTest
         //
         // NOTE: data is too volatile for cmp file method so verify specific strings
         //*********************************************************************
-        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "", string instanceRole = "", string serverInstanceName = "", string clientInstanceName = "")
+        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "", string instanceRole = "", string serverInstanceName = "")
         {
 
             Utilities MyUtils = new Utilities();
@@ -536,13 +529,6 @@ namespace AmbrosiaTest
             {
                 argString = argString + " -sin=" + serverInstanceName;
             }
-
-            // set the clientInstanceName if set (only used for server)
-            if (clientInstanceName != "")
-            {
-                argString = argString + " -cin=" + clientInstanceName;
-            }
-
 
             // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
             if (Directory.Exists(ambrosiaBaseLogDir) == false)
