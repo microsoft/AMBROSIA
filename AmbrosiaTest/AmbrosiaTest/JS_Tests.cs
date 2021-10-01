@@ -130,7 +130,7 @@ namespace AmbrosiaTest
             bool bidi = false;
             int memoryUsed = 104857600; // padding"(in bytes) used to simulate large checkpoints by being included in app state-- 1GB (1073741824) is what C# PTI uses. Will get OOM issue if do much more than 100 MB so just use 100 MB.  See bug #170 for details.  -  
 
-            int checkPointSize = 209716012;
+            int checkPointSize = 209715965; 
 
             string testName = "jsptigiantcheckpointtest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
@@ -164,11 +164,11 @@ namespace AmbrosiaTest
             int bytesPerRound = 128;
             int maxMessageSize = 64;
             int batchSizeCutoff = 32;
-            int messagesSent = 30;
+            int messagesSent = 10;
 
             int memoryUsed = 104857600;  // padding"(in bytes) used to simulate large checkpoints by being included in app state-- 1GB (1073741824) is what C# PTI uses. Will get OOM issue if do much more than 100 MB so just use 100 MB.  See bug #170 for details.  -  
 
-            int checkPointSize = 209715990;
+            int checkPointSize = 209715939;
             bool bidi = true;
 
             string testName = "jsptigiantcheckpointbiditest";

@@ -124,7 +124,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 16384;
             int maxMessageSize = 64;
             int batchSizeCutoff = 16384;
-            int messagesSent = 19200;
+            int messagesSent = 5120;
             bool bidi = false;
 
             string testName = "jsptirestartendtoendtest";

@@ -162,7 +162,7 @@ namespace AmbrosiaTest
             Process process = Process.Start(startInfo);
 
             // Give it a second to completely start \ finish
-            Thread.Sleep(3000);
+            Thread.Sleep(4000);
 
             // Kill the process id for the cmd that launched the window so it isn't lingering
             MyUtils.KillProcess(process.Id);

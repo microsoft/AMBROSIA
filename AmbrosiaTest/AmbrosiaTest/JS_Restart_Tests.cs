@@ -49,7 +49,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 128;
             int maxMessageSize = 64;
             int batchSizeCutoff = 32;
-            int messagesSent = 30;
+            int messagesSent = 10;
             bool bidi = true;
 
             string testName = "jsptirestartafterfinishesbiditest";
