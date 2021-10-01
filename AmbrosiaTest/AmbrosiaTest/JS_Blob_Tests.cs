@@ -49,7 +49,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 128;
             int maxMessageSize = 64;
             int batchSizeCutoff = 32;
-            int messagesSent = 30;
+            int messagesSent = 10;
             bool bidi = false;
 
             string testName = "jsptisavetoblobtest";
@@ -100,7 +100,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 128;
             int maxMessageSize = 64;
             int batchSizeCutoff = 64;
-            int messagesSent = 54;
+            int messagesSent = 16;
             bool bidi = true;
 
             string testName = "jsptisavetoblobbiditest";
@@ -146,7 +146,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 2048;
             int maxMessageSize = 128;
             int batchSizeCutoff = 128;
-            int messagesSent = 624;
+            int messagesSent = 208;
             bool bidi = false;
 
             string testName = "jsptiblobnoblankictest";
