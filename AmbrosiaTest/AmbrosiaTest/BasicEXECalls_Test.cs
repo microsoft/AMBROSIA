@@ -112,7 +112,7 @@ namespace AmbrosiaTest
 
             if (MyUtils.NetFrameworkTestRun == false)
             {
-                LogOutputDirFileName = TestLogDir + "\\" + testName + "_Core.log"; // help message different than netframework so have separate cmp file
+                LogOutputDirFileName = TestLogDir + "\\" + testName + "_Core.log";
             }
 
             string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
