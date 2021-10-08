@@ -351,6 +351,8 @@ namespace AmbrosiaTest
                 JS_UpdateJSConfigFile(JSConfig_icBinFolder, icBinDirectory);
 
                 //*** Copy from The Gold Config to Client Config ***
+                if (Directory.Exists(basePath + "\\PTI\\Client\\") == false)
+                    Directory.CreateDirectory(basePath + "\\PTI\\Client\\");  // create a Client folder for the config file to keep separate from server
                 File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + "\\PTI\\Client\\" + ambrosiaConfigfileName, true);
 
                 // Set the defaults based on current system
@@ -362,6 +364,8 @@ namespace AmbrosiaTest
                 JS_UpdateJSConfigFile(JSConfig_icSendPort, "2011", JSPTI_ClientInstanceRole);
 
                 //*** Copy from The Gold Config to Server Config ***
+                if (Directory.Exists(basePath + "\\PTI\\Server\\") == false)
+                    Directory.CreateDirectory(basePath + "\\PTI\\Server\\");  
                 File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + "\\PTI\\Server\\" + ambrosiaConfigfileName, true);
 
                 // Set the defaults based on current system

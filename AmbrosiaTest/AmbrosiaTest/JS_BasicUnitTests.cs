@@ -256,12 +256,12 @@ namespace AmbrosiaTest
 
             // Verify the data in the output file of the CLIENT - since not bidi, no echoed bytes
             // Verify that echo is NOT part of the output for client
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5,false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 0, true, testName, false, false);
             if (pass == true)
             {
                 Assert.Fail("<JS_PTI_BasicEndToEnd_Test> Echoed string should NOT have been found in the CLIENT output but it was.");
             }
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5,false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC] Connected!", 1, false, testName,true,false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true, false);
 
