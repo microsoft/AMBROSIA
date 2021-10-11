@@ -56,10 +56,10 @@ namespace AmbrosiaTest
                 }
 
                 //*** Copy from The Gold Config to App Config ***
-                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePath + "\\PTI\\App\\" + ambrosiaConfigfileName, true);
+                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePath + JSUtils.JSPTI_AppPath+"\\" + ambrosiaConfigfileName, true);
 
                 //*** Copy from The Gold Config to Client Config ***
-                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePath + "\\PTI\\Client\\" + ambrosiaConfigfileName, true);
+                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePath + JSUtils.JSPTI_ClientPath+"\\" + ambrosiaConfigfileName, true);
 
                 // Set the defaults based on current system
                 JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "2510", JSUtils.JSPTI_ClientInstanceRole);
@@ -67,7 +67,7 @@ namespace AmbrosiaTest
                 JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "2011", JSUtils.JSPTI_ClientInstanceRole);
 
                 //*** Copy from The Gold Config to Server Config ***
-                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePath + "\\PTI\\Server\\" + ambrosiaConfigfileName, true);
+                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePath + JSUtils.JSPTI_ServerPath+"\\" + ambrosiaConfigfileName, true);
 
                 // Set the defaults based on current system
                 JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "2500", JSUtils.JSPTI_ServerInstanceRole);
