@@ -59,6 +59,8 @@ export function getPostTimeoutInMs(): number
 export namespace Test
 {
     /**
+     * *Note: "_Fork" methods should **only** be called from deterministic events.*
+     * 
      * Method to test custom serialized parameters.
      * @param rawParams Description of the format of the custom serialized byte array.
      */
@@ -69,6 +71,8 @@ export namespace Test
     }
 
     /**
+     * *Note: "_Impulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * Method to test custom serialized parameters.
      * @param rawParams Description of the format of the custom serialized byte array.
      */
@@ -79,6 +83,8 @@ export namespace Test
     }
 
     /**
+     * *Note: "_EnqueueFork" methods should **only** be called from deterministic events, and will not be sent until IC.flushQueue() is called.*
+     * 
      * Method to test custom serialized parameters.
      * @param rawParams Description of the format of the custom serialized byte array.
      */
@@ -89,6 +95,8 @@ export namespace Test
     }
 
     /**
+     * *Note: "_EnqueueImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc), and will not be sent until IC.flushQueue() is called.*
+     * 
      * Method to test custom serialized parameters.
      * @param rawParams Description of the format of the custom serialized byte array.
      */

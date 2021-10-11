@@ -104,6 +104,8 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
      * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
+     * 
      * *********** Primitives - bool, string, number, array
      */
     export function BasicTypes_Post(callContextData: any, isFalse: boolean, height: number, mystring?: string, mystring2?: string, my_array?: number[], notSure?: any): number
@@ -122,6 +124,8 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * *********** Primitives - bool, string, number, array
      */
     export function BasicTypes_PostByImpulse(callContextData: any, isFalse: boolean, height: number, mystring?: string, mystring2?: string, my_array?: number[], notSure?: any): void
@@ -139,6 +143,8 @@ export namespace Test
     /**
      * *Note: The result (PrintMedia) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
      * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
+     * 
      * ******* Function using / returning Numeric Enum
      */
     export function getMedia_Post(callContextData: any, mediaName: string): number
@@ -151,6 +157,8 @@ export namespace Test
     /**
      * *Note: The result (PrintMedia) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * ******* Function using / returning Numeric Enum
      */
     export function getMedia_PostByImpulse(callContextData: any, mediaName: string): void
@@ -161,6 +169,8 @@ export namespace Test
 
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
      * 
      * *********** Void type
      */
@@ -174,6 +184,8 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * *********** Void type
      */
     export function warnUser_PostByImpulse(callContextData: any): void
@@ -184,6 +196,8 @@ export namespace Test
 
     /**
      * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
      * 
      * ************ Example of a [post] method that uses custom types.
      */
@@ -199,6 +213,8 @@ export namespace Test
     /**
      * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * ************ Example of a [post] method that uses custom types.
      */
     export function makeName_PostByImpulse(callContextData: any, firstName?: string, lastName?: string): void
@@ -212,6 +228,8 @@ export namespace Test
     /**
      * *Note: The result (number) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
      * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
+     * 
      * ******* Function returning number
      */
     export function return_number_Post(callContextData: any, strvalue: string): number
@@ -224,6 +242,8 @@ export namespace Test
     /**
      * *Note: The result (number) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * ******* Function returning number
      */
     export function return_number_PostByImpulse(callContextData: any, strvalue: string): void
@@ -234,6 +254,8 @@ export namespace Test
 
     /**
      * *Note: The result (string) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
      * 
      * ******* Function returning string
      */
@@ -246,6 +268,8 @@ export namespace Test
 
     /**
      * *Note: The result (string) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
      * 
      * ******* Function returning string
      */
