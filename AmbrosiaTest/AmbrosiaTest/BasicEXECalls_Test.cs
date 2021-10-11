@@ -104,6 +104,8 @@ namespace AmbrosiaTest
         public void JS_PTI_ShowHelp_Test()
         {
             Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
             string testName = "jsptishowhelptest";
 
             string TestLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
@@ -115,7 +117,7 @@ namespace AmbrosiaTest
                 LogOutputDirFileName = TestLogDir + "\\" + testName + "_Core.log";
             }
 
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + JSUtils.JSPTI_AppPath;
             string fileName = "node";
             string argString = "/C node.exe out\\main.js -h > " + LogOutputDirFileName + " 2>&1";
 
