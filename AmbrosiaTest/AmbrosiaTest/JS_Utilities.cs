@@ -24,6 +24,10 @@ namespace AmbrosiaTest
         public string JSPTI_ClientInstanceRole = "Client";
         public string JSPTI_ServerInstanceRole = "Server";
 
+        public string JSPTI_AppPath = "\\PTI-Node\\App";
+        public string JSPTI_ClientPath = "\\PTI-Node\\Client";
+        public string JSPTI_ServerPath = "\\PTI-Node\\Server";
+
         //** Config Settings in ambrosiaConfig.json
         public string JSConfig_autoRegister = "autoRegister";
         public string JSConfig_instanceName = "instanceName";
@@ -43,7 +47,6 @@ namespace AmbrosiaTest
         public string JSConfig_isActiveActive = "isActiveActive";
         public string JSConfig_replicaNumber = "replicaNumber";
         public string JSConfig_hostingMode = "icHostingMode";
-
 
         // NOTE: all lbOptions settings need "lbOptions" at beginning so know it is nested there
         public string JSConfig_LBOpt_msgQueueSize = "lbOptionsmaxMessageQueueSizeInMB";  
@@ -221,7 +224,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"]+"\\PTI\\App";
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"]+ JSPTI_AppPath;
             string fileNameExe = "node.exe";
             string argString = "out\\main.js";
 
@@ -342,7 +345,9 @@ namespace AmbrosiaTest
                 string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
 
                 //*** Copy from The Gold Config to App Config ***
-                File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + "\\PTI\\App\\" + ambrosiaConfigfileName, true);
+                string goldConfigFile = basePath + "\\" + ambrosiaGoldConfigfileName;
+                string appConfigFile = basePath + JSPTI_AppPath + "\\" + ambrosiaConfigfileName;
+                File.Copy(goldConfigFile, appConfigFile, true);
 
                 // Set the defaults based on current system
                 Directory.CreateDirectory(logDirectory);  // can't load JSon if the log path doesn't exist
@@ -351,9 +356,9 @@ namespace AmbrosiaTest
                 JS_UpdateJSConfigFile(JSConfig_icBinFolder, icBinDirectory);
 
                 //*** Copy from The Gold Config to Client Config ***
-                if (Directory.Exists(basePath + "\\PTI\\Client\\") == false)
-                    Directory.CreateDirectory(basePath + "\\PTI\\Client\\");  // create a Client folder for the config file to keep separate from server
-                File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + "\\PTI\\Client\\" + ambrosiaConfigfileName, true);
+                if (Directory.Exists(basePath + JSPTI_ClientPath+"\\") == false)
+                    Directory.CreateDirectory(basePath + JSPTI_ClientPath+"\\");  // create a Client folder for the config file to keep separate from server
+                File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + JSPTI_ClientPath+"\\" + ambrosiaConfigfileName, true);
 
                 // Set the defaults based on current system
                 JS_UpdateJSConfigFile(JSConfig_autoRegister, SetAutoRegister.ToString(), JSPTI_ClientInstanceRole);  
@@ -364,9 +369,9 @@ namespace AmbrosiaTest
                 JS_UpdateJSConfigFile(JSConfig_icSendPort, "2011", JSPTI_ClientInstanceRole);
 
                 //*** Copy from The Gold Config to Server Config ***
-                if (Directory.Exists(basePath + "\\PTI\\Server\\") == false)
-                    Directory.CreateDirectory(basePath + "\\PTI\\Server\\");  
-                File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + "\\PTI\\Server\\" + ambrosiaConfigfileName, true);
+                if (Directory.Exists(basePath + JSPTI_ServerPath+"\\") == false)
+                    Directory.CreateDirectory(basePath + JSPTI_ServerPath+"\\");  
+                File.Copy(basePath + "\\" + ambrosiaGoldConfigfileName, basePath + JSPTI_ServerPath+"\\" + ambrosiaConfigfileName, true);
 
                 // Set the defaults based on current system
                 JS_UpdateJSConfigFile(JSConfig_autoRegister, SetAutoRegister.ToString(), JSPTI_ServerInstanceRole);  
@@ -395,16 +400,16 @@ namespace AmbrosiaTest
                 string lbOptionsHeader = "lbOptions";
                 string data = string.Empty;
 
-                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";
+                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + JSPTI_AppPath;
 
                 // change it if client or server
                 if (instanceRole==JSPTI_ClientInstanceRole)
                 {
-                    basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\Client";
+                    basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + JSPTI_ClientPath;
                 }
                 if (instanceRole == JSPTI_ServerInstanceRole)
                 {
-                    basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\Server";
+                    basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + JSPTI_ServerPath;
                 }
 
                 string ambrosiaConfigfileName = "ambrosiaConfig.json";
@@ -468,7 +473,7 @@ namespace AmbrosiaTest
             string allRoundsComplete = "All rounds complete";
             string argForTTD = "Args: DebugInstance instanceName=" + testName+instanceRole.ToLower();
             string startingCheckPoint = "checkpoint="; // append the number below after calculated
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\PTI\\App";  // defaults to Combined (app)
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + JSPTI_AppPath;  // defaults to Combined (app)
             string logOutputFileName_TestApp = testName + "_" + instanceRole + "_VerifyTTD.log";
             string fileNameExe = "node.exe";
             string argString = "out\\main.js";
