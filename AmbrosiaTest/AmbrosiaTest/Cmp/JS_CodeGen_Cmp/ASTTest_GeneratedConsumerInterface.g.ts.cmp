@@ -115,6 +115,8 @@ export namespace Test
     /**
      * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
      * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
+     * 
      * Example of a [post] method that uses custom types.
      */
     export function makeName_Post(callContextData: any, firstName?: string, lastName?: string): number
@@ -129,6 +131,8 @@ export namespace Test
     /**
      * *Note: The result (Names) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * Example of a [post] method that uses custom types.
      */
     export function makeName_PostByImpulse(callContextData: any, firstName?: string, lastName?: string): void
@@ -140,6 +144,8 @@ export namespace Test
     }
 
     /**
+     * *Note: "_Fork" methods should **only** be called from deterministic events.*
+     * 
      * Example of a [non-post] method
      */
     export function DoIt_Fork(p1: Name[][]): void
@@ -149,6 +155,8 @@ export namespace Test
     }
 
     /**
+     * *Note: "_Impulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * Example of a [non-post] method
      */
     export function DoIt_Impulse(p1: Name[][]): void
@@ -158,6 +166,8 @@ export namespace Test
     }
 
     /**
+     * *Note: "_EnqueueFork" methods should **only** be called from deterministic events, and will not be sent until IC.flushQueue() is called.*
+     * 
      * Example of a [non-post] method
      */
     export function DoIt_EnqueueFork(p1: Name[][]): void
@@ -167,6 +177,8 @@ export namespace Test
     }
 
     /**
+     * *Note: "_EnqueueImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc), and will not be sent until IC.flushQueue() is called.*
+     * 
      * Example of a [non-post] method
      */
     export function DoIt_EnqueueImpulse(p1: Name[][]): void

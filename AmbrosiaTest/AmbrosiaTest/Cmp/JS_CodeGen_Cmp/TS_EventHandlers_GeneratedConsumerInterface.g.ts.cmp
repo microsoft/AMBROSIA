@@ -61,6 +61,8 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
      * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
+     * 
      * Fake Event Handler due to case in the name so this will be generated
      */
     export function onbecomingprimary_Post(callContextData: any): number
@@ -72,6 +74,8 @@ export namespace Test
 
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
      * 
      * Fake Event Handler due to case in the name so this will be generated
      */

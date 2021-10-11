@@ -61,7 +61,11 @@ Test File to test all the the ways that the ambrosia tag can be set and still wo
  */
 export namespace Test
 {
-    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.* */
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
+     */
     export function OneLineNoComment_Post(callContextData: any): number
     {
         checkDestinationSet();
@@ -69,7 +73,11 @@ export namespace Test
         return (callID);
     }
 
-    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     */
     export function OneLineNoComment_PostByImpulse(callContextData: any): void
     {
         checkDestinationSet();
@@ -78,6 +86,8 @@ export namespace Test
 
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
      * 
      * Multi Line with Comment before Tag
      * but still before tag
@@ -92,6 +102,8 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * Multi Line with Comment before Tag
      * but still before tag
      */
@@ -101,7 +113,11 @@ export namespace Test
         IC.postByImpulse(_destinationInstanceName, "MultiLineCommentBeforeTag", 1, _postTimeoutInMs, callContextData);
     }
 
-    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.* */
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
+     */
     export function MultiSeparateLinesCommentBeforeTag_Post(callContextData: any): number
     {
         checkDestinationSet();
@@ -109,7 +125,11 @@ export namespace Test
         return (callID);
     }
 
-    /** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
+    /**
+     * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     */
     export function MultiSeparateLinesCommentBeforeTag_PostByImpulse(callContextData: any): void
     {
         checkDestinationSet();
@@ -118,6 +138,8 @@ export namespace Test
 
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
      * 
      * ************ Have a space after the tag before function declaration
      */
@@ -131,6 +153,8 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * ************ Have a space after the tag before function declaration
      */
     export function EmptyLineBetweenTagAndFctn_PostByImpulse(callContextData: any): void
@@ -141,6 +165,8 @@ export namespace Test
 
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
      * 
      * **** Spacing around the tag
      */
@@ -154,6 +180,8 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * **** Spacing around the tag
      */
     export function SpacingAroundTag_PostByImpulse(callContextData: any): void
@@ -164,6 +192,8 @@ export namespace Test
 
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
      * 
      * JS Doc
      */
@@ -177,6 +207,8 @@ export namespace Test
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
      * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+     * 
      * JS Doc
      */
     export function JSDOcTag_PostByImpulse(callContextData: any): void
@@ -187,6 +219,8 @@ export namespace Test
 
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+     * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
      * 
      * The ambrosia tag must be on the implementation of an overloaded function
      */
@@ -199,6 +233,8 @@ export namespace Test
 
     /**
      * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
      * 
      * The ambrosia tag must be on the implementation of an overloaded function
      */

@@ -56,7 +56,11 @@ export function getPostTimeoutInMs(): number
     return (_postTimeoutInMs);
 }
 
-/** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.* */
+/**
+ * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
+ * 
+ * *Note: "_Post" methods should **only** be called from deterministic events.*
+ */
 export function unused_Post(callContextData: any): number
 {
     checkDestinationSet();
@@ -64,7 +68,11 @@ export function unused_Post(callContextData: any): number
     return (callID);
 }
 
-/** *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().* */
+/**
+ * *Note: The result (void) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+ * 
+ * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
+ */
 export function unused_PostByImpulse(callContextData: any): void
 {
     checkDestinationSet();

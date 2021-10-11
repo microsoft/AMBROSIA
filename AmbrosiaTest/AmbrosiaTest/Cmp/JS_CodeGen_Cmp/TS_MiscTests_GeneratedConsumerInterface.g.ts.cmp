@@ -64,6 +64,8 @@ export namespace Test
     /**
      * *Note: The result ({ r1: string, r2: string }) produced by this post method is received via the PostResultDispatcher provided to IC.start(). Returns the post method callID.*
      * 
+     * *Note: "_Post" methods should **only** be called from deterministic events.*
+     * 
      * Correctly handle line-breaks and comments
      */
     export function myComplexReturnFunction_Post(callContextData: any): number
@@ -75,6 +77,8 @@ export namespace Test
 
     /**
      * *Note: The result ({ r1: string, r2: string }) produced by this post method is received via the PostResultDispatcher provided to IC.start().*
+     * 
+     * *Note: "_PostByImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
      * 
      * Correctly handle line-breaks and comments
      */
