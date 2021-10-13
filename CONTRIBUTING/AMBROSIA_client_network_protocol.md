@@ -229,9 +229,9 @@ This is a high-availability configuration (used for server-side services only) i
 sometimes referred to as a replica. Despite typically running on separate machines (and in separate racks
 and/or datacenters), all instances "share" the log and checkpoint files.  Failover happens when the primary
 loses its lock on the log file. The primary is the non-redundant instance. If it fails, one of the standby 
-secondaries will become the primary, after completing recovery. The checkpointing secondary never becomes
-the primary, and if it fails, the next started replica becomes the checkpointing secondary, even if it's the 
-first started replica after all replicas fail.
+secondaries will become the primary, after completing recovery. The checkpointing secondary (which is also continuously
+recovering) never becomes the primary, and if it fails, the next started replica becomes the checkpointing
+secondary, even if it's the first started replica after all replicas fail.
 
 The primary never takes checkpoints, except when it first starts (ie. before there are any logs).
 Thereafter, all checkpointing is handled by the checkpointing secondary. This arrangement allows
