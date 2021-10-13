@@ -142,7 +142,7 @@ namespace AmbrosiaTest
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // Kill it 
-            MyUtils.KillProcessByName("node");
+            MyUtils.StopAllAmbrosiaProcesses();
 
             // Restart it and make sure it continues
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestarted_TestApp);
@@ -193,10 +193,10 @@ namespace AmbrosiaTest
 
             // Give it 25 seconds to do something before killing it
             Thread.Sleep(25000);
-            Application.DoEvents();  
+            Application.DoEvents();
 
             // Kill it 
-            MyUtils.KillProcessByName("node");
+            MyUtils.StopAllAmbrosiaProcesses();
 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false");   // default is false but ok to specifically state in case default changes
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false");   // get auto changed to false but ok to specifically state in case default changes
