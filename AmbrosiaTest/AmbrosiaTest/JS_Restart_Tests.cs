@@ -109,6 +109,8 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
 
             // Start it once - Launch the client and the server as separate procs 
+            //*** NOTE - The first call (Server in this case) starts 4 nodes and sometimes it doesn't give proper process id 
+            //*** However, the second call only starts one node, so make sure client is second so then know that PID is correct for killing it
             int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
@@ -167,6 +169,8 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
 
             // Start it once - Launch the client and the server as separate procs 
+            //*** NOTE - The first call (server in this case) starts 4 nodes and sometimes it doesn't give proper process id 
+            //*** However, the second call only starts one node, so make sure client is second so then know that PID is correct for killing it
             int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
@@ -200,13 +204,12 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 11;
-            long totalBytes = 45056;
-            long totalEchoBytes = 45056;
-            int bytesPerRound = 4096;
-            int maxMessageSize = 64;
-            int batchSizeCutoff = 4096;
-            int messagesSent = 704;
+            int numRounds = 3;
+            long totalBytes = 3221225472;
+            long totalEchoBytes = 3221225472;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
             bool bidi = false;
 
             string testName = "jsptirestartkillserver";
@@ -221,11 +224,11 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
 
             // Start it once - Launch the client and the server as separate procs 
-            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
-            // Give it 10 seconds where it tries to connect but doesn't
-            Thread.Sleep(10000);
+            // Give it 5 seconds where it tries to connect but doesn't
+            Thread.Sleep(5000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // Kill server
@@ -244,7 +247,7 @@ namespace AmbrosiaTest
             {
                 Assert.Fail("<JS_PTI_RestartTwoProcKillClient_Test> Echoed string should NOT have been found in the output but it was.");
             }
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "All rounds complete", 1, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
 
             // Verify integrity of Ambrosia logs by replaying 
@@ -258,13 +261,13 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 18;
-            long totalBytes = 18432;
-            long totalEchoBytes = 18432;
-            int bytesPerRound = 1024;
+            int numRounds = 10;
+            long totalBytes = 163840;
+            long totalEchoBytes = 163840;
+            int bytesPerRound = 16384;
             int maxMessageSize = 64;
-            int batchSizeCutoff = 1024;
-            int messagesSent = 288;
+            int batchSizeCutoff = 16384;
+            int messagesSent = 2560;
             bool bidi = true;
 
             string testName = "jsptirestartkillserverbidi";
@@ -279,11 +282,13 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
 
             // Start it once - Launch the client and the server as separate procs 
-            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
+            //*** NOTE - The first call (client in this case) starts 4 nodes and sometimes it doesn't give proper process id 
+            //*** However, the second call only starts one node, so make sure Server is second so then know that PID is correct for killing it
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
-            // Give it 10 seconds where it tries to connect but doesn't
-            Thread.Sleep(10000);
+            // Give it 5 seconds where it tries to connect but doesn't
+            Thread.Sleep(5000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // Kill server
@@ -312,13 +317,13 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 15;
-            long totalBytes = 122880;
-            long totalEchoBytes = 122880;
-            int bytesPerRound = 8192;
-            int maxMessageSize = 128;
-            int batchSizeCutoff = 8192;
-            int messagesSent = 1856;
+            int numRounds = 20;
+            long totalBytes = 327680;
+            long totalEchoBytes = 327680;
+            int bytesPerRound = 16384;
+            int maxMessageSize = 64;
+            int batchSizeCutoff = 16384;
+            int messagesSent = 5120;
             bool bidi = false;
 
             string testName = "jsptirestartkillboth";
@@ -337,13 +342,12 @@ namespace AmbrosiaTest
             int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
-            // Give it 10 seconds where it tries to connect but doesn't
-            Thread.Sleep(10000);
+            // Give it 5 seconds where it tries to connect but doesn't
+            Thread.Sleep(5000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // Kill server and client
-            MyUtils.KillProcess(serverProcessID);
-            MyUtils.KillProcess(clientProcessID);
+            MyUtils.StopAllAmbrosiaProcesses();
 
             // Restart the server and client and make sure it continues
             serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
@@ -373,14 +377,12 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 13;
-            long totalBytes = 212992;
-            long totalEchoBytes = 212992;
-            int bytesPerRound = 16384;
-            int maxMessageSize = 256;
-            int batchSizeCutoff = 16384;
-            int messagesSent = 3008;
-            bool bidi = true;
+            int numRounds = 3;
+            long totalBytes = 3221225472;
+            long totalEchoBytes = 3221225472;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0; bool bidi = true;
 
             string testName = "jsptirestartkillbothbidi";
             string clientInstanceName = testName + "client";
@@ -395,16 +397,15 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
 
             // Start it once - Launch the client and the server as separate procs 
-            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
-            // Give it 10 seconds where it tries to connect but doesn't
-            Thread.Sleep(10000);
+            // Give it 5 seconds where it tries to connect but doesn't
+            Thread.Sleep(5000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // Kill server and client
-            MyUtils.KillProcess(serverProcessID);
-            MyUtils.KillProcess(clientProcessID);
+            MyUtils.StopAllAmbrosiaProcesses();
 
             // Restart the server and client and make sure it continues
             serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
@@ -416,7 +417,7 @@ namespace AmbrosiaTest
 
             // Verify that echo is part of the output
             pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 1, false, testName, true, false);
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "All rounds complete", 1, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
 
             // Verify integrity of Ambrosia logs by replaying 

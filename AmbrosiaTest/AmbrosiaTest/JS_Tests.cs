@@ -625,7 +625,8 @@ namespace AmbrosiaTest
 
             // DO NOT Kill both app 
             // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
-            // MyUtils.KillProcess("node");
+            // MyUtils.StopAllAmbrosiaProcesses();
+
 
             // Change the ports in the config files before restarting so doesn't conflict port numbers
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3520");
@@ -685,7 +686,7 @@ namespace AmbrosiaTest
 
             // DO NOT Kill both app 
             // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
-            // MyUtils.KillProcess("node");
+            // MyUtils.StopAllAmbrosiaProcesses();
 
             // Change the ports in the config files before restarting so doesn't conflict port numbers
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3520");
@@ -737,8 +738,8 @@ namespace AmbrosiaTest
             // Once it connects we know it is registered so kill it
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Ready ...", 1, false, testName, true,false);
 
-            // Kill Server which will kill the IC too
-            MyUtils.KillProcess(ptiID);
+            // Kill app which will kill the IC too
+            MyUtils.StopAllAmbrosiaProcesses();
 
             //Set the Upgrade Version
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "11");
@@ -771,9 +772,9 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 6;
-            long totalBytes = 6442450944;
-            long totalEchoBytes = 6442450944;
+            int numRounds = 3;
+            long totalBytes = 3221225472;
+            long totalEchoBytes = 3221225472;
             int bytesPerRound = 0;
             int maxMessageSize = 0;
             int batchSizeCutoff = 0;
@@ -854,8 +855,10 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_appVersion, "0", JSUtils.JSPTI_ServerInstanceRole);
 
             // Start it once - Launch the client and the server as separate procs 
-            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
+            //*** NOTE - The first call (client in this case) starts 4 nodes and sometimes it doesn't give proper process id 
+            //*** However, the second call only starts one node, so make sure Server is second so then know that PID is correct for killing it
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it 10 seconds to get some going 
             Thread.Sleep(10000);
@@ -895,9 +898,9 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 4;
-            long totalBytes = 4294967296;
-            long totalEchoBytes = 4294967296;
+            int numRounds = 3;
+            long totalBytes = 3221225472;
+            long totalEchoBytes = 3221225472;
             int bytesPerRound = 0;
             int maxMessageSize = 0;
             int batchSizeCutoff = 0;
@@ -927,8 +930,10 @@ namespace AmbrosiaTest
 
 
             // Start it once - Launch the client and the server as separate procs 
-            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
+            //*** NOTE - The first call (client in this case) starts 4 nodes and sometimes it doesn't give proper process id 
+            //*** However, the second call only starts one node, so make sure Server is second so then know that PID is correct for killing it
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+            int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it 10 seconds to get some going 
             Thread.Sleep(10000);
@@ -969,9 +974,9 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 4;
-            long totalBytes = 4294967296;
-            long totalEchoBytes = 4294967296;
+            int numRounds = 3;
+            long totalBytes = 3221225472;
+            long totalEchoBytes = 3221225472;
             int bytesPerRound = 0;
             int maxMessageSize = 0;
             int batchSizeCutoff = 0;
@@ -994,8 +999,8 @@ namespace AmbrosiaTest
             // Once it connects we know it is registered so kill it
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "[IC] Ready ...", 1, false, testName, true, false);
 
-            // Kill Server which will kill the IC too
-            MyUtils.KillProcess(ptiID);
+            // Kill app and IC
+            MyUtils.StopAllAmbrosiaProcesses();
 
             //Set the Upgrade Version
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "51");

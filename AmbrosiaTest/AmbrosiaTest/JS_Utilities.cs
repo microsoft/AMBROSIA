@@ -310,7 +310,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(3000);
+            Thread.Sleep(4000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             return processID;
@@ -394,7 +394,6 @@ namespace AmbrosiaTest
         //* 
         public void JS_UpdateJSConfigFile(string property, string newValue, string instanceRole= "")
         {
-
             try
             {
                 string lbOptionsHeader = "lbOptions";
@@ -463,7 +462,6 @@ namespace AmbrosiaTest
         //*********************************************************************
         public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "", string instanceRole = "", string serverInstanceName = "")
         {
-
             Utilities MyUtils = new Utilities();
 
             string currentDir = Directory.GetCurrentDirectory();
