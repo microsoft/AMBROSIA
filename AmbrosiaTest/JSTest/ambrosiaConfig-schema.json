@@ -11,7 +11,7 @@
         "autoRegister": {
             "type": ["boolean", "string"],
             "enum": [ true, false, "TrueAndExit" ],
-            "description": "Whether to automatically [re]register this Ambrosia Immortal instance at startup. When true (or \"TrueAndExit\"), the following settings must also be explicitly set: icReceivePort, icSendPort, icLogFolder. If [re]registration succeeds, this setting automatically resets to false. Defaults to false.",
+            "description": "Whether to automatically [re]register this Ambrosia Immortal instance at startup. When true (or \"TrueAndExit\"), the following settings must also be explicitly set: icReceivePort, icSendPort, icLogFolder. If [re]registration succeeds, this setting automatically resets to false. Defaults to false.\nNote: Can be overriden by the 'autoRegister' (same as true) and 'registerInstance' (same as \"TrueAndExit\") command-line parameters.",
             "default": false
         },
         "instanceName": {
