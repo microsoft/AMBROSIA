@@ -40,6 +40,8 @@ namespace AmbrosiaTest
             string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
             string newPrimary = "NOW I'm Primary";
+            string iMChkPointer = " I'm a checkpointer";
+            string iMSecondary = "I'm a secondary";
 
             Utilities MyUtils = new Utilities();
 
@@ -54,7 +56,7 @@ namespace AmbrosiaTest
                 AMB_CreateService = "A",
                 AMB_PauseAtStart = "N",
                 AMB_PersistLogs = "Y",
-                AMB_NewLogTriggerSize = "1000",
+                AMB_NewLogTriggerSize = "256",  // Was set to 1000
                 AMB_ActiveActive = "Y",
                 AMB_Version = "0"
             };
@@ -73,7 +75,7 @@ namespace AmbrosiaTest
                 AMB_CreateService = "A",
                 AMB_PauseAtStart = "N",
                 AMB_PersistLogs = "Y",
-                AMB_NewLogTriggerSize = "1000",
+                AMB_NewLogTriggerSize = "256",
                 AMB_ActiveActive = "Y",
                 AMB_Version = "0"
             };
@@ -91,7 +93,7 @@ namespace AmbrosiaTest
                 AMB_CreateService = "A",
                 AMB_PauseAtStart = "N",
                 AMB_PersistLogs = "Y",
-                AMB_NewLogTriggerSize = "1000",
+                AMB_NewLogTriggerSize = "256",
                 AMB_ActiveActive = "Y",
                 AMB_Version = "0"
             };
@@ -108,7 +110,7 @@ namespace AmbrosiaTest
                 AMB_CreateService = "A",
                 AMB_PauseAtStart = "N",
                 AMB_PersistLogs = "Y",
-                AMB_NewLogTriggerSize = "1000",
+                AMB_NewLogTriggerSize = "256",
                 AMB_ActiveActive = "N",
                 AMB_Version = "0"
             };
@@ -152,6 +154,9 @@ namespace AmbrosiaTest
             Thread.Sleep(10000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord2, iMChkPointer, 5, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, iMSecondary, 1, false, testName, true, false);
+
             //Kill Primary Server (server1) at this point as well as ImmCoord1
             MyUtils.KillProcess(serverProcessID1);
             MyUtils.KillProcess(ImmCoordProcessID1);
@@ -166,7 +171,7 @@ namespace AmbrosiaTest
             int serverProcessID_Restarted1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1_Restarted, 1, false);
 
             //Delay until finished ... looking at the most recent primary (server3) but also verify others hit done too
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server3, byteSize, 90, false, testName, true);  // Total Bytes received needs to be accurate
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server3, byteSize, 90, false, testName, true);  // Total Bytes received needs to be accurate
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server2, byteSize, 15, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server1_Restarted, byteSize, 15, false, testName, true);

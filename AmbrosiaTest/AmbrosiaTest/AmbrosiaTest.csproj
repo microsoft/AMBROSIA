@@ -84,6 +84,7 @@
     <Compile Include="JS_BasicUnitTests.cs" />
     <Compile Include="JS_Blob_Tests.cs" />
     <Compile Include="JS_HostingMode_Tests.cs" />
+    <Compile Include="JS_ActiveActive_Tests.cs" />
     <Compile Include="JS_Restart_Tests.cs" />
     <Compile Include="MTF_Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

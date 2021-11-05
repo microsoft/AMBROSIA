@@ -6,7 +6,7 @@ import Ambrosia = require("ambrosia-node");
 import IC = Ambrosia.IC;
 import Utils = Ambrosia.Utils;
 
-const _knownDestinations: string[] = []; // All previously used destination instances (the 'TS_GenType2_Generated' Ambrosia app/service can be running on multiple instances, potentially simultaneously)
+const _knownDestinations: string[] = []; // All previously used destination instances (the 'TS_GenType2_Generated' Ambrosia app/service can be running on multiple instances, potentially simultaneously); used by the postResultDispatcher (if any)
 let _destinationInstanceName: string = ""; // The current destination instance
 let _postTimeoutInMs: number = 8000; // -1 = Infinite
 

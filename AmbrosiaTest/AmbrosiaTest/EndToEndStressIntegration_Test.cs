@@ -47,7 +47,7 @@ namespace AmbrosiaTest
                 AMB_CreateService = "A",
                 AMB_PauseAtStart = "N",
                 AMB_PersistLogs = "Y",
-                AMB_NewLogTriggerSize = "1000",
+                AMB_NewLogTriggerSize = "256",  // set the log for client to be different than server
                 AMB_ActiveActive = "N",
                 AMB_Version = "0"
             };
@@ -1890,7 +1890,7 @@ namespace AmbrosiaTest
                 AMB_CreateService = "A",
                 AMB_PauseAtStart = "N",
                 AMB_PersistLogs = "Y",
-                AMB_NewLogTriggerSize = "1000",
+                AMB_NewLogTriggerSize = "500",
                 AMB_ActiveActive = "N",
                 AMB_Version = "0"
             };
@@ -1907,7 +1907,7 @@ namespace AmbrosiaTest
                 AMB_CreateService = "A",
                 AMB_PauseAtStart = "N",
                 AMB_PersistLogs = "Y",
-                AMB_NewLogTriggerSize = "1000",
+                AMB_NewLogTriggerSize = "256",
                 AMB_ActiveActive = "N",
                 AMB_Version = "0"
             };
