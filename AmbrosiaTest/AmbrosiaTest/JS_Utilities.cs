@@ -310,7 +310,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(4000);
+            Thread.Sleep(5000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             return processID;
@@ -460,7 +460,7 @@ namespace AmbrosiaTest
         //
         // NOTE: data is too volatile for cmp file method so verify specific strings
         //*********************************************************************
-        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "", string instanceRole = "", string serverInstanceName = "")
+        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "", string instanceRole = "", string serverInstanceName = "", int serverlognum = 1)
         {
             Utilities MyUtils = new Utilities();
 
@@ -472,7 +472,7 @@ namespace AmbrosiaTest
             string argForTTD = "Args: DebugInstance instanceName=" + testName+instanceRole.ToLower();
             string startingCheckPoint = "checkpoint="; // append the number below after calculated
             string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + JSPTI_AppPath;  // defaults to Combined (app)
-            string logOutputFileName_TestApp = testName + "_" + instanceRole + "_VerifyTTD.log";
+            string logOutputFileName_TestApp = testName + "_" + instanceRole + "_VerifyTTD_"+ serverlognum.ToString() + ".log";
             string fileNameExe = "node.exe";
             string argString = "out\\main.js";
             string strLogFileInstanceRole = "";  // app instanceRole is blank
@@ -577,7 +577,8 @@ namespace AmbrosiaTest
             // can get first file or most recent
             if (startWithFirstFile)
             {
-                actualLogFile = logFirstFile;
+                //*#*#* actualLogFile = logFirstFile;  //*#*# WHEN DONE PUT THIS BACK *#*#*#*
+                actualLogFile = logFirstFile.Replace("1", serverlognum.ToString());
             }
 
             // determine if log or chkpt file
@@ -717,6 +718,45 @@ namespace AmbrosiaTest
             MyUtils.CleanupAzureTables("jsptirestartkillbothbidi");
             Thread.Sleep(2000);
         }
+
+
+        //** Clean up all the left overs from JS tests that are related to JS Active Active tests
+        public void JS_TestCleanup_ActiveActive()
+        {
+            Utilities MyUtils = new Utilities();
+
+            // If failures in queue then do not want to do anything (init, run test, clean up) 
+            if (MyUtils.CheckStopQueueFlag())
+            {
+                return;
+            }
+
+            // Stop all running processes that hung or were left behind
+            MyUtils.StopAllAmbrosiaProcesses();
+            Thread.Sleep(2000);
+
+            // Clean up Azure - this is called after each test so put all test names in for azure tables
+            MyUtils.CleanupAzureTables("jsptiactiveactivekillprimary");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiactiveactivekillprimarybidi");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiactiveactivekillsecondary");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiactiveactivekillsecondarybidi");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiactiveactivekillclientserver");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptiupgradeactiveactiveprimary");
+            Thread.Sleep(2000);
+
+            //*#*#* Debug 
+            MyUtils.CleanupAzureTables("jsptidebugactiveactivekbidi");
+            Thread.Sleep(2000);
+            MyUtils.CleanupAzureTables("jsptidebugactiveactivekillprimary");
+            Thread.Sleep(2000);
+        }
+
+
 
         //** Clean up all the left overs from JS tests that are related to JS Basic tests (JS_PTI_BasicUnitTests.cs)
         public void JS_TestCleanup_Basic()

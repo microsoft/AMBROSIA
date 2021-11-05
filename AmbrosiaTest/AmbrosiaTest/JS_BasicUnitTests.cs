@@ -51,10 +51,13 @@ namespace AmbrosiaTest
             int messagesSent = 49152;
             bool bidi = true;
 
+            string logTriggerSize = "1024";  // just set a test to have 1024 which is the default of C#
+
             string testName = "jsptibidiendtoendtest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize);  
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
             // Verify the data in the output file - too many changing rows in output to do a cmp file so verify some of the key lines
@@ -87,10 +90,13 @@ namespace AmbrosiaTest
             int messagesSent = 245760;
             bool bidi = false;
 
+            string logTriggerSize = "256";  // set a test to have 256 which is different from 1024 which is set in the BasieEndToEndBiDi
+
             string testName = "jsptiendtoendtest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize);  
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
             // Verify the data in the output file - too many changing rows in output to do a cmp file so verify some of the key lines

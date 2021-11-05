@@ -97,7 +97,7 @@ export function messageDispatcher(message: Messages.DispatchedMessage): void
     //         'sequence continuation' message only ever sends the next batch plus the 'sequence continuation' message, it can run to completion quickly, which both keeps
     //         the system responsive (by allowing interleaving I/O) while also complying with Rule #1.
     //         In addition to this "continuation message" technique for sending a series, if any single message handler has to send a large number of messages it should be 
-    //         sent in batches using either explicit batches (IC.enqueueFork + IC.flushQueue) or implicit batches (IC.callFork / IC.postFork) inside a setImmediate() callback.
+    //         sent in batches using either explicit batches (IC.queueFork + IC.flushQueue) or implicit batches (IC.callFork / IC.postFork) inside a setImmediate() callback.
     //         This asynchrony is necessary to allow I/O with the IC to interleave, and is one of the few allowable exceptions to the "always only use asynchronous code" 
     //         dictate in Rule #1. Interleaving I/O allows the instance to service self-calls, and allows checkpoints to be taken between batches.
     
