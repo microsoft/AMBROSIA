@@ -371,7 +371,7 @@ namespace AmbrosiaTest
             }
 
             // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true,"", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true,"", JSUtils.JSPTI_ServerInstanceRole);
 
         }
 

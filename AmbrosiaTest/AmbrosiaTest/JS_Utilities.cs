@@ -460,7 +460,7 @@ namespace AmbrosiaTest
         //
         // NOTE: data is too volatile for cmp file method so verify specific strings
         //*********************************************************************
-        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool startWithFirstFile, bool checkForDoneString = true, string specialVerifyString = "", string instanceRole = "", string serverInstanceName = "", int serverlognum = 1)
+        public void JS_VerifyTimeTravelDebugging(string testName, int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, bool checkForDoneString = true, string specialVerifyString = "", string instanceRole = "", string serverInstanceName = "", int serverlognum = 1)
         {
             Utilities MyUtils = new Utilities();
 
@@ -548,7 +548,6 @@ namespace AmbrosiaTest
             // used to get log file
             string ambrosiaFullLogDir = ambrosiaBaseLogDir + "\\" + testName + strLogFileInstanceRole + "_0";
             string startingChkPtVersionNumber = "1";
-            string logFirstFile = "";
 
             // Get most recent version of log file and check point
             string actualLogFile = "";
@@ -557,28 +556,13 @@ namespace AmbrosiaTest
                 DirectoryInfo d = new DirectoryInfo(ambrosiaFullLogDir);
                 FileInfo[] files = d.GetFiles().OrderBy(p => p.CreationTime).ToArray();
 
-                foreach (FileInfo file in files)
-                {
-                    // Sets the first (oldest) file
-                    if (logFirstFile == "")
-                    {
-                        logFirstFile = file.Name;
-                    }
+                // Where set what actual log file want to start with
+                actualLogFile = files[0].Name.Replace("1", serverlognum.ToString());
 
-                    // This will be most recent file
-                    actualLogFile = file.Name;
-                }
             }
             else
             {
                 Assert.Fail("<JS_VerifyTimeTravelDebugging> Unable to find Log directory: " + ambrosiaFullLogDir);
-            }
-
-            // can get first file or most recent
-            if (startWithFirstFile)
-            {
-                //*#*#* actualLogFile = logFirstFile;  //*#*# WHEN DONE PUT THIS BACK *#*#*#*
-                actualLogFile = logFirstFile.Replace("1", serverlognum.ToString());
             }
 
             // determine if log or chkpt file

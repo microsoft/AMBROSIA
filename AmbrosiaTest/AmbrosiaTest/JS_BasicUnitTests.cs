@@ -69,7 +69,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #"+ numRounds.ToString(), 1, false, testName, true);
             
             // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds,totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize,batchSizeCutoff, bidi, true, true);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds,totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize,batchSizeCutoff, bidi, true);
         }
 
 
@@ -114,7 +114,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true);
         }
 
         //** Basic End to End that is NOT bidirectional and that is stopped and restarted 
@@ -167,7 +167,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "[IC] Connected!", 1, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying 
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true);
         }
 
 
@@ -219,7 +219,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true);
         }
 
 
@@ -272,7 +272,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true, false);
 
             // Verify integrity of Ambrosia logs by replaying server side of things (not bidi so only do Server)
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
 
         }
 
@@ -319,8 +319,8 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true, false);
 
             // Verify integrity of Ambrosia logs by replaying server and client side of things (do both since bidi)
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true,"",JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true,"",JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
 
         }
 
