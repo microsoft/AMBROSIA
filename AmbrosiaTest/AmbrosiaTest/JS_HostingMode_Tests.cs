@@ -180,7 +180,7 @@ namespace AmbrosiaTest
             }
 
             // Do not verify logs as the setting 'debugStartCheckpoint' is not allowed for Separate host mode
-            //JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+            //JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true);
         }
 
 

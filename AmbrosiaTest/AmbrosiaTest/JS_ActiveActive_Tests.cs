@@ -161,7 +161,7 @@ namespace AmbrosiaTest
 
             // Verify integrity of Ambrosia logs by replaying 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
         //****************************
@@ -290,7 +290,7 @@ namespace AmbrosiaTest
 
             // Verify integrity of Ambrosia logs by replaying 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
 
@@ -415,7 +415,7 @@ namespace AmbrosiaTest
 
             // Verify integrity of Ambrosia logs by replaying 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
 
@@ -541,7 +541,7 @@ namespace AmbrosiaTest
 
             // Verify integrity of Ambrosia logs by replaying 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
 
@@ -556,15 +556,17 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_ActiveActive_KillClientAndServer_Test()
         {
-            Utilities MyUtils = new Utilities();
-            JS_Utilities JSUtils = new JS_Utilities();
 
 
-            Assert.Fail("NOT FINISHED!!!");
             //#*#*# *****************************
             //*#*#*#* TO DO:
-            //#*#*  Get this working - client primary crashes 
+            //#*#*  Get this working
+            //#*#* Just ran it to see where it fails *#*#
             //#*#*# *****************************
+
+
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
 
             int numRounds = 4;
             long totalBytes = 4294967296;
@@ -574,14 +576,12 @@ namespace AmbrosiaTest
             int batchSizeCutoff = 0;
             bool fixedMsgSize = false;
             bool bidi = false;
+            string logTriggerSize = "256";
 
             // Various strings used to verify servers are who they should be
             string becomingPrimary = "Becoming primary";
             string iMChkPointer = " I'm a checkpointer";
             string iMSecondary = "I'm a secondary";
-
-            string logTriggerSize = "256";
-
             string testName = "jsptiactiveactivekillclientserver";
             string clientInstanceName = testName + "client";
             string serverInstanceName = testName + "server";
@@ -589,7 +589,7 @@ namespace AmbrosiaTest
             string logOutputClientPrimaryFileName_TestApp = testName + "ClientPrimary_TestApp.log";
             string logOutputClientChkPtFileName_TestApp = testName + "ClientChkPt_TestApp.log";
             string logOutputClientRestartPrimaryFileName_TestApp = testName + "ClientRestartPrimary_TestApp.log";
-            string logOutputClientSecondaryFileName_TestApp = testName + "ClientPSecondary_TestApp.log";
+            string logOutputClientSecondaryFileName_TestApp = testName + "ClientSecondary_TestApp.log";
             string logOutputServerPrimaryFileName_TestApp = testName + "ServerPrimary_TestApp.log";
             string logOutputServerRestartPrimaryFileName_TestApp = testName + "ServerRestartPrimary_TestApp.log";
             string logOutputServerChkPtFileName_TestApp = testName + "ServerChkPt_TestApp.log";
@@ -692,9 +692,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "0", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1110", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1000", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1001", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1510", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1500", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1501", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverRestartPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
@@ -718,13 +718,12 @@ namespace AmbrosiaTest
             // Verify Client output files
             pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartPrimaryFileName_TestApp, iMSecondary, 5, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartPrimaryFileName_TestApp, "All rounds complete", 5, false, testName, true, false);
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartPrimaryFileName_TestApp, "[IC] Connected!", 2, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientChkPtFileName_TestApp, "All rounds complete", 2, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputClientSecondaryFileName_TestApp, "All rounds complete", 2, false, testName, true, false);
 
             // Verify integrity of Ambrosia logs by replaying 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
 
@@ -744,6 +743,7 @@ namespace AmbrosiaTest
             //#*#*# *****************************
             //*#*#*#* TO DO:
             //#*#*  Get this working
+            //#*#* Just ran it to see where it fails *#*#
             //#*#*# *****************************
 
 
@@ -896,6 +896,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
+
             int numRounds = 4;
             long totalBytes = 4294967296;
             long totalEchoBytes = 4294967296;
@@ -1004,7 +1005,7 @@ namespace AmbrosiaTest
 
             // Verify integrity of Ambrosia logs by replaying 
             //*#*#*# JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
-            //*#*#*# JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            //*#*#*# JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
 
@@ -1055,13 +1056,15 @@ namespace AmbrosiaTest
 
             //*#*#* Allows for TTD on all the individual log files
             //*#*#* NOTE -- make sure comment out Init so doesn't delete files
-            //for (int i = 1; i <= 2; i++)
-            //{
-                //JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
-                //JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole, "", i);
-                //MyUtils.KillProcessByName("node");
+            //*#*#* Put JS Utilities back where it just always takes the first 
+//            testName = "jsptidebug";
+  //          bidi = false;
+    //        for (int i = 1; i <= 11; i++)
+      //      {
+        //        JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
+          //      JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole, "", i);
+            //    MyUtils.KillProcessByName("node");
             //}
-
             //*#*#*# 
 
 
@@ -1146,7 +1149,7 @@ namespace AmbrosiaTest
 
             // Verify integrity of Ambrosia logs by replaying 
             //*#*#*# JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
-            //*#*#*# JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            //*#*#*# JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
 

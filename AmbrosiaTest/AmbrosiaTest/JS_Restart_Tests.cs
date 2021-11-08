@@ -77,7 +77,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true);
         }
 
 
@@ -138,7 +138,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "[IC] Connected!", 1, false, testName, true,false);
 
             // Verify integrity of Ambrosia logs by replaying 
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true,"", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true,"", JSUtils.JSPTI_ServerInstanceRole);
         }
 
         //**  End to End for Two Proc that is bidirectional and where the Client is stopped and restarted 
@@ -194,7 +194,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
 
             // Verify integrity of Ambrosia logs by replaying 
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
         //**  End to End for Two Proc that is NOT bidirectional and where the Server is stopped and restarted 
@@ -251,7 +251,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
 
             // Verify integrity of Ambrosia logs by replaying 
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
         //**  End to End for Two Proc that is bidirectional and where the Server is stopped and restarted 
@@ -307,7 +307,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
 
             // Verify integrity of Ambrosia logs by replaying 
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
         //**  End to End for Two Proc that is NOT bidirectional and where the Server and Client are stopped and restarted 
@@ -367,7 +367,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
 
             // Verify integrity of Ambrosia logs by replaying 
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
         //**  End to End for Two Proc that is bidirectional and where the Server and Client are stopped and restarted 
@@ -421,7 +421,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientRestartedFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
 
             // Verify integrity of Ambrosia logs by replaying 
-            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
 
