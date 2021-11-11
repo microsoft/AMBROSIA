@@ -557,14 +557,6 @@ namespace AmbrosiaTest
         public void JS_PTI_ActiveActive_KillClientAndServer_Test()
         {
 
-
-            //#*#*# *****************************
-            //*#*#*#* TO DO:
-            //#*#*  Get this working
-            //#*#* Just ran it to see where it fails *#*#
-            //#*#*# *****************************
-
-
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -633,7 +625,6 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "6001", JSUtils.JSPTI_ClientInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ClientInstanceRole);
             int clientSecondaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientSecondaryFileName_TestApp, 0, fixedMsgSize, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
-
 
             // Start Server Primary
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
@@ -739,13 +730,6 @@ namespace AmbrosiaTest
         [TestMethod]
         public void JS_PTI_UpgradeActiveActivePrimaryOnly_Test()
         {
-
-            //#*#*# *****************************
-            //*#*#*#* TO DO:
-            //#*#*  Get this working
-            //#*#* Just ran it to see where it fails *#*#
-            //#*#*# *****************************
-
 
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -857,11 +841,7 @@ namespace AmbrosiaTest
             // Restart the server and make sure it continues
             int serverRestartedProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerUpgradedPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
-
-            //*#*#*#* THIS IS HOW C# WORKS - VERIFY
-            //** Upgraded service running at this point ... doing logs but no checkpointer
-            //** Because checkpointer and secondary were not upgraded so they were stopped which means nothing to take the checkpoint or be secondary
-
+            // Because checkpointer and secondary were not upgraded so they were stopped which means nothing to take the checkpoint or be secondary
 
             // Verify the data in the restarted output file
             pass = MyUtils.WaitForProcessToFinish(logOutputServerUpgradedPrimaryFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 5, false, testName, true); // number of bytes processed
@@ -872,8 +852,9 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
 
             // This proves that the upgrade worked
-            pass = MyUtils.WaitForProcessToFinish(logOutputServerUpgradedPrimaryFileName_TestApp, "Upgrade complete", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputServerUpgradedPrimaryFileName_TestApp, "VNext: Successfully upgraded!", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerUpgradedPrimaryFileName_TestApp, "Upgrade of state and code complete", 1, false, testName, true);
+            //pass = MyUtils.WaitForProcessToFinish(logOutputServerUpgradedPrimaryFileName_TestApp, "VNext: Successfully upgraded!", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerUpgradedPrimaryFileName_TestApp, "VNext: SUCCESS:", 1, false, testName, true);
         }
 
 
@@ -903,7 +884,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 0;
             int maxMessageSize = 0;  //*#*#*#* Default to 0 --- try -mms=32768 (crash) and try again (still with -fms). If that doesn’t repro, try -mms=16384, then -mms=8192 
             int batchSizeCutoff = 0;
-            bool fixedMsgSize = false;  
+            bool fixedMsgSize = true;  
             bool bidi = false;
             string logTriggerSize = "256";
 
@@ -1028,7 +1009,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 0;
             int maxMessageSize = 0;  //*#*#*#* Default to 0 --- try -mms=32768 and try again (still with -fms). If that doesn’t repro, try -mms=16384, then -mms=8192 ;
             int batchSizeCutoff = 0;
-            bool fixedMsgSize = false;
+            bool fixedMsgSize = true;
             bool bidi = true;
             string logTriggerSize = "256";
 
@@ -1058,15 +1039,16 @@ namespace AmbrosiaTest
             //*#*#* NOTE -- make sure comment out Init so doesn't delete files
             //*#*#* Put JS Utilities back where it just always takes the first 
 //            testName = "jsptidebug";
-  //          bidi = false;
-    //        for (int i = 1; i <= 11; i++)
-      //      {
-        //        JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
-          //      JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole, "", i);
-            //    MyUtils.KillProcessByName("node");
-            //}
+            //bidi = false;
+           // for (int i = 1; i <= 15; i++)
+//            {
+  //              JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_CombinedInstanceRole);  // Set combined role to ActiveActive so can verify log
+    //            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole, "", i);
+      //          MyUtils.KillProcessByName("node");
+        //    }
             //*#*#*# 
 
+        //    Assert.Fail("STOP");
 
 
             // Start Client
