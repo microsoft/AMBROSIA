@@ -1434,15 +1434,9 @@ namespace AmbrosiaTest
             StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            CleanupAzureTables("unitendtoendtest");
+            CleanupAzureTables("unitendtoendtest"); // all end to end tests
             Thread.Sleep(2000);
-            CleanupAzureTables("unitendtoendrestarttest");
-            Thread.Sleep(2000);
-            CleanupAzureTables("unittestactiveactivekillprimary");
-            Thread.Sleep(2000);
-            CleanupAzureTables("unittestinproctcp");
-            Thread.Sleep(2000);
-            CleanupAzureTables("unittestinprocpipe");
+            CleanupAzureTables("unittest"); // all unit tests
             Thread.Sleep(2000);
         }
 
@@ -1466,55 +1460,27 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("killservertest");
             Thread.Sleep(2000);
-            CleanupAzureTables("giantmessagetest");
+            CleanupAzureTables("giant"); // all giant tests
             Thread.Sleep(2000);
-            CleanupAzureTables("doublekilljob");
+            CleanupAzureTables("doublekill");  // all double kill tests
             Thread.Sleep(2000);
-            CleanupAzureTables("doublekillserver");
+            CleanupAzureTables("mtf"); // all mtf tests
             Thread.Sleep(2000);
-            CleanupAzureTables("mtfnokill");
-            Thread.Sleep(2000);
-            CleanupAzureTables("mtfnokillpersist");
-            Thread.Sleep(2000);
-            CleanupAzureTables("mtfkillpersist");
-            Thread.Sleep(2000);
-            CleanupAzureTables("activeactiveaddnotekillprimary");
-            Thread.Sleep(2000);
-            CleanupAzureTables("activeactivekillprimary");
-            Thread.Sleep(2000);
-            CleanupAzureTables("activeactivekillcheckpoint");
-            Thread.Sleep(2000);
-            CleanupAzureTables("activeactivekillsecondary");
-            Thread.Sleep(2000);
-            CleanupAzureTables("activeactivekillsecondaryandcheckpoint");
-            Thread.Sleep(2000);
-            CleanupAzureTables("activeactivekillclientandserver");
-            Thread.Sleep(2000);
-            CleanupAzureTables("activeactivekillall");
+            CleanupAzureTables("activeactive"); // all active active tests
             Thread.Sleep(2000);
             CleanupAzureTables("startimmcoordlasttest");
             Thread.Sleep(2000);
             CleanupAzureTables("actactaddnotekillprimary");
             Thread.Sleep(2000);
-            CleanupAzureTables("upgradeserverafterserverdone");
-            Thread.Sleep(2000);
-            CleanupAzureTables("upgradeserverbeforeserverdone");
-            Thread.Sleep(2000);
-            CleanupAzureTables("upgradeserverbeforestarts");
-            Thread.Sleep(2000);
-            CleanupAzureTables("upgradeactiveactiveprimaryonly");
+            CleanupAzureTables("upgrade"); // all upgrade tests
             Thread.Sleep(2000);
             CleanupAzureTables("migrateclient");
             Thread.Sleep(2000);
             CleanupAzureTables("multipleclientsperserver");
             Thread.Sleep(2000);
-            CleanupAzureTables("giantcheckpointtest");
-            Thread.Sleep(2000);
             CleanupAzureTables("overrideoptions");
             Thread.Sleep(2000);
-            CleanupAzureTables("savelogtoblob");
-            Thread.Sleep(2000);
-            CleanupAzureTables("savelogtofileandblob");
+            CleanupAzureTables("savelogto");  // all save log to ... tests
             Thread.Sleep(2000);
             CleanupAzureTables("fixedmessagetest");
             Thread.Sleep(2000);
@@ -1538,23 +1504,15 @@ namespace AmbrosiaTest
             StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            CleanupAzureTables("inprocpipeclientonly");
-            Thread.Sleep(2000);
-            CleanupAzureTables("inprocpipeclientonly");
+            CleanupAzureTables("inprocpipe"); // all inproc pipe
             Thread.Sleep(2000);
             CleanupAzureTables("inprocbasictest");
             Thread.Sleep(2000);
-            CleanupAzureTables("inprocgiantcheckpointtest");
+            CleanupAzureTables("inprocgiant"); // in proc giant
             Thread.Sleep(2000);
-            CleanupAzureTables("inprocgiantmessagetest");
+            CleanupAzureTables("inprocdoublekill"); // double kill tests
             Thread.Sleep(2000);
-            CleanupAzureTables("inprocdoublekilljob");
-            Thread.Sleep(2000);
-            CleanupAzureTables("inprocdoublekillserver");
-            Thread.Sleep(2000);
-            CleanupAzureTables("inprockilljobtest");
-            Thread.Sleep(2000);
-            CleanupAzureTables("inprockillservertest");
+            CleanupAzureTables("inprockill"); // kill tests
             Thread.Sleep(2000);
             CleanupAzureTables("inprocmultipleclientsperserver");
             Thread.Sleep(2000);
@@ -1564,11 +1522,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("inprocmigrateclient");
             Thread.Sleep(2000);
-            CleanupAzureTables("inprocupgradeafterserverdone");
-            Thread.Sleep(2000);
-            CleanupAzureTables("inprocupgradebeforeserverdone");
-            Thread.Sleep(2000);
-            CleanupAzureTables("inprocpipeserveronly");
+            CleanupAzureTables("inprocupgrade"); // upgrade
             Thread.Sleep(2000);
 
             // Give it a few second to clean things up a bit more
@@ -1593,13 +1547,9 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("inproctcpserveronly");
             Thread.Sleep(2000);
-            CleanupAzureTables("inprocclienttcpserverpipe");
+            CleanupAzureTables("inprocclient"); // tcp client tests
             Thread.Sleep(2000);
-            CleanupAzureTables("inprocclientpipeservertcp");
-            Thread.Sleep(2000);
-            CleanupAzureTables("inproctcpkilljobtest");
-            Thread.Sleep(2000);
-            CleanupAzureTables("inproctcpkillservertest");
+            CleanupAzureTables("inproctcpkill");  // tcp kill tests
             Thread.Sleep(2000);
             CleanupAzureTables("inproctcpfileblob");
             Thread.Sleep(2000);

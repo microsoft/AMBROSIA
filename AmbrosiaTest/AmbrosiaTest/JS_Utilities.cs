@@ -654,19 +654,7 @@ namespace AmbrosiaTest
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             MyUtils.CleanupAzureTables("jsptisavetoblobtest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptisavetoblobbiditest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiblobnoblankictest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiblobtwoproctest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiblobtwoprocbiditest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiblobclientfiletwoproctest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiblobserverfiletwoproctest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiblobdeletelogtest");
+            MyUtils.CleanupAzureTables("jsptiblob");  //** Covers all the generic blob tests
             Thread.Sleep(2000);
         }
 
@@ -685,21 +673,7 @@ namespace AmbrosiaTest
             MyUtils.StopAllAmbrosiaProcesses();
 
             Thread.Sleep(2000);
-
-            // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("jsptirestartafterfinishesbiditest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptirestartkillclient");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptirestartkillclientbidi");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptirestartkillserver");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptirestartkillserverbidi");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptirestartkillboth");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptirestartkillbothbidi");
+            MyUtils.CleanupAzureTables("jsptirestart");  //** covers all the generic restart tests
             Thread.Sleep(2000);
         }
 
@@ -719,16 +693,7 @@ namespace AmbrosiaTest
             MyUtils.StopAllAmbrosiaProcesses();
             Thread.Sleep(2000);
 
-            // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("jsptiactiveactivekillprimary");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiactiveactivekillprimarybidi");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiactiveactivekillsecondary");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiactiveactivekillsecondarybidi");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiactiveactivekillclientserver");
+            MyUtils.CleanupAzureTables("jsptiactiveactive"); //** Covers all the generic active active tests
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptiupgradeactiveactiveprimary");
             Thread.Sleep(2000);
@@ -790,13 +755,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("jsptihostmodeseparatetesttwoproc");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptihostmodeseparatetest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptihostmodesepbiditest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptihostmodesepptifirsttest");
+            MyUtils.CleanupAzureTables("jsptihostmode"); //** covers the generic host mode tests
             Thread.Sleep(2000);
         }
 
@@ -817,45 +776,21 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("jsptigiantmessagebiditest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptigiantmessagetest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptigiantcheckpointtest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptigiantcheckpointbiditest");
+            MyUtils.CleanupAzureTables("jsptigiant"); // all "Giant" tests
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptibidifmstest");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptifmstest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptideletefilelogtruetest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptideletefilelogfalsetest");
+            MyUtils.CleanupAzureTables("jsptideletefilelog"); // all delete file tests
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptiautoregexittest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptimigrateclienttwoproctest");
+            MyUtils.CleanupAzureTables("jsptimigrate"); // all migrate tests
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptimigrateclienttwoprocbiditest");
+            MyUtils.CleanupAzureTables("jsptiupgrade"); // all upgrade tests
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptimigrateclienttest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptimigrateclientbiditest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiupgradeservertest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiupgradeserverbiditest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiupgradeservertwoproctest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiupgradeservertwoprocbiditest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptiupgradeserverbacktobacktest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptimultipleclienttest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptimultipleclientbiditest");
+            MyUtils.CleanupAzureTables("jsptimultipleclient"); // multi client
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptinoupgradeversiontest");
             Thread.Sleep(2000);
