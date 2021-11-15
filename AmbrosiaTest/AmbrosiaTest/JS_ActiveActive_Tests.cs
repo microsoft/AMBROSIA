@@ -583,6 +583,7 @@ namespace AmbrosiaTest
             string logTriggerSize = "256";
 
             // Various strings used to verify servers are who they should be
+            string nowPrimary = "NOW I'm Primary";
             string becomingPrimary = "Becoming primary";
             string iMChkPointer = " I'm a checkpointer";
             string iMSecondary = "I'm a secondary";
@@ -699,6 +700,9 @@ namespace AmbrosiaTest
             // Kill Client Primary 
             MyUtils.KillProcess(clientPrimaryProcessID);
 
+            // Verify Secondary becomese primary
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerSecondaryFileName_TestApp, nowPrimary, 3, false, testName, true, false);
+
             // Restart the primary server just to verify a new started one will become active secondary now - do not auto register as already registered
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
@@ -709,6 +713,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1501", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverRestartPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
+
+            // Give it an extra second to start
+            Thread.Sleep(1000);
 
             // Restart Primary Client
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
