@@ -303,7 +303,8 @@ namespace AmbrosiaTest
                 bool waitForExit = false;
                 string testOutputLogFile = "AmbrosiaStatus_" + nameOfObjects + ".log";
 
-                int powerShell_PID = LaunchProcess(scriptWorkingDir, fileName, parameters, waitForExit, testOutputLogFile);
+                //*#*# -- remove this for now as it gets stuck and it hasn't been used
+                //*#*#   int powerShell_PID = LaunchProcess(scriptWorkingDir, fileName, parameters, waitForExit, testOutputLogFile);
             }
             catch (Exception e)
             {
