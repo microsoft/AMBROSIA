@@ -178,7 +178,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSDirectory"] + "\\Ambrosia-Node";
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\node_modules\\Ambrosia-Node";
             string fileNameExe = "pwsh.exe";
             string argString = "-c npm run unittests";
 
