@@ -1,5 +1,5 @@
 // Generated consumer-side API for the 'TS_CustomSerialParamNoRawParam_Generated' Ambrosia Node app/service.
-// Publisher: Darren Gehring [darrenge@microsoft.com].
+// Publisher: (Not specified).
 // Note: This file was generated
 // Note [to publisher]: You can edit this file, but to avoid losing your changes be sure to specify a 'mergeType' other than 'None' (the default is 'Annotate') when re-running emitTypeScriptFile[FromSource]().
 import Ambrosia = require("ambrosia-node");
@@ -65,7 +65,7 @@ export namespace Test
      * *Note: "_Fork" methods should **only** be called from deterministic events.*
      * 
      * Method to test custom serialized parameters.
-     * @param rawParams A custom serialization (byte array) of all required parameters. Contact the 'TS_CustomSerialParamNoRawParam_Generated' API publisher (Darren Gehring [darrenge@microsoft.com]) for details of the serialization format.
+     * @param rawParams A custom serialization (byte array) of all required parameters. Contact the 'TS_CustomSerialParamNoRawParam_Generated' API publisher for details of the serialization format.
      */
     export function takesCustomSerializedParams_Fork(rawParams: Uint8Array): void
     {
@@ -77,7 +77,7 @@ export namespace Test
      * *Note: "_Impulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc).*
      * 
      * Method to test custom serialized parameters.
-     * @param rawParams A custom serialization (byte array) of all required parameters. Contact the 'TS_CustomSerialParamNoRawParam_Generated' API publisher (Darren Gehring [darrenge@microsoft.com]) for details of the serialization format.
+     * @param rawParams A custom serialization (byte array) of all required parameters. Contact the 'TS_CustomSerialParamNoRawParam_Generated' API publisher for details of the serialization format.
      */
     export function takesCustomSerializedParams_Impulse(rawParams: Uint8Array): void
     {
@@ -89,7 +89,7 @@ export namespace Test
      * *Note: "_EnqueueFork" methods should **only** be called from deterministic events, and will not be sent until IC.flushQueue() is called.*
      * 
      * Method to test custom serialized parameters.
-     * @param rawParams A custom serialization (byte array) of all required parameters. Contact the 'TS_CustomSerialParamNoRawParam_Generated' API publisher (Darren Gehring [darrenge@microsoft.com]) for details of the serialization format.
+     * @param rawParams A custom serialization (byte array) of all required parameters. Contact the 'TS_CustomSerialParamNoRawParam_Generated' API publisher for details of the serialization format.
      */
     export function takesCustomSerializedParams_EnqueueFork(rawParams: Uint8Array): void
     {
@@ -101,7 +101,7 @@ export namespace Test
      * *Note: "_EnqueueImpulse" methods should **only** be called from non-deterministic events (UI events, timers, web service calls, etc), and will not be sent until IC.flushQueue() is called.*
      * 
      * Method to test custom serialized parameters.
-     * @param rawParams A custom serialization (byte array) of all required parameters. Contact the 'TS_CustomSerialParamNoRawParam_Generated' API publisher (Darren Gehring [darrenge@microsoft.com]) for details of the serialization format.
+     * @param rawParams A custom serialization (byte array) of all required parameters. Contact the 'TS_CustomSerialParamNoRawParam_Generated' API publisher for details of the serialization format.
      */
     export function takesCustomSerializedParams_EnqueueImpulse(rawParams: Uint8Array): void
     {
