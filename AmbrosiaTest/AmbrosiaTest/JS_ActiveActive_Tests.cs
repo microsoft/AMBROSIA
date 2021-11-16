@@ -881,8 +881,7 @@ namespace AmbrosiaTest
 
             // This proves that the upgrade worked
             pass = MyUtils.WaitForProcessToFinish(logOutputServerUpgradedPrimaryFileName_TestApp, "Upgrade of state and code complete", 1, false, testName, true);
-            //pass = MyUtils.WaitForProcessToFinish(logOutputServerUpgradedPrimaryFileName_TestApp, "VNext: Successfully upgraded!", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputServerUpgradedPrimaryFileName_TestApp, "VNext: SUCCESS:", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerUpgradedPrimaryFileName_TestApp, "VNext:", 1, false, testName, true);
         }
 
 
