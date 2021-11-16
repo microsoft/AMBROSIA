@@ -652,7 +652,7 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("jsptisavetoblobtest");
+            MyUtils.CleanupAzureTables("jsptisavetoblob");
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptiblob");  //** Covers all the generic blob tests
             Thread.Sleep(2000);
