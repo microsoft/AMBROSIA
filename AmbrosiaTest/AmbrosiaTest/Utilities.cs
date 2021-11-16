@@ -1434,7 +1434,7 @@ namespace AmbrosiaTest
             StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            CleanupAzureTables("unitendtoendtest"); // all end to end tests
+            CleanupAzureTables("unitendtoend"); // all end to end tests
             Thread.Sleep(2000);
             CleanupAzureTables("unittest"); // all unit tests
             Thread.Sleep(2000);
