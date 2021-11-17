@@ -437,10 +437,8 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID1_Restarted);
             MyUtils.KillProcess(ImmCoordProcessID4);
 
-            // Verify cmp files for client and 3 servers
+            // Verify cmp files for client and servers -- don't do cmp on couple of servers as changes too much from machine to machine
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server1);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server1_Restarted);
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server2);
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server3);
 
