@@ -457,19 +457,13 @@ namespace AmbrosiaTest
             //Delay until client is done - also check Server just to make sure
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted_Again, byteSize, 15, false, testName, true); // Total bytes received
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, "Service Received", 5, false, testName, true); // just make sure client did something
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID_Restarted_Again);
             MyUtils.KillProcess(serverProcessID);
 
-            // .netcore has slightly different cmp file - not crucial to try to have separate files
-            if (MyUtils.NetFrameworkTestRun)
-            {
-                // Verify Client (before and after restart)
-                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
-                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
-                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted_Again);
-            }
+            // don't do cmp files for client as it changes from machine to machine and a bit on netcore
 
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
@@ -552,9 +546,7 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(clientJobProcessID);
             MyUtils.KillProcess(serverProcessID_Restarted);
 
-            // Verify Server (before and after restart)
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
+            // don't do cmp for server as changes from machine to machine 
 
             // .netcore has slightly different cmp file - not crucial to try to have separate files
             if (MyUtils.NetFrameworkTestRun)
@@ -562,7 +554,6 @@ namespace AmbrosiaTest
                 // Verify Client - .net core with TCP causes extra message in output of core, so don't cmp to others
                 MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
             }
-
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
@@ -572,7 +563,6 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_InProc_TCP_UpgradeServer_Test()
         {
-
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "inproctcpupgradeserver";
             string clientJobName = testName + "clientjob";
@@ -657,18 +647,7 @@ namespace AmbrosiaTest
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 25, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server_upgraded, byteSize, 15, false, testName, true);
 
-            // Stop things so file is freed up and can be opened in verify
-            MyUtils.KillProcess(clientJobProcessID);
-            MyUtils.KillProcess(serverProcessID_upgraded);
-
-            // Verify Client - .net core with TCP causes extra message in output of core, so don't cmp to others
-            if (MyUtils.NetFrameworkTestRun)
-            {
-                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
-            }
-
-            // Verify Server
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_upgraded);
+            // do not check cmp files as they change too much from machine to machine 
 
             // Verify integrity of Ambrosia logs by replaying
             // Do not verify log file through replay / ttd - doesn't work when log files span different versions
@@ -765,17 +744,7 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(clientJobProcessID_Restarted);
             MyUtils.KillProcess(serverProcessID_Restarted);
 
-            // Verify Client - .net core with TCP causes extra message in output of core, so don't cmp to others
-            if (MyUtils.NetFrameworkTestRun)
-            {
-                // Verify Client (before and after restart)
-                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
-                MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
-            }
-
-            // Verify Server
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
+            // do not check cmp files since changes too much from machine to machine on restarted job or server
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
