@@ -685,7 +685,7 @@ namespace AmbrosiaTest
             int serverSecondaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerSecondaryFileName_TestApp, 0, fixedMsgSize, JSUtils.JSPTI_ServerInstanceRole);
 
             // Verify Servers are who they should be by checking output strings
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerChkPtFileName_TestApp, iMChkPointer, 5, false, testName, true, false);
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerChkPtFileName_TestApp, iMChkPointer, 10, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputServerPrimaryFileName_TestApp, becomingPrimary, 5, false, testName, true, false); 
             pass = MyUtils.WaitForProcessToFinish(logOutputServerSecondaryFileName_TestApp, iMSecondary, 1, false, testName, true, false);
 
