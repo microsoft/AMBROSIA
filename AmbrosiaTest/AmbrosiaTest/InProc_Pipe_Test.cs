@@ -708,13 +708,7 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(clientJobProcessID_Restarted);
             MyUtils.KillProcess(serverProcessID_Restarted);
 
-            // Verify Client (before and after restart)
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
-
-            // Verify Server
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
+            // don't use cmp files here as output from client and server vary too much from machine to machine
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);

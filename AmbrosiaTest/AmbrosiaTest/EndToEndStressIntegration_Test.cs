@@ -327,10 +327,7 @@ namespace AmbrosiaTest
                 MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
             }
 
-            // Verify Client (before and after restart)
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted_Again);
+            // don't use cmp on client as it varies too much from machine to machine
 
             // Verify Server
             MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
@@ -556,13 +553,7 @@ namespace AmbrosiaTest
                 MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
             }
 
-            // Verify Client (before and after restart)
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
-
-            // Verify Server
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
+            // Don't use cmp files as client and server output vary too much between machines
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
@@ -676,13 +667,7 @@ namespace AmbrosiaTest
                 MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_AMB2);
             }
 
-            // Verify Client (before and after restart)
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Restarted);
-
-            // Verify Server
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server);
-            MyUtils.VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Restarted);
+            // don't use cmp files as output from client and server vary too much from machine to machine
 
             // Verify integrity of Ambrosia logs by replaying
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
