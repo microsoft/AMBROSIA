@@ -457,7 +457,7 @@ namespace AmbrosiaTest
             //Delay until client is done - also check Server just to make sure
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob_Restarted_Again, byteSize, 15, false, testName, true); // Total bytes received
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, "Service Received", 5, false, testName, true); // just make sure client did something
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, "Service Received", 5, false, testName, true,false); // just make sure client did something
 
             // Stop things so file is freed up and can be opened in verify
             MyUtils.KillProcess(clientJobProcessID_Restarted_Again);
