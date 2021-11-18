@@ -144,6 +144,11 @@
                     "description": "The folder where the language-binding will write output log files (when outputLogDestination is 'File' or 'ConsoleAndFile'). Defaults to './outputLogs'.",
                     "default": "./outputLogs"
                 },
+                "outputLoggingTraceFlags": {
+                    "type": "string",
+                    "description": "A semi-colon separated list of trace flag names (case-sensitive). When a trace flag is specified (eg. \"logPageInterruption\"), messages which require that flag will always be logged, regardless of the configured 'outputLoggingLevel'.\nDefaults to \"\".",
+                    "default": ""
+                },
                 "allowDisplayOfRpcParams": {
                     "type": "boolean",
                     "description": "Set this to true to allow incoming RPC parameters [which can contain privacy/security related content] to be displayed/logged. Defaults to false.",
