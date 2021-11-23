@@ -22,6 +22,25 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Ambrosia
 {
+    class ValueTupleEqualityComparer : IEqualityComparer<ValueTuple<string, int>>
+    {
+        public bool Equals(ValueTuple<string, int> vt1, ValueTuple<string, int> vt2)
+        {
+            if (vt1.Item1 == vt2.Item1 && vt1.Item2 == vt2.Item2)
+                return true;
+            else
+                return false;
+        }
+
+        public int GetHashCode(ValueTuple<string, int> vt)
+        {
+            string combinedString;
+            if (vt.Item1 == "") combinedString = vt.Item1;
+            else combinedString = vt.Item1 + "_S" + $"{vt.Item2}";
+            return combinedString.GetHashCode();
+        }
+    }
+
     internal struct LongPair
     {
         public LongPair(long first,
@@ -61,6 +80,45 @@ namespace Ambrosia
             return _retVal;
         }
 
+        internal static void AmbrosiaSerialize(this ConcurrentDictionary<ValueTuple<string, int>, long> dict, ILogWriter writeToStream)
+        {
+            writeToStream.WriteIntFixed(dict.Count);
+#if Debug
+            Console.WriteLine("[Serialize Trim Watermarks] dict count = {0}", dict.Count);
+#endif
+            foreach (var entry in dict)
+            {
+#if Debug
+                Console.WriteLine("[Serialize Trim Watermarks] Destination = {0}, ShardNum = {1}", entry.Key.Item1, entry.Key.Item2);
+#endif
+                var encodedKey = Encoding.UTF8.GetBytes(entry.Key.Item1);
+                writeToStream.WriteInt(encodedKey.Length);
+                writeToStream.Write(encodedKey, 0, encodedKey.Length);
+                writeToStream.WriteIntFixed(entry.Key.Item2);
+                writeToStream.WriteLongFixed(entry.Value);
+            }
+        }
+
+        internal static ConcurrentDictionary<ValueTuple<string, int>, long> AmbrosiaDeserialize(this ConcurrentDictionary<ValueTuple<string, int>, long> dict, ILogReader readFromStream)
+        {
+            var _retVal = new ConcurrentDictionary<ValueTuple<string, int>, long>(new ValueTupleEqualityComparer());
+            var dictCount = readFromStream.ReadIntFixed();
+#if Debug
+            Console.WriteLine("[Deserialize Trim Watermarks] dict count = {0}", dictCount);
+#endif
+            for (int i = 0; i < dictCount; i++)
+            {
+                var myString = Encoding.UTF8.GetString(readFromStream.ReadByteArray());
+                var shardNum = readFromStream.ReadIntFixed();
+#if Debug
+                Console.WriteLine("[Deserialize Trim Watermarks] Destination = {0}, ShardNum = {1}", myString, shardNum);
+#endif
+                long seqNo = readFromStream.ReadLongFixed();
+                _retVal.TryAdd(new ValueTuple<string, int>(myString, shardNum), seqNo);
+            }
+            return _retVal;
+        }
+
         internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, LongPair> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
@@ -85,6 +143,48 @@ namespace Ambrosia
                 newLongPair.First = readFromStream.ReadLongFixed();
                 newLongPair.Second = readFromStream.ReadLongFixed();
                 _retVal.TryAdd(myString, newLongPair);
+            }
+            return _retVal;
+        }
+
+        internal static void AmbrosiaSerialize(this ConcurrentDictionary<ValueTuple<string, int>, LongPair> dict, ILogWriter writeToStream)
+        {
+            writeToStream.WriteIntFixed(dict.Count);
+#if Debug
+            Console.WriteLine("[Serialize Uncommitted Watermarks] dict Count = {0}", dict.Count);
+#endif
+            foreach (var entry in dict)
+            {
+#if Debug
+                Console.WriteLine("[Serialize Uncommitted Watermarks] Destination = {0}, ShardNum = {1}", entry.Key.Item1, entry.Key.Item2);
+#endif
+                var encodedKey = Encoding.UTF8.GetBytes(entry.Key.Item1);
+                writeToStream.WriteInt(encodedKey.Length);
+                writeToStream.Write(encodedKey, 0, encodedKey.Length);
+                writeToStream.WriteIntFixed(entry.Key.Item2);
+                writeToStream.WriteLongFixed(entry.Value.First);
+                writeToStream.WriteLongFixed(entry.Value.Second);
+            }
+        }
+
+        internal static ConcurrentDictionary<ValueTuple<string, int>, LongPair> AmbrosiaDeserialize(this ConcurrentDictionary<ValueTuple<string, int>, LongPair> dict, ILogReader readFromStream)
+        {
+            var _retVal = new ConcurrentDictionary<ValueTuple<string, int>, LongPair>(new ValueTupleEqualityComparer());
+            var dictCount = readFromStream.ReadIntFixed();
+#if Debug
+            Console.WriteLine("[Deserialize Uncommitted Watermarks] dict Count = {0}", dictCount);
+#endif
+            for (int i = 0; i < dictCount; i++)
+            {
+                var myString = Encoding.UTF8.GetString(readFromStream.ReadByteArray());
+                var shardNum = readFromStream.ReadIntFixed();
+#if Debug
+                Console.WriteLine("[Deserialize Uncommitted Watermarks] Destination = {0}, ShardNum = {1}", myString, shardNum);
+#endif
+                var newLongPair = new LongPair();
+                newLongPair.First = readFromStream.ReadLongFixed();
+                newLongPair.Second = readFromStream.ReadLongFixed();
+                _retVal.TryAdd(new ValueTuple<string, int>(myString, shardNum), newLongPair);
             }
             return _retVal;
         }
@@ -125,8 +225,14 @@ namespace Ambrosia
         internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, InputConnectionRecord> dict, ILogWriter writeToStream)
         {
             writeToStream.WriteIntFixed(dict.Count);
+#if Debug
+            Console.WriteLine("[Serialize inputs] dict Count = {0}", dict.Count);
+#endif
             foreach (var entry in dict)
             {
+#if Debug
+                Console.WriteLine("[Serialize inputs] Destination = {0}", entry.Key);
+#endif
                 var keyEncoding = Encoding.UTF8.GetBytes(entry.Key);
                 Trace.TraceInformation("input {0} seq no: {1}", entry.Key, entry.Value.LastProcessedID);
                 Trace.TraceInformation("input {0} replayable seq no: {1}", entry.Key, entry.Value.LastProcessedReplayableID);
@@ -141,9 +247,15 @@ namespace Ambrosia
         {
             var _retVal = new ConcurrentDictionary<string, InputConnectionRecord>();
             var dictCount = readFromStream.ReadIntFixed();
+#if Debug
+            Console.WriteLine("[Deserialize inputs] dict Count = {0}", dictCount);
+#endif
             for (int i = 0; i < dictCount; i++)
             {
                 var myString = Encoding.UTF8.GetString(readFromStream.ReadByteArray());
+#if Debug
+                Console.WriteLine("[Deserialize inputs] Destination = {0}", myString);
+#endif
                 long seqNo = readFromStream.ReadLongFixed();
                 var newRecord = new InputConnectionRecord();
                 newRecord.LastProcessedID = seqNo;
@@ -190,6 +302,68 @@ namespace Ambrosia
                 newRecord.ReplayableTrimTo = readFromStream.ReadLongFixed();
                 newRecord.BufferedOutput = EventBuffer.Deserialize(readFromStream, thisAmbrosia, newRecord);
                 _retVal.TryAdd(myString, newRecord);
+            }
+            return _retVal;
+        }
+
+        internal static void AmbrosiaSerialize(this ConcurrentDictionary<string, OutputConnectionRecord[]> dict, ILogWriter writeToStream)
+        {
+            writeToStream.WriteIntFixed(dict.Count);
+#if Debug
+            Console.WriteLine("[Serialize Outputs] dict count = {0}", dict.Count);
+#endif
+            foreach (var entry in dict)
+            {
+                var keyEncoding = Encoding.UTF8.GetBytes(entry.Key);
+                writeToStream.WriteInt(keyEncoding.Length);
+                writeToStream.Write(keyEncoding, 0, keyEncoding.Length);
+
+                writeToStream.WriteIntFixed(entry.Value.Length);
+#if Debug
+                Console.WriteLine("[Serialize Outputs] Destination = {0}, Shard numbers = {1}", entry.Key, entry.Value.Length);
+#endif
+                foreach (var subentry in entry.Value)
+                {
+                    writeToStream.WriteLongFixed(subentry.LastSeqNoFromLocalService);
+                    // Lock to ensure atomic update of both variables due to race in InputControlListenerAsync
+                    long trimTo;
+                    long replayableTrimTo;
+                    lock (subentry._trimLock)
+                    {
+                        trimTo = subentry.TrimTo;
+                        replayableTrimTo = subentry.ReplayableTrimTo;
+                    }
+                    writeToStream.WriteLongFixed(trimTo);
+                    writeToStream.WriteLongFixed(replayableTrimTo);
+                    subentry.BufferedOutput.Serialize(writeToStream);
+                }
+            }
+        }
+
+        internal static ConcurrentDictionary<string, OutputConnectionRecord[]> AmbrosiaDeserialize(this ConcurrentDictionary<string, OutputConnectionRecord[]> dict, ILogReader readFromStream, AmbrosiaRuntime thisAmbrosia)
+        {
+            var _retVal = new ConcurrentDictionary<string, OutputConnectionRecord[]>();
+            var dictCount = readFromStream.ReadIntFixed();
+#if Debug
+            Console.WriteLine("[Deserialize Outputs] dict count = {0}", dictCount);
+#endif
+            for (int i = 0; i < dictCount; i++)
+            {
+                var myString = Encoding.UTF8.GetString(readFromStream.ReadByteArray());
+                int arrSize = readFromStream.ReadIntFixed();
+#if Debug
+                Console.WriteLine("[Deserialize Outputs] destination = {0}, total shard number = {1}", myString, arrSize);
+#endif
+                OutputConnectionRecord[] newRecordArr = new OutputConnectionRecord[arrSize];
+                for (int j = 0; j < arrSize; j++)
+                {
+                    newRecordArr[j] = new OutputConnectionRecord(thisAmbrosia);
+                    newRecordArr[j].LastSeqNoFromLocalService = readFromStream.ReadLongFixed();
+                    newRecordArr[j].TrimTo = readFromStream.ReadLongFixed();
+                    newRecordArr[j].ReplayableTrimTo = readFromStream.ReadLongFixed();
+                    newRecordArr[j].BufferedOutput = EventBuffer.Deserialize(readFromStream, thisAmbrosia, newRecordArr[j]);
+                }
+                _retVal.TryAdd(myString, newRecordArr);
             }
             return _retVal;
         }
@@ -1045,6 +1219,7 @@ namespace Ambrosia
         public string storageConnectionString;
         public long currentVersion;
         public long upgradeToVersion;
+        public int initialNumShards;
     }
 
     public static class AmbrosiaRuntimeParms
@@ -1126,6 +1301,26 @@ namespace Ambrosia
             }
         }
 
+        private void InsertOrReplacePublicServiceInfoRecord(string infoTitle, string info)
+        {
+            try
+            {
+                serviceInstanceEntity ServiceInfoEntity = new serviceInstanceEntity(infoTitle, info);
+                TableOperation insertOrReplaceOperation = TableOperation.InsertOrReplace(ServiceInfoEntity);
+                var myTask = this._serviceInstancePublicTable.ExecuteAsync(insertOrReplaceOperation);
+                myTask.Wait();
+                var retrievedResult = myTask.Result;
+                if (retrievedResult.HttpStatusCode < 200 || retrievedResult.HttpStatusCode >= 300)
+                {
+                    OnError(AzureOperationError, "Error replacing a record in an Azure public table");
+                }
+            }
+            catch
+            {
+                OnError(AzureOperationError, "Error replacing a record in an Azure public table");
+            }
+        }
+
         // Retrieve info for a given key
         // If no key exists or _logMetadataTable does not exist, raise an exception
         private string RetrieveServiceInfo(string key)
@@ -1154,6 +1349,33 @@ namespace Ambrosia
             return null;
         }
 
+        private string RetrievePublicServiceInfo(CloudTable tableToRetrieveFrom,
+                                                 string key)
+        {
+            if (tableToRetrieveFrom != null)
+            {
+                TableOperation retrieveOperation = TableOperation.Retrieve<serviceInstanceEntity>("(Default)", key);
+                var myTask = tableToRetrieveFrom.ExecuteAsync(retrieveOperation);
+                myTask.Wait();
+                var retrievedResult = myTask.Result;
+                if (retrievedResult.Result != null)
+                {
+                    return ((serviceInstanceEntity)retrievedResult.Result).value;
+                }
+                else
+                {
+                    string taskExceptionString = myTask.Exception == null ? "" : " Task exception: " + myTask.Exception;
+                    OnError(AzureOperationError, "Error retrieving info from Azure public table." + taskExceptionString);
+                }
+            }
+            else
+            {
+                OnError(AzureOperationError, "Error retrieving info from Azure public table. The reference to the server instance table was not initialized.");
+            }
+            // Make compiler happy
+            return null;
+        }
+
         // Used to hold the bytes which will go in the log. Note that two streams are passed in. The
         // log stream must write to durable storage and be flushable, while the second stream initiates
         // actual action taken after the message has been made durable.
@@ -1171,10 +1393,10 @@ namespace Ambrosia
             const long First32Mask = Last32Mask << 32;
             ILogWriter _logStream;
             Stream _workStream;
-            ConcurrentDictionary<string, LongPair> _uncommittedWatermarks;
-            ConcurrentDictionary<string, LongPair> _uncommittedWatermarksBak;
-            internal ConcurrentDictionary<string, long> _trimWatermarks;
-            ConcurrentDictionary<string, long> _trimWatermarksBak;
+            ConcurrentDictionary<ValueTuple<string, int>, LongPair> _uncommittedWatermarks;
+            ConcurrentDictionary<ValueTuple<string, int>, LongPair> _uncommittedWatermarksBak;
+            internal ConcurrentDictionary<ValueTuple<string, int>, long> _trimWatermarks;
+            ConcurrentDictionary<ValueTuple<string, int>, long> _trimWatermarksBak;
             internal const int HeaderSize = 24;  // 4 Committer ID, 8 Write ID, 8 check bytes, 4 page size
             Task _lastCommitTask;
             bool _persistLogs;
@@ -1190,8 +1412,8 @@ namespace Ambrosia
             {
                 _myAmbrosia = myAmbrosia;
                 _persistLogs = persistLogs;
-                _uncommittedWatermarksBak = new ConcurrentDictionary<string, LongPair>();
-                _trimWatermarksBak = new ConcurrentDictionary<string, long>();
+                _uncommittedWatermarksBak = new ConcurrentDictionary<ValueTuple<string, int>, LongPair>(new ValueTupleEqualityComparer());
+                _trimWatermarksBak = new ConcurrentDictionary<ValueTuple<string, int>, long>(new ValueTupleEqualityComparer());
                 if (maxBufSize <= 0)
                 {
                     // Recovering
@@ -1211,8 +1433,8 @@ namespace Ambrosia
                     _status = HeaderSize << SealedBits;
                     _maxBufSize = maxBufSize;
                     _buf = new byte[maxBufSize];
-                    _uncommittedWatermarks = new ConcurrentDictionary<string, LongPair>();
-                    _trimWatermarks = new ConcurrentDictionary<string, long>();
+                    _uncommittedWatermarks = new ConcurrentDictionary<ValueTuple<string, int>, LongPair>(new ValueTupleEqualityComparer());
+                    _trimWatermarks = new ConcurrentDictionary<ValueTuple<string, int>, long>(new ValueTupleEqualityComparer());
                     long curTime;
                     GetSystemTimePreciseAsFileTime(out curTime);
                     _committerID = (int)((curTime << 33) >> 33);
@@ -1245,8 +1467,8 @@ namespace Ambrosia
             public byte[] Buf { get { return _buf; } }
 
 
-            private void SendInputWatermarks(ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
-                                             ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+            private void SendInputWatermarks(ConcurrentDictionary<ValueTuple<string, int>, LongPair> uncommittedWatermarks,
+                                             ConcurrentDictionary<string, OutputConnectionRecord[]> outputs)
             {
                 // trim output buffers of inputs
                 lock (outputs)
@@ -1254,13 +1476,11 @@ namespace Ambrosia
                     foreach (var kv in uncommittedWatermarks)
                     {
                         OutputConnectionRecord outputConnectionRecord;
-                        if (!outputs.TryGetValue(kv.Key, out outputConnectionRecord))
-                        {
-                            // Set up the output record for the first time and add it to the dictionary
-                            outputConnectionRecord = new OutputConnectionRecord(_myAmbrosia);
-                            outputs[kv.Key] = outputConnectionRecord;
-                            Trace.TraceInformation("Adding output:{0}", kv.Key);
-                        }
+                        OutputConnectionRecord[] shardedOutputConnections;
+
+                        shardedOutputConnections = _myAmbrosia.CheckAndInitShardsMappingNonBlock(_myAmbrosia._outputs, kv.Key.Item1, kv.Key.Item1.Length);
+                        outputConnectionRecord = shardedOutputConnections[kv.Key.Item2];
+
                         // Must lock to atomically update due to race with ToControlStreamAsync
                         lock (outputConnectionRecord._remoteTrimLock)
                         {
@@ -1279,9 +1499,9 @@ namespace Ambrosia
                                       int length1,
                                       byte[] secondBufToCommit,
                                       int length2,
-                                      ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
-                                      ConcurrentDictionary<string, long> trimWatermarks,
-                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+                                      ConcurrentDictionary<ValueTuple<string, int>, LongPair> uncommittedWatermarks,
+                                      ConcurrentDictionary<ValueTuple<string, int>, long> trimWatermarks,
+                                      ConcurrentDictionary<string, OutputConnectionRecord[]> outputs)
             {
                 try
                 {
@@ -1320,35 +1540,37 @@ namespace Ambrosia
                 await TryCommitAsync(outputs);
             }
 
-            private async Task writeFullWaterMarksAsync(ConcurrentDictionary<string, LongPair> uncommittedWatermarks)
+            private async Task writeFullWaterMarksAsync(ConcurrentDictionary<ValueTuple<string, int>, LongPair> uncommittedWatermarks)
             {
                 _logStream.WriteInt(uncommittedWatermarks.Count);
                 foreach (var kv in uncommittedWatermarks)
                 {
-                    var sourceBytes = Encoding.UTF8.GetBytes(kv.Key);
+                    var sourceBytes = Encoding.UTF8.GetBytes(kv.Key.Item1);
                     _logStream.WriteInt(sourceBytes.Length);
                     await _logStream.WriteAsync(sourceBytes, 0, sourceBytes.Length);
+                    _logStream.WriteIntFixed(kv.Key.Item2);
                     _logStream.WriteLongFixed(kv.Value.First);
                     _logStream.WriteLongFixed(kv.Value.Second);
                 }
             }
 
-            private async Task writeSimpleWaterMarksAsync(ConcurrentDictionary<string, long> uncommittedWatermarks)
+            private async Task writeSimpleWaterMarksAsync(ConcurrentDictionary<ValueTuple<string, int>, long> uncommittedWatermarks)
             {
                 _logStream.WriteInt(uncommittedWatermarks.Count);
                 foreach (var kv in uncommittedWatermarks)
                 {
-                    var sourceBytes = Encoding.UTF8.GetBytes(kv.Key);
-                    _logStream.WriteInt(sourceBytes.Length);
+                    var sourceBytes = Encoding.UTF8.GetBytes(kv.Key.Item1);
+                    _logStream.WriteInt(sourceBytes.Length);                    
                     await _logStream.WriteAsync(sourceBytes, 0, sourceBytes.Length);
+                    _logStream.WriteIntFixed(kv.Key.Item2);
                     _logStream.WriteLongFixed(kv.Value);
                 }
             }
             private async Task Commit(byte[] buf,
                                       int length,
-                                      ConcurrentDictionary<string, LongPair> uncommittedWatermarks,
-                                      ConcurrentDictionary<string, long> trimWatermarks,
-                                      ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+                                      ConcurrentDictionary<ValueTuple<string, int>, LongPair> uncommittedWatermarks,
+                                      ConcurrentDictionary<ValueTuple<string, int>, long> trimWatermarks,
+                                      ConcurrentDictionary<string, OutputConnectionRecord[]> outputs)
             {
                 try
                 {
@@ -1574,9 +1796,10 @@ namespace Ambrosia
 
             public async Task<long> AddRow(FlexReadBuffer copyFromFlexBuffer,
                                            string outputToUpdate,
+                                           int outputShardNumToUpdate,
                                            long newSeqNo,
                                            long newReplayableSeqNo,
-                                           ConcurrentDictionary<string, OutputConnectionRecord> outputs,
+                                           ConcurrentDictionary<string, OutputConnectionRecord[]> outputs,
                                            InputConnectionRecord associatedInputConnectionRecord)
             {
                 var copyFromBuffer = copyFromFlexBuffer.Buffer;
@@ -1689,17 +1912,18 @@ namespace Ambrosia
                             // Do the actual commit
                             // Grab the current state of trim levels since the last write
                             // Note that the trim thread may want to modify the table, requiring a lock
-                            ConcurrentDictionary<string, long> oldTrimWatermarks;
+                            ConcurrentDictionary<ValueTuple<string, int>, long> oldTrimWatermarks;
                             lock (_trimWatermarks)
                             {
                                 oldTrimWatermarks = _trimWatermarks;
                                 _trimWatermarks = _trimWatermarksBak;
                                 _trimWatermarksBak = null;
                             }
+
                             if (newLength <= _maxBufSize)
                             {
                                 // add row to current buffer and commit
-                                _uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
+                                _uncommittedWatermarks[new ValueTuple<string, int>(outputToUpdate, outputShardNumToUpdate)] = new LongPair(newSeqNo, newReplayableSeqNo);
                                 _lastCommitTask = Commit(_buf, (int)newLength, _uncommittedWatermarks, oldTrimWatermarks, outputs);
                                 newLocalStatus = HeaderSize << SealedBits;
                             }
@@ -1708,14 +1932,14 @@ namespace Ambrosia
                                 // Steal the byte array in the flex buffer to return it after writing
                                 copyFromFlexBuffer.StealBuffer();
                                 // write new event as part of commit
-                                _uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
+                                _uncommittedWatermarks[new ValueTuple<string, int>(outputToUpdate, outputShardNumToUpdate)] = new LongPair(newSeqNo, newReplayableSeqNo);
                                 var commitTask = Commit(_buf, (int)oldBufLength, copyFromBuffer, length, _uncommittedWatermarks, oldTrimWatermarks, outputs);
                                 newLocalStatus = HeaderSize << SealedBits;
                             }
                             else
                             {
                                 // commit and add new event to new buffer
-                                newUncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
+                                newUncommittedWatermarks[new ValueTuple<string, int>(outputToUpdate, outputShardNumToUpdate)] = new LongPair(newSeqNo, newReplayableSeqNo);
                                 _lastCommitTask = Commit(_buf, (int)oldBufLength, _uncommittedWatermarks, oldTrimWatermarks, outputs);
                                 Buffer.BlockCopy(copyFromBuffer, 0, newWriteBuf, (int)HeaderSize, length);
                                 newLocalStatus = (HeaderSize + length) << SealedBits;
@@ -1727,7 +1951,7 @@ namespace Ambrosia
                         }
                         // Add the message to the existing buffer
                         Buffer.BlockCopy(copyFromBuffer, 0, _buf, (int)oldBufLength, length);
-                        _uncommittedWatermarks[outputToUpdate] = new LongPair(newSeqNo, newReplayableSeqNo);
+                        _uncommittedWatermarks[new ValueTuple<string, int>(outputToUpdate, outputShardNumToUpdate)] = new LongPair(newSeqNo, newReplayableSeqNo);
                         // Reduce write count
                         while (true)
                         {
@@ -1749,7 +1973,7 @@ namespace Ambrosia
                 }
             }
 
-            public async Task TryCommitAsync(ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+            public async Task TryCommitAsync(ConcurrentDictionary<string, OutputConnectionRecord[]> outputs)
             {
                 long localStatus;
                 localStatus = Interlocked.Read(ref _status);
@@ -1811,7 +2035,7 @@ namespace Ambrosia
 
                     // Grab the current state of trim levels since the last write
                     // Note that the trim thread may want to modify the table, requiring a lock
-                    ConcurrentDictionary<string, long> oldTrimWatermarks;
+                    ConcurrentDictionary<ValueTuple<string, int>, long> oldTrimWatermarks;
                     lock (_trimWatermarks)
                     {
                         oldTrimWatermarks = _trimWatermarks;
@@ -1941,8 +2165,9 @@ namespace Ambrosia
             public long LastCommittedCheckpoint { get; set; }
             public long LastLogFile { get; set; }
             public AARole MyRole { get; set; }
-            public ConcurrentDictionary<string, OutputConnectionRecord> Outputs { get; set; }
+            public ConcurrentDictionary<string, OutputConnectionRecord[]> Outputs { get; set; }
             public long ShardID { get; set; }
+            public int NumShards { get; set; }
         }
 
         internal void LoadAmbrosiaState(MachineState state)
@@ -1954,6 +2179,8 @@ namespace Ambrosia
             state.LastLogFile = _lastLogFile;
             state.MyRole = _myRole;
             state.Outputs = _outputs;
+            // BugBug Do we want this in here?
+            state.NumShards = _numShards;
         }
 
         internal void UpdateAmbrosiaState(MachineState state)
@@ -1965,6 +2192,8 @@ namespace Ambrosia
             _lastLogFile = state.LastLogFile;
             _myRole = state.MyRole;
             _outputs = state.Outputs;
+            // BugBug Do we want this in here?
+            _numShards = state.NumShards;
         }
 
         public class AmbrosiaOutput : IAsyncVertexOutputEndpoint
@@ -2038,7 +2267,7 @@ namespace Ambrosia
         }
 
         ConcurrentDictionary<string, InputConnectionRecord> _inputs;
-        ConcurrentDictionary<string, OutputConnectionRecord> _outputs;
+        ConcurrentDictionary<string, OutputConnectionRecord[]> _outputs;
         internal int _localServiceReceiveFromPort;           // specifiable on the command line
         internal int _localServiceSendToPort;                // specifiable on the command line 
         internal string _serviceName;  // specifiable on the command line
@@ -2049,7 +2278,9 @@ namespace Ambrosia
         public const string AmbrosiaDataOutputsName = "Ambrosiadataout";
         public const string AmbrosiaControlOutputsName = "Ambrosiacontrolout";
         bool _persistLogs;
-        bool _sharded;
+        int _numShards;
+        bool Sharded { get { return _numShards > 0; } }
+
         internal bool _createService;
         long _shardID;
         bool _runningRepro;
@@ -2094,6 +2325,7 @@ namespace Ambrosia
 
         // Azure table for service instance metadata information
         CloudTable _serviceInstanceTable;
+        CloudTable _serviceInstancePublicTable;
         long _lastCommittedCheckpoint;
 
         // Azure blob for writing commit log and checkpoint
@@ -2231,8 +2463,16 @@ namespace Ambrosia
             {
                 _storageAccount = CloudStorageAccount.Parse(_storageConnectionString);
                 _tableClient = _storageAccount.CreateCloudTableClient();
-                _serviceInstanceTable = _tableClient.GetTableReference(_serviceName);
-                if ((_storageAccount == null) || (_tableClient == null) || (_serviceInstanceTable == null))
+                _serviceInstancePublicTable = _tableClient.GetTableReference(_serviceName + "Public");
+                if (!Sharded)
+                {
+                    _serviceInstanceTable = _tableClient.GetTableReference(_serviceName);
+                }
+                else
+                {
+                    _serviceInstanceTable = _tableClient.GetTableReference(_serviceName+"S"+$"{_shardID}");
+                }
+                if ((_storageAccount == null) || (_tableClient == null) || (_serviceInstanceTable == null) || (_serviceInstancePublicTable == null))
                 {
                     OnError(AzureOperationError, "Error setting up initial connection to Azure");
                 }
@@ -2357,6 +2597,8 @@ namespace Ambrosia
                 // Recover output connections
                 state.Outputs = state.Outputs.AmbrosiaDeserialize(checkpointStream, this);
                 UnbufferNonreplayableCalls(state.Outputs);
+                // Recover number of local shards
+                state.NumShards = checkpointStream.ReadInt();
                 // Restore new service from checkpoint
                 var serviceCheckpoint = new FlexReadBuffer();
                 FlexReadBuffer.Deserialize(checkpointStream, serviceCheckpoint);
@@ -2407,6 +2649,80 @@ namespace Ambrosia
             }
         }
 
+        private async Task<CRAErrorCode> TryToConnectNTimesAsync(int maxIterations,
+                                                                 string sourceVertex,
+                                                                 string sourceEndpoint,
+                                                                 string destVertex,
+                                                                 string destEndpoint)
+        {
+            CRAErrorCode connectResult = CRAErrorCode.Success;
+            for (int i = 0; i < maxIterations; i++)
+            {
+                connectResult = await ConnectAsync(sourceVertex, sourceEndpoint, destVertex, destEndpoint);
+                if (connectResult == CRAErrorCode.Success)
+                {
+                    return CRAErrorCode.Success;
+                }
+            }
+            return connectResult;
+        }
+
+        private async Task AttachToAsync(string toAttachTo)
+        {
+            var attachToTableRef = _tableClient.GetTableReference(toAttachTo + "Public");
+            var numDestShards = int.Parse(RetrievePublicServiceInfo(attachToTableRef, "NumShards"));
+
+            var myShardNames = new List<string>();
+            if (!Sharded)
+            {
+                myShardNames.Add(_serviceName);
+            }
+            else
+            {
+                for (int shardNum = 0; shardNum < _numShards; shardNum++)
+                {
+                    myShardNames.Add(_serviceName + "_S" + $"{shardNum}");
+                }
+            }
+
+            var destShardNames = new List<string>();
+            if (numDestShards <= 0)
+            {
+                destShardNames.Add(toAttachTo);
+            }
+            else
+            {
+                for (int shardNum = 0; shardNum < numDestShards; shardNum++)
+                {
+                    destShardNames.Add(toAttachTo + "_S" + $"{shardNum}");
+                }
+            }
+
+            foreach (string myShard in myShardNames)
+            {
+                foreach (string destShard in destShardNames)
+                {
+                    var connectionResult1 = CRAErrorCode.Success;
+                    var connectionResult2 = CRAErrorCode.Success;
+                    var connectionResult3 = CRAErrorCode.Success;
+                    var connectionResult4 = CRAErrorCode.Success;
+                    connectionResult1 = await TryToConnectNTimesAsync(10, myShard, AmbrosiaDataOutputsName, destShard, AmbrosiaDataInputsName);
+                    connectionResult2 = await TryToConnectNTimesAsync(10, myShard, AmbrosiaControlOutputsName, destShard, AmbrosiaControlInputsName);
+                    if (myShard.CompareTo(destShard) != 0)
+                    {
+                        connectionResult3 = await TryToConnectNTimesAsync(10, destShard, AmbrosiaDataOutputsName, myShard, AmbrosiaDataInputsName);
+                        connectionResult4 = await TryToConnectNTimesAsync(10, destShard, AmbrosiaControlOutputsName, myShard, AmbrosiaControlInputsName);
+                    }
+                    if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
+                        (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
+                    {
+                        OnError(0, "Error attaching " + myShard + " to " + destShard);
+                    }
+                }
+            }
+        }
+
+
         private async Task StartAsync()
         {
             // We are starting for the first time. This is the primary
@@ -2414,27 +2730,29 @@ namespace Ambrosia
             _lastCommittedCheckpoint = 0;
             _lastLogFile = 0;
             _inputs = new ConcurrentDictionary<string, InputConnectionRecord>();
-            _outputs = new ConcurrentDictionary<string, OutputConnectionRecord>();
+            _outputs = new ConcurrentDictionary<string, OutputConnectionRecord[]>();
             _serviceInstanceTable.CreateIfNotExistsAsync().Wait();
 
             _myRole = AARole.Primary;
 
             _checkpointWriter = null;
             _committer = new Committer(_localServiceSendToStream, _persistLogs, this);
-            await ConnectAsync(ServiceName(), AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName);
-            await ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName);
+            await AttachToAsync(_serviceName);
             await MoveServiceToNextLogFileAsync(true, true);
             InsertOrReplaceServiceInfoRecord(InfoTitle("CurrentVersion"), _currentVersion.ToString());
         }
 
-        private void UnbufferNonreplayableCalls(ConcurrentDictionary<string, OutputConnectionRecord> outputs)
+        private void UnbufferNonreplayableCalls(ConcurrentDictionary<string, OutputConnectionRecord[]> outputs)
         {
-            foreach (var outputRecord in outputs)
+            foreach (var dests in outputs)
             {
-                var newLastSeqNo = outputRecord.Value.BufferedOutput.TrimAndUnbufferNonreplayableCalls(outputRecord.Value.TrimTo, outputRecord.Value.ReplayableTrimTo);
-                if (newLastSeqNo != -1)
+                foreach (var outputRecord in dests.Value)
                 {
-                    outputRecord.Value.LastSeqNoFromLocalService = newLastSeqNo;
+                    var newLastSeqNo = outputRecord.BufferedOutput.TrimAndUnbufferNonreplayableCalls(outputRecord.TrimTo, outputRecord.ReplayableTrimTo);
+                    if (newLastSeqNo != -1)
+                    {
+                        outputRecord.LastSeqNoFromLocalService = newLastSeqNo;
+                    }
                 }
             }
         }
@@ -2455,19 +2773,6 @@ namespace Ambrosia
             return await _coral.ConnectAsync(fromProcessName, fromEndpoint, toProcessName, toEndpoint);
         }
 
-        private string ServiceName(long shardID = -1)
-        {
-            if (_sharded)
-            {
-                if (shardID == -1)
-                {
-                    shardID = _shardID;
-                }
-                return _serviceName + "-" + shardID.ToString();
-            }
-            return _serviceName;
-        }
-
         private string RootDirectory(long version = -1)
         {
             if (version == -1)
@@ -2481,13 +2786,13 @@ namespace Ambrosia
         private string LogDirectory(long version = -1, long shardID = -1)
         {
             string shard = "";
-            if (_sharded)
+            if (Sharded)
             {
                 if (shardID == -1)
                 {
                     shardID = _shardID;
                 }
-                shard = shardID.ToString();
+                shard = "Shard"+shardID.ToString();
             }
 
             return Path.Combine(RootDirectory(version), shard);
@@ -2573,7 +2878,7 @@ namespace Ambrosia
         private string InfoTitle(string prefix, long shardID = -1)
         {
             var file = prefix;
-            if (_sharded)
+            if (Sharded)
             {
                 if (shardID == -1)
                 {
@@ -2754,14 +3059,176 @@ namespace Ambrosia
             }
         }
 
+        private bool CheckGrainID(int grainID)
+        {
+            // To Do (Sekwon): Function for the future use to implement elastic scale-out
+            // Not implemented yet
+            // Check if the given grainID is included in the current shard membership
+            return true;
+        }
+
+        private void FilterLogEntires(byte[] headerBuf, byte[] tempBuf, int commitSize)
+        {
+            // To Do (Sekwon): Function for the future use to implement elastic scale-out
+            // CHeck if the gainId exists in the mapping
+            // Filter out RPC messages that have grainId not existing in the mapping table
+            var tempBufStream = new MemoryStream(tempBuf);
+            tempBufStream.Position = 0;
+            var filteredBuf = new byte[commitSize];
+            long filteredBufOffset = 0;
+
+            int firstByte = -1;
+            while (tempBufStream.Position < commitSize)
+            {
+                long startPositionOfRecord = tempBufStream.Position;
+                long startOffsetOfFilter = filteredBufOffset;
+
+                var totalRecordSize = tempBufStream.ReadInt();
+                totalRecordSize += (int)(tempBufStream.Position - startPositionOfRecord);
+                firstByte = tempBufStream.ReadByte();
+                if (firstByte == AmbrosiaRuntimeLBConstants.RPCByte)
+                {
+                    //Console.WriteLine("[Sekwon] This is RPCByte {0}", firstByte);
+                    var returnByte = tempBufStream.ReadByte();
+                    var methodByte = tempBufStream.ReadInt();
+                    var rpctypeByte = tempBufStream.ReadByte();
+                    var grainIdByte = tempBufStream.ReadInt();
+
+                    tempBufStream.Position += (totalRecordSize - (tempBufStream.Position - startPositionOfRecord));
+
+                    if (CheckGrainID(grainIdByte))
+                    {
+                        Buffer.BlockCopy(tempBuf, (int)startPositionOfRecord, filteredBuf, (int)filteredBufOffset, (int)(tempBufStream.Position - startPositionOfRecord));
+                        filteredBufOffset += (tempBufStream.Position - startPositionOfRecord);
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Sekwon] RPC not involved in the range of given shards {0}", grainIdByte);
+                    }
+                    //Console.WriteLine("[Sekwon] commitSize = {0}, tempBufStream.Position = {1}, totalRecordSize = {2}, filteredBufOffset = {3}", commitSize, tempBufStream.Position, totalRecordSize, filteredBufOffset);
+                }
+                else if (firstByte == AmbrosiaRuntimeLBConstants.RPCBatchByte || firstByte == AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte)
+                {
+                    //if (firstByte == AmbrosiaRuntimeLBConstants.RPCBatchByte)
+                    //    Console.WriteLine("[Sekwon] This is RPCBatchByte {0}", firstByte);
+                    //else
+                    //    Console.WriteLine("[Sekwon] This is CountReplayableRPCBatchByte {0}", firstByte);
+
+                    long startPositionOfRPC = 0;
+                    var numberOfRPCs = tempBufStream.ReadInt();
+                    //Console.WriteLine("[Sekwon] number of RPCs = {0}", numberOfRPCs);
+
+                    if (firstByte == AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte)
+                    {
+                        var numReplayableRPCs = tempBufStream.ReadInt();
+                        //Console.WriteLine("[Sekwon] number of replayable RPCs = {0}", numReplayableRPCs);
+                    }
+
+                    int validNumOfRPCs = 0;
+                    for (int i = 0; i < numberOfRPCs; i++)
+                    {
+                        var lengthOfRPC = tempBufStream.ReadInt();
+                        //Console.WriteLine("[Sekwon] Length of RPC message = {0}", lengthOfRPC);
+
+                        var startOffset = tempBufStream.Position;
+                        //Console.WriteLine("[Sekwon] Start offset = {0}", startOffset);
+
+                        var typeOfRPC = tempBufStream.ReadByte();
+                        //Console.WriteLine("[Sekwon] Type of RPC = {0}", typeOfRPC);
+
+                        var returnByte = tempBufStream.ReadByte();
+                        //Console.WriteLine("[Sekwon] Return byte = {0}", returnByte);
+
+                        var methodByte = tempBufStream.ReadInt();
+                        //Console.WriteLine("[Sekwon] Method byte = {0}", methodByte);
+
+                        var rpctypeByte = tempBufStream.ReadByte();
+                        //Console.WriteLine("[Sekwon] RPC Type = {0}", rpctypeByte);
+
+                        var grainIdByte = tempBufStream.ReadInt();
+                        //Console.WriteLine("[Sekwon] Grain ID = {0}", grainIdByte);
+
+                        var endOffset = tempBufStream.Position;
+                        //Console.WriteLine("[Sekwon] End offset = {0}", endOffset);
+
+                        tempBufStream.Position += (((long)lengthOfRPC) - (endOffset - startOffset));
+                        //Console.WriteLine("[Sekwon] Buffer offset = {0}", tempBufStream.Position);
+
+                        if (CheckGrainID(grainIdByte))
+                        {
+                            // Copy RPC messages involved in the shard membership into the new temporal buffer
+                            if (i == 0)
+                            {
+                                Buffer.BlockCopy(tempBuf, (int)startPositionOfRecord, filteredBuf, (int)filteredBufOffset, (int)(tempBufStream.Position - startPositionOfRecord));
+                                filteredBufOffset += (tempBufStream.Position - startPositionOfRecord);
+                                startPositionOfRPC = tempBufStream.Position;
+                            }
+                            else
+                            {
+                                Buffer.BlockCopy(tempBuf, (int)startPositionOfRPC, filteredBuf, (int)filteredBufOffset, (int)(tempBufStream.Position - startPositionOfRPC));
+                                filteredBufOffset += (tempBufStream.Position - startPositionOfRPC);
+                                startPositionOfRPC = tempBufStream.Position;
+                            }
+
+                            validNumOfRPCs++;
+                        }
+                        else
+                        {
+                            Console.WriteLine("[Sekwon] RPC not involved in the range of given shards {0}", grainIdByte);
+                            startPositionOfRPC = tempBufStream.Position;
+                        }
+                    }
+                    //Console.WriteLine("[Sekwon] commitSize = {0}, tempBufStream.Position = {1}, totalRecordSize = {2}, filteredBufOffset = {3}", commitSize, tempBufStream.Position, totalRecordSize, filteredBufOffset);
+
+                    if (validNumOfRPCs != numberOfRPCs)
+                    {
+                        int cursor_ = (int)startOffsetOfFilter;
+                        int newTotalRecordSize = (int)(filteredBufOffset - startOffsetOfFilter) - StreamCommunicator.IntSize(totalRecordSize);
+                        filteredBuf.WriteInt(cursor_, newTotalRecordSize);
+                        cursor_ += (StreamCommunicator.IntSize(totalRecordSize) + 1);
+                        filteredBuf.WriteInt(cursor_, validNumOfRPCs);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("[Sekwon] Not classified into any RPC types {0}", firstByte);
+                    break;
+                }
+            }
+
+            // Do the actual work on the local service
+            if (firstByte == AmbrosiaRuntimeLBConstants.RPCByte ||
+                firstByte == AmbrosiaRuntimeLBConstants.RPCBatchByte ||
+                firstByte == AmbrosiaRuntimeLBConstants.CountReplayableRPCBatchByte)
+            {
+                if (commitSize != (int)filteredBufOffset)
+                {
+                    commitSize = (int)filteredBufOffset;
+                    int newCommitSize = commitSize + Committer.HeaderSize;
+                    headerBuf[4] = (byte)(newCommitSize & 0xFF);
+                    headerBuf[5] = (byte)((newCommitSize >> 0x8) & 0xFF);
+                    headerBuf[6] = (byte)((newCommitSize >> 0x10) & 0xFF);
+                    headerBuf[7] = (byte)((newCommitSize >> 0x18) & 0xFF);
+                }
+
+                _localServiceSendToStream.Write(headerBuf, 0, Committer.HeaderSize);
+                _localServiceSendToStream.Write(filteredBuf, 0, commitSize);
+            }
+            else
+            {
+                _localServiceSendToStream.Write(headerBuf, 0, Committer.HeaderSize);
+                _localServiceSendToStream.Write(tempBuf, 0, commitSize);
+            }
+        }
+
         private async Task ReplayAsync(ILogReader replayStream, MachineState state)
         {
             var tempBuf = new byte[100];
             var tempBuf2 = new byte[100];
             var headerBuf = new byte[Committer.HeaderSize];
             var headerBufStream = new MemoryStream(headerBuf);
-            var committedInputDict = new Dictionary<string, LongPair>();
-            var trimDict = new Dictionary<string, long>();
+            var committedInputDict = new Dictionary<ValueTuple<string, int>, LongPair>();
+            var trimDict = new Dictionary<ValueTuple<string, int>, long>();
             var detectedEOF = false;
             var detectedEOL = false;
             var clearedCommitterWrite = false;
@@ -2816,10 +3283,11 @@ namespace Ambrosia
                         }
                         replayStream.ReadAllRequiredBytes(tempBuf2, 0, inputNameSize);
                         var inputName = Encoding.UTF8.GetString(tempBuf2, 0, inputNameSize);
+                        var shardNum = replayStream.ReadIntFixed();
                         var newLongPair = new LongPair();
                         newLongPair.First = replayStream.ReadLongFixed();
                         newLongPair.Second = replayStream.ReadLongFixed();
-                        committedInputDict[inputName] = newLongPair;
+                        committedInputDict[new ValueTuple<string, int>(inputName, shardNum)] = newLongPair;
                     }
                     // Read changes in trim to perform and reflect in _outputs
                     watermarksToRead = replayStream.ReadInt();
@@ -2833,8 +3301,9 @@ namespace Ambrosia
                         }
                         replayStream.ReadAllRequiredBytes(tempBuf2, 0, inputNameSize);
                         var inputName = Encoding.UTF8.GetString(tempBuf2, 0, inputNameSize);
+                        var shardNum = replayStream.ReadIntFixed();
                         long seqNo = replayStream.ReadLongFixed();
-                        trimDict[inputName] = seqNo;
+                        trimDict[new ValueTuple<string, int>(inputName, shardNum)] = seqNo;
                     }
                 }
                 catch
@@ -3008,25 +3477,42 @@ namespace Ambrosia
                 // Successfully read an entire replay segment. Go ahead and process for recovery
                 foreach (var kv in committedInputDict)
                 {
+                    OutputConnectionRecord outputConnectionRecord;
+                    OutputConnectionRecord[] shardedOutputConnections;
+
+                    shardedOutputConnections = CheckAndInitShardsMapping(state.Outputs, kv.Key.Item1, kv.Key.Item1.Length);
+                    outputConnectionRecord = shardedOutputConnections[kv.Key.Item2];
+
                     InputConnectionRecord inputConnectionRecord;
-                    if (!state.Inputs.TryGetValue(kv.Key, out inputConnectionRecord))
+                    string inputName;
+                    if (kv.Key.Item1 == "" || kv.Key.Item1 == _serviceName)
+                    {
+                        if (shardedOutputConnections.Length > 1)
+                            inputName = _serviceName + "_S" + $"{kv.Key.Item2}";
+                        else
+                            inputName = "";
+                    }
+                    else
+                    {
+                        if (shardedOutputConnections.Length > 1)
+                        {
+                            inputName = kv.Key.Item1 + "_S" + $"{kv.Key.Item2}";
+                        }
+                        else
+                        {
+                            inputName = kv.Key.Item1;
+                        }
+                    }
+
+                    if (!state.Inputs.TryGetValue(inputName, out inputConnectionRecord))
                     {
                         // Create input record and add it to the dictionary
                         inputConnectionRecord = new InputConnectionRecord();
-                        state.Inputs[kv.Key] = inputConnectionRecord;
+                        state.Inputs[inputName] = inputConnectionRecord;
                     }
                     inputConnectionRecord.LastProcessedID = kv.Value.First;
                     inputConnectionRecord.LastProcessedReplayableID = kv.Value.Second;
-                    OutputConnectionRecord outputConnectionRecord;
-                    // this lock prevents conflict with output arriving from the local service during replay
-                    lock (state.Outputs)
-                    {
-                        if (!state.Outputs.TryGetValue(kv.Key, out outputConnectionRecord))
-                        {
-                            outputConnectionRecord = new OutputConnectionRecord(this);
-                            state.Outputs[kv.Key] = outputConnectionRecord;
-                        }
-                    }
+
                     // this lock prevents conflict with output arriving from the local service during replay and ensures maximal cleaning
                     lock (outputConnectionRecord)
                     {
@@ -3038,22 +3524,27 @@ namespace Ambrosia
                         }
                     }
                 }
-                // Do the actual work on the local service
-                _localServiceSendToStream.Write(headerBuf, 0, Committer.HeaderSize);
-                _localServiceSendToStream.Write(tempBuf, 0, commitSize);
+
+                if (false)
+                {
+                    FilterLogEntires(headerBuf, tempBuf, commitSize);
+                }
+                else
+                {
+                    // Do the actual work on the local service
+                    _localServiceSendToStream.Write(headerBuf, 0, Committer.HeaderSize);
+                    _localServiceSendToStream.Write(tempBuf, 0, commitSize);
+                }
+
                 // Trim the outputs. Should clean as aggressively as during normal operation
                 foreach (var kv in trimDict)
                 {
                     OutputConnectionRecord outputConnectionRecord;
-                    // this lock prevents conflict with output arriving from the local service during replay
-                    lock (state.Outputs)
-                    {
-                        if (!state.Outputs.TryGetValue(kv.Key, out outputConnectionRecord))
-                        {
-                            outputConnectionRecord = new OutputConnectionRecord(this);
-                            state.Outputs[kv.Key] = outputConnectionRecord;
-                        }
-                    }
+                    OutputConnectionRecord[] shardedOutputConnections;
+
+                    shardedOutputConnections = CheckAndInitShardsMapping(state.Outputs, kv.Key.Item1, kv.Key.Item1.Length);
+                    outputConnectionRecord = shardedOutputConnections[kv.Key.Item2];
+
                     // this lock prevents conflict with output arriving from the local service during replay and ensures maximal cleaning
                     lock (outputConnectionRecord)
                     {
@@ -3162,13 +3653,14 @@ namespace Ambrosia
 
         void AttachTo(string destination)
         {
+            // Bug bug add pairwise connections for sharded scenarios
             while (true)
             {
                 Trace.TraceInformation("Attempting to attach to {0}", destination);
-                var connectionResult1 = ConnectAsync(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
-                var connectionResult2 = ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
-                var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName).GetAwaiter().GetResult();
-                var connectionResult4 = ConnectAsync(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName).GetAwaiter().GetResult();
+                var connectionResult1 = ConnectAsync(_serviceName, AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
+                var connectionResult2 = ConnectAsync(_serviceName, AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
+                var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, _serviceName, AmbrosiaDataInputsName).GetAwaiter().GetResult();
+                var connectionResult4 = ConnectAsync(destination, AmbrosiaControlOutputsName, _serviceName, AmbrosiaControlInputsName).GetAwaiter().GetResult();
                 if ((connectionResult1 == CRAErrorCode.Success) && (connectionResult2 == CRAErrorCode.Success) &&
                     (connectionResult3 == CRAErrorCode.Success) && (connectionResult4 == CRAErrorCode.Success))
                 {
@@ -3219,16 +3711,7 @@ namespace Ambrosia
                         else
                         {
                             Trace.TraceInformation("Attaching to {0}", destination);
-                            var connectionResult1 = ConnectAsync(ServiceName(), AmbrosiaDataOutputsName, destination, AmbrosiaDataInputsName).GetAwaiter().GetResult();
-                            var connectionResult2 = ConnectAsync(ServiceName(), AmbrosiaControlOutputsName, destination, AmbrosiaControlInputsName).GetAwaiter().GetResult();
-                            var connectionResult3 = ConnectAsync(destination, AmbrosiaDataOutputsName, ServiceName(), AmbrosiaDataInputsName).GetAwaiter().GetResult();
-                            var connectionResult4 = ConnectAsync(destination, AmbrosiaControlOutputsName, ServiceName(), AmbrosiaControlInputsName).GetAwaiter().GetResult();
-                            if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
-                                (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
-                            {
-                                Trace.TraceError("Error attaching " + ServiceName() + " to " + destination);
-                                // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
-                            }
+                            var connectionResult = AttachToAsync(destination).GetAwaiter();
                         }
                     }
                     break;
@@ -3313,7 +3796,140 @@ namespace Ambrosia
 
         int _lastShuffleDestSize = -1; // must be negative because self-messages are encoded with a destination size of 0
         byte[] _lastShuffleDest = new byte[20];
+        OutputConnectionRecord[] _lastShuffleShards = null;
         OutputConnectionRecord _shuffleOutputRecord = null;
+
+        private OutputConnectionRecord[] CheckAndInitShardsMapping (ConcurrentDictionary<string, OutputConnectionRecord[]> shardedOutputs, string destination, int destBytesSize)
+        {
+            OutputConnectionRecord[] arrayOfShards = null;
+            lock (shardedOutputs)
+            {
+                if (!shardedOutputs.TryGetValue(destination, out arrayOfShards))
+                {
+                    if (destBytesSize != 0) // non-self calls
+                    {
+                        var attachToTableRef = _tableClient.GetTableReference(destination + "Public");
+                        var numDestShards = int.Parse(RetrievePublicServiceInfo(attachToTableRef, "NumShards"));
+
+                        if (numDestShards > 1) // sharded destination
+                        {
+                            arrayOfShards = new OutputConnectionRecord[numDestShards];
+                            shardedOutputs[destination] = arrayOfShards;
+                            for (int i = 0; i < numDestShards; i++)
+                            {
+                                arrayOfShards[i] = new OutputConnectionRecord(this);
+                            }
+                        }
+                        else // non-sharded destination
+                        {
+                            arrayOfShards = new OutputConnectionRecord[1];
+                            shardedOutputs[destination] = arrayOfShards;
+                            arrayOfShards[0] = new OutputConnectionRecord(this);
+                        }
+                    }
+                    else // self calls (need to check # of shards itself and allocate output records)
+                    {
+                        arrayOfShards = new OutputConnectionRecord[_numShards != 0 ? _numShards : 1];
+                        shardedOutputs[destination] = arrayOfShards;
+                        for (int i = 0; i < (_numShards != 0 ? _numShards : 1); i++)
+                            arrayOfShards[i] = new OutputConnectionRecord(this);
+                    }
+                }
+            }
+
+            return arrayOfShards;
+        }
+
+        private OutputConnectionRecord[] CheckAndInitShardsMappingNonBlock(ConcurrentDictionary<string, OutputConnectionRecord[]> shardedOutputs, string destination, int destBytesSize)
+        {
+            OutputConnectionRecord[] arrayOfShards = null;
+
+            if (!shardedOutputs.TryGetValue(destination, out arrayOfShards))
+            {
+                if (destBytesSize != 0) // non-self calls
+                {
+                    var attachToTableRef = _tableClient.GetTableReference(destination + "Public");
+                    var numDestShards = int.Parse(RetrievePublicServiceInfo(attachToTableRef, "NumShards"));
+
+                    if (numDestShards > 1) // sharded destination
+                    {
+                        arrayOfShards = new OutputConnectionRecord[numDestShards];
+                        shardedOutputs[destination] = arrayOfShards;
+                        for (int i = 0; i < numDestShards; i++)
+                        {
+                            arrayOfShards[i] = new OutputConnectionRecord(this);
+                        }
+                    }
+                    else // non-sharded destination
+                    {
+                        arrayOfShards = new OutputConnectionRecord[1];
+                        shardedOutputs[destination] = arrayOfShards;
+                        arrayOfShards[0] = new OutputConnectionRecord(this);
+                    }
+                }
+                else // self calls
+                {
+                    arrayOfShards = new OutputConnectionRecord[_numShards != 0 ? _numShards : 1];
+                    shardedOutputs[destination] = arrayOfShards;
+                    for (int i = 0; i < (_numShards != 0 ? _numShards : 1); i++)
+                        arrayOfShards[i] = new OutputConnectionRecord(this);
+                }
+            }
+
+            return arrayOfShards;
+        }
+
+        private string ParseShardedDest(string sourceDestString, ref int destShardNum)
+        {
+            string destination;
+            if (sourceDestString.Length == 0)
+            {
+                destination = "";
+                return destination;
+            }
+
+            // Bugbug need to handle sharded cases?
+            if (sourceDestString.Equals(_serviceName))
+            {
+                destination = "";
+            }
+            else if (sourceDestString.Contains(_serviceName))
+            {
+                destination = "";
+
+                int startOfShardString;
+                for (startOfShardString = sourceDestString.Length - 1; startOfShardString >= 0; startOfShardString--)
+                {
+                    if (sourceDestString[startOfShardString] == 'S')
+                        break;
+                }
+                startOfShardString = startOfShardString + 1;
+                destShardNum = int.Parse(sourceDestString.Substring(startOfShardString, sourceDestString.Length - startOfShardString));
+            }
+            else
+            {
+                int endOfDestString, startOfShardString;
+                for (endOfDestString = 0; endOfDestString < sourceDestString.Length; endOfDestString++)
+                {
+                    if (sourceDestString[endOfDestString] == '_')
+                        break;
+                }
+                destination = sourceDestString.Substring(0, endOfDestString);
+
+                if (endOfDestString < sourceDestString.Length)
+                {
+                    for (startOfShardString = sourceDestString.Length - 1; startOfShardString >= 0; startOfShardString--)
+                    {
+                        if (sourceDestString[startOfShardString] == 'S')
+                            break;
+                    }
+                    startOfShardString = startOfShardString + 1;
+                    destShardNum = int.Parse(sourceDestString.Substring(startOfShardString, sourceDestString.Length - startOfShardString));
+                }
+            }
+
+            return destination;
+        }
 
         bool EqualBytes(byte[] data1, int data1offset, byte[] data2, int elemsCompared)
         {
@@ -3332,10 +3948,10 @@ namespace Ambrosia
             var sizeBytes = RpcBuffer.LengthLength;
             int destBytesSize = RpcBuffer.Buffer.ReadBufferedInt(sizeBytes + 1);
             var destOffset = sizeBytes + 1 + StreamCommunicator.IntSize(destBytesSize);
+
             // Check to see if the _lastShuffleDest is the same as the one to process. Caching here avoids significant overhead.
             if (_lastShuffleDest == null || (_lastShuffleDestSize != destBytesSize) || !EqualBytes(RpcBuffer.Buffer, destOffset, _lastShuffleDest, destBytesSize))
             {
-                // Find the appropriate connection record
                 string destination;
                 if (_lastShuffleDest.Length < destBytesSize)
                 {
@@ -3344,22 +3960,17 @@ namespace Ambrosia
                 Buffer.BlockCopy(RpcBuffer.Buffer, destOffset, _lastShuffleDest, 0, destBytesSize);
                 _lastShuffleDestSize = destBytesSize;
                 destination = Encoding.UTF8.GetString(RpcBuffer.Buffer, destOffset, destBytesSize);
-                // locking to avoid conflict with stream reconnection immediately after replay and trim during replay
-                lock (_outputs)
-                {
-                    // During replay, the output connection won't exist if this is the first message ever and no trim record has been processed yet.
-                    if (!_outputs.TryGetValue(destination, out _shuffleOutputRecord))
-                    {
-                        _shuffleOutputRecord = new OutputConnectionRecord(this);
-                        _outputs[destination] = _shuffleOutputRecord;
-                    }
-                }
+
+                _lastShuffleShards = CheckAndInitShardsMapping(_outputs, destination, destBytesSize);
             }
 
             int restOfRPCOffset = destOffset + destBytesSize;
             int restOfRPCMessageSize = RpcBuffer.Length - restOfRPCOffset;
             var totalSize = StreamCommunicator.IntSize(1 + restOfRPCMessageSize) +
                             1 + restOfRPCMessageSize;
+
+            int grainId = RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1 + StreamCommunicator.IntSize(RpcBuffer.Buffer.ReadBufferedInt(restOfRPCOffset + 1)) + 1);
+            _shuffleOutputRecord = _lastShuffleShards[grainId % _lastShuffleShards.Length];
 
             // lock to avoid conflict and ensure maximum memory cleaning during replay. No possible conflict during primary operation
             lock (_shuffleOutputRecord)
@@ -3410,25 +4021,16 @@ namespace Ambrosia
                                              CancellationToken ct)
 
         {
+            string destination;
+            int destShardNum = 0;
             OutputConnectionRecord outputConnectionRecord;
-            if (destString.Equals(ServiceName()))
-            {
-                destString = "";
-            }
-            lock (_outputs)
-            {
-                if (!_outputs.TryGetValue(destString, out outputConnectionRecord))
-                {
-                    // Set up the output record for the first time and add it to the dictionary
-                    outputConnectionRecord = new OutputConnectionRecord(this);
-                    _outputs[destString] = outputConnectionRecord;
-                    Trace.TraceInformation("Adding output:{0}", destString);
-                }
-                else
-                {
-                    Trace.TraceInformation("restoring output:{0}", destString);
-                }
-            }
+            OutputConnectionRecord[] shardedOutputConnections;
+
+            destination = ParseShardedDest(destString, ref destShardNum);
+
+            shardedOutputConnections = CheckAndInitShardsMapping(_outputs, destination, destination.Length);
+            outputConnectionRecord = shardedOutputConnections[destShardNum];
+
             try
             {
                 // Reset the output cursor if it exists
@@ -3533,25 +4135,16 @@ namespace Ambrosia
                                                 CancellationToken ct)
 
         {
+            string destination;
+            int destShardNum = 0;
             OutputConnectionRecord outputConnectionRecord;
-            if (destString.Equals(ServiceName()))
-            {
-                destString = "";
-            }
-            lock (_outputs)
-            {
-                if (!_outputs.TryGetValue(destString, out outputConnectionRecord))
-                {
-                    // Set up the output record for the first time and add it to the dictionary
-                    outputConnectionRecord = new OutputConnectionRecord(this);
-                    _outputs[destString] = outputConnectionRecord;
-                    Trace.TraceInformation("Adding output:{0}", destString);
-                }
-                else
-                {
-                    Trace.TraceInformation("restoring output:{0}", destString);
-                }
-            }
+            OutputConnectionRecord[] shardedOutputConnections;
+
+            destination = ParseShardedDest(destString, ref destShardNum);
+
+            shardedOutputConnections = CheckAndInitShardsMapping(_outputs, destination, destination.Length);
+            outputConnectionRecord = shardedOutputConnections[destShardNum];
+
             // Process remote trim message
             var inputFlexBuffer = new FlexReadBuffer();
             await FlexReadBuffer.DeserializeAsync(writeToStream, inputFlexBuffer, ct);
@@ -3653,7 +4246,8 @@ namespace Ambrosia
                                                CancellationToken ct)
         {
             InputConnectionRecord inputConnectionRecord;
-            if (sourceString.Equals(ServiceName()))
+            // Bugbug need to handle sharded cases?
+            if (sourceString.Equals(_serviceName))
             {
                 sourceString = "";
             }
@@ -3681,7 +4275,8 @@ namespace Ambrosia
                                                   CancellationToken ct)
         {
             InputConnectionRecord inputConnectionRecord;
-            if (sourceString.Equals(ServiceName()))
+            // Bugbug need to handle sharded cases?
+            if (sourceString.Equals(_serviceName))
             {
                 sourceString = "";
             }
@@ -3696,16 +4291,25 @@ namespace Ambrosia
             {
                 Trace.TraceInformation("restoring input:{0}", sourceString);
             }
+
             inputConnectionRecord.ControlConnectionStream = (NetworkStream)readFromStream;
             OutputConnectionRecord outputConnectionRecord;
+            OutputConnectionRecord[] shardedOutputConnections;
             long outputTrim = -1;
+
+            string destination;
+            int destShardNum = 0;
+            destination = ParseShardedDest(sourceString, ref destShardNum);
+
             lock (_outputs)
             {
-                if (_outputs.TryGetValue(sourceString, out outputConnectionRecord))
+                if (_outputs.TryGetValue(destination, out shardedOutputConnections))
                 {
+                    outputConnectionRecord = shardedOutputConnections[destShardNum];
                     outputTrim = outputConnectionRecord.TrimTo;
                 }
             }
+
             await SendTrimStateMessageAsync(readFromStream, outputTrim, ct);
             // Create new input task for monitoring new input
             Task inputTask;
@@ -3722,10 +4326,15 @@ namespace Ambrosia
             var bufferSize = 128 * 1024;
             byte[] bytes = new byte[bufferSize];
             byte[] bytesBak = new byte[bufferSize];
+
+            string inputServiceName;
+            int inputShardNum = 0;
+            inputServiceName = ParseShardedDest(inputName, ref inputShardNum);
+
             while (true)
             {
                 await FlexReadBuffer.DeserializeAsync(inputRecord.DataConnectionStream, inputFlexBuffer, ct);
-                await ProcessInputMessageAsync(inputRecord, inputName, inputFlexBuffer);
+                await ProcessInputMessageAsync(inputRecord, inputServiceName, inputShardNum, inputFlexBuffer);
             }
         }
 
@@ -3738,6 +4347,11 @@ namespace Ambrosia
             var bufferSize = 128 * 1024;
             byte[] bytes = new byte[bufferSize];
             byte[] bytesBak = new byte[bufferSize];
+
+            string destination;
+            int destShardNum = 0;
+            destination = ParseShardedDest(inputName, ref destShardNum);
+
             while (true)
             {
                 await FlexReadBuffer.DeserializeAsync(inputRecord.ControlConnectionStream, inputFlexBuffer, ct);
@@ -3750,7 +4364,7 @@ namespace Ambrosia
                         inputFlexBuffer.ResetBuffer();
 
                         // Find the appropriate connection record
-                        var outputConnectionRecord = _outputs[inputName];
+                        var outputConnectionRecord = _outputs[destination][destShardNum];
                         // Check to make sure this is progress, otherwise, can ignore
                         if (commitSeqNo > outputConnectionRecord.TrimTo && !outputConnectionRecord.WillResetConnection && !outputConnectionRecord.ConnectingAfterRestart)
                         {
@@ -3766,7 +4380,7 @@ namespace Ambrosia
                             }
                             lock (_committer._trimWatermarks)
                             {
-                                _committer._trimWatermarks[inputName] = replayableCommitSeqNo;
+                                _committer._trimWatermarks[new ValueTuple<string, int>(destination, destShardNum)] = replayableCommitSeqNo;
                             }
                         }
                         break;
@@ -3780,6 +4394,7 @@ namespace Ambrosia
 
         private async Task ProcessInputMessageAsync(InputConnectionRecord inputRecord,
                                                     string inputName,
+                                                    int inputShardNum,
                                                     FlexReadBuffer inputFlexBuffer)
         {
             var sizeBytes = inputFlexBuffer.LengthLength;
@@ -3790,11 +4405,11 @@ namespace Ambrosia
                     long newFileSize;
                     if (inputFlexBuffer.Buffer[sizeBytes + 2 + StreamCommunicator.IntSize(methodID)] != (byte)RpcTypes.RpcType.Impulse)
                     {
-                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
+                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputShardNum, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
                     }
                     else
                     {
-                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID, _outputs, inputRecord);
+                        newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputShardNum, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID, _outputs, inputRecord);
                     }
                     inputFlexBuffer.ResetBuffer();
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
@@ -3814,7 +4429,7 @@ namespace Ambrosia
                     var memStream = new MemoryStream(inputFlexBuffer.Buffer, restOfBatchOffset, inputFlexBuffer.Length - restOfBatchOffset);
                     var numRPCs = memStream.ReadInt();
                     var numReplayableRPCs = memStream.ReadInt();
-                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numReplayableRPCs, _outputs, inputRecord);
+                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputShardNum, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numReplayableRPCs, _outputs, inputRecord);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
@@ -3833,7 +4448,7 @@ namespace Ambrosia
                     restOfBatchOffset = inputFlexBuffer.LengthLength + 1;
                     memStream = new MemoryStream(inputFlexBuffer.Buffer, restOfBatchOffset, inputFlexBuffer.Length - restOfBatchOffset);
                     numRPCs = memStream.ReadInt();
-                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numRPCs, _outputs, inputRecord);
+                    newFileSize = await _committer.AddRow(inputFlexBuffer, inputName, inputShardNum, inputRecord.LastProcessedID + numRPCs, inputRecord.LastProcessedReplayableID + numRPCs, _outputs, inputRecord);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     if (_newLogTriggerSize > 0 && newFileSize >= _newLogTriggerSize)
@@ -3855,7 +4470,7 @@ namespace Ambrosia
                     GetSystemTimePreciseAsFileTime(out time);
                     memStream.WriteLongFixed(time);
                     // Treat as RPC
-                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
+                    await _committer.AddRow(inputFlexBuffer, inputName, inputShardNum, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     break;
@@ -3866,7 +4481,7 @@ namespace Ambrosia
                     GetSystemTimePreciseAsFileTime(out time);
                     memStream.WriteLongFixed(time);
                     // Treat as RPC
-                    await _committer.AddRow(inputFlexBuffer, inputName, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
+                    await _committer.AddRow(inputFlexBuffer, inputName, inputShardNum, inputRecord.LastProcessedID + 1, inputRecord.LastProcessedReplayableID + 1, _outputs, inputRecord);
                     inputFlexBuffer.ResetBuffer();
                     memStream.Dispose();
                     break;
@@ -3914,9 +4529,13 @@ namespace Ambrosia
             CheckpointingService = true;
             while (LastReceivedCheckpoint == null) { await Task.Yield(); }
             // Now that the service has sent us its checkpoint, we need to quiesce the output connections, which may be sending
-            foreach (var outputRecord in _outputs)
+            foreach (var dests in _outputs)
             {
-                outputRecord.Value.BufferedOutput.AcquireAppendLock();
+                var _outputs = dests.Value;
+                foreach (var outputRecord in _outputs)
+                {
+                    outputRecord.BufferedOutput.AcquireAppendLock();
+                }
             }
 
             CheckpointingService = false;
@@ -3926,9 +4545,16 @@ namespace Ambrosia
             _inputs.AmbrosiaSerialize(_checkpointWriter);
             // Serialize output connections
             _outputs.AmbrosiaSerialize(_checkpointWriter);
-            foreach (var outputRecord in _outputs)
+            // Serialize number of local shards (Presume fixed shards)
+            _checkpointWriter.WriteInt(_numShards);
+
+            foreach (var dests in _outputs)
             {
-                outputRecord.Value.BufferedOutput.ReleaseAppendLock();
+                var _outputs = dests.Value;
+                foreach (var outputRecord in _outputs)
+                {
+                    outputRecord.BufferedOutput.ReleaseAppendLock();
+                }
             }
 
             // Serialize the service note that the local listener task is blocked after reading the checkpoint until the end of this method
@@ -3942,12 +4568,16 @@ namespace Ambrosia
             // successfully written
             foreach (var kv in _inputs)
             {
+                string destination;
+                int destShardNum = 0;
                 OutputConnectionRecord outputConnectionRecord;
-                if (!_outputs.TryGetValue(kv.Key, out outputConnectionRecord))
-                {
-                    outputConnectionRecord = new OutputConnectionRecord(this);
-                    _outputs[kv.Key] = outputConnectionRecord;
-                }
+                OutputConnectionRecord[] shardedOutputConnections;
+
+                destination = ParseShardedDest(kv.Key, ref destShardNum);
+
+                shardedOutputConnections = CheckAndInitShardsMapping(_outputs, destination, destination.Length);
+                outputConnectionRecord = shardedOutputConnections[destShardNum];
+
                 // Must lock to atomically update due to race with ToControlStreamAsync
                 lock (outputConnectionRecord._remoteTrimLock)
                 {
@@ -3992,7 +4622,7 @@ namespace Ambrosia
                 p = (AmbrosiaRuntimeParams)xmlSerializer.Deserialize(textReader);
             }
 
-            bool sharded = false;
+            _shardID = StartupParamOverrides.shardID;
 
             Initialize(
                 p.serviceReceiveFromPort,
@@ -4007,8 +4637,8 @@ namespace Ambrosia
                 p.storageConnectionString,
                 p.currentVersion,
                 p.upgradeToVersion,
-                sharded
-            );
+                p.initialNumShards
+            ) ;
             return;
         }
 
@@ -4065,13 +4695,14 @@ namespace Ambrosia
                        string storageConnectionString,
                        long currentVersion,
                        long upgradeToVersion,
-                       bool sharded
+                       int numShards
                        )
         {
             if (LogReaderStaticPicker.curStatic == null || LogWriterStaticPicker.curStatic == null)
             {
                 OnError(UnexpectedError, "Must specify log storage type");
             }
+            _numShards = numShards;
             _runningRepro = false;
             _currentVersion = currentVersion;
             _upgradeToVersion = upgradeToVersion;
@@ -4121,14 +4752,13 @@ namespace Ambrosia
             }
             _serviceName = serviceName;
             _storageConnectionString = storageConnectionString;
-            _sharded = sharded;
             _coral = ClientLibrary;
 
             Trace.TraceInformation("Logs directory: {0}", _serviceLogPath);
 
             if (createService == null)
             {
-                if (_logWriterStatics.DirectoryExists(RootDirectory()))
+                if (_logWriterStatics.DirectoryExists(LogDirectory()))
                 {
                     createService = false;
                 }
@@ -4161,7 +4791,8 @@ namespace Ambrosia
             _activeActive = true;
             _serviceLogPath = serviceLogPath;
             _serviceName = serviceName;
-            _sharded = false;
+            //            _sharded = false; // BugBug - Add support for sharding to repros.
+            _numShards = 0;
             _createService = false;
             InitializeLogWriterStatics();
             RecoverOrStartAsync(checkpointToLoad, testUpgrade).Wait();

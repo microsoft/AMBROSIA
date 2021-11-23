@@ -19,6 +19,7 @@ namespace Ambrosia
         public static string ICReceivePipeName;
         public static string ICSendPipeName;
         public static string ICLogLocation = null;
+        public static int shardID = -1;
     }
 
     // Constants for leading byte communicated between services;
