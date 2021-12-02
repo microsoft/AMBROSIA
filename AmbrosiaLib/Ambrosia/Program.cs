@@ -2771,6 +2771,8 @@ namespace Ambrosia
             while (true)
             {
                 long logRecordPos = replayStream.Position;
+                Console.WriteLine("Reading log record at {0}", logRecordPos);
+                Console.Out.Flush();
                 int commitSize;
                 try
                 {
@@ -2780,6 +2782,8 @@ namespace Ambrosia
                     var commitID = headerBufStream.ReadIntFixed();
                     if (commitID != state.Committer.CommitID)
                     {
+                        Console.WriteLine("Committer didn't match");
+                        Console.Out.Flush();
                         throw new Exception("Committer didn't match. Must be incomplete record");
                     }
                     // Get commit page length
@@ -2788,6 +2792,8 @@ namespace Ambrosia
                     var writeSeqID = headerBufStream.ReadLongFixed();
                     if (writeSeqID != state.Committer._nextWriteID)
                     {
+                        Console.WriteLine("Out of order page");
+                        Console.Out.Flush();
                         throw new Exception("Out of order page. Must be incomplete record");
                     }
                     // Remove header
@@ -2799,8 +2805,12 @@ namespace Ambrosia
                     replayStream.ReadAllRequiredBytes(tempBuf, 0, commitSize);
                     // Perform integrity check
                     long checkBytesCalc = state.Committer.CheckBytes(tempBuf, 0, commitSize);
+                    Console.WriteLine("Header check bytes: {0}    Computed check bytes: {1}", checkBytes, checkBytesCalc);
+                    Console.Out.Flush();
                     if (checkBytesCalc != checkBytes)
                     {
+                        Console.WriteLine("Integrity check failed");
+                        Console.Out.Flush();
                         throw new Exception("Integrity check failed for page. Must be incomplete record");
                     }
 
@@ -2836,9 +2846,13 @@ namespace Ambrosia
                         long seqNo = replayStream.ReadLongFixed();
                         trimDict[inputName] = seqNo;
                     }
+                    Console.WriteLine("Finished reading dictionaries");
+                    Console.Out.Flush();
                 }
                 catch
                 {
+                    Console.WriteLine("Caught exception");
+                    Console.Out.Flush();
                     // Non-Active/Active case for couldn't recover replay segment. Could be for a number of reasons.
 
                     // Do we already have the write lock on the latest log?
@@ -3039,6 +3053,8 @@ namespace Ambrosia
                     }
                 }
                 // Do the actual work on the local service
+                Console.WriteLine("Sending actual messages to language binding");
+                Console.Out.Flush();
                 _localServiceSendToStream.Write(headerBuf, 0, Committer.HeaderSize);
                 _localServiceSendToStream.Write(tempBuf, 0, commitSize);
                 // Trim the outputs. Should clean as aggressively as during normal operation
