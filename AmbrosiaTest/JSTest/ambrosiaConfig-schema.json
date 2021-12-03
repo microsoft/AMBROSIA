@@ -146,8 +146,13 @@
                 },
                 "outputLoggingTraceFlags": {
                     "type": "string",
-                    "description": "A semi-colon separated list of trace flag names (case-sensitive). When a trace flag is specified (eg. \"logPageInterruption\"), messages which require that flag will always be logged, regardless of the configured 'outputLoggingLevel'.\nDefaults to \"\".",
+                    "description": "A semi-colon separated list of trace flag names (case-sensitive). When a trace flag is specified (eg. \"LogPageInterruption\"), messages which require that flag will always be logged, regardless of the configured 'outputLoggingLevel'.\nDefaults to \"\".",
                     "default": ""
+                },
+                "outputLogAllowColor": {
+                    "type": "boolean",
+                    "description": "Set this to false to disable the use of color when logging to the console. Defaults to true.",
+                    "default": true
                 },
                 "allowDisplayOfRpcParams": {
                     "type": "boolean",
@@ -178,14 +183,14 @@
                 "messageBytePoolSizeInMB":
                 {
                     "type": "number",
-                    "description": "The size (in MB) of the message byte pool used for optimizing message construction. Defaults to 2MB.",
+                    "description": "The size (in MB) of the message byte pool used for optimizing message construction. Defaults to 2 MB.",
                     "default": 2
                 },
                 "maxMessageQueueSizeInMB":
                 {
                     "type": "number",
-                    "description": "The maximum size (in MB) of the message queue for outgoing messages. Defaults to 64MB.",
-                    "default": 64
+                    "description": "The maximum size (in MB) of the message queue for outgoing messages. Defaults to 256 MB. Cannot be smaller than 32 MB.",
+                    "default": 256
                 }
             }
         }
