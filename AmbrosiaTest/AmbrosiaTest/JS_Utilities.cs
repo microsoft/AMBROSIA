@@ -690,8 +690,8 @@ namespace AmbrosiaTest
             }
 
             // Stop all running processes that hung or were left behind
-//            MyUtils.StopAllAmbrosiaProcesses();
-//            Thread.Sleep(2000);
+            MyUtils.StopAllAmbrosiaProcesses();
+            Thread.Sleep(2000);
 //            MyUtils.CleanupAzureTables("jsptiactiveactive"); //** Covers all the generic active active tests
             //Thread.Sleep(2000);
             //MyUtils.CleanupAzureTables("jsptiupgradeactiveactiveprimary");
