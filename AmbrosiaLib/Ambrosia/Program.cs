@@ -2805,7 +2805,7 @@ namespace Ambrosia
                     replayStream.ReadAllRequiredBytes(tempBuf, 0, commitSize);
                     // Perform integrity check
                     long checkBytesCalc = state.Committer.CheckBytes(tempBuf, 0, commitSize);
-                    Console.WriteLine("Header check bytes: {0}    Computed check bytes: {1}", checkBytes, checkBytesCalc);
+                    Console.WriteLine("Header check bytes: {0}    Computed check bytes: {1}     Bytes checked: {2}", checkBytes, checkBytesCalc, commitSize);
                     Console.Out.Flush();
                     if (checkBytesCalc != checkBytes)
                     {
@@ -2851,7 +2851,7 @@ namespace Ambrosia
                 }
                 catch
                 {
-                    Console.WriteLine("Caught exception");
+                    Console.WriteLine("Caught exception 0");
                     Console.Out.Flush();
                     // Non-Active/Active case for couldn't recover replay segment. Could be for a number of reasons.
 
@@ -2939,11 +2939,15 @@ namespace Ambrosia
                         }
                     }
 
+                    Console.WriteLine("Caught exception 1");
+                    Console.Out.Flush();
                     // Active/Active case for couldn't recover replay segment. Could be for a number of reasons.
                     if (detectedEOL)
                     {
                         break;
                     }
+                    Console.WriteLine("Caught exception 2");
+                    Console.Out.Flush();
                     if (detectedEOF)
                     {
                         // Move to the next log file for reading only. We may need to take a checkpoint
@@ -2971,6 +2975,8 @@ namespace Ambrosia
                         detectedEOF = false;
                         continue;
                     }
+                    Console.WriteLine("Caught exception 3");
+                    Console.Out.Flush();
                     var myRoleBeforeEOLChecking = state.MyRole;
                     replayStream.Position = logRecordPos;
                     var newLastLogFile = state.LastLogFile;
@@ -2986,18 +2992,24 @@ namespace Ambrosia
                     {
                         newLastLogFile = long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID)));
                     }
+                    Console.WriteLine("Caught exception 4");
+                    Console.Out.Flush();
                     if (newLastLogFile > state.LastLogFile) // a new log file has been written
                     {
                         // Someone started a new log. Try to read the last record again and then move to next file
                         detectedEOF = true;
                         continue;
                     }
+                    Console.WriteLine("Caught exception 5");
+                    Console.Out.Flush();
                     if (myRoleBeforeEOLChecking == AARole.Primary)
                     {
                         // Became the primary and the current file is the end of the log. Make sure we read the whole file.
                         detectedEOL = true;
                         continue;
                     }
+                    Console.WriteLine("Caught exception 6");
+                    Console.Out.Flush();
                     // The remaining case is that we hit the end of log, but someone is still writing to this file. Wait and try to read again, or kill the primary if we are trying to upgrade in an active/active scenario
                     if (_upgrading && _activeActive && _killFileHandle == null)
                     {
@@ -3019,6 +3031,8 @@ namespace Ambrosia
                     await Task.Delay(1000);
                     continue;
                 }
+                Console.WriteLine("Past catch");
+                Console.Out.Flush();
                 // Successfully read an entire replay segment. Go ahead and process for recovery
                 foreach (var kv in committedInputDict)
                 {
@@ -3052,8 +3066,9 @@ namespace Ambrosia
                         }
                     }
                 }
+
                 // Do the actual work on the local service
-                Console.WriteLine("Sending actual messages to language binding");
+                Console.WriteLine("Sending actual messages to language binding {0} {1}", state.Committer.CheckBytes(tempBuf, 0, commitSize), commitSize);
                 Console.Out.Flush();
                 _localServiceSendToStream.Write(headerBuf, 0, Committer.HeaderSize);
                 _localServiceSendToStream.Write(tempBuf, 0, commitSize);
