@@ -1456,7 +1456,15 @@ namespace Ambrosia
                                                  byte[] extraBytes,
                                                  int extraLength)
             {
-                _myAmbrosia.OnError(0, "checkbytesextra not implemented");
+                var combinedMemStream = new ConcatMemStream();
+                combinedMemStream.AddSource(_buf, length);
+                combinedMemStream.AddSource(extraBytes, extraLength);
+                combinedMemStream.StartPump();
+                return xxHash64.ComputeHash(combinedMemStream, 1024*64);
+
+
+
+/*
                 var firstBufferCheck = CheckBytes(offset, length);
                 var secondBufferCheck = CheckBytes(extraBytes, 0, extraLength);
                 ulong shiftedSecondBuffer = secondBufferCheck;
@@ -1478,33 +1486,20 @@ namespace Ambrosia
                     }
                 }
                 return firstBufferCheck ^ shiftedSecondBuffer;
+*/             
             }
-
-            static ulong FNV_offset_basis = 14695981039346656037;
-            static ulong FNV_prime = 1099511628211;
 
             internal unsafe ulong CheckBytes(byte[] bufToCalc,
                             int offset,
                             int length)
             {
-                /*                ulong checkBytes = FNV_offset_basis;
-                                fixed (byte* p = bufToCalc)
-                                {
-                                    for (int i = offset; i < offset + length; i++)
-                                    {
-                                        checkBytes ^= p[i];
-                                        checkBytes *= FNV_prime;
-                                    }
-                                }
-                                return checkBytes;*/
-
                 fixed (byte* pData = &bufToCalc[offset])
                 {
                     return xxHash64.UnsafeComputeHash(pData, length);
                 }
 
             }
-
+/*
             public static partial class xxHash64
             {
                 private const ulong p1 = 11400714785074694791UL;
@@ -1526,7 +1521,7 @@ namespace Ambrosia
                     }
 
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    public static ulong RotateLeft(ulong value, int offset) // Taken help from: https://stackoverflow.com/a/48580489/5592276
+                    public static ulong RotateLeft(ulong value, int offset)
                     {
 #if FCL_BITOPS
             return System.Numerics.BitOperations.RotateLeft(value, offset);
@@ -1658,13 +1653,13 @@ namespace Ambrosia
                     return h64;
                 }
             }
-
+*/
 
             internal unsafe ulong CheckBytes(int offset,
                                             int length)
             {
                 return CheckBytes(_buf, offset, length);
-
+/*
                 ulong checkBytes = 0;
 
                 fixed (byte* p = _buf)
@@ -1704,7 +1699,7 @@ namespace Ambrosia
                         _myAmbrosia.OnError(0, "checkbytes case not implemented");
                     }
                 }
-                return checkBytes;
+                return checkBytes;*/
             }
 
 /*
