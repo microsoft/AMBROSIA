@@ -608,7 +608,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false, bool checkForDoneString = true)
+        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false, bool checkForDoneString = true, string ambrosiaLogDir = "")
         {
             string currentDir = Directory.GetCurrentDirectory();
 
@@ -625,8 +625,21 @@ namespace AmbrosiaTest
 
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
             string serverName = testName + "server";
-            string ambrosiaLogDir = currentDir+"\\"+ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
-            string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDirFromPTI;
+
+
+            // allows for using different ambrosia log directory
+            if (ambrosiaLogDir == "")
+            {
+                ambrosiaLogDir = currentDir + "\\" + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
+                ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
+            }
+            else
+            {
+                ambrosiaLogDirFromPTI = ambrosiaLogDir+"\\";  //*#*# TO DO!!!!!!   This is the same as ambrosiaLogDir but ambrosiaLogDir won't be hardcoded so must need to figure out from PTI directory structure
+            }
+
+
             string ambServiceLogPath = ambrosiaLogDir + "\\";
 
             // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
