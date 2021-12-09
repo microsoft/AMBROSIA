@@ -2023,15 +2023,14 @@ namespace AmbrosiaTest
         public void AMB_Verify_OrigLog_Test()
         {
             string testName = "orig";
-            string ambrosiaLogDir = "D:\\Ambrosia\\AmbrosiaTest\\AmbrosiaTest\\TestLogs"; //currentDir + "\\" + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
+            string ambrosiaTestLogsDir = ConfigurationManager.AppSettings["TestRootDirectory"] + "\\TestLogs";//  
             string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();
 
             // This will verify the original log format  using Ambrosia and also run TTD using PTI
-            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0","",false,true, ambrosiaLogDir);
+            MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0","",false,true, ambrosiaTestLogsDir);
         }
-
 
 
 
