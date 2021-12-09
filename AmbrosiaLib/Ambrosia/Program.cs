@@ -1285,11 +1285,14 @@ namespace Ambrosia
             {
                 try
                 {
+                    var finalLength = length1 + length2;
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
                         _logStream.Write(firstBufToCommit, 0, 4);
-                        _logStream.WriteIntFixed(length1 + length2);
+                        // Back compate hack to use negative lengths to specify new hash function
+                        var writeLength = finalLength * -1 - 1;
+                        _logStream.WriteIntFixed(writeLength);
                         _logStream.Write(firstBufToCommit, 8, 16);
                         await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
                         await _logStream.WriteAsync(secondBufToCommit, 0, length2);
@@ -1300,7 +1303,7 @@ namespace Ambrosia
 
                     SendInputWatermarks(uncommittedWatermarks, outputs);
                     _workStream.Write(firstBufToCommit, 0, 4);
-                    _workStream.WriteIntFixed(length1 + length2);
+                    _workStream.WriteIntFixed(finalLength);
                     _workStream.Write(firstBufToCommit, 8, 16);
                     await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
                     await _workStream.WriteAsync(secondBufToCommit, 0, length2);
@@ -1355,11 +1358,17 @@ namespace Ambrosia
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
-                        await _logStream.WriteAsync(buf, 0, length);
+                        _logStream.Write(buf, 0, 4);
+                        // Back compate hack to use negative lengths to specify new hash function
+                        var writeLength = length * -1 - 1;
+                        _logStream.WriteIntFixed(writeLength);
+                        _logStream.Write(buf, 8, 16);
+                        await _logStream.WriteAsync(buf, HeaderSize, length - HeaderSize);
                         await writeFullWaterMarksAsync(uncommittedWatermarks);
                         await writeSimpleWaterMarksAsync(trimWatermarks);
                         await _logStream.FlushAsync();
                     }
+
                     SendInputWatermarks(uncommittedWatermarks, outputs);
                     await _workStream.WriteAsync(buf, 0, length);
                     var flushtask = _workStream.FlushAsync();
@@ -1451,47 +1460,21 @@ namespace Ambrosia
             byte[] _checkTempBytes = new byte[8];
             byte[] _checkTempBytes2 = new byte[8];
 
-            internal unsafe ulong CheckBytesExtra(int offset,
-                                                 int length,
-                                                 byte[] extraBytes,
-                                                 int extraLength)
+            internal unsafe ulong CheckBytesExtraxxHash64(int offset,
+                                                          int length,
+                                                          byte[] extraBytes,
+                                                          int extraLength)
             {
                 var combinedMemStream = new ConcatMemStream();
-                combinedMemStream.AddSource(_buf, length);
+                combinedMemStream.AddSource(_buf, offset, length);
                 combinedMemStream.AddSource(extraBytes, extraLength);
                 combinedMemStream.StartPump();
-                return xxHash64.ComputeHash(combinedMemStream, 1024*64);
-
-
-
-/*
-                var firstBufferCheck = CheckBytes(offset, length);
-                var secondBufferCheck = CheckBytes(extraBytes, 0, extraLength);
-                ulong shiftedSecondBuffer = secondBufferCheck;
-                var lastByteLongOffset = length % 8;
-                if (lastByteLongOffset != 0)
-                {
-                    fixed (byte* p = _checkTempBytes)
-                    {
-                        *((ulong*)p) = secondBufferCheck;
-                    }
-                    // Create new buffer with circularly shifted secondBufferCheck
-                    for (int i = 0; i < 8; i++)
-                    {
-                        _checkTempBytes2[i] = _checkTempBytes[(i - lastByteLongOffset + 8) % 8];
-                    }
-                    fixed (byte* p = _checkTempBytes2)
-                    {
-                        shiftedSecondBuffer = *((ulong*)p);
-                    }
-                }
-                return firstBufferCheck ^ shiftedSecondBuffer;
-*/             
+                return xxHash64.ComputeHash(combinedMemStream, 1024 * 64);
             }
 
-            internal unsafe ulong CheckBytes(byte[] bufToCalc,
-                            int offset,
-                            int length)
+            internal unsafe ulong CheckBytesxxHash64(byte[] bufToCalc,
+                                                     int offset,
+                                                     int length)
             {
                 fixed (byte* pData = &bufToCalc[offset])
                 {
@@ -1499,170 +1482,14 @@ namespace Ambrosia
                 }
 
             }
-/*
-            public static partial class xxHash64
+
+            internal unsafe ulong CheckBytesOriginal(byte[] bufToCalc,
+                                                     int offset,
+                                                     int length)
             {
-                private const ulong p1 = 11400714785074694791UL;
-                private const ulong p2 = 14029467366897019727UL;
-                private const ulong p3 = 1609587929392839161UL;
-                private const ulong p4 = 9650029242287828579UL;
-                private const ulong p5 = 2870177450012600261UL;
-
-                internal static class BitUtils
-                {
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    public static uint RotateLeft(uint value, int offset)
-                    {
-#if FCL_BITOPS
-            return System.Numerics.BitOperations.RotateLeft(value, offset);
-#else
-                        return (value << offset) | (value >> (32 - offset));
-#endif
-                    }
-
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    public static ulong RotateLeft(ulong value, int offset)
-                    {
-#if FCL_BITOPS
-            return System.Numerics.BitOperations.RotateLeft(value, offset);
-#else
-                        return (value << offset) | (value >> (64 - offset));
-#endif
-                    }
-                }
-
-                /// <summary>
-                /// Compute xxhash64 for the unsafe array of memory
-                /// </summary>
-                /// <param name="ptr"></param>
-                /// <param name="length"></param>
-                /// <param name="seed"></param>
-                /// <returns></returns>
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                internal static unsafe ulong UnsafeComputeHash(byte* ptr, int length, ulong seed = 0)
-                {
-                    byte* end = ptr + length;
-                    ulong h64;
-
-                    if (length >= 32)
-
-                    {
-                        byte* limit = end - 32;
-
-                        ulong v1 = seed + p1 + p2;
-                        ulong v2 = seed + p2;
-                        ulong v3 = seed + 0;
-                        ulong v4 = seed - p1;
-
-                        do
-                        {
-                            v1 += *((ulong*)ptr) * p2;
-                            v1 = BitUtils.RotateLeft(v1, 31); // rotl 31
-                            v1 *= p1;
-                            ptr += 8;
-
-                            v2 += *((ulong*)ptr) * p2;
-                            v2 = BitUtils.RotateLeft(v2, 31); // rotl 31
-                            v2 *= p1;
-                            ptr += 8;
-
-                            v3 += *((ulong*)ptr) * p2;
-                            v3 = BitUtils.RotateLeft(v3, 31); // rotl 31
-                            v3 *= p1;
-                            ptr += 8;
-
-                            v4 += *((ulong*)ptr) * p2;
-                            v4 = BitUtils.RotateLeft(v4, 31); // rotl 31
-                            v4 *= p1;
-                            ptr += 8;
-
-                        } while (ptr <= limit);
-
-                        h64 = BitUtils.RotateLeft(v1, 1) +  // rotl 1
-                              BitUtils.RotateLeft(v2, 7) +  // rotl 7
-                              BitUtils.RotateLeft(v3, 12) + // rotl 12
-                              BitUtils.RotateLeft(v4, 18);  // rotl 18
-
-                        // merge round
-                        v1 *= p2;
-                        v1 = BitUtils.RotateLeft(v1, 31); // rotl 31
-                        v1 *= p1;
-                        h64 ^= v1;
-                        h64 = h64 * p1 + p4;
-
-                        // merge round
-                        v2 *= p2;
-                        v2 = BitUtils.RotateLeft(v2, 31); // rotl 31
-                        v2 *= p1;
-                        h64 ^= v2;
-                        h64 = h64 * p1 + p4;
-
-                        // merge round
-                        v3 *= p2;
-                        v3 = BitUtils.RotateLeft(v3, 31); // rotl 31
-                        v3 *= p1;
-                        h64 ^= v3;
-                        h64 = h64 * p1 + p4;
-
-                        // merge round
-                        v4 *= p2;
-                        v4 = BitUtils.RotateLeft(v4, 31); // rotl 31
-                        v4 *= p1;
-                        h64 ^= v4;
-                        h64 = h64 * p1 + p4;
-                    }
-                    else
-                    {
-                        h64 = seed + p5;
-                    }
-
-                    h64 += (ulong)length;
-
-                    // finalize
-                    while (ptr <= end - 8)
-                    {
-                        ulong t1 = *((ulong*)ptr) * p2;
-                        t1 = BitUtils.RotateLeft(t1, 31); // rotl 31
-                        t1 *= p1;
-                        h64 ^= t1;
-                        h64 = BitUtils.RotateLeft(h64, 27) * p1 + p4; // (rotl 27) * p1 + p4
-                        ptr += 8;
-                    }
-
-                    if (ptr <= end - 4)
-                    {
-                        h64 ^= *((uint*)ptr) * p1;
-                        h64 = BitUtils.RotateLeft(h64, 23) * p2 + p3; // (rotl 23) * p2 + p3
-                        ptr += 4;
-                    }
-
-                    while (ptr < end)
-                    {
-                        h64 ^= *((byte*)ptr) * p5;
-                        h64 = BitUtils.RotateLeft(h64, 11) * p1; // (rotl 11) * p1
-                        ptr += 1;
-                    }
-
-                    // avalanche
-                    h64 ^= h64 >> 33;
-                    h64 *= p2;
-                    h64 ^= h64 >> 29;
-                    h64 *= p3;
-                    h64 ^= h64 >> 32;
-
-                    return h64;
-                }
-            }
-*/
-
-            internal unsafe ulong CheckBytes(int offset,
-                                            int length)
-            {
-                return CheckBytes(_buf, offset, length);
-/*
                 ulong checkBytes = 0;
 
-                fixed (byte* p = _buf)
+                fixed (byte* p = bufToCalc)
                 {
                     if (offset % 8 == 0)
                     {
@@ -1696,59 +1523,11 @@ namespace Ambrosia
                     }
                     else
                     {
-                        _myAmbrosia.OnError(0, "checkbytes case not implemented");
-                    }
-                }
-                return checkBytes;*/
-            }
-
-/*
-            internal unsafe long CheckBytes(byte[] bufToCalc,
-                                            int offset,
-                                            int length)
-            {
-                long checkBytes = 0;
-
-                fixed (byte* p = bufToCalc)
-                {
-                    if (offset % 8 == 0)
-                    {
-                        int startLongCalc = offset / 8;
-                        int numLongCalcs = length / 8;
-                        int numByteCalcs = length % 8;
-                        long* longPtr = ((long*)p) + startLongCalc;
-                        for (int i = 0; i < numLongCalcs; i++)
-                        {
-                            checkBytes ^= longPtr[i];
-                        }
-                        if (numByteCalcs != 0)
-                        {
-                            var lastBytes = (byte*)(longPtr + numLongCalcs);
-                            for (int i = 0; i < 8; i++)
-                            {
-                                if (i < numByteCalcs)
-                                {
-                                    _checkTempBytes[i] = lastBytes[i];
-                                }
-                                else
-                                {
-                                    _checkTempBytes[i] = 0;
-                                }
-                            }
-                            fixed (byte* p2 = _checkTempBytes)
-                            {
-                                checkBytes ^= *((long*)p2);
-                            }
-                        }
-                    }
-                    else
-                    {
                         _myAmbrosia.OnError(0, "checkbytes case not implemented 2");
                     }
                 }
                 return checkBytes;
             }
-*/
 
             public async Task<long> AddRow(FlexReadBuffer copyFromFlexBuffer,
                                            string outputToUpdate,
@@ -1853,12 +1632,12 @@ namespace Ambrosia
                             if (length <= (_maxBufSize - HeaderSize))
                             {
                                 // new message will end up in a commit buffer. Use normal CheckBytes
-                                checkBytes = CheckBytes(HeaderSize, lengthOnPage - HeaderSize);
+                                checkBytes = CheckBytesxxHash64(_buf, HeaderSize, lengthOnPage - HeaderSize);
                             }
                             else
                             {
                                 // new message is too big to land in a commit buffer and will be tacked on the end.
-                                checkBytes = CheckBytesExtra(HeaderSize, lengthOnPage - HeaderSize, copyFromBuffer, length);
+                                checkBytes = CheckBytesExtraxxHash64(HeaderSize, lengthOnPage - HeaderSize, copyFromBuffer, length);
                             }
                             writeStream.WriteULongFixed(checkBytes);
                             writeStream.WriteLongFixed(_nextWriteID);
@@ -1982,7 +1761,7 @@ namespace Ambrosia
                     // Filling header with enough info to detect incomplete writes and also writing the page length
                     var writeStream = new MemoryStream(_buf, 4, 20);
                     writeStream.WriteIntFixed((int)bufLength);
-                    ulong checkBytes = CheckBytes(HeaderSize, (int)bufLength - HeaderSize);
+                    ulong checkBytes = CheckBytesxxHash64(_buf, HeaderSize, (int)bufLength - HeaderSize);
                     writeStream.WriteULongFixed(checkBytes);
                     writeStream.WriteLongFixed(_nextWriteID);
                     _nextWriteID++;
@@ -2021,7 +1800,7 @@ namespace Ambrosia
                 memStream.WriteByte(upgradeServiceByte);
                 memStream.Dispose();
                 _workStream.WriteIntFixed((int)(HeaderSize + numMessageBytes));
-                ulong checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
+                ulong checkBytes = CheckBytesxxHash64(messageBuf, 0, (int)numMessageBytes);
                 _workStream.WriteULongFixed(checkBytes);
                 _workStream.WriteLongFixed(-1);
                 _workStream.Write(messageBuf, 0, numMessageBytes);
@@ -2053,7 +1832,7 @@ namespace Ambrosia
                 }
                 memStream.Dispose();
                 _workStream.WriteIntFixed((int)(HeaderSize + numMessageBytes));
-                ulong checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
+                ulong checkBytes = CheckBytesxxHash64(messageBuf, 0, (int)numMessageBytes);
                 _workStream.WriteULongFixed(checkBytes);
                 _workStream.WriteLongFixed(-1);
                 _workStream.Write(messageBuf, 0, numMessageBytes);
@@ -2070,7 +1849,7 @@ namespace Ambrosia
                 memStream.WriteByte(becomingPrimaryByte);
                 memStream.Dispose();
                 _workStream.WriteIntFixed((int)(HeaderSize + numMessageBytes));
-                ulong checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
+                ulong checkBytes = CheckBytesxxHash64(messageBuf, 0, (int)numMessageBytes);
                 _workStream.WriteULongFixed(checkBytes);
                 _workStream.WriteLongFixed(-1);
                 _workStream.Write(messageBuf, 0, numMessageBytes);
@@ -2949,29 +2728,34 @@ namespace Ambrosia
             while (true)
             {
                 long logRecordPos = replayStream.Position;
-                Console.WriteLine("Reading log record at {0}", logRecordPos);
-                Console.Out.Flush();
                 int commitSize;
                 try
                 {
+                    var usingxxHash64 = false;
                     // First get commit ID and check for integrity
                     replayStream.ReadAllRequiredBytes(headerBuf, 0, Committer.HeaderSize);
                     headerBufStream.Position = 0;
                     var commitID = headerBufStream.ReadIntFixed();
                     if (commitID != state.Committer.CommitID)
                     {
-                        Console.WriteLine("Committer didn't match");
-                        Console.Out.Flush();
                         throw new Exception("Committer didn't match. Must be incomplete record");
                     }
                     // Get commit page length
                     commitSize = headerBufStream.ReadIntFixed();
+
+                    // Hack to make sure the right hash function is used by using the negative length values to specify the new hash
+                    if (commitSize < 0)
+                    {
+                        usingxxHash64 = true;
+                        commitSize = (commitSize * -1) - 1;
+                        headerBufStream.Position -= 4;
+                        headerBufStream.WriteIntFixed(commitSize);
+                    }
+
                     var checkBytes = headerBufStream.ReadULongFixed();
                     var writeSeqID = headerBufStream.ReadLongFixed();
                     if (writeSeqID != state.Committer._nextWriteID)
                     {
-                        Console.WriteLine("Out of order page");
-                        Console.Out.Flush();
                         throw new Exception("Out of order page. Must be incomplete record");
                     }
                     // Remove header
@@ -2982,13 +2766,17 @@ namespace Ambrosia
                     }
                     replayStream.ReadAllRequiredBytes(tempBuf, 0, commitSize);
                     // Perform integrity check
-                    ulong checkBytesCalc = state.Committer.CheckBytes(tempBuf, 0, commitSize);
-                    Console.WriteLine("Header check bytes: {0}    Computed check bytes: {1}     Bytes checked: {2}", checkBytes, checkBytesCalc, commitSize);
-                    Console.Out.Flush();
+                    ulong checkBytesCalc;
+                    if (usingxxHash64)
+                    {
+                        checkBytesCalc = state.Committer.CheckBytesxxHash64(tempBuf, 0, commitSize);
+                    }
+                    else
+                    {
+                        checkBytesCalc = state.Committer.CheckBytesOriginal(tempBuf, 0, commitSize);
+                    }
                     if (checkBytesCalc != checkBytes)
                     {
-                        Console.WriteLine("Integrity check failed");
-                        Console.Out.Flush();
                         throw new Exception("Integrity check failed for page. Must be incomplete record");
                     }
 
@@ -3024,13 +2812,9 @@ namespace Ambrosia
                         long seqNo = replayStream.ReadLongFixed();
                         trimDict[inputName] = seqNo;
                     }
-                    Console.WriteLine("Finished reading dictionaries");
-                    Console.Out.Flush();
                 }
                 catch
                 {
-                    Console.WriteLine("Caught exception 0");
-                    Console.Out.Flush();
                     // Non-Active/Active case for couldn't recover replay segment. Could be for a number of reasons.
 
                     // Do we already have the write lock on the latest log?
@@ -3117,15 +2901,11 @@ namespace Ambrosia
                         }
                     }
 
-                    Console.WriteLine("Caught exception 1");
-                    Console.Out.Flush();
                     // Active/Active case for couldn't recover replay segment. Could be for a number of reasons.
                     if (detectedEOL)
                     {
                         break;
                     }
-                    Console.WriteLine("Caught exception 2");
-                    Console.Out.Flush();
                     if (detectedEOF)
                     {
                         // Move to the next log file for reading only. We may need to take a checkpoint
@@ -3153,8 +2933,6 @@ namespace Ambrosia
                         detectedEOF = false;
                         continue;
                     }
-                    Console.WriteLine("Caught exception 3");
-                    Console.Out.Flush();
                     var myRoleBeforeEOLChecking = state.MyRole;
                     replayStream.Position = logRecordPos;
                     var newLastLogFile = state.LastLogFile;
@@ -3170,24 +2948,18 @@ namespace Ambrosia
                     {
                         newLastLogFile = long.Parse(RetrieveServiceInfo(InfoTitle("LastLogFile", state.ShardID)));
                     }
-                    Console.WriteLine("Caught exception 4");
-                    Console.Out.Flush();
                     if (newLastLogFile > state.LastLogFile) // a new log file has been written
                     {
                         // Someone started a new log. Try to read the last record again and then move to next file
                         detectedEOF = true;
                         continue;
                     }
-                    Console.WriteLine("Caught exception 5");
-                    Console.Out.Flush();
                     if (myRoleBeforeEOLChecking == AARole.Primary)
                     {
                         // Became the primary and the current file is the end of the log. Make sure we read the whole file.
                         detectedEOL = true;
                         continue;
                     }
-                    Console.WriteLine("Caught exception 6");
-                    Console.Out.Flush();
                     // The remaining case is that we hit the end of log, but someone is still writing to this file. Wait and try to read again, or kill the primary if we are trying to upgrade in an active/active scenario
                     if (_upgrading && _activeActive && _killFileHandle == null)
                     {
@@ -3209,8 +2981,6 @@ namespace Ambrosia
                     await Task.Delay(1000);
                     continue;
                 }
-                Console.WriteLine("Past catch");
-                Console.Out.Flush();
                 // Successfully read an entire replay segment. Go ahead and process for recovery
                 foreach (var kv in committedInputDict)
                 {
@@ -3246,8 +3016,6 @@ namespace Ambrosia
                 }
 
                 // Do the actual work on the local service
-                Console.WriteLine("Sending actual messages to language binding {0} {1}", state.Committer.CheckBytes(tempBuf, 0, commitSize), commitSize);
-                Console.Out.Flush();
                 _localServiceSendToStream.Write(headerBuf, 0, Committer.HeaderSize);
                 _localServiceSendToStream.Write(tempBuf, 0, commitSize);
                 // Trim the outputs. Should clean as aggressively as during normal operation
