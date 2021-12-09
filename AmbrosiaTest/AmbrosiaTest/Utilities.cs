@@ -626,6 +626,7 @@ namespace AmbrosiaTest
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
             string serverName = testName + "server";
             string ambrosiaLogDirFromPTI;
+            string ambServiceLogPath;
 
 
             // allows for using different ambrosia log directory
@@ -633,14 +634,14 @@ namespace AmbrosiaTest
             {
                 ambrosiaLogDir = currentDir + "\\" + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
                 ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
+                ambServiceLogPath = ambrosiaLogDir + "\\";
+
             }
             else
             {
-                ambrosiaLogDirFromPTI = ambrosiaLogDir+"\\";  //*#*# TO DO!!!!!!   This is the same as ambrosiaLogDir but ambrosiaLogDir won't be hardcoded so must need to figure out from PTI directory structure
+                ambServiceLogPath = "..\\"+ambrosiaLogDir + "\\";
+                ambrosiaLogDirFromPTI = "..\\..\\"+ambrosiaLogDir +"\\"; 
             }
-
-
-            string ambServiceLogPath = ambrosiaLogDir + "\\";
 
             // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
             if (Directory.Exists(ambrosiaLogDir) ==false)
@@ -1498,7 +1499,8 @@ namespace AmbrosiaTest
             CleanupAzureTables("fixedmessagetest");
             Thread.Sleep(2000);
             CleanupAzureTables("nobiditest");
-            
+            Thread.Sleep(2000);
+            CleanupAzureTables("orig");  // tests that use the old original log format
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
