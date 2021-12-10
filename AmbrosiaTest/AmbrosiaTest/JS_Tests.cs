@@ -130,7 +130,7 @@ namespace AmbrosiaTest
             bool bidi = false;
             int memoryUsed = 104857600; // padding"(in bytes) used to simulate large checkpoints by being included in app state-- 1GB (1073741824) is what C# PTI uses. Will get OOM issue if do much more than 100 MB so just use 100 MB.  See bug #170 for details.  -  
 
-            int checkPointSize = 209715; //Typical value is 209715965 but varies a bit based on machine running on so only check first 6 digits    
+            int checkPointSize = 20971; //Typical value is 209715965 but varies a bit based on machine running on so only check first 6 digits    
 
             string testName = "jsptigiantcheckpointtest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";

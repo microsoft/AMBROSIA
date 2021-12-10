@@ -874,8 +874,8 @@ namespace AmbrosiaTest
 
 
 
-
-
+        //*#*#*#*#*#*#
+        /*
         //****************************
         // Debugging fail in checkpointer where get this error in check pointer
         // [91m2021/11/02 13:59:11.101: Uncaught Exception: Error: The supplied varInt32 value(170 170 170 170 170 138) encodes a value larger than 32-bits
@@ -1129,7 +1129,7 @@ namespace AmbrosiaTest
             //*#*#*# JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
         }
 
-
-
+        */
+        //*#*#*#*#*#*#
     }
 }

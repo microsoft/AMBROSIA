@@ -2018,10 +2018,13 @@ namespace AmbrosiaTest
             //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
         }
 
+        
+        /*
         //** This test verifies and TTD original log format
         [TestMethod]
         public void AMB_Verify_OrigLog_Test()
         {
+            
             string testName = "orig";
             string ambrosiaTestLogsDir = ConfigurationManager.AppSettings["TestRootDirectory"] + "\\TestLogs";//  
             string byteSize = "1073741824";
@@ -2031,7 +2034,7 @@ namespace AmbrosiaTest
             // This will verify the original log format  using Ambrosia and also run TTD using PTI
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0","",false,true, ambrosiaTestLogsDir);
         }
-
+        */
 
 
         [TestCleanup()]
