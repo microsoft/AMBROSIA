@@ -982,14 +982,11 @@ namespace Ambrosia
         {
             LogReaderStaticPicker.curStatic = new GenericFileLogReaderStatics();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            //if (false)
             {
-                Trace.TraceInformation("DEBUG (Bug #190): Using LogWriterStaticsWindows()");
                 LogWriterStaticPicker.curStatic = new LogWriterStaticsWindows();
             }
             else
             {
-                Trace.TraceInformation("DEBUG (Bug #190): Using LogWriterStaticsGeneric()");
                 LogWriterStaticPicker.curStatic = new LogWriterStaticsGeneric();
             }
         }
