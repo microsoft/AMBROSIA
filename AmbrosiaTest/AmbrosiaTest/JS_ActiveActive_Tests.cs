@@ -389,10 +389,11 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverSecondaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerSecondaryFileName_TestApp, 0, fixedMsgSize, JSUtils.JSPTI_ServerInstanceRole);
 
+            Thread.Sleep(1000);
+
             // Verify Servers are who they should be by checking output strings
             bool pass = MyUtils.WaitForProcessToFinish(logOutputServerChkPtFileName_TestApp, iMChkPointer, 5, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputServerPrimaryFileName_TestApp, becomingPrimary, 5, false, testName, true, false); // when shows it is primary, then check others
-            pass = MyUtils.WaitForProcessToFinish(logOutputServerSecondaryFileName_TestApp, iMSecondary, 1, false, testName, true, false);
 
             // Kill secondary
             MyUtils.KillProcess(serverSecondaryProcessID);
@@ -402,9 +403,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "2", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3210", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "3200", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3201", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "5210", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "5200", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "5201", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverRestartPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartSecondaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
@@ -520,7 +521,7 @@ namespace AmbrosiaTest
             // Verify Servers are who they should be by checking output strings
             bool pass = MyUtils.WaitForProcessToFinish(logOutputServerChkPtFileName_TestApp, iMChkPointer, 5, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputServerPrimaryFileName_TestApp, becomingPrimary, 5, false, testName, true, false); // when shows it is primary, then check others
-            pass = MyUtils.WaitForProcessToFinish(logOutputServerSecondaryFileName_TestApp, iMSecondary, 1, false, testName, true, false);
+            //pass = MyUtils.WaitForProcessToFinish(logOutputServerSecondaryFileName_TestApp, iMSecondary, 1, false, testName, true, false);
 
             // Kill secondary
             MyUtils.KillProcess(serverSecondaryProcessID);
@@ -530,9 +531,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "2", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3210", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "3200", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3201", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "5315", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "5305", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "5306", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverRestartPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartSecondaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
