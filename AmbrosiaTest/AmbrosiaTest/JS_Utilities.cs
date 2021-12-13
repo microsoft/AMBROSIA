@@ -336,9 +336,11 @@ namespace AmbrosiaTest
 
                 //** Set defaults that are test run specific
                 string CurrentFramework = MyUtils.NetFramework;
+                bool useNetCore = false; 
                 if (MyUtils.NetFrameworkTestRun == false)
                 {
                     CurrentFramework = MyUtils.NetCoreFramework;
+                    useNetCore = true;
                 }
 
                 string icBinDirectory = Directory.GetCurrentDirectory() + "\\" + CurrentFramework;
@@ -354,6 +356,7 @@ namespace AmbrosiaTest
                 JS_UpdateJSConfigFile(JSConfig_autoRegister, SetAutoRegister.ToString());
                 JS_UpdateJSConfigFile(JSConfig_icLogFolder, logDirectory);
                 JS_UpdateJSConfigFile(JSConfig_icBinFolder, icBinDirectory);
+                JS_UpdateJSConfigFile(JSConfig_useNetCore, useNetCore.ToString());
 
                 //*** Copy from The Gold Config to Client Config ***
                 if (Directory.Exists(basePath + JSPTI_ClientPath+"\\") == false)
