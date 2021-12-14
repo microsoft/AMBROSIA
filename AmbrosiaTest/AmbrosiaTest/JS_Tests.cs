@@ -741,6 +741,9 @@ namespace AmbrosiaTest
             // Kill app which will kill the IC too
             MyUtils.StopAllAmbrosiaProcesses();
 
+            // Give it an extra second to fully stop
+            Thread.Sleep(1000);
+
             //Set the Upgrade Version
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "11");
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false");
@@ -1002,6 +1005,9 @@ namespace AmbrosiaTest
             // Kill app and IC
             MyUtils.StopAllAmbrosiaProcesses();
 
+            // Give it an extra second to stop
+            Thread.Sleep(2000);
+
             //Set the Upgrade Version
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "51");
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false");
@@ -1016,6 +1022,9 @@ namespace AmbrosiaTest
 
             // Kill Server which will kill the IC too
             MyUtils.KillProcess(ptiID2);
+
+            // Give it an extra second to fully stop
+            Thread.Sleep(1000);
 
             // Restart it once and make sure it continues with the new version
             int ptiID3 = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestartedAgain_TestApp);
