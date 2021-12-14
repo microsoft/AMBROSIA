@@ -1499,8 +1499,6 @@ namespace AmbrosiaTest
             CleanupAzureTables("fixedmessagetest");
             Thread.Sleep(2000);
             CleanupAzureTables("nobiditest");
-            Thread.Sleep(2000);
-            CleanupAzureTables("orig");  // tests that use the old original log format
 
             // Give it a few second to clean things up a bit more
             Thread.Sleep(5000);
