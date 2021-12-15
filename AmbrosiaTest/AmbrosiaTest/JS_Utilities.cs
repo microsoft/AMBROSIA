@@ -198,28 +198,30 @@ namespace AmbrosiaTest
 
 
         // Start Javascript Test App
-        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile, int memoryUsed = 0, bool fms = false, string instanceRole= "", string serverInstanceName = "")
+        public int StartJSPTI(int numRounds, long totalBytes, long totalEchoBytes, int bytesPerRound, int maxMessageSize, int batchSizeCutoff, bool bidi, string testOutputLogFile, int memoryUsed = 0, bool fms = false, string instanceRole= "", string serverInstanceName = "", bool includePostMethod = false )
         {
 
-/*   *** For reference - PTI parameters
- 
-        -h | --help                    : [Common] Displays this help message
-        -ir | --instanceRole =          : [Common] The role of this instance in the test('Server', 'Client', or 'Combined'); defaults to 'Combined'
-        - m | --memoryUsed =             : [Common] Optional "padding"(in bytes) used to simulate large checkpoints by being included in app state; defaults to 0
-        - c | --autoContinue =           : [Common] Whether to continue automatically at startup(if true), or wait for the 'Enter' key(if false) ; defaults to true
-        - sin | --serverInstanceName =   : [Client] The name of the instance that's acting in the 'Server' role for the test; only required when --role is 'Client'
-        - bpr | --bytesPerRound =        : [Client] The total number of message payload bytes that will be sent in a single round; defaults to 1 GB
-        - bsc | --batchSizeCutoff =      : [Client] Once the total number of message payload bytes queued reaches(or exceeds) this limit, then the batch will be sent; defaults to 10 MB
-        - mms | --maxMessageSize =       : [Client] The maximum size(in bytes) of the message payload; must be a power of 2(eg. 65536), and be at least 16; defaults to 64KB
-        - n | --numOfRounds =            : [Client] The number of rounds(of size bytesPerRound) to work through; each round will use a[potentially] different message size; defaults to 1
-        - nds | --noDescendingSize      : [Client] Disables descending(halving) the message size after each round; instead, a random size[power of 2] between 16 and--maxMessageSize will be used
-        -fms | --fixedMessageSize      : [Client] All messages(in all rounds) will be of size --maxMessageSize; --noDescendingSize(if also supplied) will be ignored
-        - eeb | --expectedEchoedBytes =  : [Client] The total number of "echoed" bytes expected to be received from the server when--bidirectional is specified; the client will report a "success" message when this number of bytes have been received
-        -cin | --clientInstanceName =   : [Server] The name of the instance that's acting in the 'Client' role for the test; only required when --role is 'Server' and --bidirectional is specified
-        - nhc | --noHealthCheck         : [Server] Disables the periodic server health check(requested via an Impulse message)
-        -bd | --bidirectional          : [Server] Enables echoing the 'doWork' method call back to the client
-        -efb | --expectedFinalBytes =   : [Server] The total number of bytes expected to be received from all clients; the server will report a "success" message when this number of bytes have been received
-*/
+            /*   *** For reference
+            PTI Parameters:
+              ===============
+              -h|--help                    : [Common] Displays this help message
+              -ir|--instanceRole=          : [Common] The role of this instance in the test ('Server', 'Client', or 'Combined'); defaults to 'Combined'
+              -m|--memoryUsed=             : [Common] Optional "padding" (in bytes) used to simulate large checkpoints by being included in app state; defaults to 0
+              -c|--autoContinue=           : [Common] Whether to continue automatically at startup (if true), or wait for the 'Enter' key (if false); defaults to true
+              -vp|--verifyPayload          : [Common] Enables verifying the message payload bytes (for 'doWork' on the server, and 'doWorkEcho' on the client); enabling this will decrease performance
+              -sin|--serverInstanceName=   : [Client] The name of the instance that's acting in the 'Server' role for the test; only required when --role is 'Client'
+              -bpr|--bytesPerRound=        : [Client] The total number of message payload bytes that will be sent in a single round; defaults to 1 GB
+              -bsc|--batchSizeCutoff=      : [Client] Once the total number of message payload bytes queued reaches (or exceeds) this limit, then the batch will be sent; defaults to 10 MB
+              -mms|--maxMessageSize=       : [Client] The maximum size (in bytes) of the message payload; must be a power of 2 (eg. 65536), and be at least 64; defaults to 64KB
+              -n|--numOfRounds=            : [Client] The number of rounds (of size bytesPerRound) to work through; each round will use a [potentially] different message size; defaults to 1
+              -nds|--noDescendingSize      : [Client] Disables descending (halving) the message size after each round; instead, a random size [power of 2] between 64 and --maxMessageSize will be used
+              -fms|--fixedMessageSize      : [Client] All messages (in all rounds) will be of size --maxMessageSize; --noDescendingSize (if also supplied) will be ignored
+              -eeb|--expectedEchoedBytes=  : [Client] The total number of "echoed" bytes expected to be received from the server when --bidirectional is specified; the client will report a "success" message when this number of bytes have been received
+              -ipm|--includePostMethod     : [Client] Includes a 'post' method call in the test
+              -nhc|--noHealthCheck         : [Server] Disables the periodic server health check (requested via an Impulse message)
+              -bd|--bidirectional          : [Server] Enables echoing the 'doWork' method call back to the client(s)
+              -efb|--expectedFinalBytes=   : [Server] The total number of bytes expected to be received from all clients; the server will report a "success" message when this number of bytes have been received
+              */
 
             Utilities MyUtils = new Utilities();
 
@@ -300,6 +302,12 @@ namespace AmbrosiaTest
             if (instanceRole == JSPTI_ServerInstanceRole)
             {
                 argString = argString + " ambrosiaConfigFile=..\\Server\\ambrosiaConfig.json";
+            }
+
+            // include Post Method
+            if ((includePostMethod) && (instanceRole != JSPTI_ServerInstanceRole))
+            {
+                argString = argString + " -ipm";
             }
 
             int processID = MyUtils.LaunchProcess(workingDir, fileNameExe, argString, false, testOutputLogFile);
@@ -725,13 +733,9 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             MyUtils.CleanupAzureTables("jsptiendtoendtest");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptirestartendtoendbiditest");
+            MyUtils.CleanupAzureTables("jsptirestart");
             Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptirestartendtoendtest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptitwoproctest");
-            Thread.Sleep(2000);
-            MyUtils.CleanupAzureTables("jsptitwoproctestbidi");
+            MyUtils.CleanupAzureTables("jsptitwoproc");
             Thread.Sleep(2000);
         }
 
