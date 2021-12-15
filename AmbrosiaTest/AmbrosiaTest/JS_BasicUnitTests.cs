@@ -143,8 +143,8 @@ namespace AmbrosiaTest
             // Start it once
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
-            // Give it 5 seconds where it tries to connect but doesn't
-            Thread.Sleep(5000);
+            // Give it 2 seconds where it tries to connect but doesn't
+            Thread.Sleep(2000);
             Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
 
             // Kill it 
@@ -498,8 +498,6 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, successString, 1, false, testName, true, false);
 
         }
-
-
 
     }
 }
