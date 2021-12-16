@@ -274,7 +274,7 @@ namespace AmbrosiaTest
 
         }
 
-        //** Basic End to End that is NOT bidirectional where Client and Server are in separate Procs
+        //** Same as Basic End to End that is NOT bidirectional where Client and Server are in separate Procs but tests the Post Method
         [TestMethod]
         public void JS_PTI_BasicTwoProc_BiDi_Test()
         {
@@ -358,13 +358,15 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
             // Verify the Post Method messages
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "outgoing messages (there are 768 in-flight post methods)...", 1, false, testName, true);  // The "Waiting for xxx number changes from run to run
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Outgoing message queue is empty (there are 0 in-flight post methods)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "outgoing messages and 768 in-flight post methods...", 1, false, testName, true);  // The "Waiting for xxx number changes from run to run
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "Outgoing message queue is empty; there are no in-flight post methods", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "SUCCESS: The result of the final 'incrementValue' post method is correct (245761)", 1, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TTDVerify, "outgoing messages (there are 768 in-flight post methods)...", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TTDVerify, "Outgoing message queue is empty (there are 0 in-flight post methods)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TTDVerify, "outgoing messages and 768 in-flight post methods...", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TTDVerify, "Outgoing message queue is empty; there are no in-flight post methods", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TTDVerify, "SUCCESS: The result of the final 'incrementValue' post method is correct (245761)", 1, false, testName, true);
 
         }
 
@@ -411,23 +413,23 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "[IC] Connected!", 1, false, testName, true);
 
             // Verify the Post Method messages
-            //pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "flight post methods", 2, false, testName, true);  // original output before restarting
-
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Restarted result timeouts for", 1, false, testName, true);  
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "outgoing messages (there are 128 in-flight post methods)...", 1, false, testName, true);  
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Outgoing message queue is empty (there are 0 in-flight post methods)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "outgoing messages and 128 in-flight post methods...", 1, false, testName, true);  
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Outgoing message queue is empty; there are no in-flight post methods", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The result of the final 'incrementValue' post method is correct (114689)", 1, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying 
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TTDVerify, "outgoing messages (there are 128 in-flight post methods)...", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TTDVerify, "Outgoing message queue is empty (there are 0 in-flight post methods)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TTDVerify, "outgoing messages and 128 in-flight post methods...", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TTDVerify, "Outgoing message queue is empty; there are no in-flight post methods", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TTDVerify, "SUCCESS: The result of the final 'incrementValue' post method is correct (114689)", 1, false, testName, true);
 
         }
 
 
         //** Same as basic End to End that is NOT bidirectional where Client and Server are in separate Procs and it is testing Post Method
         [TestMethod]
-        public void JS_PTI_BasicTwoProc_PostMethTest()
+        public void JS_PTI_BasicTwoProc_PostMeth_Test()
         {
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
@@ -468,11 +470,69 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true, false);
 
             // Verify the Post Method messages
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "outgoing messages (there are 128 in-flight post methods)...", 1, false, testName, true);  // The "Waiting for xxx number changes from run to run
-            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "Outgoing message queue is empty (there are 0 in-flight post methods)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "flight post methods...", 1, false, testName, true);  // The "Waiting for xxx number changes from run to run
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "SUCCESS: The result of the final 'incrementValue' post method is correct (114689)", 1, false, testName, true);
 
             // Verify integrity of Ambrosia logs by replaying server side of things (not bidi so only do Server which will not show Post Meth)
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
+        }
+
+
+        //** Basic End to End that is NOT bidirectional where Client and Server are in separate Procs
+        [TestMethod]
+        public void JS_PTI_BasicTwoProc_BiDi_PostMeth_Test()
+        {
+            Utilities MyUtils = new Utilities();
+            JS_Utilities JSUtils = new JS_Utilities();
+
+            string testName = "jsptitwoproctestbidipostmeth";
+
+            int numRounds = 4;
+            long totalBytes = 4294967296;
+            long totalEchoBytes = 4294967296;
+            int bytesPerRound = 0;
+            int maxMessageSize = 0;
+            int batchSizeCutoff = 0;
+            int messagesSent = 245760;
+            bool bidi = true;
+            string clientInstanceName = testName + "client";
+            string serverInstanceName = testName + "server";
+
+            string logOutputClientFileName_TestApp = testName + "Client_TestApp.log";
+            string logOutputServerFileName_TestApp = testName + "Server_TestApp.log";
+            string logOutputClientFileName_TTDVerify = testName + "_Client_VerifyTTD_1.log";
+
+
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName, JSUtils.JSPTI_CombinedInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
+
+            // Launch the client and the server as separate procs 
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole,"",true);
+            JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName,true);
+
+            // Verify the data in the output file of the server
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "Bytes received: " + totalBytes.ToString(), 10, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputServerFileName_TestApp, "[IC] Connected!", 1, false, testName, true);
+
+            // Verify the data in the output file of the CLIENT 
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 5, true, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 5, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "[IC] Connected!", 1, false, testName, true, false);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true, false);
+
+            // Verify the Post Method messages
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "flight post methods...", 1, false, testName, true);  // The "Waiting for xxx number changes from run to run
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "SUCCESS: The result of the final 'incrementValue' post method is correct (114689)", 1, false, testName, true);
+
+            // Verify integrity of Ambrosia logs by replaying server and client side of things (do both since bidi)
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
+            JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TTDVerify, "outgoing messages and 768 in-flight post methods...", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TTDVerify, "Outgoing message queue is empty; there are no in-flight post methods", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TTDVerify, "SUCCESS: The result of the final 'incrementValue' post method is correct (245761)", 1, false, testName, true);
+
         }
 
 
