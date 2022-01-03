@@ -1726,9 +1726,15 @@ namespace AmbrosiaTest
             string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
             int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2, false, 9999, 0, 0, "", "", MyUtils.logTypeBlobs);
 
+            // Give it a few seconds to start
+            Thread.Sleep(2000);
+
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob);
+
+            // Give it a few seconds to start
+            Thread.Sleep(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -1811,9 +1817,15 @@ namespace AmbrosiaTest
             string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
             int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2, false, 9999, 0, 0, "", "", MyUtils.logTypeFiles);
 
+            // Give it a few seconds to start
+            Thread.Sleep(2000);
+
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob);
+
+            // Give it a few seconds to start
+            Thread.Sleep(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
