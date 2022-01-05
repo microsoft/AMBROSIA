@@ -1285,11 +1285,14 @@ namespace Ambrosia
             {
                 try
                 {
+                    var finalLength = length1 + length2;
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
                         _logStream.Write(firstBufToCommit, 0, 4);
-                        _logStream.WriteIntFixed(length1 + length2);
+                        // Back compate hack to use negative lengths to specify new hash function
+                        var writeLength = finalLength * -1 - 1;
+                        _logStream.WriteIntFixed(writeLength);
                         _logStream.Write(firstBufToCommit, 8, 16);
                         await _logStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
                         await _logStream.WriteAsync(secondBufToCommit, 0, length2);
@@ -1300,7 +1303,7 @@ namespace Ambrosia
 
                     SendInputWatermarks(uncommittedWatermarks, outputs);
                     _workStream.Write(firstBufToCommit, 0, 4);
-                    _workStream.WriteIntFixed(length1 + length2);
+                    _workStream.WriteIntFixed(finalLength);
                     _workStream.Write(firstBufToCommit, 8, 16);
                     await _workStream.WriteAsync(firstBufToCommit, HeaderSize, length1 - HeaderSize);
                     await _workStream.WriteAsync(secondBufToCommit, 0, length2);
@@ -1355,11 +1358,17 @@ namespace Ambrosia
                     // writes to _logstream - don't want to persist logs when perf testing so this is optional parameter
                     if (_persistLogs)
                     {
-                        await _logStream.WriteAsync(buf, 0, length);
+                        _logStream.Write(buf, 0, 4);
+                        // Back compate hack to use negative lengths to specify new hash function
+                        var writeLength = length * -1 - 1;
+                        _logStream.WriteIntFixed(writeLength);
+                        _logStream.Write(buf, 8, 16);
+                        await _logStream.WriteAsync(buf, HeaderSize, length - HeaderSize);
                         await writeFullWaterMarksAsync(uncommittedWatermarks);
                         await writeSimpleWaterMarksAsync(trimWatermarks);
                         await _logStream.FlushAsync();
                     }
+
                     SendInputWatermarks(uncommittedWatermarks, outputs);
                     await _workStream.WriteAsync(buf, 0, length);
                     var flushtask = _workStream.FlushAsync();
@@ -1451,85 +1460,34 @@ namespace Ambrosia
             byte[] _checkTempBytes = new byte[8];
             byte[] _checkTempBytes2 = new byte[8];
 
-            internal unsafe long CheckBytesExtra(int offset,
-                                                 int length,
-                                                 byte[] extraBytes,
-                                                 int extraLength)
+            internal unsafe ulong CheckBytesExtraxxHash64(int offset,
+                                                          int length,
+                                                          byte[] extraBytes,
+                                                          int extraLength)
             {
-                var firstBufferCheck = CheckBytes(offset, length);
-                var secondBufferCheck = CheckBytes(extraBytes, 0, extraLength);
-                long shiftedSecondBuffer = secondBufferCheck;
-                var lastByteLongOffset = length % 8;
-                if (lastByteLongOffset != 0)
-                {
-                    fixed (byte* p = _checkTempBytes)
-                    {
-                        *((long*)p) = secondBufferCheck;
-                    }
-                    // Create new buffer with circularly shifted secondBufferCheck
-                    for (int i = 0; i < 8; i++)
-                    {
-                        _checkTempBytes2[i] = _checkTempBytes[(i - lastByteLongOffset + 8) % 8];
-                    }
-                    fixed (byte* p = _checkTempBytes2)
-                    {
-                        shiftedSecondBuffer = *((long*)p);
-                    }
-                }
-                return firstBufferCheck ^ shiftedSecondBuffer;
+                var combinedMemStream = new ConcatMemStream();
+                combinedMemStream.AddSource(_buf, offset, length);
+                combinedMemStream.AddSource(extraBytes, extraLength);
+                combinedMemStream.StartPump();
+                return xxHash64.ComputeHash(combinedMemStream, 1024 * 64);
             }
 
-            internal unsafe long CheckBytes(int offset,
-                                            int length)
+            internal unsafe ulong CheckBytesxxHash64(byte[] bufToCalc,
+                                                     int offset,
+                                                     int length)
             {
-                long checkBytes = 0;
-
-                fixed (byte* p = _buf)
+                fixed (byte* pData = &bufToCalc[offset])
                 {
-                    if (offset % 8 == 0)
-                    {
-                        int startLongCalc = offset / 8;
-                        int numLongCalcs = length / 8;
-                        int numByteCalcs = length % 8;
-                        long* longPtr = ((long*)p) + startLongCalc;
-                        for (int i = 0; i < numLongCalcs; i++)
-                        {
-                            checkBytes ^= longPtr[i];
-                        }
-                        if (numByteCalcs != 0)
-                        {
-                            var lastBytes = (byte*)(longPtr + numLongCalcs);
-                            for (int i = 0; i < 8; i++)
-                            {
-                                if (i < numByteCalcs)
-                                {
-                                    _checkTempBytes[i] = lastBytes[i];
-                                }
-                                else
-                                {
-                                    _checkTempBytes[i] = 0;
-                                }
-                            }
-                            fixed (byte* p2 = _checkTempBytes)
-                            {
-                                checkBytes ^= *((long*)p2);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        _myAmbrosia.OnError(0, "checkbytes case not implemented");
-                    }
+                    return xxHash64.UnsafeComputeHash(pData, length);
                 }
-                return checkBytes;
+
             }
 
-
-            internal unsafe long CheckBytes(byte[] bufToCalc,
-                                            int offset,
-                                            int length)
+            internal unsafe ulong CheckBytesOriginal(byte[] bufToCalc,
+                                                     int offset,
+                                                     int length)
             {
-                long checkBytes = 0;
+                ulong checkBytes = 0;
 
                 fixed (byte* p = bufToCalc)
                 {
@@ -1538,7 +1496,7 @@ namespace Ambrosia
                         int startLongCalc = offset / 8;
                         int numLongCalcs = length / 8;
                         int numByteCalcs = length % 8;
-                        long* longPtr = ((long*)p) + startLongCalc;
+                        ulong* longPtr = ((ulong*)p) + startLongCalc;
                         for (int i = 0; i < numLongCalcs; i++)
                         {
                             checkBytes ^= longPtr[i];
@@ -1559,7 +1517,7 @@ namespace Ambrosia
                             }
                             fixed (byte* p2 = _checkTempBytes)
                             {
-                                checkBytes ^= *((long*)p2);
+                                checkBytes ^= *((ulong*)p2);
                             }
                         }
                     }
@@ -1570,7 +1528,6 @@ namespace Ambrosia
                 }
                 return checkBytes;
             }
-
 
             public async Task<long> AddRow(FlexReadBuffer copyFromFlexBuffer,
                                            string outputToUpdate,
@@ -1671,18 +1628,18 @@ namespace Ambrosia
                                 // Copy the contents into the log record buffer
                                 Buffer.BlockCopy(copyFromBuffer, 0, _buf, (int)oldBufLength, length);
                             }
-                            long checkBytes;
+                            ulong checkBytes;
                             if (length <= (_maxBufSize - HeaderSize))
                             {
                                 // new message will end up in a commit buffer. Use normal CheckBytes
-                                checkBytes = CheckBytes(HeaderSize, lengthOnPage - HeaderSize);
+                                checkBytes = CheckBytesxxHash64(_buf, HeaderSize, lengthOnPage - HeaderSize);
                             }
                             else
                             {
                                 // new message is too big to land in a commit buffer and will be tacked on the end.
-                                checkBytes = CheckBytesExtra(HeaderSize, lengthOnPage - HeaderSize, copyFromBuffer, length);
+                                checkBytes = CheckBytesExtraxxHash64(HeaderSize, lengthOnPage - HeaderSize, copyFromBuffer, length);
                             }
-                            writeStream.WriteLongFixed(checkBytes);
+                            writeStream.WriteULongFixed(checkBytes);
                             writeStream.WriteLongFixed(_nextWriteID);
                             _nextWriteID++;
 
@@ -1804,8 +1761,8 @@ namespace Ambrosia
                     // Filling header with enough info to detect incomplete writes and also writing the page length
                     var writeStream = new MemoryStream(_buf, 4, 20);
                     writeStream.WriteIntFixed((int)bufLength);
-                    long checkBytes = CheckBytes(HeaderSize, (int)bufLength - HeaderSize);
-                    writeStream.WriteLongFixed(checkBytes);
+                    ulong checkBytes = CheckBytesxxHash64(_buf, HeaderSize, (int)bufLength - HeaderSize);
+                    writeStream.WriteULongFixed(checkBytes);
                     writeStream.WriteLongFixed(_nextWriteID);
                     _nextWriteID++;
 
@@ -1843,8 +1800,8 @@ namespace Ambrosia
                 memStream.WriteByte(upgradeServiceByte);
                 memStream.Dispose();
                 _workStream.WriteIntFixed((int)(HeaderSize + numMessageBytes));
-                long checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
-                _workStream.WriteLongFixed(checkBytes);
+                ulong checkBytes = CheckBytesxxHash64(messageBuf, 0, (int)numMessageBytes);
+                _workStream.WriteULongFixed(checkBytes);
                 _workStream.WriteLongFixed(-1);
                 _workStream.Write(messageBuf, 0, numMessageBytes);
                 _workStream.Flush();
@@ -1875,8 +1832,8 @@ namespace Ambrosia
                 }
                 memStream.Dispose();
                 _workStream.WriteIntFixed((int)(HeaderSize + numMessageBytes));
-                long checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
-                _workStream.WriteLongFixed(checkBytes);
+                ulong checkBytes = CheckBytesxxHash64(messageBuf, 0, (int)numMessageBytes);
+                _workStream.WriteULongFixed(checkBytes);
                 _workStream.WriteLongFixed(-1);
                 _workStream.Write(messageBuf, 0, numMessageBytes);
                 _workStream.Flush();
@@ -1892,8 +1849,8 @@ namespace Ambrosia
                 memStream.WriteByte(becomingPrimaryByte);
                 memStream.Dispose();
                 _workStream.WriteIntFixed((int)(HeaderSize + numMessageBytes));
-                long checkBytes = CheckBytes(messageBuf, 0, (int)numMessageBytes);
-                _workStream.WriteLongFixed(checkBytes);
+                ulong checkBytes = CheckBytesxxHash64(messageBuf, 0, (int)numMessageBytes);
+                _workStream.WriteULongFixed(checkBytes);
                 _workStream.WriteLongFixed(-1);
                 _workStream.Write(messageBuf, 0, numMessageBytes);
                 _workStream.Flush();
@@ -2774,6 +2731,7 @@ namespace Ambrosia
                 int commitSize;
                 try
                 {
+                    var usingxxHash64 = false;
                     // First get commit ID and check for integrity
                     replayStream.ReadAllRequiredBytes(headerBuf, 0, Committer.HeaderSize);
                     headerBufStream.Position = 0;
@@ -2784,7 +2742,17 @@ namespace Ambrosia
                     }
                     // Get commit page length
                     commitSize = headerBufStream.ReadIntFixed();
-                    var checkBytes = headerBufStream.ReadLongFixed();
+
+                    // Hack to make sure the right hash function is used by using the negative length values to specify the new hash
+                    if (commitSize < 0)
+                    {
+                        usingxxHash64 = true;
+                        commitSize = (commitSize * -1) - 1;
+                        headerBufStream.Position -= 4;
+                        headerBufStream.WriteIntFixed(commitSize);
+                    }
+
+                    var checkBytes = headerBufStream.ReadULongFixed();
                     var writeSeqID = headerBufStream.ReadLongFixed();
                     if (writeSeqID != state.Committer._nextWriteID)
                     {
@@ -2798,7 +2766,15 @@ namespace Ambrosia
                     }
                     replayStream.ReadAllRequiredBytes(tempBuf, 0, commitSize);
                     // Perform integrity check
-                    long checkBytesCalc = state.Committer.CheckBytes(tempBuf, 0, commitSize);
+                    ulong checkBytesCalc;
+                    if (usingxxHash64)
+                    {
+                        checkBytesCalc = state.Committer.CheckBytesxxHash64(tempBuf, 0, commitSize);
+                    }
+                    else
+                    {
+                        checkBytesCalc = state.Committer.CheckBytesOriginal(tempBuf, 0, commitSize);
+                    }
                     if (checkBytesCalc != checkBytes)
                     {
                         throw new Exception("Integrity check failed for page. Must be incomplete record");
@@ -3038,6 +3014,7 @@ namespace Ambrosia
                         }
                     }
                 }
+
                 // Do the actual work on the local service
                 _localServiceSendToStream.Write(headerBuf, 0, Committer.HeaderSize);
                 _localServiceSendToStream.Write(tempBuf, 0, commitSize);

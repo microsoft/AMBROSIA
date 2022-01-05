@@ -130,7 +130,7 @@ namespace AmbrosiaTest
             bool bidi = false;
             int memoryUsed = 104857600; // padding"(in bytes) used to simulate large checkpoints by being included in app state-- 1GB (1073741824) is what C# PTI uses. Will get OOM issue if do much more than 100 MB so just use 100 MB.  See bug #170 for details.  -  
 
-            int checkPointSize = 209715; //Typical value is 209715965 but varies a bit based on machine running on so only check first 6 digits    
+            int checkPointSize = 20971; //Typical value is 209715965 but varies a bit based on machine running on so only check first 6 digits    
 
             string testName = "jsptigiantcheckpointtest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
@@ -168,7 +168,7 @@ namespace AmbrosiaTest
 
             int memoryUsed = 104857600;  // padding"(in bytes) used to simulate large checkpoints by being included in app state-- 1GB (1073741824) is what C# PTI uses. Will get OOM issue if do much more than 100 MB so just use 100 MB.  See bug #170 for details.  -  
 
-            int checkPointSize = 209715; //Typical value is 209715939 but varies a bit based on machine running on so only check first 6 digits
+            int checkPointSize = 20971; //Typical value is 209716077  but varies a bit based on machine running on so only check first 5 digits
             bool bidi = true;
 
             string testName = "jsptigiantcheckpointbiditest";
@@ -741,6 +741,9 @@ namespace AmbrosiaTest
             // Kill app which will kill the IC too
             MyUtils.StopAllAmbrosiaProcesses();
 
+            // Give it an extra second to fully stop
+            Thread.Sleep(1000);
+
             //Set the Upgrade Version
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "11");
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false");
@@ -1002,6 +1005,9 @@ namespace AmbrosiaTest
             // Kill app and IC
             MyUtils.StopAllAmbrosiaProcesses();
 
+            // Give it an extra second to stop
+            Thread.Sleep(2000);
+
             //Set the Upgrade Version
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "51");
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false");
@@ -1016,6 +1022,9 @@ namespace AmbrosiaTest
 
             // Kill Server which will kill the IC too
             MyUtils.KillProcess(ptiID2);
+
+            // Give it an extra second to fully stop
+            Thread.Sleep(1000);
 
             // Restart it once and make sure it continues with the new version
             int ptiID3 = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestartedAgain_TestApp);
