@@ -1718,6 +1718,9 @@ namespace AmbrosiaTest
             };
             MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
 
+            // Give it a couple seconds to register since connecting to Azure blobs
+            Thread.Sleep(2000);
+
             //ImmCoord1
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
             int ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1,false,9999,0,0,"","", MyUtils.logTypeBlobs);
@@ -1808,6 +1811,9 @@ namespace AmbrosiaTest
                 AMB_Version = "0"
             };
             MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
+
+            // Give it a couple seconds to register since connecting to Azure blobs
+            Thread.Sleep(2000);
 
             //ImmCoord1
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
