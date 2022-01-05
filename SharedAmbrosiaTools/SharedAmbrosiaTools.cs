@@ -424,6 +424,21 @@ namespace Ambrosia
             return intValue;
         }
 
+        public static ulong ReadULongFixed(this Stream stream)
+        {
+            var value = new byte[8];
+            stream.ReadAllRequiredBytes(value, 0, value.Length);
+            ulong intValue = value[0]
+                | (ulong)value[1] << 0x8
+                | (ulong)value[2] << 0x10
+                | (ulong)value[3] << 0x18
+                | (ulong)value[4] << 0x20
+                | (ulong)value[5] << 0x28
+                | (ulong)value[6] << 0x30
+                | (ulong)value[7] << 0x38;
+            return intValue;
+        }
+
         public static int ReadBufferedIntFixed(this byte[] buf,
                                                     int offset)
         {
@@ -471,6 +486,18 @@ namespace Ambrosia
         }
 
         public static void WriteLongFixed(this Stream stream, long value)
+        {
+            stream.WriteByte((byte)(value & 0xFF));
+            stream.WriteByte((byte)((value >> 0x8) & 0xFF));
+            stream.WriteByte((byte)((value >> 0x10) & 0xFF));
+            stream.WriteByte((byte)((value >> 0x18) & 0xFF));
+            stream.WriteByte((byte)((value >> 0x20) & 0xFF));
+            stream.WriteByte((byte)((value >> 0x28) & 0xFF));
+            stream.WriteByte((byte)((value >> 0x30) & 0xFF));
+            stream.WriteByte((byte)((value >> 0x38) & 0xFF));
+        }
+
+        public static void WriteULongFixed(this Stream stream, ulong value)
         {
             stream.WriteByte((byte)(value & 0xFF));
             stream.WriteByte((byte)((value >> 0x8) & 0xFF));
