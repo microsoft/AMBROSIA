@@ -6,7 +6,7 @@
     "icReceivePort": 2000,
     "icSendPort": 2001,
     "icLogFolder": "C:/logs/",
-    "icBinFolder": "C:/src/Git/PostSledgehammer/AMBROSIA/ImmortalCoordinator/bin/x64/Release;C:/src/Git/PostSledgehammer/AMBROSIA/Ambrosia/Ambrosia/bin/x64/Release",
+    "icBinFolder": "",
     "useNetCore": false,
     "logTriggerSizeInMB": 1024,
     "debugStartCheckpoint": 0,
