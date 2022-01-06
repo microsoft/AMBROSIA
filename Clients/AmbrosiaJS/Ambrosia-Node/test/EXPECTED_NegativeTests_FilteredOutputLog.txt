@@ -1,0 +1,43 @@
+Successfully published type alias 'CName' as a type
+Error: Unable to publish type alias 'CNames' () as a type (reason: Deferred expansion of type(s) failed (reason: Unable to expand type definition '{ first: string, last: string, priorNames: CNames[] }' because it has a circular reference with definition 'CName[]'))
+Error: The @ambrosia tag is not valid on a private static method ()
+Error: The @ambrosia tag is not valid on a static method of a class expression ()
+Error: Unable to publish function 'takesCustomSerializedParams' () as a post method (reason: Post method 'takesCustomSerializedParams' is defined as taking a single 'rawParams' Uint8Array parameter; Post methods do NOT support custom (raw byte) parameter serialization - all parameters are always serialized to JSON)
+Error: Unable to publish type alias 'myComplexType' () as a type (reason: The published type 'myComplexType' [property 'fn'] has an invalid type ('()=>void'); function types are not supported)
+Successfully published type alias 'MyType' as a type
+Error: Unable to publish function 'fn' () as a post method (reason: The following types must be published before any method can be published: 'Name' found in published type 'MyType')
+Error: Unable to publish type alias 'Name' () as a type (reason: Deferred expansion of type(s) failed (reason: Unable to expand type definition '{ first: string, last: string, priorNames: CNames[] }' because it has a circular reference with definition 'CName[]'))
+Error: Unable to publish function 'fnOverload' () as a post method (reason: The @ambrosia tag must appear on the implementation of an overloaded function)
+Warning: Skipping function 'fnOverload'  because it has no @ambrosia JSDoc tag
+Successfully published function 'parentFn' as a post method
+Error: The @ambrosia tag is not valid on a local function ()
+Warning: Skipping static method 'someStaticMethod'  because it has no @ambrosia JSDoc tag
+Error: The @ambrosia tag is not valid on a local function ()
+Error: Unable to publish function 'showNames' () as a post method (reason: The parameter 'names' of method 'showNames' references an unpublished type ('NameList'))
+Successfully published type alias 'NameList' as a type
+Error: Unable to publish function 'myGenericFn' () as a post method (reason: Generic functions are not supported; since the type of 'T' will not be known until runtime, Ambrosia cannot determine [at code-gen time] if the type(s) can be serialized)
+Error: Unable to publish type alias 'MyTypeWithGenerics' () as a type (reason: Generic type aliases are not supported; since the type of 'T' will not be known until runtime, Ambrosia cannot determine [at code-gen time] if the type(s) can be serialized)
+Error: Unable to publish type alias 'Dictionary' () as a type (reason: Generic type aliases are not supported; since the type of 'K' and 'V' will not be known until runtime, Ambrosia cannot determine [at code-gen time] if the type(s) can be serialized)
+Error: Unable to publish type alias 'TodoPreview' () as a type (reason: The published type 'TodoPreview' uses a TypeScript utility type ('Pick'); utility types are not supported)
+Error: Unable to publish type alias 'MyTypeWithOptionalMembers' () as a type (reason: Property 'bar' is optional; types with optional properties are not supported)
+Error: Unable to publish type alias 'MyTupleType' () as a type (reason: The published type 'MyTupleType' has an invalid type ('[string, number]'); tuple types are not supported)
+Error: Unable to publish type alias 'MyFunctionType' () as a type (reason: The published type 'MyFunctionType' has an invalid type ('(p1: number) => string'); function types are not supported)
+Error: Unable to publish type alias 'MyUnsupportedType' () as a type (reason: The published type 'MyUnsupportedType' has an invalid type ('string extends null ? never: string'); conditional types are not supported)
+Error: The value ('true // For ambrosia') supplied for @ambrosia attribute 'publish' is not a boolean ()
+Error: The value ('"true"') supplied for @ambrosia attribute 'publish' is not a boolean ()
+Error: The @ambrosia tag is defined more than once ()
+Error: Unknown @ambrosia attribute 'published' ; valid attributes are: publish, version, methodID, doRuntimeTypeChecking
+Error: Unknown @ambrosia attribute 'published' ; valid attributes are: publish
+Error: The @ambrosia attribute 'methodID' is invalid for a type alias (); valid attributes are: publish
+Error: The @ambrosia attribute 'version' is invalid for a enum (); valid attributes are: publish
+Error: Malformed @ambrosia attribute 'publish=true version=1 doRuntimeTypeChecking=true' ; expected format is: attrName=attrValue, ...
+Error: The @ambrosia tag is not valid on a module (); valid targets are: function, static method, type alias, and enum
+Error: The @ambrosia tag is not valid on a class (); valid targets are: function, static method, type alias, and enum
+Error: The @ambrosia tag is not valid on a non-static method ()
+Error: The @ambrosia tag is not valid on a interface (); valid targets are: function, static method, type alias, and enum
+Error: The value ('Hello') supplied for @ambrosia attribute 'doRuntimeTypeChecking' is not a boolean ()
+Error: The value ('Hello') supplied for @ambrosia attribute 'version' is not an integer ()
+Error: The value ('Hello') supplied for @ambrosia attribute 'methodID' is not an integer ()
+Error: The value (-1) supplied for @ambrosia attribute 'methodID' cannot be negative ()
+Warning: Skipping Ambrosia AppEvent handler function 'onRecoveryComplete' () because it has different parameters (name: string) than expected ()
+Warning: Skipping Ambrosia AppEvent handler function 'onBecomingPrimary' () because it has a different return type (number) than expected (void)

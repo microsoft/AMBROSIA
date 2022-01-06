@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/out/Main.js",
+            "args": ["-ir=Combined", "-fms", "-nhc", "-nds"],
+            "outFiles": [
+                "${workspaceFolder}/**/*.js", // This "deep" glob pattern is necessary for the [VS Code] debugger to pick up the source maps for the TypeScript source that ships in the ambrosia-node package
+                "!${workspaceFolder}/**/typescript.js" // Prevents VS Code from reporting "Could not read source map for file:///...AmbrosiaJS/PTI-Node/App/node_modules/typescript/lib/typescript.js: ENOENT: no such file or directory" (which is true: typescript.js.map does not exist)
+            ],
+            "preLaunchTask": "tsc: build - tsconfig.json", // Build at each F5 (whether this is an incremental build or not is controlled by the "incremental" compiler option in tsconfig.json)
+            "console": "integratedTerminal", // The 'Terminal' window (required for using Process.stdin)
+            "autoAttachChildProcesses": false // Prevent VS Code from trying to attach to launched sub-processes
+        }
+    ]
+}

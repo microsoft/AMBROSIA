@@ -1,0 +1,34 @@
+{
+  "name": "ambrosia-node",
+  "version": "0.0.100",
+  "description": "Library for writing AMBROSIA apps for Node.js.",
+  "homepage": "https://github.com/microsoft/AMBROSIA/tree/master/Clients",
+  "main": "./lib/Ambrosia.js",
+  "scripts": {
+    "unittests": "node ./lib/UnitTests.js",
+    "postinstall": "node postInstall.js"
+  },
+  "files": [
+    "/src/**",
+    "/lib/**",
+    "ambrosiaConfig.json",
+    "ambrosiaConfig-schema.json",
+    "postInstall.js",
+    "PublisherFramework.template.ts"
+  ],
+  "author": "Microsoft Research",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/AMBROSIA.git"
+  },
+  "dependencies": {
+    "@types/node": "16.11.7",
+    "azure-storage": "2.10.5",
+    "source-map-support": "0.5.20"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.4"
+  }
+}
