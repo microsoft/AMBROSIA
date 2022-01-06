@@ -165,7 +165,7 @@ export class AmbrosiaInternalState
 /** The version of the JavaScript language binding (matches the ambrosia-node package version). */
 export function languageBindingVersion(): string
 {
-    return ("0.0.100"); // Be careful when editing this because build.ps1 looks for "(X.X.X);" [in this file], where 'X' can be any integer
+    return ("2.0.0"); // Be careful when editing this because build.ps1 looks for "(X.X.X);" [in this file], where 'X' can be any integer
 }
 
 /** The modes of operation that the language binding (LB) can be initalized for. */
