@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            // These are args for node.exe itself (eg. to change GC behavior)
+            // "runtimeArgs": [ "--max-old-space-size=2000", "--max-semi-space-size=512", "--noconcurrent_sweeping" ],
+            "request": "launch",
+            "name": "Launch Program",
+            "skipFiles": [
+                "<node_internals>/**" // See https://code.visualstudio.com/docs/nodejs/nodejs-debugging#_skipping-uninteresting-code-node-chrome
+            ],
+            "outFiles": [ "${workspaceRoot}/lib/**/*.js" ], // Added to help the debugger find the source files (see https://vscode.readthedocs.io/en/latest/nodejs/nodejs-debugging/)
+            "program": "${workspaceFolder}/lib/Demo.js", // Demo.ts is our test/demo harness that serves the purpose of a "mini-app" which we use to develop/debug/test the Ambrosia-Node package
+            // "program": "${workspaceFolder}/lib/UnitTests.js", // UnitTests.ts is our unit-test runner [which can also be run (but not debugged) without changing the "program" setting using "npm run unittests"]
+            // "trace": true, // Capture internal debugger trace
+            "args": [],
+            "preLaunchTask": "tsc: build - tsconfig.json", // Build at each F5 (whether this is an incremental build or not is controlled by the "incremental" compiler option in tsconfig.json)
+            "console": "integratedTerminal", // The 'Terminal' window (required for using Process.stdin)
+            //"console": "internalConsole", // The 'Debug Console' window
+            //"outputCapture": "std"
+            "autoAttachChildProcesses": false // Prevent VS Code from trying to attach to launched sub-processes
+        }
+    ]
+}

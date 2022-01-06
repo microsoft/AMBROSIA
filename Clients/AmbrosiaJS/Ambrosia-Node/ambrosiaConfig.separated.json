@@ -1,0 +1,19 @@
+{
+    "$schema": "./ambrosiaConfig-schema.json",
+    "instanceName": "PTIServer",
+    "icCraPort": 2500,
+    "icReceivePort": 2000,
+    "icSendPort": 2001,
+    "icHostingMode": "Separated",
+    "activeCode": "VCurrent",
+    "lbOptions": 
+    {
+        "deleteRemoteCRAConnections": false,
+        "outputLogDestination": "ConsoleAndFile",
+        "outputLogFolder": "./outputLogs",
+        "outputLoggingLevel": "Verbose",
+        "allowDisplayOfRpcParams": true,
+        "allowPostMethodTimeouts": true,
+        "enableTypeScriptStackTraces": true
+    }
+}

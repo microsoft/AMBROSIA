@@ -1,0 +1,30 @@
+{
+    "$schema": "../../ambrosiaConfig-schema.json",
+    "autoRegister": false,
+    "instanceName": "serverAA",
+    "icCraPort": 2500,
+    "icReceivePort": 2000,
+    "icSendPort": 2001,
+    "icLogFolder": "C:/logs/",
+    "icBinFolder": "C:/src/Git/PostSledgehammer/AMBROSIA/ImmortalCoordinator/bin/x64/Release;C:/src/Git/PostSledgehammer/AMBROSIA/Ambrosia/Ambrosia/bin/x64/Release",
+    "useNetCore": false,
+    "logTriggerSizeInMB": 1024,
+    "debugStartCheckpoint": 0,
+    "debugTestUpgrade": false,
+    "appVersion": 0,
+    "upgradeVersion": 0,
+    "activeCode": "VCurrent",
+    "isActiveActive": true,
+    "replicaNumber": 1,
+    "lbOptions": 
+    {
+        "deleteLogs": false, 
+        "deleteRemoteCRAConnections": false,
+        "outputLogDestination": "ConsoleAndFile",
+        "outputLogFolder": "./outputLogs",
+        "outputLoggingLevel": "Verbose",
+        "allowDisplayOfRpcParams": true,
+        "allowPostMethodTimeouts": true,
+        "enableTypeScriptStackTraces": true
+    }
+}

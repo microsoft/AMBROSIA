@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+      "target": "es2018", // "es6" didn't give TS-friendly stack traces for async/await calls; switching to "es2018" fixed this
+      "module": "CommonJS",
+      "sourceMap": true,
+      "declarationMap": true, // Generate .d.ts.map files (to allow .ts source files to be located from .d.ts files [we publish our .ts files])
+      "declaration": true, // Generate .d.ts files
+      "outDir": "./lib", // There will be a generated .js and .js.map [source-map from .js to .ts files] for each compiled .ts file, so we keep them separate from the source
+      "listEmittedFiles": true,
+      "incremental": true, // Doing an incremental build can reduce the build time by ~50% (6 seconds to 3)
+      "strict": true, // For tighter type checking, and so that consumers of the package can also set this option in their project [and spare them from having to craft workarounds (usually for 'strictNullChecks'), like we do to use the 'azure-storage' package]
+      "noImplicitReturns": true // Not part of 'strict'
+    },
+    "files": [
+      "./src/Demo.ts", // Note that all imported files will be automatically included/compiled, so we don't need to list them all explicitly
+      "./src/UnitTests.ts" // A non-imported TS file, so we have to explicitly add it
+    ]
+}
