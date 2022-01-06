@@ -15,7 +15,7 @@
     "url": "https://github.com/microsoft/AMBROSIA.git"
   },
   "dependencies": {
-    "ambrosia-node": "file:../../Ambrosia-Node/ambrosia-node-0.0.100.tgz"
+    "ambrosia-node": "file:../../Ambrosia-Node/ambrosia-node-2.0.0.tgz"
   },
   "devDependencies": {
     "typescript": "^4.5.4"
