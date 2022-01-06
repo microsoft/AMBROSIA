@@ -1744,7 +1744,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
             //Delay until client is done - also check Server just to make sure
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 20, false, testName, true); // number of bytes processed
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 45, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
@@ -1838,7 +1838,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
             //Delay until client is done - also check Server just to make sure
-            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 15, false, testName, true); // number of bytes processed
+            bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ClientJob, byteSize, 45, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Server, byteSize, 15, false, testName, true);
 
             // Stop things so file is freed up and can be opened in verify
