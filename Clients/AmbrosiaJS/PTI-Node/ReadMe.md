@@ -101,7 +101,7 @@ autoRegister | Has the same effect as setting `"autoRegister"` to `true` in ambr
 ## :speech_balloon: PTI Explained
 
 The following is a deeper dive into what the PTI app does and how it works. Look in App\src and you will see that the app consists of 2 `.ts` files, and 2 generated `.g.ts` files (which were produced by "code-gen").
-> :star: Unlike the C# LB, the Node.js LB doesn't have a separate tool for code-generation, rather it provides a simple code-gen API. Code-generation will be covered in more detail in the **[How the PTI App was Created](#%3Abulb%3A-how-the-pti-app-was-created)**.
+> :star: Unlike the C# LB, the Node.js LB doesn't have a separate tool for code-generation, rather it provides a simple code-gen API. Code-generation will be covered in more detail in the **[How the PTI App was Created](#bulb-how-the-pti-app-was-created)**.
 
 * `Main.ts` does command-line parsing/validation then starts the Immortal instance; it also handles code-generation for the "published" Ambrosia methods in `PTI.ts` (a "published" method is a method that is callable by an Ambrosia instance, allowing the method to participate in the guarantees provided by the Ambrosia runtime).
 * `PTI.ts` contains all the published methods and application state/logic for both the client and server. It consists of a `State` namespace that contains a special `AppState` class (which is a state object used, in our case, by _both_ client and server), a `ClientAPI` namespace, and a `ServerAPI` namespace.
@@ -210,7 +210,7 @@ Parameter Name | Equivalent (in ambrosiaConfig.json)
 
 While not comprehensive, the following describes the "broad strokes" of how the PTI app was created, with an emphasis on the code-generation steps which are unique to the Node.js LB.
 
-After installing the ambrosia-node npm package (see **[Getting Started](#%3Aarrow_forward%3A-getting-started)**), `PTI.ts` was created. Stubs for the 5 methods to be "published" were written and annotated with a special `@ambrosia` JSDoc tag, like this:
+After installing the ambrosia-node npm package (see **[Getting Started](#arrow_forward-getting-started)**), `PTI.ts` was created. Stubs for the 5 methods to be "published" were written and annotated with a special `@ambrosia` JSDoc tag, like this:
 
 ````TypeScript
 /** 

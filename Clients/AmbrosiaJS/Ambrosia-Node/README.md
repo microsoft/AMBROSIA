@@ -16,7 +16,7 @@ When you build an application or service using Ambrosia, it will gain these capa
 - Failover: The app/service can easily be run in an active/active (high availability) configuration, without any app/service code changes.
 - "Time-Travel Debugging": The app/service can replay all state changes that led up to the problem, providing a deterministic repro case.
 
-> **Tip:** It's much easier to build an app/service with Ambrosia from the outset than to retrofit an existing app/service with Ambrosia. This is because adopting Ambrosia requires thinking about program design through the lens of deterministic execution, which &ndash; combined with limitations in the Node.js LB itself &ndash; places some significant restrictions on how the app can be developed (see **[Application Design Considerations](docs/Introduction.md#%3Athought_balloon%3A-application-design-considerations)**).
+> **Tip:** It's much easier to build an app/service with Ambrosia from the outset than to retrofit an existing app/service with Ambrosia. This is because adopting Ambrosia requires thinking about program design through the lens of deterministic execution, which &ndash; combined with limitations in the Node.js LB itself &ndash; places some significant restrictions on how the app can be developed (see **[Application Design Considerations](docs/Introduction.md#thought_balloon-application-design-considerations)**).
 
 ## Documentation
 
