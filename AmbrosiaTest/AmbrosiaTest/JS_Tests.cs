@@ -297,7 +297,7 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "TrueAndExit");   // The actual test
             
             // Launch the app where it just registers it
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + JSUtils.JSPTI_AppPath;
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSUtils.JSPTI_AppPath;
             string fileNameExe = "node.exe";
             string argString = "out\\main.js -ir=Combined -n="+ numRounds.ToString() + "-eeb="+ totalBytes.ToString() + " -nhc -efb="+ totalBytes.ToString() + " -mms="+ maxMessageSize.ToString() + " -bpr="+ bytesPerRound.ToString() + " -bsc="+ batchSizeCutoff.ToString();
 
@@ -1223,7 +1223,7 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
 
             // Remove the  "upgradeVersion": 0, from config file - whole basis of the test is to not have it there
-            string configFile = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + JSUtils.JSPTI_AppPath+"\\ambrosiaConfig.json";
+            string configFile = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSUtils.JSPTI_AppPath+"\\ambrosiaConfig.json";
             string tempFile = Path.GetTempFileName();
 
             using (var sr = new StreamReader(configFile)) 

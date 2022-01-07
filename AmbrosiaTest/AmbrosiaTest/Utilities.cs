@@ -51,7 +51,7 @@ namespace AmbrosiaTest
         // when = false, the test will run under the assumption that .Net Core files in AmbrosiaTest\bin\x64\debug (or release) directory (from netcoreapp3.1 directory)
         // .NET CORE only has DLLs, so no AMB exe so run by using "dotnet"
         // The two strings (NetFramework and NetCoreFramework) are part of the path when calling PTI and PT - called in helper functions
-        // NOTE: To run the JS tests using NetCore modify the "useNetCore": false, in the ambrosiaConfigGOLD.json file
+        // NOTE: Changing this setting also sets the JS tests to use NetCore
         //*********
         public bool NetFrameworkTestRun = true;
         public string NetFramework = "net461";
