@@ -147,8 +147,6 @@ In addition to creating simple/quick "smoke" tests like this, the ability to pre
 
 Finally, the `"logTriggerSizeInMB"` in ambrosiaConfig.json is set to 256MB so that 4 checkpoints will be taken for every 1GB of messages sent. This allows testing recovery (from a checkpoint) after halting a participating instance before the test completes, even in the default case (1 round of 1 GB). This can be changed as needed to suit the needs of the test. Again, regarding recovery, be aware that the `"deleteLogs"` setting in ambrosiaConfig.json must be set to `"false"`.
 
-> **Note:** Currently, PTI does not test 'post' method calls (methods that return values), nor does it test non-post methods that pass JSON parameters. PTI _only_ tests non-post methods that pass a single binary blob parameter (ie. "custom parameter encoding") so its **[code coverage](https://en.wikipedia.org/wiki/Code_coverage)** of the LB is limited.
-
 &nbsp;
 
 ## :mag_right: Differences with the C# Language Binding version of PTI
