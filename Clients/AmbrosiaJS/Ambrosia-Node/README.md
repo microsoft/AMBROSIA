@@ -1,8 +1,4 @@
-﻿<div style="height: 145px; width: 145px;">
-
-![Node.js logo](docs/images/node_logo.png)
-
-</div>
+﻿<img alt="Node.js logo" src="docs/images/node_logo.png" width="145px"/>
 
 ## Ambrosia-Node: A Language Binding for Building Ambrosia Apps/Services for Node.js
 ----
@@ -41,17 +37,18 @@ This project may contain trademarks or logos for projects, products, or services
 &nbsp;
 
 ---
-<div>
-<!-- PNG converted from SVG (from https://iconcloud.design/browse/Azure%20Icons/Networking/e8b50c8ac-de64dd68d) using Paint3D -->
-<!-- Slighty convoluted to make it work in both VSCode and ADO -->
-<div style="width: 70px; height: 70px; float: left; padding-right: 10px">
-
-![Ambrosia logo](docs/images/ambrosia_logo.png)
-
-</div>
-    <div style="font-size:20px; padding-top:5px">
-        <a style="color:inherit; text-decoration: none" href="https://github.com/microsoft/AMBROSIA#ambrosia-robust-distributed-programming-made-easy-and-efficient">AMBROSIA</a>
-    </div>
-    <div style="font-size:10px; margin-top:-5px;">An Application Platform for Virtual Resiliency</div>
-    <div style="font-size:10px; margin-top:-2px;">from Microsoft Research</div>
-</div>
+<table align="left">
+  <tr>
+    <td>
+      <img src="images/ambrosia_logo.png" width="80" height="80"/>
+    </td>
+    <td>
+      <div>
+          <a href="https://github.com/microsoft/AMBROSIA#ambrosia-robust-distributed-programming-made-easy-and-efficient">AMBROSIA</a>
+      </div>
+      <sub>An Application Platform for Virtual Resiliency</sub>
+      <br/>
+      <sub>from Microsoft Research</sub>
+    </td>
+  </tr>
+</table>

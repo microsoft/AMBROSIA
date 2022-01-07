@@ -19,7 +19,7 @@ We now know enough to see an Impulse in action:
 <center>
 <div style="width: 1000px; height: 203px; background: black; border-radius: 7px; overflow: hidden; margin: 12px">
 
-![Impulse chain diagram](images/impulse.png)
+![Impulse chain diagram](images/Impulse.png)
 
 </div>
 </center>
@@ -56,13 +56,10 @@ As we just saw, the most basic rule of writing an Ambrosia message handler (whet
 -|-
 **Rule&nbsp;&#35;1** | Messages must be handled - to completion - in the order received. For application (RPC) messages only, if there are messages that are known to be **[commutative](https://en.wikipedia.org/wiki/Commutative_property)** then this rule can be relaxed. 
 Reason | Using Ambrosia requires applications to have deterministic execution. Further, system messages (like `TakeCheckpoint`) from the IC rely on being handled in the order they are sent to the app. This means being extremely careful about using non-synchronous code (like awaitable operations and callbacks) inside message handlers. The safest path is to always only use synchronous code.
-| | |
 **Rule&nbsp;&#35;2** | Before a `TakeCheckpoint` message can be handled, all handlers for previously received messages must have completed (ie. finished executing). If Rule &#35;1 is followed, the app is automatically in compliance with Rule &#35;2. 
 Reason | Unless your application has a way to capture (and rehydrate) runtime execution state (specifically the message handler stack) in the serialized application state (checkpoint), recovery of the checkpoint will not be able to complete the in-flight message handlers. But if there are no in-flight handlers at the time the checkpoint is taken (because they all completed), then the problem of how to complete them during recovery is moot.
-| | |
 **Rule&nbsp;&#35;3** | Avoid sending too many messages in a single message handler.
 Reason | Because a message handler always has to run to completion (see Rule &#35;1), if it runs for too long it can monopolize the system leading to performance issues. Further, this becomes a very costly message to have to replay during recovery. So instead, when an message handler needs to send a large sequence (series) of independent messages, it should be designed to be restartable so that the sequence can pick up where it left off (rather than starting over) when resuming execution (ie. after loading a checkpoint that occurred during the long-running - but incomplete - sequence). Restartability is achieved by sending an application-defined 'sequence continuation' message at the end of each batch, which describes the remaining work to be done. Because the handler for the 'sequence continuation' message only ever sends the next batch plus the 'sequence continuation' message, it can run to completion quickly, which both keeps the system responsive (by allowing interleaving I/O) while also complying with Rule &#35;1. You can see this technique in action in the **[PTI](../../PTI-Node/ReadMe.md#ptiexplained)** app.<br/>In addition to this "continuation message" technique for sending a series, if any single message handler has to send a large number of messages it should be sent in batches using either explicit batches (`IC.queueFork` + `IC.flushQueue`) or implicit batches (`IC.callFork` / `IC.postFork`) inside a `setImmediate()` callback. This asynchrony is necessary to allow I/O with the IC to interleave, and is one of the few allowable exceptions to the "always only use asynchronous code" dictate in Rule &#35;1. Interleaving I/O allows the instance to service self-calls, and allows checkpoints to be taken between batches. You can see this technique in action in the `"runForkPerfTest"` command handler in ICTest.ts.
-| | |
 **Rule&nbsp;&#35;4** | A message handler should only use state that comes from one or more of these sources:<br/>1) Checkpointed application state.<br/>2) Method (RPC message) arguments.<br/>3) Runtime state that is repeatably deterministic, ie. that will be identical during both real-time and replay. This includes program state that is [re]computed from checkpointed application state.
 Reason | Using only deterministically available/[re]produced state ensures the deterministic integrity of recovery (replay).
 
