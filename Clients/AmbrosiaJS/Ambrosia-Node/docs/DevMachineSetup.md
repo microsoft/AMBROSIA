@@ -72,9 +72,9 @@ In either case, if you're already familiar with Node.js development using TypeSc
 - Further, running the command `npm list --depth=0` should yield this output (without any errors), although the TypeScript package version number may be higher:
     ````
     +-- @types/node@16.11.7
-    +-- azure-storage@2.10.5
+    +-- azure-storage@2.10.7
     +-- source-map-support@0.5.20
-    `-- typescript@4.4.4    
+    `-- typescript@4.5.4
     ````
 8&#41; Customize VS Code (these make it easier to develop, but are not essential to building or running the Node.js LB):
 - Install the 'GitLens &ndash; Git supercharged' extension
