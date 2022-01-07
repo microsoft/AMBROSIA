@@ -249,7 +249,7 @@ The generated `State` namespace in `PublisherFramework.g.ts` was manually moved 
 Indeed, any time the name, type, or "shape" of any published entity (like a method) changes, code-gen must be re-run. Because of this, it's usually best to leave your `codeGen()` function in `Main.ts`, even after you switch over to using the app's normal `main()` entry-point. Depending on the changes that were made, it can be necessary to force code-gen to ignore errors in the input source file (`PTI.ts` in our case) by temporarily modifying the `fileOptions` parameter of `emitTypeScriptFileFromSource()` to include the `"ignoreTSErrorsInSourceFile: true"` option. Further, the changes may cause compilation errors in the existing PublisherFramework.g.ts and/or ConsumerInterface.g.ts (both of which your app may import) leading to this popup dialog (when running code-gen using VS Code): 
 <div style="width: 600px; display: block; margin-left: auto; margin-right: auto; margin-top: 15px; margin-bottom: 10px">
 
-![VSCode Compilation Errors Dialog](Images\CompilationErrors.png)
+![VSCode Compilation Errors Dialog](Images/CompilationErrors.png)
 
 </div>
 <center>Since you are running code-gen (which rebuilds these files), you can typically just click "Debug Anyway" (after confirming that <b>all</b> the compile errors are confined to the 2 generated files).</center>
