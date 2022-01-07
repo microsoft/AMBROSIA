@@ -44,7 +44,8 @@ namespace AmbrosiaTest
                 JS_Utilities JSUtils = new JS_Utilities();
 
                 // ** Restore Config file from golden one
-                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"];
+                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
+                string basePTIPath = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"];
                 string ambrosiaSeparatedGoldConfigfileName = "ambrosiaConfig.separatedGOLD.json";
                 string ambrosiaConfigfileName = "ambrosiaConfig.json";
 
@@ -56,10 +57,10 @@ namespace AmbrosiaTest
                 }
 
                 //*** Copy from The Gold Config to App Config ***
-                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePath + JSUtils.JSPTI_AppPath+"\\" + ambrosiaConfigfileName, true);
+                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePTIPath + JSUtils.JSPTI_AppPath+"\\" + ambrosiaConfigfileName, true);
 
                 //*** Copy from The Gold Config to Client Config ***
-                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePath + JSUtils.JSPTI_ClientPath+"\\" + ambrosiaConfigfileName, true);
+                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePTIPath + JSUtils.JSPTI_ClientPath+"\\" + ambrosiaConfigfileName, true);
 
                 // Set the defaults based on current system
                 JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "2510", JSUtils.JSPTI_ClientInstanceRole);
@@ -67,7 +68,7 @@ namespace AmbrosiaTest
                 JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "2011", JSUtils.JSPTI_ClientInstanceRole);
 
                 //*** Copy from The Gold Config to Server Config ***
-                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePath + JSUtils.JSPTI_ServerPath+"\\" + ambrosiaConfigfileName, true);
+                File.Copy(basePath + "\\" + ambrosiaSeparatedGoldConfigfileName, basePTIPath + JSUtils.JSPTI_ServerPath+"\\" + ambrosiaConfigfileName, true);
 
                 // Set the defaults based on current system
                 JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "2500", JSUtils.JSPTI_ServerInstanceRole);
