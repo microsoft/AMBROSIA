@@ -166,14 +166,9 @@ To get into more of the details of code-gen:
 
 Code generation can be done in two ways: either using a source file as input (strongly recommended, and as shown in the **[Quick Walkthrough](#code-generation-a-quick-walkthrough)**), or by calling the publish API's (`publishType`, `publishMethod`, `publishPostMethod`) directly:
 
-<!-- Slighty convoluted to make it work in both VSCode and ADO -->
-<center>
-<div style="width: 720px; height: 491px; background: black; border-radius: 7px; overflow: hidden; margin: 15px">
-
-![Code generation diagram](images/CodeGen.png)
-
+<div align="center">
+  <img alt="Code generation diagram" src="images/CodeGen.png" width="720"/>
 </div>
-</center>
 
 Automatically publishing types and methods from an annotated TypeScript source file using `emitTypeScriptFileFromSource()` provides 4 major benefits over explicitly hand-crafting `publishType()`, `publishPostMethod()`, and `publishMethod()` calls then calling `emitTypeScriptFile()`:
 
