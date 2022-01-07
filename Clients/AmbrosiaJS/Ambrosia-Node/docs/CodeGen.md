@@ -164,7 +164,7 @@ To get into more of the details of code-gen:
 
 ### Code Generation: A Deeper Look
 
-Code generation can be done in two ways: either using a source file as input (strongly recommended, and as shown in the **[Quick Walkthrough](#code-generation%3A-a-quick-walkthrough)**), or by calling the publish API's (`publishType`, `publishMethod`, `publishPostMethod`) directly:
+Code generation can be done in two ways: either using a source file as input (strongly recommended, and as shown in the **[Quick Walkthrough](#code-generation-a-quick-walkthrough)**), or by calling the publish API's (`publishType`, `publishMethod`, `publishPostMethod`) directly:
 
 <!-- Slighty convoluted to make it work in both VSCode and ADO -->
 <center>
@@ -193,7 +193,7 @@ Automatically publishing types and methods from an annotated TypeScript source f
 
     <div style="margin-top:10px; margin-bottom: 10px">
 
-    **Note:** The consumer-side file (`ConsumerInterface.g.ts`) actually generates a minimal "data-only" class for a published complex type to make it easier to create (by using constructor syntax) as a parameter for a published method call. You can see this being done for the `Digits` type in the **[Quick Walkthrough](#code-generation%3A-a-quick-walkthrough)**.
+    **Note:** The consumer-side file (`ConsumerInterface.g.ts`) actually generates a minimal "data-only" class for a published complex type to make it easier to create (by using constructor syntax) as a parameter for a published method call. You can see this being done for the `Digits` type in the **[Quick Walkthrough](#code-generation-a-quick-walkthrough)**.
     
     </div>
 3. Type aliases cannot contain optional members (for example, `middleInitial?: string`), or contain generics (other than for built-in types, for example, `Map<string, number>`).

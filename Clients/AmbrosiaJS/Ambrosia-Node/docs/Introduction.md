@@ -310,7 +310,7 @@ While this process may seem a little complicated at first, several of these step
 - Adding new published methods (and types used in published method parameters), then re-running code-gen.
 - Modifying the `State.AppState` class by adding/updating/removing members, then updating the constructor to handle initialization and re-instantiation from a restored checkpoint.
 
-Another example of this process is described in **[How the PTI App was Created](../../PTI-Node/ReadMe.md#%3Abulb%3A-how-the-pti-app-was-created)**. If desired, the PTI app code can be studied as a more complete (although still artificial) example of a working Ambrosia Node application.
+Another example of this process is described in **[How the PTI App was Created](../../PTI-Node/ReadMe.md#bulb-how-the-pti-app-was-created)**. If desired, the PTI app code can be studied as a more complete (although still artificial) example of a working Ambrosia Node application.
 
 &nbsp;
 ### :thought_balloon: Application Design Considerations
@@ -334,7 +334,7 @@ Name | Description
 `eraseInstance`&#x00B9; | After prompting for confirmation, completely erases all meta-data and checkpoints/logs for the `instanceName` specified in `ambrosiaConfig.json`; the app will immediately exit afterwards<br/>:warning: **Use with caution**
 `eraseInstanceAndReplicas`&#x00B9; | Like `eraseInstance`, but repeated for all instance replicas too (see **[Running an Active/Active Configuration](../test/ActiveActive/ReadMe.md)**)<br/>:warning: **Use with caution**
 
-&#x00B9; For example usage, see **[Cleaning Up](../../PTI-Node/ReadMe.md#%3Awastebasket%3A-cleaning-up)** in the Performance Test Interruptible (PTI) documentation.<br/>
+&#x00B9; For example usage, see **[Cleaning Up](../../PTI-Node/ReadMe.md#wastebasket-cleaning-up)** in the Performance Test Interruptible (PTI) documentation.<br/>
 
 &nbsp;
 ### :books: Further Reading
