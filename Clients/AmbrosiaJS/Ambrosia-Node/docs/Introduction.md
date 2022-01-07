@@ -332,7 +332,7 @@ Name | Description
 `autoRegister`&#x00B9; | During app startup, automatically registers (or re-registers) the `instanceName` specified in `ambrosiaConfig.json`<br/>Note: This is the same as setting "autoRegister" to true in `ambrosiaConfig.json`
 `registerInstance`&#x00B9; | Same as `autoRegister`, but the app immediately exits after registering<br/>Note: This is the same as setting "autoRegister" to "trueAndExit" in `ambrosiaConfig.json`
 `eraseInstance`&#x00B9; | After prompting for confirmation, completely erases all meta-data and checkpoints/logs for the `instanceName` specified in `ambrosiaConfig.json`; the app will immediately exit afterwards<br/>:warning: **Use with caution**
-`eraseInstanceAndReplicas`&#x00B9; | Like `eraseInstance`, but repeated for all instance replicas too (see **[Running an Active/Active Configuration](../test/ActiveActive/ReadMe.md)**)<br/>:warning: **Use with caution**
+`eraseInstanceAndReplicas`&#x00B9; | Like `eraseInstance`, but repeated for all instance replicas too (see **[Demonstration of Using Active/Active with the Ambrosia Node.js Language Binding](../test/ActiveActive/ReadMe.md)**)<br/>:warning: **Use with caution**
 
 &#x00B9; For example usage, see **[Cleaning Up](../../PTI-Node/ReadMe.md#wastebasket-cleaning-up)** in the Performance Test Interruptible (PTI) documentation.<br/>
 
@@ -343,7 +343,7 @@ Name | Description
 - [Code Generation for an Ambrosia Node.js App/Service](CodeGen.md)
 - [Type Checking in the Node.js Language Binding](TypeChecking.md)
 - [Upgrading an Ambrosia Node.js App/Service](Upgrade.md)
-- [Running an Active/Active Configuration](../test/ActiveActive/ReadMe.md)
+- [Demonstration of Using Active/Active with the Ambrosia Node.js Language Binding](../test/ActiveActive/ReadMe.md)
 - [Performance Test Interruptible (PTI)](../../PTI-Node/ReadMe.md)
 
 &nbsp;

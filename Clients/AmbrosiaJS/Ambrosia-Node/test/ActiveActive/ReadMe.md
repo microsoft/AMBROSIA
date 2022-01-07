@@ -32,23 +32,25 @@ To end the test, press CTRL+C in each console window where an instance is still 
 
 <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u><br/>
 &#x00B9; Visual Studio Code is the recommended way to build and edit the Ambrosia Node language binding.<br/>
-&#x00B2; When `"replicaNumber"` is greater than 0, the instance will be registered as an replica.<br/>
+&#x00B2; When `"replicaNumber"` is greater than 0, the instance will be registered as a replica (aka. a secondary).<br/>
 &#x00B3; Note that in the config file `"isActiveActive"` is `true`, and a `"replicaNumber"` has been specified.<br/>
 
 &nbsp;
 
 ---
+<table align="left">
+  <tr>
+    <td>
+      <img src="../../docs/images/ambrosia_logo.png" width="80" height="80"/>
+    </td>
+    <td>
+      <div>
+          <a href="https://github.com/microsoft/AMBROSIA#ambrosia-robust-distributed-programming-made-easy-and-efficient">AMBROSIA</a>
+      </div>
+      <sub>An Application Platform for Virtual Resiliency</sub>
+      <br/>
+      <sub>from Microsoft Research</sub>
+    </td>
+  </tr>
+</table>
 <div>
-<!-- PNG converted from SVG (from https://iconcloud.design/browse/Azure%20Icons/Networking/e8b50c8ac-de64dd68d) using Paint3D -->
-<!-- Slighty convoluted to make it work in both VSCode and ADO -->
-<div style="width: 70px; height: 70px; float: left; padding-right: 10px">
-
-![Ambrosia logo](../../docs/images/ambrosia_logo.png)
-
-</div>
-    <div style="font-size:20px; padding-top:5px">
-        <a style="color:inherit; text-decoration: none" href="https://github.com/microsoft/AMBROSIA#ambrosia-robust-distributed-programming-made-easy-and-efficient">AMBROSIA</a>
-    </div>
-    <div style="font-size:10px; margin-top:-5px;">An Application Platform for Virtual Resiliency</div>
-    <div style="font-size:10px; margin-top:-2px;">from Microsoft Research</div>
-</div>
