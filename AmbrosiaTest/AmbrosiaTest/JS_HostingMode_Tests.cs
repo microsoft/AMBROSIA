@@ -44,7 +44,7 @@ namespace AmbrosiaTest
                 JS_Utilities JSUtils = new JS_Utilities();
 
                 // ** Restore Config file from golden one
-                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
+                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"];
                 string ambrosiaSeparatedGoldConfigfileName = "ambrosiaConfig.separatedGOLD.json";
                 string ambrosiaConfigfileName = "ambrosiaConfig.json";
 

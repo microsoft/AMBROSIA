@@ -117,7 +117,7 @@ namespace AmbrosiaTest
                 LogOutputDirFileName = TestLogDir + "\\" + testName + "_Core.log";
             }
 
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + JSUtils.JSPTI_AppPath;
+            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSUtils.JSPTI_AppPath;
             string fileName = "node";
             string argString = "/C node.exe out\\main.js -h > " + LogOutputDirFileName + " 2>&1";
 
