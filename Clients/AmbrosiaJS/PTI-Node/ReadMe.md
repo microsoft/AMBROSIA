@@ -260,7 +260,7 @@ Indeed, any time the name, type, or "shape" of any published entity (like a meth
 <table align="left">
   <tr>
     <td>
-      <img src="images/ambrosia_logo.png" width="80" height="80"/>
+      <img src="Images/ambrosia_logo.png" width="80" height="80"/>
     </td>
     <td>
       <div>
