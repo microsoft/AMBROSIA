@@ -24,7 +24,7 @@ Start exploring the documentation **[here](docs/Introduction.md)**.
 
 ## License
 
-Ambrosia is released under an **[MIT license](LICENSE.md)**.
+Ambrosia-Node is released under an **[MIT license](LICENSE.md)**.
 
 ## Contributing Expectations
 
