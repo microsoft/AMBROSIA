@@ -21,11 +21,12 @@ At publish time, type checking happens in the publish APIs (`publishType`, `publ
   <img alt="Code generation diagram" src="images/CodeGen.png" width="720"/>
 </div>
 
-At runtime, the values provided for incoming method parameters are examined and a corresponding type definition is built which is then compared against the published type of the method parameter. Since this can be expensive, when publishing a post method, the "doRuntimeTypeChecking=false" `@ambrosia` attribute can be specified to opt the method out of runtime type checking (it will still be checked at publish time, ie. during code-gen). Runtime type checking doesn't happen for non-post methods because only post methods provide a way (the `PostResultDispatcher`) to communicate a type-mismatch back to the caller, which the main reason for doing runtime type checking.
+At runtime, the values provided for incoming method parameters are examined and a corresponding type definition is built which is then compared against the published type of the method parameter. Since this can be expensive, when publishing a post method, the "doRuntimeTypeChecking=false" `@ambrosia` attribute can be specified to opt the method out of runtime type checking (it will still be checked at publish time, ie. during code-gen). Runtime type checking doesn't happen for non-post methods because only post methods provide a way (the `PostResultDispatcher`) to communicate a type-mismatch back to the caller, which is the main reason for doing runtime type checking.
 
 As a simple example of how runtime type checking can help with JavaScript's "truthy" / "falsey" behavior, consider a post method defined like this…
 
 ````TypeScript
+Meta.publishType("Digits", "{ count: number }");
 Meta.publishPostMethod("ComputePI", 1, ["digits?: Digits"], "number");
 ````
 
