@@ -17,14 +17,9 @@ Even though the Node.js LB is written in TypeScript, it contains a significant a
 
 At publish time, type checking happens in the publish APIs (`publishType`, `publishMethod`, and `publishPostMethod`) as represented by the "Publish entities" boxes below. Doing type checking at this level - rather than at the Abstract Syntax Tree (AST) level - enables type checking to happen regardless of the publishing path used ("automatically" by code-gen, or "manually" by API calls).
 
-<!-- Slighty convoluted to make it work in both VSCode and ADO -->
-<center>
-<div style="width: 720px; height: 491px; background: black; border-radius: 7px; overflow: hidden; margin: 12px">
-
-![Code generation diagram](images/CodeGen.png)
-
+<div align="center">
+  <img alt="Code generation diagram" src="images/CodeGen.png" width="720"/>
 </div>
-</center>
 
 At runtime, the values provided for incoming method parameters are examined and a corresponding type definition is built which is then compared against the published type of the method parameter. Since this can be expensive, when publishing a post method, the "doRuntimeTypeChecking=false" `@ambrosia` attribute can be specified to opt the method out of runtime type checking (it will still be checked at publish time, ie. during code-gen). Runtime type checking doesn't happen for non-post methods because only post methods provide a way (the `PostResultDispatcher`) to communicate a type-mismatch back to the caller, which the main reason for doing runtime type checking.
 
