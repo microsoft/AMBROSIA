@@ -21,7 +21,7 @@ At publish time, type checking happens in the publish APIs (`publishType`, `publ
 <center>
 <div style="width: 720px; height: 491px; background: black; border-radius: 7px; overflow: hidden; margin: 12px">
 
-![Code generation diagram](images/codeGen.png)
+![Code generation diagram](images/CodeGen.png)
 
 </div>
 </center>

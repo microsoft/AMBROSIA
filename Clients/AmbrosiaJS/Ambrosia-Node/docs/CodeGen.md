@@ -170,7 +170,7 @@ Code generation can be done in two ways: either using a source file as input (st
 <center>
 <div style="width: 720px; height: 491px; background: black; border-radius: 7px; overflow: hidden; margin: 15px">
 
-![Code generation diagram](images/codeGen.png)
+![Code generation diagram](images/CodeGen.png)
 
 </div>
 </center>
