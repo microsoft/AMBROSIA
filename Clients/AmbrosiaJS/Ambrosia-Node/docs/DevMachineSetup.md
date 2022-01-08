@@ -20,9 +20,15 @@ In either case, if you're already familiar with Node.js development using TypeSc
 - See **[here](https://github.com/Microsoft/AMBROSIA/tree/master/CONTRIBUTING)** for more information about building Ambrosia.
 
 **1b&#41;** If you don't want to build/debug the IC, you can just install the pre-built Ambrosia binaries:<br/>
- - Create a folder C:\ambrosia-win.
- - Visit https://github.com/microsoft/AMBROSIA/releases.
- - Click on Ambrosia-win-x64.zip and extract it to C:\ambrosia-win.
+- Create a folder C:\ambrosia-win.
+- Visit https://github.com/microsoft/AMBROSIA/releases.
+- Click on Ambrosia-win-x64.zip and extract it to C:\ambrosia-win.
+
+Similarly, if you don't want to build the Node.js LB (which is consumed as an npm package), you can simply install the pre-built package (for example, ambrosia-node-2.0.0.tgz) from https://github.com/microsoft/AMBROSIA/releases, by running this command:
+
+`npm install https://github.com/microsoft/AMBROSIA/releases/download/v2.0.0.0/ambrosia-node-2.0.0.tgz`
+
+> **Note:** If you don't already have npm installed, see step #3. Further, the ambrosia-node package by itself is **not** sufficient to create an Ambrosia app for Node.js: you also need the Ambrosia binaries for your OS (for example, by installing Ambrosia-win-x64.zip).  Finally, note that the package includes all the TypeScript source code for the LB, so you can "step into" the LB code with your IDE even without cloning the Git repo.
 
 **2&#41;** Install VS Code from https://code.visualstudio.com/download. Accept all the defaults.
 
