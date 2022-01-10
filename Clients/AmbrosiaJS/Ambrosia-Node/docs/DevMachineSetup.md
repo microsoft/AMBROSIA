@@ -3,7 +3,7 @@
 ----
 If you want to work on _developing_ the Node.js Language Binding (LB) itself, then the following setup steps are provided to help you get your developer workstation up and running.<br/>
 If you want to simply _use_ the the Node.js LB to build a new Ambrosia application/service, then only the **bold** numbered steps apply (1b, 2, 3, 4, 9, 10, 11).<br/>
-In either case, if you're already familiar with Node.js development using TypeScript, VS Code, and Git, then you likely already have your development environment setup and can skip the software installation steps.<br/>
+In either case, if you're already familiar with Node.js development using TypeScript, VS Code, and Git, then you likely already have your development environment setup and can skip most of the software installation steps. Just be aware that we've only tested the LB with Node.js version 14.17.5 (see step #3).<br/>
 
 > **Note:** Windows 10 is assumed to be the target OS in all steps of this guide.
 
@@ -33,7 +33,7 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
 **2&#41;** Install VS Code from https://code.visualstudio.com/download. Accept all the defaults.
 
 **3&#41;** Install Node.js (which includes npm) from https://nodejs.org/en/download/. Accept all the defaults.
-  > Note: We used Node version **[14.17.5](https://nodejs.org/download/release/v14.17.5/)** (npm version 6.14.14), which will go end-of-life on 2023-04-30 (see **[previous releases](https://nodejs.org/en/download/releases/)** list).<br/>
+  > **Note:** We used Node.js version **[14.17.5](https://nodejs.org/download/release/v14.17.5/)** (npm version 6.14.14), which will go end-of-life on 2023-04-30 (see **[previous releases](https://nodejs.org/en/download/releases/)** list).<br/>
     Using this exact version of Node (and npm) is recommended.
 
 **4&#41;** Install Git
