@@ -28,7 +28,7 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
 
 `npm install https://github.com/microsoft/AMBROSIA/releases/download/v2.0.0.0/ambrosia-node-2.0.0.tgz`
 
-> **Note:** If you don't already have npm installed, see step #3. Further, the ambrosia-node package by itself is **not** sufficient to create an Ambrosia app for Node.js: you also need the Ambrosia binaries for your OS (for example, by installing Ambrosia-win-x64.zip).  Finally, note that the package includes all the TypeScript source code for the LB, so you can "step into" the LB code with your IDE even without cloning the Git repo.
+> **Note:** If you don't already have npm installed, see step #3. Further, the ambrosia-node package by itself is **not** sufficient to create/run an Ambrosia app for Node.js: you also need the Ambrosia binaries for your OS (for example, by installing Ambrosia-win-x64.zip) from the _**same**_ version of Ambrosia. Finally, note that the package includes all the TypeScript source code for the LB, so you can "step into" the LB code (if needed) with your IDE even without cloning the Git repo.
 
 **2&#41;** Install VS Code from https://code.visualstudio.com/download. Accept all the defaults.
 
