@@ -31,6 +31,7 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
 > **Note:** If you don't already have npm installed, see step #3. Further, the ambrosia-node package by itself is **not** sufficient to create/run an Ambrosia app for Node.js: you also need the Ambrosia binaries for your OS (for example, by installing Ambrosia-win-x64.zip) from the _**same**_ version of Ambrosia. Finally, note that the package includes all the TypeScript source code for the LB, so you can "step into" the LB code (if needed) with your IDE even without cloning the Git repo.
 
 **2&#41;** Install VS Code from https://code.visualstudio.com/download. Accept all the defaults.
+> **Note:** Also install PowerShell 7.0 (or later) from https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.2, since this is the terminal that we want VS Code to use.
 
 **3&#41;** Install Node.js (which includes npm) from https://nodejs.org/en/download/. Accept all the defaults.
   > **Note:** We used Node.js version **[14.17.5](https://nodejs.org/download/release/v14.17.5/)** (npm version 6.14.14), which will go end-of-life on 2023-04-30 (see **[previous releases](https://nodejs.org/en/download/releases/)** list).<br/>
@@ -82,7 +83,8 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
     +-- source-map-support@0.5.20
     `-- typescript@4.5.4
     ````
-8&#41; Customize VS Code (these make it easier to develop, but are not essential to building or running the Node.js LB):
+8&#41; Customize VS Code (these make it easier to develop, but are not essential to building or running the Node.js LB, other than the first item):
+- Under 'Terminal' &#x2192; 'New Terminal', ensure that the 'PowerShell' profile uses "pwsh" (not "powershell"). **Note:** This is important since the build.ps1 file _requires_ PowerShell 7.0 (or later). To check the version of PowerShell, type `$PSVersionTable` in the terminal.
 - Install the 'GitLens &ndash; Git supercharged' extension
   - In the 'Quick Setup' uncheck 'Current Line Blame', 'Git Code Lens' and 'Status Bar Blame'.
   - From the Source Control tab:
