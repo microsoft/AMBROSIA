@@ -14,6 +14,7 @@
   -nds|--noDescendingSize      : [Client] Disables descending (halving) the message size after each round; instead, a random size [power of 2] between 64 and --maxMessageSize will be used
   -fms|--fixedMessageSize      : [Client] All messages (in all rounds) will be of size --maxMessageSize; --noDescendingSize (if also supplied) will be ignored
   -eeb|--expectedEchoedBytes=  : [Client] The total number of "echoed" bytes expected to be received from the server when --bidirectional is specified; the client will report a "success" message when this number of bytes have been received
+  -ipm|--includePostMethod     : [Client] Includes a 'post' method call in the test
   -nhc|--noHealthCheck         : [Server] Disables the periodic server health check (requested via an Impulse message)
   -bd|--bidirectional          : [Server] Enables echoing the 'doWork' method call back to the client(s)
   -efb|--expectedFinalBytes=   : [Server] The total number of bytes expected to be received from all clients; the server will report a "success" message when this number of bytes have been received
