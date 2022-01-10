@@ -52,7 +52,7 @@ Table of Contents
 ### Virtual Resiliency
 > *Virtual Resiliency* is a mechanism in a (possibly distributed) programming and execution environment, typically employing a log, which exploits the replayably deterministic nature and serializability of an application to automatically mask failure.
 
-We use the term virtual resiliency to describe the mechanism in AMBROSIA that allows programmers to write their applications in a failure oblivious way, removing the need for application writers to write logic for recovery or state protection. Data processing systems, which typically express their queries in SQL variants, have provided their query writers virtual resiliency for decades. Map-reduce systems, which don’t necessarily use SQL, also provide this capability. Note that in all these cases, this feature leverages the ability to deterministically replay, like AMBROSIA.
+We use the term virtual resiliency to describe the mechanism in AMBROSIA that allows programmers to write their applications in a failure oblivious way, removing the need for application writers to write logic for recovery or state protection. Data processing systems, which typically express their queries in SQL variants, have provided their query writers virtual resiliency for decades. Map-reduce systems, which donâ€™t necessarily use SQL, also provide this capability. Note that in all these cases, this feature leverages the ability to deterministically replay, like AMBROSIA.
 
 ### Deterministic Replayability
 In order to achieve virtual resiliency through AMBROSIA, applications must uphold the following contract: from some initial state, any execution of the same requests in the same order results in both the *same final state*, as well as the *same outgoing requests in the same order*.
@@ -101,7 +101,7 @@ Also check out our [contributing guide](https://github.com/Microsoft/AMBROSIA/tr
 AMBROSIA currently requires an Azure subscription to write its logs to replicated storage. In the future, we anticipate abstracting this component out to be able to use other storage options for logs. 
 
 ### Language Support
-AMBROSIA currently supports C# on both .NET Core and .NET Framework. We plan to expand this support with AMBROSIA bindings for other languages in the future. 
+AMBROSIA currently supports C# on both .NET Core and .NET Framework. As of the 2.0.0.0 release, AMBROSIA also supports Node.js using TypeScript. We hope to add support for other languages in the future. 
 
 ### Usage
 ```
