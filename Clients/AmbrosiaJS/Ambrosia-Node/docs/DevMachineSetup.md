@@ -34,7 +34,7 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
 > **Note:** Also install PowerShell 7.0 (or later) from https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.2, since this is the terminal that we want VS Code to use.
 
 **3&#41;** Install Node.js (which includes npm) from https://nodejs.org/en/download/. Accept all the defaults.
-  > **Note:** We used Node.js version **[14.17.5](https://nodejs.org/download/release/v14.17.5/)** (npm version 6.14.14), which will go end-of-life on 2023-04-30 (see **[previous releases](https://nodejs.org/en/download/releases/)** list).<br/>
+  > **Note:** We used Node.js version **[14.17.5](https://nodejs.org/download/release/v14.17.5/)** (npm version 6.14.14), which will go end-of-life on 2023-04-30 (see node **[Releases](https://nodejs.org/en/about/releases/)**).<br/>
     Using this exact version of Node (and npm) is recommended.
 
 **4&#41;** Install Git
