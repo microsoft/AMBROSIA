@@ -1,4 +1,4 @@
-<img alt="Node.js logo" src="docs/images/node_logo.png" width="145px"/>
+<img alt="Node.js logo" src="docs/images/node_logo.png" width="145" height="145"/>
 
 ## Ambrosia-Node: A Language Binding for Building Ambrosia Apps/Services for Node.js
 ----
@@ -16,11 +16,11 @@ When you build an application or service using Ambrosia, it will gain these capa
 - Failover: The app/service can easily be run in an active/active (high availability) configuration, without any app/service code changes.
 - "Time-Travel Debugging": The app/service can replay all state changes that led up to the problem, providing a deterministic repro case.
 
-> **Tip:** It's much easier to build an app/service with Ambrosia from the outset than to retrofit an existing app/service with Ambrosia. This is because adopting Ambrosia requires thinking about program design through the lens of deterministic execution, which &ndash; combined with limitations in the Node.js LB itself &ndash; places some significant restrictions on how the app can be developed (see **[Application Design Considerations](docs/Introduction.md#thought_balloon-application-design-considerations)**).
+> **Tip:** It's much easier to build an app/service with Ambrosia from the outset than to retrofit an existing app/service with Ambrosia. This is because adopting Ambrosia requires thinking about program design through the lens of deterministic execution, which &ndash; combined with limitations in the Node.js LB itself &ndash; places some significant restrictions on how the app can be developed (see **[Application Design Considerations](https://github.com/microsoft/AMBROSIA/tree/master/Clients/AmbrosiaJS/Ambrosia-Node/docs/Introduction.md#thought_balloon-application-design-considerations)**).
 
 ## Documentation
 
-Start exploring the documentation **[here](docs/Introduction.md)**.
+Start exploring the documentation **[here](https://github.com/microsoft/AMBROSIA/tree/master/Clients/AmbrosiaJS/Ambrosia-Node/docs/Introduction.md)**.
 
 ## License
 
@@ -40,11 +40,11 @@ This project may contain trademarks or logos for projects, products, or services
 <table align="left">
   <tr>
     <td>
-      <img src="docs/images/ambrosia_logo.png" width="80" height="80"/>
+      <img alt="Ambrosia logo" src="docs/images/ambrosia_logo.png" width="80" height="80"/>
     </td>
     <td>
       <div>
-          <a href="https://github.com/microsoft/AMBROSIA#ambrosia-robust-distributed-programming-made-easy-and-efficient">AMBROSIA</a>
+        <a href="https://github.com/microsoft/AMBROSIA#ambrosia-robust-distributed-programming-made-easy-and-efficient">AMBROSIA</a>
       </div>
       <sub>An Application Platform for Virtual Resiliency</sub>
       <br/>
