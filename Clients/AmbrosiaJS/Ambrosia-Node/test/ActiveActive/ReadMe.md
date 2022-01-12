@@ -41,11 +41,11 @@ To end the test, press CTRL+C in each console window where an instance is still 
 <table align="left">
   <tr>
     <td>
-      <img src="../../docs/images/ambrosia_logo.png" width="80" height="80"/>
+      <img alt="Ambrosia logo" src="../../docs/images/ambrosia_logo.png"/>
     </td>
     <td>
       <div>
-          <a href="https://github.com/microsoft/AMBROSIA#ambrosia-robust-distributed-programming-made-easy-and-efficient">AMBROSIA</a>
+        <a href="https://github.com/microsoft/AMBROSIA#ambrosia-robust-distributed-programming-made-easy-and-efficient">AMBROSIA</a>
       </div>
       <sub>An Application Platform for Virtual Resiliency</sub>
       <br/>
@@ -53,4 +53,3 @@ To end the test, press CTRL+C in each console window where an instance is still 
     </td>
   </tr>
 </table>
-<div>
