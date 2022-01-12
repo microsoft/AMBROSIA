@@ -1,4 +1,4 @@
-<img alt="Node.js logo" src="docs/images/node_logo.png" width="145" height="145"/>
+![Node.js logo](docs/images/node_logo.png)
 
 ## Ambrosia-Node: A Language Binding for Building Ambrosia Apps/Services for Node.js
 ----
@@ -40,7 +40,7 @@ This project may contain trademarks or logos for projects, products, or services
 <table align="left">
   <tr>
     <td>
-      <img alt="Ambrosia logo" src="docs/images/ambrosia_logo.png" width="80" height="80"/>
+      <img alt="Ambrosia logo" src="docs/images/ambrosia_logo.png"/>
     </td>
     <td>
       <div>
