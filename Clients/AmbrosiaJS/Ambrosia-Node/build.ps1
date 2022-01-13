@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-This script builds the ambrosia-node package (eg. ambrosia-node-2.0.0.tgz).
+This script builds the ambrosia-node package (eg. ambrosia-node-2.0.1.tgz).
 
 .DESCRIPTION
-This script builds the ambrosia-node package (eg. ambrosia-node-2.0.0.tgz).
+This script builds the ambrosia-node package (eg. ambrosia-node-2.0.1.tgz).
 You should do a "git pull" before running this.
 It compiles the TypeScript source, runs unit tests, [optionally] increases the 'patch' part of the package
 version, archives any old ambrosia-node*.tgz files (to .\buildArchive), then finally creates a new .tgz.
