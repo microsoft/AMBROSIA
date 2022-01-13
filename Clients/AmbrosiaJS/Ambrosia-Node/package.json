@@ -10,7 +10,9 @@
   },
   "files": [
     "/src/**",
-    "/lib/**",
+    "/lib/**/*.js",
+    "/lib/**/*.ts",
+    "/lib/**/*.map",
     "ambrosiaConfig.json",
     "ambrosiaConfig-schema.json",
     "postInstall.js",
