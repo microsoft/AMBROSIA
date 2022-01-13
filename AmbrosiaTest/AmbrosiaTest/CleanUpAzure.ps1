@@ -56,7 +56,7 @@ $storageAccountName = $ConnectionString_Array2[3]
 $storageKey = $ConnectionString_Array2[5]+"=="  #Split removes the == off the end so put them back
 
 Write-host " Storage Account:" $storageAccountName
-Write-host " Storage Key:" $storageKey
+#Write-host " Storage Key:" $storageKey
 Write-host "----------------"
 Write-host
 
