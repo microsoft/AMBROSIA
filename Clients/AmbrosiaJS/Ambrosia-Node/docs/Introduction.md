@@ -2,7 +2,7 @@
 ## :helicopter: The Ambrosia Node.js Language Binding: An Overview
 ----
 ### :vertical_traffic_light: Getting Started
-The Ambrosia Node.js language binding enables you to write Ambrosia apps/services (**[Immortals](https://github.com/microsoft/AMBROSIA#ambrosia-concepts)**) for Node.js using TypeScript (4.4+). You consume it by installing an npm package (for example, `ambrosia-node-2.0.0.tgz`) in the folder where you're building your Ambrosia app. You obtain the package in one of two ways: either by building it locally, or by installing the pre-built package. To install the pre-built package see step 1b of the **[Developer Machine Setup Guide](DevMachineSetup.md)**. Otherwise, if you're developing the LB itself, see steps 7 and 12 of the **[Developer Machine Setup Guide](DevMachineSetup.md)** for how to build the Node.js LB.
+The Ambrosia Node.js language binding enables you to write Ambrosia apps/services (**[Immortals](https://github.com/microsoft/AMBROSIA#ambrosia-concepts)**) for Node.js using TypeScript (4.4+). You consume it by installing an npm package (for example, `ambrosia-node-2.0.1.tgz`) in the folder where you're building your Ambrosia app. You obtain the package in one of two ways: either by building it locally, or by installing the pre-built package. To install the pre-built package see step 1b of the **[Developer Machine Setup Guide](DevMachineSetup.md)**. Otherwise, if you're developing the LB itself, see steps 7 and 12 of the **[Developer Machine Setup Guide](DevMachineSetup.md)** for how to build the Node.js LB.
 
 The package includes a complete copy of the source code (in TypeScript) so that you can step right into the LB's code using the debugger (VS Code is recommended, which is the IDE that was used to develop the LB).
 
@@ -171,7 +171,7 @@ You can control output logging via the `"lbOptions.outputLogX"` settings in ambr
 &nbsp;
 ### :stopwatch: A Quick Tour of the Ambrosia Node.js LB API
 
-- The LB API is accessed by first installing the ambrosia-node package (for example, `npm install ambrosia-node-2.0.0.tgz`) in the folder where you're building your app. Then, in your TypeScript code, import the package with:
+- The LB API is accessed by first installing the ambrosia-node package (for example, `npm install ambrosia-node-2.0.1.tgz`) in the folder where you're building your app. Then, in your TypeScript code, import the package with:
     ````TypeScript
     import Ambrosia = require("ambrosia-node");
     ````
