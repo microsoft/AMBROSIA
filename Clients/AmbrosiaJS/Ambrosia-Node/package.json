@@ -1,6 +1,6 @@
 {
   "name": "ambrosia-node",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Library for writing AMBROSIA apps for Node.js.",
   "homepage": "https://github.com/microsoft/AMBROSIA/tree/master/Clients",
   "main": "./lib/Ambrosia.js",
