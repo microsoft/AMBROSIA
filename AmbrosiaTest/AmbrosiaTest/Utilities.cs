@@ -264,7 +264,6 @@ namespace AmbrosiaTest
             }
         }
 
-
         // cleans up all the Azure tables based on name of Object. 
         public void CleanupAzureTables(string nameOfObjects)
         {
@@ -312,7 +311,6 @@ namespace AmbrosiaTest
                 Assert.Fail("<LogAmbrosiaStatus> Failure! Exception:" + e.Message);
             }
         }
-
 
         // Deletes all the log files created by Ambrosia
         public void CleanupAmbrosiaLogFiles()
@@ -514,7 +512,6 @@ namespace AmbrosiaTest
             string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
             if (connectionString == null)
                 Assert.Fail("<VerifyTestEnvironment> Missing Connection String environment variable 'AZURE_STORAGE_CONN_STRING'");
-
         }
 
 
