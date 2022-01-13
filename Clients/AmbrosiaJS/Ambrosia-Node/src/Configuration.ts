@@ -471,7 +471,7 @@ export class AmbrosiaConfigFile
         {
             const settingName: string | undefined = new Error().stack?.split("\n")[2].trim().split(" ")[2]; // TODO: Is there a better way?
             // Typically, these are settings that we (the LB) need to provide to an Ambrosia binary (eg. ImmortalCoordinator.exe / Ambrosia.exe)
-            // when we start it; since we're not starting the binary in 'Separated' mode, the setting doesn't apply.
+            // when we start it; since we don't start the binary when using 'Separated' mode, the setting doesn't apply.
             throw new Error(`The '${sectionName ? sectionName + "." : ""}${settingName || "N/A"}' setting only applies when icHostingMode is '${ICHostingMode[ICHostingMode.Integrated]}'`);
         }
     }
@@ -851,7 +851,7 @@ export class LanguageBindingOptions
                     const maxMessageQueueSizeInMB: number = partialOptions[optionName];
                     const maxMessageQueueSizeInBytes: number = maxMessageQueueSizeInMB * 1024 * 1024;
                     const heapSizeInBytes: number = Utils.getNodeLongTermHeapSizeInBytes();
-                    const messageQueueLimitInBytes : number = heapSizeInBytes / 4;
+                    const messageQueueLimitInBytes: number = heapSizeInBytes / 4;
                     if ((maxMessageQueueSizeInBytes < 32 * 1024 * 1024) || (maxMessageQueueSizeInBytes > messageQueueLimitInBytes))
                     {
                         throw new Error(`Option 'maxMessageQueueSizeInMB' (${maxMessageQueueSizeInMB}) must be between 32 and ${Math.floor(messageQueueLimitInBytes / ( 1024 * 1024))}; if needed, set the node.js V8 parameter '--max-old-space-size' to raise the upper limit (see https://nodejs.org/api/cli.html)`);
