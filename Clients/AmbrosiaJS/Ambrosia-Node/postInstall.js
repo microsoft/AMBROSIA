@@ -30,8 +30,8 @@ if (process.env.INIT_CWD)
             }
 
             fs.copyFileSync("ambrosiaConfig.json", path.join(destinationFolder, "ambrosiaConfig.json")); 
-            console.log("ATTENTION: Either use the 'autoRegister' setting, or edit the ambrosiaConfig.json file to match your Ambrosia instance registration.");
-            console.log("           See https://github.com/microsoft/AMBROSIA/blob/master/Samples/HelloWorld/HOWTO-WINDOWS-TwoProc.md#registering-the-immortal-instances for more details.");
+            console.log("ATTENTION: Either use the 'autoRegister' setting (in ambrosiaConfig.json) or edit ambrosiaConfig.json to match your Ambrosia instance registration.");
+            console.log("           See 'Getting Started' in https://github.com/microsoft/AMBROSIA/blob/master/Clients/AmbrosiaJS/Ambrosia-Node/docs/Introduction.md for more details.");
             console.log(localFileRenamed ? "           Note: Your existing ambrosiaConfig.json file was renamed to ambrosiaConfig.json.old.\n" : "");
         }
         catch (error)
