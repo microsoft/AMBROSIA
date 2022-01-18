@@ -130,7 +130,7 @@ if ($currDirName -ne "Ambrosia-Node")
 # // Pre-build check: Is TypeScript installed locally?
 if (!$tscInstalled) 
 {
-    report "Error" "The TypeScript compiler is not installed locally (have you run `"npm install`"?)"
+    report "Error" "The TypeScript compiler is not installed locally (have you run `"npm install --production=false`"?)"
     # // Report additional details to help debug the problem
     Write-Host "Installed npm packages:"
     npm list --depth=0
