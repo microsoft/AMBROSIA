@@ -34,6 +34,9 @@ namespace AmbrosiaTest
     // These are the different modes of what the AMB is called 
     public enum AMB_ModeConsts { RegisterInstance, AddReplica, DebugInstance };
 
+
+
+
     public class Utilities
     {
 
@@ -73,6 +76,24 @@ namespace AmbrosiaTest
         public string deployModeInProcManual = "inprocmanual";  // this is the TCP port call where need rp & sp but still in single proc per job or server
         public string deployModeInProcTimeTravel = "inproctimetravel";  // Used by Client and Server of PTI for time travel debugging
 
+        //*********
+        // Base of Ambrosia paths
+        // Base test path for Ambrosia that all the test paths will be based on  -- if source code is at c:\Ambrosia\AmbrosiaTest etc, this will be c:\Ambrosia\ and is used as the base for all the paths in App.Config
+        // The value for this variable is defined in TestInitialize() which is called at beginning of every test
+        // ** NOTE -- this path has a "\" on it already so don't add it when appending to path in App.Config
+        //*********
+        public string baseAmbrosiaPath = "";
+
+        // Since every test uses this, set the base directory in constructor
+        public Utilities()
+        {
+            // Get base path for Ambrosia
+            string currentDir = Directory.GetCurrentDirectory();
+            int AmbrosiaTestLoc = currentDir.IndexOf("AmbrosiaTest");
+            baseAmbrosiaPath = currentDir.Substring(0, AmbrosiaTestLoc);  
+        }
+
+
         // Returns the Process ID of the process so you then can something with it
         // Currently output to file using ">", but using cmd.exe to do that.
         // If want to run actual file name (instead of via cmd.exe), then need to use stream reader to get output and send to a file 
@@ -87,7 +108,7 @@ namespace AmbrosiaTest
                 fileToExecute = "dotnet.exe";
             }
 
-            string TestLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+            string TestLogDir = baseAmbrosiaPath+ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             string LogOutputDirFileName = TestLogDir + "\\" + testOutputLogFile;
 
             // Use ProcessStartInfo class
@@ -167,7 +188,7 @@ namespace AmbrosiaTest
             string doneString = "DONE";
             bool foundExtraString = false;
             bool foundDoneString = false;
-            logFile = ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\" + logFile;
+            logFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\" + logFile;
 
             for (int i = 0; i < maxTimeLoops; i++)
             {
@@ -326,7 +347,7 @@ namespace AmbrosiaTest
                     return;
                 }
 
-                string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+                string ambrosiaLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
 
                 if (Directory.Exists(ambrosiaLogDir))
                 {
@@ -343,8 +364,8 @@ namespace AmbrosiaTest
                     Assert.Fail("<CleanupAmbrosiaLogFiles> Unable to delete Log Dir:" + ambrosiaLogDir);
                 }
 
-                // Clean up the InProc files now.  Since InProc, they are relative to PTI
-                string PTIAmbrosiaLogDir = "..\\"+ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+                // Clean up the InProc files now. 
+                string PTIAmbrosiaLogDir = baseAmbrosiaPath+ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
                 if (Directory.Exists(PTIAmbrosiaLogDir))
                 {
                     Directory.Delete(PTIAmbrosiaLogDir, true);
@@ -359,7 +380,7 @@ namespace AmbrosiaTest
                 }
 
                 // job IC output file and any blob log files
-                string PTI_Job_Dir = currentDir+"\\"+ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ CurrentFramework;
+                string PTI_Job_Dir = baseAmbrosiaPath+ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ CurrentFramework;
                 var jobdir = new DirectoryInfo(PTI_Job_Dir);
                 foreach (var file in jobdir.EnumerateFiles(InProcICOutputFile))
                 {
@@ -370,7 +391,7 @@ namespace AmbrosiaTest
                 DeleteDirectoryUsingWildCard(PTI_Job_Dir, "job_");
 
                 // server IC output file and any blob log files 
-                string PTI_Server_Dir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + CurrentFramework;
+                string PTI_Server_Dir = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + CurrentFramework;
                 var serverdir = new DirectoryInfo(PTI_Server_Dir);
                 foreach (var file in serverdir.EnumerateFiles(InProcICOutputFile))
                 {
@@ -457,13 +478,13 @@ namespace AmbrosiaTest
             string currentDir = Directory.GetCurrentDirectory();
 
             // Verify logging directory ... if doesn't exist, create it
-            string testLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+            string testLogDir = baseAmbrosiaPath+ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             if (Directory.Exists(testLogDir) == false)
             {
                 Directory.CreateDirectory(testLogDir);
             }
 
-            string cmpLogDir = ConfigurationManager.AppSettings["TestCMPDirectory"];
+            string cmpLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestCMPDirectory"];
             if (Directory.Exists(cmpLogDir) == false)
                 Assert.Fail("<VerifyTestEnvironment> Cmp directory does not exist. Expecting:" + cmpLogDir);
 
@@ -501,11 +522,11 @@ namespace AmbrosiaTest
             // if (File.Exists(AmbrosiaLibCSExe) == false)
             //     Assert.Fail("<VerifyTestEnvironment> Missing AmbrosiaLibcs dll. Expecting:" + AmbrosiaLibCSExe);
 
-            string perfTestJobFile = currentDir + "\\"+ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
+            string perfTestJobFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
             if (File.Exists(perfTestJobFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
 
-            string perfTestServerFile = currentDir + "\\" + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
+            string perfTestServerFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
             if (File.Exists(perfTestServerFile) == false)
                 Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
 
@@ -529,9 +550,9 @@ namespace AmbrosiaTest
             // Give it a second to get all ready to be verified - helps timing issues
             Thread.Sleep(1000);
 
-            string testLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+            string testLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             string logOutputDirFileName = testLogDir + "\\" + testOutputLogFile;
-            string cmpLogDir = ConfigurationManager.AppSettings["TestCMPDirectory"];
+            string cmpLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestCMPDirectory"];
             string cmpDirFile = cmpLogDir + "\\" + testOutputLogFile.Replace(".log", ".cmp");
 
             // TTD tests have different files so need modify file to do proper match
@@ -544,9 +565,9 @@ namespace AmbrosiaTest
             if (JSTest)
             {
                 // Test Log Output
-                testLogDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
+                testLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
                 logOutputDirFileName = testLogDir +"\\"+ testOutputLogFile;  
-                cmpLogDir = ConfigurationManager.AppSettings["TestCMPDirectory"] + "\\JS_CodeGen_Cmp";
+                cmpLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestCMPDirectory"] + "\\JS_CodeGen_Cmp";
                 cmpDirFile = cmpLogDir + "\\" + testOutputLogFile +".cmp";
             }
 
@@ -630,8 +651,8 @@ namespace AmbrosiaTest
             // allows for using different ambrosia log directory
             if (ambrosiaLogDir == "")
             {
-                ambrosiaLogDir = currentDir + "\\" + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
-                ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
+                ambrosiaLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
+                ambrosiaLogDirFromPTI = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
                 ambServiceLogPath = ambrosiaLogDir + "\\";
 
             }
@@ -642,13 +663,14 @@ namespace AmbrosiaTest
             }
 
             // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
+/*  *#*#* DELETE *#*#*#
             if (Directory.Exists(ambrosiaLogDir) ==false)
             {
-                ambrosiaLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+                ambrosiaLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
                 ambrosiaLogDirFromPTI = "..\\..\\" + ambrosiaLogDir+"\\";   // feels like there has to be better way of determining this - used for TTD
                 ambServiceLogPath = "..\\..\\"+ambrosiaLogDir + "\\";
             }
-
+*/
             // used to get log file
             string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_0";  // client is always 0 so don't use + CurrentVersion;
             string ambrosiaServerLogDir = ambrosiaLogDir + "\\" + testName + "server_" + CurrentVersion;
@@ -1068,7 +1090,7 @@ namespace AmbrosiaTest
                 current_framework = NetFramework;
 
             // Launch the server process with these values based on deploy mode
-            string workingDir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework;
+            string workingDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Server.exe";
             string argString = "";
 
@@ -1156,7 +1178,7 @@ namespace AmbrosiaTest
                 current_framework = NetFramework;
 
             // Launch the server process with these values
-            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + current_framework;
+            string workingDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AsyncPerfTestServerExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Server.exe";
             string argString = "-rp=" + receivePort + " -sp=" + sendPort + " -s=" + perfServerName + " -c ";
 
@@ -1185,7 +1207,7 @@ namespace AmbrosiaTest
                 current_framework = NetFramework;
 
             // Set defaults here and can modify based on deploy mode
-            string workingDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework;
+            string workingDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Job.exe";
             string argString = "";
 
@@ -1260,7 +1282,7 @@ namespace AmbrosiaTest
                 current_framework = NetFramework;
 
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + current_framework;
+            string workingDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AsyncPerfTestJobExeWorkingDirectory"] + current_framework;
             string fileNameExe = "Job.exe";
             string argString = "-rp=" + receivePort + " -sp=" + sendPort + " -j=" + perfJobName + " -s=" + perfServerName + " -n=" + perfNumberRounds + " -c ";
 
@@ -1284,7 +1306,7 @@ namespace AmbrosiaTest
         {
             string timeStamp = DateTime.Now.ToString();
             logEntry = "[" + timeStamp + "]  " + logEntry + "\r\n";
-            string logDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+            string logDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
 
             try
             {
@@ -1309,8 +1331,8 @@ namespace AmbrosiaTest
         public void TruncateAmbrosiaLogDir(string testName)
         {
             // Assuming _0 for directory files ... this might be bad assumption
-            string ambrosiaClientLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob_0";
-            string ambrosiaServerLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "server_0";
+            string ambrosiaClientLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "clientjob_0";
+            string ambrosiaServerLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\" + testName + "server_0";
             int numberOfFilesToKeep = 8;
 
             try
@@ -1373,8 +1395,8 @@ namespace AmbrosiaTest
         public void VerifyBytesRecievedInTwoLogFiles(string logFile1, string logFile2)
         {
             // Log file location
-            string firstLogFile = ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\" + logFile1;
-            string secondLogFile = ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\" + logFile2;
+            string firstLogFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\" + logFile1;
+            string secondLogFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\" + logFile2;
 
             try
             {
@@ -1648,7 +1670,7 @@ namespace AmbrosiaTest
         // ****************************
         public void SetStopQueueFlag()
         {
-            string stopQueueFile = ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\StopQueue.txt";
+            string stopQueueFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\StopQueue.txt";
 
             // Have variable at top of file just so makes it easier to set and not set
             if (StopQueueOnFail)
@@ -1659,7 +1681,7 @@ namespace AmbrosiaTest
 
         public bool CheckStopQueueFlag()
         {
-            string stopQueueFile = ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\StopQueue.txt";
+            string stopQueueFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"] + "\\StopQueue.txt";
 
             // If file exists (meaning stop queue flag is on), then return true
             if (File.Exists(stopQueueFile))

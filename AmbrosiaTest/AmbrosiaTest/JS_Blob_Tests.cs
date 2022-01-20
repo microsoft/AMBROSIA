@@ -78,7 +78,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
             // Verify that directory does not exist to show it wasn't in a file as not real easy ways to verify blob
-            string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+            string logDirectory = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
             string expectedLogFile = logDirectory + "\\" + testName + "_0";
 
             if (Directory.Exists(expectedLogFile))
@@ -123,7 +123,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
             // Verify that directory does not exist to show it wasn't in a file as not real easy ways to verify blob
-            string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+            string logDirectory = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
             string expectedLogFile = logDirectory + "\\" + testName + "_0";
 
             if (Directory.Exists(expectedLogFile))
@@ -175,7 +175,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
             // Verify that directory does not exist to show it wasn't in a file as not real easy ways to verify blob
-            string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+            string logDirectory = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
             string expectedLogFile = logDirectory + "\\" + testName + "_0";
 
             if (Directory.Exists(expectedLogFile))
@@ -239,7 +239,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "logStorageType=Blobs", 1, false, testName, true, false);
 
             // Verify that directory does not exist to show it wasn't in a file as not real easy ways to verify blob
-            string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+            string logDirectory = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
             string expectedClientLogFile = logDirectory + "\\" + testName + "client_0";
             if (Directory.Exists(expectedClientLogFile))
             {
@@ -358,7 +358,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "logStorageType=Blobs", 1, false, testName, true, false);
 
             // Verify that directory does not exist to show it wasn't in a file as not real easy ways to verify blob
-            string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+            string logDirectory = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
             string expectedClientLogFile = logDirectory + "\\" + testName + "client_0";
             if (Directory.Exists(expectedClientLogFile))
             {
@@ -430,7 +430,7 @@ namespace AmbrosiaTest
             pass = MyUtils.WaitForProcessToFinish(logOutputClientFileName_TestApp, "logStorageType=Files", 1, false, testName, true, false);
 
             // Verify that directory does not exist to show it wasn't in a file as not real easy ways to verify blob
-            string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+            string logDirectory = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
             string expectedClientLogFile = logDirectory + "\\" + testName + "client_0";
             if (Directory.Exists(expectedClientLogFile) ==  false)
             {

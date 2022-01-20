@@ -297,7 +297,7 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "TrueAndExit");   // The actual test
             
             // Launch the app where it just registers it
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSUtils.JSPTI_AppPath;
+            string workingDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSUtils.JSPTI_AppPath;
             string fileNameExe = "node.exe";
             string argString = "out\\main.js -ir=Combined -n="+ numRounds.ToString() + "-eeb="+ totalBytes.ToString() + " -nhc -efb="+ totalBytes.ToString() + " -mms="+ maxMessageSize.ToString() + " -bpr="+ bytesPerRound.ToString() + " -bsc="+ batchSizeCutoff.ToString();
 
@@ -343,7 +343,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+            string logDirectory = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
 
             int numRounds = 2;
             long totalBytes = 2147483648;
@@ -396,7 +396,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+            string logDirectory = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
 
             int numRounds = 3;
             long totalBytes = 3221225472;
@@ -1223,7 +1223,7 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
 
             // Remove the  "upgradeVersion": 0, from config file - whole basis of the test is to not have it there
-            string configFile = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSUtils.JSPTI_AppPath+"\\ambrosiaConfig.json";
+            string configFile = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSUtils.JSPTI_AppPath+"\\ambrosiaConfig.json";
             string tempFile = Path.GetTempFileName();
 
             using (var sr = new StreamReader(configFile)) 

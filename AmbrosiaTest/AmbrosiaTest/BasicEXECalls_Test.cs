@@ -75,7 +75,7 @@ namespace AmbrosiaTest
 
             string testName = "showhelpptijob";
             string fileName = "job";
-            string workingDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework;
+            string workingDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework;
             GenericVerifyHelp(testName, fileName, workingDir);
         }
 
@@ -95,7 +95,7 @@ namespace AmbrosiaTest
 
             string testName = "showhelpptiserver";
             string fileName = "server";
-            string workingDir = ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework;
+            string workingDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework;
             GenericVerifyHelp(testName, fileName, workingDir);
         }
 
@@ -108,7 +108,7 @@ namespace AmbrosiaTest
 
             string testName = "jsptishowhelptest";
 
-            string TestLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+            string TestLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             string logOutputFileName = testName + ".log";
             string LogOutputDirFileName = TestLogDir + "\\" + logOutputFileName;
 
@@ -117,7 +117,7 @@ namespace AmbrosiaTest
                 LogOutputDirFileName = TestLogDir + "\\" + testName + "_Core.log";
             }
 
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSUtils.JSPTI_AppPath;
+            string workingDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSUtils.JSPTI_AppPath;
             string fileName = "node";
             string argString = "/C node.exe out\\main.js -h > " + LogOutputDirFileName + " 2>&1";
 
@@ -131,7 +131,7 @@ namespace AmbrosiaTest
         public void GenericVerifyHelp(string testName, string fileName, string workingDir, string argString="")
         {
             Utilities MyUtils = new Utilities();
-            string TestLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+            string TestLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             string logOutputFileName = testName + ".log";
 
             // Get and log the proper help based on if netframework netcore

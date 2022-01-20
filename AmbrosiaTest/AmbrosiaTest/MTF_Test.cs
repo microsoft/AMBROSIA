@@ -30,10 +30,13 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_MTF_KILL_PERSIST_Test()
         {
+
+            Utilities MyUtils = new Utilities();
+
             string testName = "mtfkillpersist";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             Random rnd = new Random();
             bool pass = false;
             int minsBetweenKills = 2;
@@ -46,8 +49,6 @@ namespace AmbrosiaTest
             //int numRounds = 500; long totalNumBytesReceived = 536870912000; 
             //int numRounds = 1000; long totalNumBytesReceived = 1073741824000; 
             //************************
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -191,11 +192,13 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_MTF_NoKill_PERSIST_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "mtfnokillpersist";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
 
             //****************** MTF Settings ***************
             int numRounds = 5; long totalNumBytesReceived = 5368709120;  int maxMminsToWaitToFinish = 5;
@@ -205,8 +208,6 @@ namespace AmbrosiaTest
             //int numRounds = 500; long totalNumBytesReceived = 536870912000; int maxMminsToWaitToFinish = 360; 
             //int numRounds = 1000; long totalNumBytesReceived = 1073741824000; int maxMminsToWaitToFinish = 700; 
             //************************
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -286,11 +287,13 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_MTF_NoKill_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "mtfnokill";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
 
             //****************** MTF Settings ***************
             int numRounds = 5; long totalNumBytesReceived = 5368709120;  int maxMminsToWaitToFinish = 5;
@@ -299,8 +302,6 @@ namespace AmbrosiaTest
             //int numRounds = 500; long totalNumBytesReceived = 536870912000; int maxMminsToWaitToFinish = 160; // about 1.5 hrs
             //int numRounds = 1000; long totalNumBytesReceived = 1073741824000; int maxMminsToWaitToFinish = 320; // 3 hrs or so
             //************************
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
