@@ -34,16 +34,16 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_ActiveActive_KillPrimary_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             string testName = "activeactivekillprimary";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
             string newPrimary = "NOW I'm Primary";
             string iMChkPointer = " I'm a checkpointer";
             string iMSecondary = "I'm a secondary";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - primary
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -209,13 +209,13 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_ActiveActive_KillCheckPointer_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             string testName = "activeactivekillcheckpoint";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "5368709120";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - primary
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -375,13 +375,13 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_ActiveActive_KillSecondary_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             string testName = "activeactivekillsecondary";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "6442450944";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - primary
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -542,14 +542,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_ActiveActive_KillSecondaryAndCheckPointer_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             string testName = "activeactivekillsecondaryandcheckpoint";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
 
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - primary
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -721,14 +721,15 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_ActiveActive_Kill_Client_And_Server_Test()
         {
+
+            Utilities MyUtils = new Utilities();
+
             string testName = "activeactivekillclientandserver";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
             string newPrimary = "NOW I'm Primary";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - primary server
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -806,8 +807,8 @@ namespace AmbrosiaTest
             {
                 AMB_ServiceName = clientJobName,
                 AMB_ReplicaNumber = "1",
-                AMB_PortAppReceives = "5000",
-                AMB_PortAMBSends = "5001",
+                AMB_PortAppReceives = "5200",
+                AMB_PortAMBSends = "5201",
                 AMB_ServiceLogPath = ambrosiaLogDir,
                 AMB_CreateService = "A",
                 AMB_PauseAtStart = "N",
@@ -868,7 +869,7 @@ namespace AmbrosiaTest
 
             //start Client Job - checkpoint
             string logOutputFileName_ClientJob2 = testName + "_ClientJob2.log";
-            int clientJobProcessID2 = MyUtils.StartPerfClientJob("5001", "5000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob2);
+            int clientJobProcessID2 = MyUtils.StartPerfClientJob("5201", "5200", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob2);
 
             //start Client Job - secondary
             string logOutputFileName_ClientJob3 = testName + "_ClientJob3.log";
@@ -961,15 +962,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_ActiveActive_Kill_All_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             string testName = "activeactivekillall";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
             string newPrimary = "NOW I'm Primary";
-
-            // If failures in queue, set a flag to not run tests or clean up - helps debug tests that failed by keeping in proper state
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - primary server
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -1221,13 +1221,13 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_ActiveActive_AddNodeBeforeKillPrimary_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             string testName = "activeactiveaddnotekillprimary";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - primary
             string logOutputFileName_AMB1 = testName + "_AMB1.log";

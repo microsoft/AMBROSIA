@@ -88,7 +88,7 @@ namespace AmbrosiaTest
                 string PubSuccessString = CodeGenNoTypeScriptErrorsMessage + TestName + "_GeneratedPublisherFramework.g.ts";
                 bool pass = true;  // not actually used in this test but it is a generic utility fctn return
 
-                string testappdir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
+                string testappdir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
                 string sourcefile = testfileDir + TestFile;
                 string generatedfile = TestName + "_Generated";
                 string fileNameExe = "node.exe";
@@ -115,7 +115,7 @@ namespace AmbrosiaTest
                         // just give a breath for file to close 
                         Thread.Sleep(500);
 
-                        string TestLogDir = ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+                        string TestLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
                         string outputFile = TestLogDir + "\\" + testOutputLogFile;
                         var total = 0;
 
@@ -178,7 +178,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\node_modules\\Ambrosia-Node";
+            string workingDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"] + "\\node_modules\\Ambrosia-Node";
             string fileNameExe = "pwsh.exe";
             string argString = "-c npm run unittests";
 
@@ -226,7 +226,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
 
             // Launch the client job process with these values
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSPTI_AppPath;
+            string workingDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSPTI_AppPath;
             string fileNameExe = "node.exe";
             string argString = "out\\main.js";
 
@@ -333,8 +333,8 @@ namespace AmbrosiaTest
                 Utilities MyUtils = new Utilities();
 
                 // ** Restore Config file from golden one
-                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
-                string PTIPath = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"];
+                string basePath = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
+                string PTIPath = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"];
                 string ambrosiaGoldConfigfileName = "ambrosiaConfigGOLD.json";
                 string ambrosiaConfigfileName = "ambrosiaConfig.json";
 
@@ -353,7 +353,7 @@ namespace AmbrosiaTest
                 }
 
                 string icBinDirectory = Directory.GetCurrentDirectory() + "\\" + CurrentFramework;
-                string logDirectory = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
+                string logDirectory = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
 
                 //*** Copy from The Gold Config to App Config ***
                 string goldConfigFile = basePath + "\\" + ambrosiaGoldConfigfileName;
@@ -408,19 +408,21 @@ namespace AmbrosiaTest
         {
             try
             {
+                Utilities MyUtils = new Utilities();
+
                 string lbOptionsHeader = "lbOptions";
                 string data = string.Empty;
 
-                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSPTI_AppPath;
+                string basePath = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSPTI_AppPath;
 
                 // change it if client or server
                 if (instanceRole==JSPTI_ClientInstanceRole)
                 {
-                    basePath = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSPTI_ClientPath;
+                    basePath = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSPTI_ClientPath;
                 }
                 if (instanceRole == JSPTI_ServerInstanceRole)
                 {
-                    basePath = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSPTI_ServerPath;
+                    basePath = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSPTI_ServerPath;
                 }
 
                 string ambrosiaConfigfileName = "ambrosiaConfig.json";
@@ -483,7 +485,7 @@ namespace AmbrosiaTest
             string allRoundsComplete = "All rounds complete";
             string argForTTD = "Args: DebugInstance instanceName=" + testName+instanceRole.ToLower();
             string startingCheckPoint = "checkpoint="; // append the number below after calculated
-            string workingDir = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSPTI_AppPath;  // defaults to Combined (app)
+            string workingDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + JSPTI_AppPath;  // defaults to Combined (app)
             string logOutputFileName_TestApp = testName + "_" + instanceRole + "_VerifyTTD_"+ serverlognum.ToString() + ".log";
             string fileNameExe = "node.exe";
             string argString = "out\\main.js";
@@ -502,8 +504,8 @@ namespace AmbrosiaTest
                 argString = argString + " -ir=" + instanceRole;
                 strLogFileInstanceRole = instanceRole;  // used in the file name of the log
             }
-            string ambrosiaBaseLogDir = currentDir + "\\" + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
-            string ambrosiaLogDirFromPTI = ConfigurationManager.AppSettings["TTDAmbrosiaLogDirectory"] + "\\";
+            string ambrosiaBaseLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];  // don't put + "\\" on end as mess up location .. need append in Ambrosia call though
+            string ambrosiaLogDirFromPTI = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string ambServiceLogPath = ambrosiaBaseLogDir + "\\";
 
             // Enables echoing the 'doWork' method call back to the client
@@ -550,12 +552,14 @@ namespace AmbrosiaTest
             }
 
             // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
+/*  *#*#*# DELETE *#*#*
             if (Directory.Exists(ambrosiaBaseLogDir) == false)
             {
-                ambrosiaBaseLogDir = ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + ConfigurationManager.AppSettings["PTIAmbrosiaLogDirectory"];
+                ambrosiaBaseLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
                 ambrosiaLogDirFromPTI = "..\\..\\" + ambrosiaBaseLogDir + "\\";   // feels like there has to be better way of determining this - used for TTD
                 ambServiceLogPath = "..\\..\\" + ambrosiaBaseLogDir + "\\";
             }
+*/
 
             // used to get log file
             string ambrosiaFullLogDir = ambrosiaBaseLogDir + "\\" + testName + strLogFileInstanceRole + "_0";

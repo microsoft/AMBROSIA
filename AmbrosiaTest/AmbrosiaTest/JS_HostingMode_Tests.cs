@@ -44,8 +44,8 @@ namespace AmbrosiaTest
                 JS_Utilities JSUtils = new JS_Utilities();
 
                 // ** Restore Config file from golden one
-                string basePath = ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
-                string basePTIPath = ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"];
+                string basePath = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"];
+                string basePTIPath = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"];
                 string ambrosiaSeparatedGoldConfigfileName = "ambrosiaConfig.separatedGOLD.json";
                 string ambrosiaConfigfileName = "ambrosiaConfig.json";
 
@@ -103,7 +103,7 @@ namespace AmbrosiaTest
             string logOutputClientFileName_TestApp = testName + "Client_TestApp.log";
             string logOutputServerFileName_TestApp = testName + "Server_TestApp.log";
 
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
 
             // Set name and ports to match IC call for client and server
@@ -205,7 +205,7 @@ namespace AmbrosiaTest
 
             string testName = "jsptihostmodeseparatetest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
 
             // Set name and ports to match IC call
@@ -275,7 +275,7 @@ namespace AmbrosiaTest
 
             string testName = "jsptihostmodesepbiditest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
 
             // Set name and ports to match IC call
@@ -342,7 +342,7 @@ namespace AmbrosiaTest
 
             string testName = "jsptihostmodesepptifirsttest";
             string logOutputFileName_TestApp = testName + "_TestApp.log";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);

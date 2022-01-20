@@ -27,15 +27,15 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_Basic_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "basictest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"]+"\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"]+"\\";
             string byteSize = "3221225472";
                                
-            Utilities MyUtils = new Utilities();
-
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
             AMB_Settings AMB1 = new AMB_Settings
@@ -120,16 +120,16 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_GiantMessage_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "giantmessagetest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "5368709120";
             string messageSize = "67108864";
             string numRounds = "5";  
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -218,14 +218,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_KillJob_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
             string testName = "killjobtest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -340,14 +340,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_KillServer_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
             string testName = "killservertest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -450,14 +450,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_DoubleKill_RestartJOBFirst_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
             string testName = "doublekilljob";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -564,14 +564,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_DoubleKill_RestartSERVERFirst_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
             string testName = "doublekillserver";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -677,14 +677,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_StartImmCoordLast_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "startimmcoordlasttest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -775,15 +775,15 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_UpgradeServerAFTERServerDone_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "upgradeserverafterserverdone";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "4294967296";
             string newUpgradedPrimary = "becoming upgraded primary";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -894,15 +894,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_UpgradeServerBEFOREServerDone_Test()
         {
+            Utilities MyUtils = new Utilities();
 
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "upgradeserverbeforeserverdone";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -1014,19 +1013,19 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_UpgradeActiveActivePrimaryOnly_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             string testName = "upgradeactiveactiveprimaryonly";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
 
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "2147481250";
             string newPrimary = "NOW I'm Primary";
             string serverUpgradePrimary = "becoming upgraded primary";
             string upgradingImmCoordPrimary = "Migrating or upgrading. Must commit suicide since I'm the primary";
             string serverKilledMessage = "connection was forcibly closed";
             string immCoordKilledMessage = "KILLING WORKER:";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - primary -- in actuality, this is replica #0
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -1204,15 +1203,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_MultipleClientsPerServer_Test()
         {
-                        
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "multipleclientsperserver";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "12884901888"; 
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Server
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -1368,15 +1366,15 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_GiantCheckPoint_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "giantcheckpointtest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741"; // "1073741824";  // checkpoint sizes are off a bit between machines so do partial check
             long giantCheckpointSize = 2000483648;// 2147483648; 
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -1456,20 +1454,20 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_OverrideOptions_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "overrideoptions";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaLogDir_Invalid = "C:\\Junk\\";  // give invalid so know valid one overrode it
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
             int overrideJobReceivePort = 3000;
             int overrideJobSendPort = 3001;
             int overrideServerReceivePort = 4000;
             int overrideServerSendPort = 4001;
             string overrideIPAddress = "99.999.6.11";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -1566,15 +1564,15 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_MigrateClient_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "migrateclient";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
             string killJobMessage = "Migrating or upgrading. Must commit suicide since I'm the primary";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -1768,15 +1766,15 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_SaveLogsToFileAndBlob_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "savelogtofileandblob";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
             string ambrosiaBlobLoc = testName + "blobstore\\";  // specify the name of the blob instead of taking default by making blank
-            string ambrosiaFileLoc = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaFileLoc = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -1862,16 +1860,16 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_FixedMessage_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "fixedmessagetest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "5368709120";
             string messageSize = "32768";
             string numRounds = "5"; 
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -1951,16 +1949,16 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_NotBiDi_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "nobiditest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "5368709120";
             string messageSize = "1024";
             string numRounds = "5";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -2036,18 +2034,18 @@ namespace AmbrosiaTest
             //MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, AMB1.AMB_Version);
         }
 
-        
+
         /*
         //** This test verifies and TTD original log format
         [TestMethod]
         public void AMB_Verify_OrigLog_Test()
         {
-            
-            string testName = "orig";
-            string ambrosiaTestLogsDir = ConfigurationManager.AppSettings["TestRootDirectory"] + "\\TestLogs";//  
-            string byteSize = "1073741824";
 
             Utilities MyUtils = new Utilities();
+            
+            string testName = "orig";
+            string ambrosiaTestLogsDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["TestRootDirectory"] + "\\TestLogs";//  
+            string byteSize = "1073741824";
 
             // This will verify the original log format  using Ambrosia and also run TTD using PTI
             MyUtils.VerifyAmbrosiaLogFile(testName, Convert.ToInt64(byteSize), true, true, "0","",false,true, ambrosiaTestLogsDir);

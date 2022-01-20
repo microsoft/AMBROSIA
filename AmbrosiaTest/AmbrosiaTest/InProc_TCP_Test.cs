@@ -48,14 +48,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_InProc_TCP_ClientOnly_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "inproctcpclientonly";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -136,14 +136,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_InProc_TCP_ServerOnly_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "inproctcpserveronly";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -222,14 +222,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_InProc_ClientTCP_ServerPipe_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "inprocclienttcpserverpipe";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -301,14 +301,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_InProc_ClientPipe_ServerTCP_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "inprocclientpipeservertcp";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -381,14 +381,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_InProc_TCP_KillJob_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
             string testName = "inproctcpkilljobtest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -475,14 +475,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_InProc_TCP_KillServer_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has test name hard coded so if this changes, update Cleanup section too
             string testName = "inproctcpkillservertest";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -562,14 +562,14 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_InProc_TCP_UpgradeServer_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "inproctcpupgradeserver";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
@@ -659,15 +659,15 @@ namespace AmbrosiaTest
         [TestMethod]
         public void AMB_InProc_TCP_MigrateClient_Test()
         {
+            Utilities MyUtils = new Utilities();
+
             //NOTE - the Cleanup has this hard coded so if this changes, update Cleanup section too
             string testName = "inproctcpmigrateclient";
             string clientJobName = testName + "clientjob";
             string serverName = testName + "server";
-            string ambrosiaLogDir = ConfigurationManager.AppSettings["AmbrosiaInProcLogDirectory"] + "\\";
+            string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "13958643712";
             //string killJobMessage = "Migrating or upgrading. Must commit suicide since I'm the primary";
-
-            Utilities MyUtils = new Utilities();
 
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
