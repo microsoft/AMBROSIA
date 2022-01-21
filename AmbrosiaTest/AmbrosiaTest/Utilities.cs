@@ -84,6 +84,10 @@ namespace AmbrosiaTest
         //*********
         public string baseAmbrosiaPath = "";
 
+        //*#*#*# DEBUG ONLY - 
+        public string fullVerifyString = "";  // string of verify
+        //*#*#*# DEBUG ONLY - 
+
         // Since every test uses this, set the base directory in constructor
         public Utilities()
         {
@@ -144,12 +148,67 @@ namespace AmbrosiaTest
                     //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
                     Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
 
+                    //*#*#* DEBUG INFO 
+                    Thread.Sleep(2000);
+
+                    fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":TRUE ";
+                    if (File.Exists(LogOutputDirFileName) == false)
+                    {
+                        fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":FALSE ";
+                    }
+                    else
+                    {
+                        fullVerifyString = fullVerifyString + " Processforapp Length:" + processesforapp.Length.ToString();
+
+                        if (processesforapp.Length == 0)
+                        {
+                            StreamReader fileReader = new StreamReader(LogOutputDirFileName);
+                            string fileContents = fileReader.ReadToEnd();
+                            fullVerifyString = fullVerifyString + " LogOutput Contents:" + fileContents;
+                        }
+
+                        long logFileSize = new FileInfo(LogOutputDirFileName).Length;
+                        fullVerifyString = fullVerifyString + " LogOutput Size:" + logFileSize.ToString();
+                        fullVerifyString = fullVerifyString + " STOP CONTENTS";
+
+                    }
+                    fullVerifyString = fullVerifyString + " FULL STOP";
+
+                    fullVerifyString = fullVerifyString + " PROCESSES START";
+
+                    for (int i = 0; i <= processesforapp.Length - 1; i++)
+                    {
+                        string processName = processesforapp[i].ProcessName;
+
+                        fullVerifyString = fullVerifyString + " " + processName;
+                    }
+                    fullVerifyString = fullVerifyString + " PROCESSES END";
+
+                    //string[] filePaths = Directory.GetFiles(workingDirectory);
+
+                    //for (int i = 0; i <= filePaths.Length - 1; i++)
+                    //{
+                    //string onlyFile = Path.GetFileName(filePaths[i]);
+
+                    //fullVerifyString = fullVerifyString + " " + onlyFile;
+                    //}
+
+
+                    //*#*#* DEBUG INFO 
+
+
+
+
+/*
                     if (processesforapp.Length == 0)
                     {
                         FailureSupport(fileToExecute);
-                        Assert.Fail("<LaunchProcess> Failure! Process " + fileToExecute + " failed to start.");
+                        Assert.Fail("<LaunchProcess> Failure! Process. Working Dir:" + workingDirectory + " File to execute:" + startInfo.FileName + " Arguments:" + startInfo.Arguments + " failed to start.  FullVerifyString:" + fullVerifyString);
                         return 0;
                     }
+
+                    fullVerifyString = fullVerifyString + " GET PROCESSID";
+
 
                     processID = processesforapp[0].Id;
                     var processStart = processesforapp[0].StartTime;
@@ -166,7 +225,12 @@ namespace AmbrosiaTest
 
                     // Kill the process id for the cmd that launched the window so it isn't lingering
                     KillProcess(process.Id);
+*/
                 }
+
+
+                fullVerifyString = fullVerifyString + " Return PROCESS ID" + processID.ToString();
+
 
                 return processID;
 
@@ -174,7 +238,7 @@ namespace AmbrosiaTest
             catch (Exception e)
             {
                 FailureSupport("EmptyProcess");
-                Assert.Fail("<LaunchProcess> Failure! Exception:" + e.Message);
+                Assert.Fail("<LaunchProcess> Failure! Exception:" + e.Message + " Verify String:" + fullVerifyString);
                 return 0;
             }
         }
