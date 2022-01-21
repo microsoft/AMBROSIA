@@ -197,9 +197,7 @@ namespace AmbrosiaTest
                     //*#*#* DEBUG INFO 
 
 
-
-
-//**#*#* COMMENT HERE IF DOESN'T WORK
+/**#*#* COMMENT HERE IF DOESN'T WORK -- This kills the CMD that launches other processes. Might not need
                     if (processesforapp.Length == 0)
                     {
                         FailureSupport(fileToExecute);
@@ -225,7 +223,8 @@ namespace AmbrosiaTest
 
                     // Kill the process id for the cmd that launched the window so it isn't lingering
                     KillProcess(process.Id);
-//**#*#* COMMENT HERE IF DOESN'T WORK
+    /**#*#* COMMENT HERE IF DOESN'T WORK
+ */ 
 
                 }
 
@@ -383,11 +382,11 @@ namespace AmbrosiaTest
         {
             try
             {
-                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest\AmbrosiaTest";
-                string fileName = "powershell.exe";
-                string parameters = "-file CheckAmbrosiaStatus.ps1 " + nameOfObjects + "*";
-                bool waitForExit = false;
-                string testOutputLogFile = "AmbrosiaStatus_" + nameOfObjects + ".log";
+//                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest\AmbrosiaTest";
+  //              string fileName = "powershell.exe";
+      //          string parameters = "-file CheckAmbrosiaStatus.ps1 " + nameOfObjects + "*";
+    //            bool waitForExit = false;
+        //        string testOutputLogFile = "AmbrosiaStatus_" + nameOfObjects + ".log";
 
                 //*#*# -- remove this for now as it gets stuck and it hasn't been used
                 //*#*#   int powerShell_PID = LaunchProcess(scriptWorkingDir, fileName, parameters, waitForExit, testOutputLogFile);
