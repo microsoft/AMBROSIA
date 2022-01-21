@@ -1614,7 +1614,7 @@ namespace AmbrosiaTest
             KillProcessByName("MSBuild");
             KillProcessByName("dotnet");
             //KillProcessByName("cmd");  // sometimes processes hang
-            KillProcessByName("node");
+            //KillProcessByName("node");  // Azure Dev Ops uses Node so killing it here affects that
 
 
             // Give it a few second to clean things up a bit more
