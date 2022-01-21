@@ -199,7 +199,7 @@ namespace AmbrosiaTest
 
 
 
-/*
+//**#*#* COMMENT HERE IF DOESN'T WORK
                     if (processesforapp.Length == 0)
                     {
                         FailureSupport(fileToExecute);
@@ -225,7 +225,8 @@ namespace AmbrosiaTest
 
                     // Kill the process id for the cmd that launched the window so it isn't lingering
                     KillProcess(process.Id);
-*/
+//**#*#* COMMENT HERE IF DOESN'T WORK
+
                 }
 
 
