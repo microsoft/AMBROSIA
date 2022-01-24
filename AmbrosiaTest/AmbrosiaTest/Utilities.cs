@@ -1541,6 +1541,8 @@ namespace AmbrosiaTest
             Thread.Sleep(2000);
             CleanupAzureTables("unittest"); // all unit tests
             Thread.Sleep(2000);
+            CleanupAzureTables("VssAdministrator"); // Azure Dev Ops left overs
+            Thread.Sleep(2000);
         }
 
 
