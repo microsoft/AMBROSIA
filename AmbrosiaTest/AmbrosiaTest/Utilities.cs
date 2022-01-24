@@ -194,7 +194,7 @@ namespace AmbrosiaTest
                     //*#*#* DEBUG INFO 
 
 
-/**#*#* COMMENT HERE IF DOESN'T WORK -- This kills the CMD that launches other processes.
+/**#*#* IF DON'T COMMENT HERE THEN AZURE DEV OPS DOESN'T WORK -- This kills the CMD that launches other processes.
                     // cleans up cmd.exe that launched the process but probably not needed
                     if (processesforapp.Length == 0)
                     {
@@ -255,6 +255,8 @@ namespace AmbrosiaTest
             for (int i = 0; i < maxTimeLoops; i++)
             {
 
+                fullVerifyString = "CONTENTS START:";
+
                 // This file is being written to when this is called so need to do it a bit fancier
                 FileStream logFileStream = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 StreamReader logFileReader = new StreamReader(logFileStream);
@@ -262,6 +264,7 @@ namespace AmbrosiaTest
                 while (!logFileReader.EndOfStream)
                 {
                     string line = logFileReader.ReadLine();
+                    fullVerifyString = fullVerifyString + " "+line;  // used for debugging to verify contents - will show up in the FAIL statement if it fails - most useful in Azure Dev Ops debugging
 
                     // Looking for "DONE"
                     if (line.Contains(doneString))
@@ -306,6 +309,9 @@ namespace AmbrosiaTest
                 }
             }
 
+            fullVerifyString = fullVerifyString + " CONTENTS STOP";  
+
+
             // made it here so we know it either DONE was not found or the DONE was found but the extra string was not found
             // only pop assert if asked to do that
             if (assertOnFalseReturn == true)
@@ -315,11 +321,12 @@ namespace AmbrosiaTest
                 // If times out without string hit - then pop exception
                 if (checkForDoneString)
                 {
-                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for '" + doneString + "' string AND the extra string:" + extraStringToFind + " in log file:" + logFile + " but did not find one or both after waiting:" + maxDelay.ToString() + " minutes.");
+
+                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for '" + doneString + "' string AND the extra string:" + extraStringToFind + " in log file:" + logFile + " but did not find one or both after waiting:" + maxDelay.ToString() + " minutes. "+ fullVerifyString);
                 }
                 else
                 {
-                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for string:" + extraStringToFind + " in log file:" + logFile + " but did not find it after waiting:" + maxDelay.ToString() + " minutes.");
+                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for string:" + extraStringToFind + " in log file:" + logFile + " but did not find it after waiting:" + maxDelay.ToString() + " minutes. "+ fullVerifyString);
                 }
             }
 
