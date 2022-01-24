@@ -70,8 +70,9 @@ namespace AmbrosiaTest
         #endregion
 
         //** Basic end to end test with minimal rounds and message size of 1GB ... could make it smaller and it would be faster.
+        //** "ADO" is for Azure Dev Ops
         [TestMethod]
-        [TestCategory("Unit")]
+        [TestCategory("ADO")]
         public void UnitTest_BasicEndtoEnd_Test()
         {
             Utilities MyUtils = new Utilities();
@@ -167,7 +168,6 @@ namespace AmbrosiaTest
 
         //** Basic end to end test where something dies and restart it and works still
         [TestMethod]
-        [TestCategory("Unit")]
         public void UnitTest_BasicRestartEndtoEnd_Test()
         {
             Utilities MyUtils = new Utilities();
@@ -285,7 +285,6 @@ namespace AmbrosiaTest
         //  
         //****************************
         [TestMethod]
-        [TestCategory("Unit")]
         public void UnitTest_BasicActiveActive_KillPrimary_Test()
         {
             Utilities MyUtils = new Utilities();
@@ -450,7 +449,7 @@ namespace AmbrosiaTest
 
         //** Basic end to end test for the InProc TCP feature with minimal rounds and message size of 1GB ... could make it smaller and it would be faster.
         [TestMethod]
-        [TestCategory("Unit")]
+        [TestCategory("ADO")]
         public void UnitTest_BasicInProcTCPEndtoEnd_Test()
         {
             Utilities MyUtils = new Utilities();
@@ -537,7 +536,6 @@ namespace AmbrosiaTest
 
         //** Basic end to end test for the InProc TCP feature with minimal rounds and message size of 1GB ... could make it smaller and it would be faster.
         [TestMethod]
-        [TestCategory("Unit")]
         public void UnitTest_BasicInProcPipeEndtoEnd_Test()
         {
             Utilities MyUtils = new Utilities();
