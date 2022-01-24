@@ -169,6 +169,7 @@ namespace AmbrosiaTest
 
         //** Basic end to end test with minimal rounds and message size of 1GB ... could make it smaller and it would be faster.
         [TestMethod]
+        [TestCategory("Unit")]
         public void UnitTest_BasicEndtoEnd_Test()
         {
             Utilities MyUtils = new Utilities();

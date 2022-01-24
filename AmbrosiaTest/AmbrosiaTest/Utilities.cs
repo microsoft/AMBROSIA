@@ -84,9 +84,8 @@ namespace AmbrosiaTest
         //*********
         public string baseAmbrosiaPath = "";
 
-        //*#*#*# DEBUG ONLY - 
-        public string fullVerifyString = "";  // string of verify
-        //*#*#*# DEBUG ONLY - 
+        // Used to store ongoing debug string to verify debug info
+        public string fullVerifyString = "";  
 
         // Since every test uses this, set the base directory in constructor
         public Utilities()
@@ -192,12 +191,11 @@ namespace AmbrosiaTest
 
                     //fullVerifyString = fullVerifyString + " " + onlyFile;
                     //}
-
-
                     //*#*#* DEBUG INFO 
 
 
-/**#*#* COMMENT HERE IF DOESN'T WORK -- This kills the CMD that launches other processes. Might not need
+/**#*#* COMMENT HERE IF DOESN'T WORK -- This kills the CMD that launches other processes.
+                    // cleans up cmd.exe that launched the process but probably not needed
                     if (processesforapp.Length == 0)
                     {
                         FailureSupport(fileToExecute);
