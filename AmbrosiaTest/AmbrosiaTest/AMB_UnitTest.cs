@@ -168,6 +168,7 @@ namespace AmbrosiaTest
 
         //** Basic end to end test where something dies and restart it and works still
         [TestMethod]
+        [TestCategory("ADO")]
         public void UnitTest_BasicRestartEndtoEnd_Test()
         {
             Utilities MyUtils = new Utilities();
