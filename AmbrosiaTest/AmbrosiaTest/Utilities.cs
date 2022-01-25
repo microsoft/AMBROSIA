@@ -123,7 +123,7 @@ namespace AmbrosiaTest
                 CreateNoWindow = false,
                 WorkingDirectory = workingDirectory,
                 FileName = "cmd.exe",
-                Arguments = "/C " + fileName + " " + parameterString + " > " + LogOutputDirFileName + " 2>&1"
+                Arguments = "/C " + fileName + " " + parameterString + " > " + LogOutputDirFileName + " 2>&1 exit 0"
             };
 
             // Log the info to debug
@@ -183,6 +183,11 @@ namespace AmbrosiaTest
                     }
                     fullVerifyString = fullVerifyString + " PROCESSES END";
 
+
+                    // Kills the calling cmd 
+     //               KillProcessByName("cmd");  // sometimes processes hang
+
+
                     //string[] filePaths = Directory.GetFiles(workingDirectory);
 
                     //for (int i = 0; i <= filePaths.Length - 1; i++)
@@ -194,8 +199,7 @@ namespace AmbrosiaTest
                     //*#*#* DEBUG INFO 
 
 
-/**#*#* IF DON'T COMMENT HERE THEN AZURE DEV OPS DOESN'T WORK -- This kills the CMD that launches other processes.
-                    // cleans up cmd.exe that launched the process but probably not needed
+                    // Gets proper process ID and returns it
                     if (processesforapp.Length == 0)
                     {
                         FailureSupport(fileToExecute);
@@ -220,9 +224,7 @@ namespace AmbrosiaTest
                     }
 
                     // Kill the process id for the cmd that launched the window so it isn't lingering
-                    KillProcess(process.Id);
-    /**#*#* COMMENT HERE IF DOESN'T WORK
- */ 
+//*#*#*#*#                    KillProcess(process.Id);
 
                 }
 
