@@ -85,7 +85,7 @@ namespace AmbrosiaTest
         public string baseAmbrosiaPath = "";
 
         // Used to store ongoing debug string to verify debug info
-        public string fullVerifyString = "";  
+        public string fullVerifyString = "";
 
         // Since every test uses this, set the base directory in constructor
         public Utilities()
@@ -95,6 +95,41 @@ namespace AmbrosiaTest
             int AmbrosiaTestLoc = currentDir.IndexOf("AmbrosiaTest");
             baseAmbrosiaPath = currentDir.Substring(0, AmbrosiaTestLoc);  
         }
+
+//*#*#* DEBUG *#*#*#*
+        public string currentLogFile = "";
+//*#*#* DEBUG *#*#*#*
+
+
+
+
+//*#*#*# DEBUG AREA
+        void process_WriteDataReceivedToFile(object sender, DataReceivedEventArgs e)
+        {
+            Console.WriteLine(e.Data + "\n");
+
+
+            string logDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+
+            try
+            {
+                if (e.Data != null)
+                {
+                    if (!Directory.Exists(logDir))
+                        Directory.CreateDirectory(logDir);
+                    
+                    File.AppendAllText(logDir + @"\"+ currentLogFile, e.Data.ToString());
+
+                }
+            }
+            catch
+            {
+
+            }
+
+        }
+//*#*#*# DEBUG AREA
+
 
 
         // Returns the Process ID of the process so you then can something with it
@@ -111,128 +146,189 @@ namespace AmbrosiaTest
                 fileToExecute = "dotnet.exe";
             }
 
-            string TestLogDir = baseAmbrosiaPath+ConfigurationManager.AppSettings["TestLogOutputDirectory"];
-            string LogOutputDirFileName = TestLogDir + "\\" + testOutputLogFile;
-
-            // Use ProcessStartInfo class
-            ProcessStartInfo startInfo = new ProcessStartInfo()
-            {
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                WindowStyle = ProcessWindowStyle.Normal,
-                CreateNoWindow = false,
-                WorkingDirectory = workingDirectory,
-                FileName = "cmd.exe",
-                Arguments = "/C " + fileName + " " + parameterString + " > " + LogOutputDirFileName + " 2>&1 exit 0"
-            };
-
-            // Log the info to debug
-            string logInfo = "<LaunchProcess> " + fileName + " " + parameterString;
-            LogDebugInfo(logInfo);
-
             try
             {
-                // Start cmd.exe process that launches proper exe
-                Process process = Process.Start(startInfo);
-                if (waitForExit)
-                    process.WaitForExit();
 
-                // Give it a second to completely start
-                Thread.Sleep(2000);
+                string TestLogDir = baseAmbrosiaPath+ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+                string LogOutputDirFileName = TestLogDir + "\\" + testOutputLogFile;
+
+
+                //#*#* DEBUG *#*#*# Public string that is set here but used in the DataReceivedEventHandler
+                currentLogFile = testOutputLogFile;
+
 
                 int processID = 999;
 
-                if (startInfo.Arguments.Contains("dotnet Ambrosia.dll") == false)
+                // Use ProcessStartInfo class
+                ProcessStartInfo startInfo = new ProcessStartInfo()
                 {
-                    //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
-                    Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
-
-                    //*#*#* DEBUG INFO 
-                    Thread.Sleep(2000);
-
-                    fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":TRUE ";
-                    if (File.Exists(LogOutputDirFileName) == false)
-                    {
-                        fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":FALSE ";
-                    }
-                    else
-                    {
-                        fullVerifyString = fullVerifyString + " Processforapp Length:" + processesforapp.Length.ToString();
-
-                        if (processesforapp.Length == 0)
-                        {
-                            StreamReader fileReader = new StreamReader(LogOutputDirFileName);
-                            string fileContents = fileReader.ReadToEnd();
-                            fullVerifyString = fullVerifyString + " LogOutput Contents:" + fileContents;
-                        }
-
-                        long logFileSize = new FileInfo(LogOutputDirFileName).Length;
-                        fullVerifyString = fullVerifyString + " LogOutput Size:" + logFileSize.ToString();
-                        fullVerifyString = fullVerifyString + " STOP CONTENTS";
-
-                    }
-                    fullVerifyString = fullVerifyString + " FULL STOP";
-
-                    fullVerifyString = fullVerifyString + " PROCESSES START";
-
-                    for (int i = 0; i <= processesforapp.Length - 1; i++)
-                    {
-                        string processName = processesforapp[i].ProcessName;
-
-                        fullVerifyString = fullVerifyString + " " + processName;
-                    }
-                    fullVerifyString = fullVerifyString + " PROCESSES END";
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    WindowStyle = ProcessWindowStyle.Normal,
+                    CreateNoWindow = false,
+                    WorkingDirectory = workingDirectory,
+                    FileName = "cmd.exe",
+                    Arguments = "/C " + fileName + " " + parameterString + " > " + LogOutputDirFileName + " 2>&1 exit 0"
+                    //FileName = workingDirectory+"\\"+fileName,
+                    //Arguments = parameterString
+                };
 
 
-                    // Kills the calling cmd 
-     //               KillProcessByName("cmd");  // sometimes processes hang
+                //*#*#*# DEBUG AREA -- 
+                /*
+                                Process process = new Process();
+
+                                process.EnableRaisingEvents = true;
+                                process.OutputDataReceived += new DataReceivedEventHandler(process_WriteDataReceivedToFile);
+                                process.StartInfo.FileName = workingDirectory + "\\" + fileName;
+                                process.StartInfo.Arguments = parameterString;
+                                process.StartInfo.UseShellExecute = false;
+                                process.StartInfo.WorkingDirectory = workingDirectory;
+                                process.StartInfo.RedirectStandardError = true;
+                                process.StartInfo.RedirectStandardOutput = true;
+
+                                // Log the info to debug before process is started
+                                string logInfo = "<LaunchProcess> " + fileName + " " + parameterString;
+                                LogDebugInfo(logInfo);
+
+                                process.Start();
+                                process.BeginErrorReadLine();
+                                process.BeginOutputReadLine();
+                */
 
 
-                    //string[] filePaths = Directory.GetFiles(workingDirectory);
+                //*#*#*# DEBUG AREA
+                //** This works for files that end 
+                /*
+                                var outputStream = new StreamWriter(LogOutputDirFileName);
 
-                    //for (int i = 0; i <= filePaths.Length - 1; i++)
-                    //{
-                    //string onlyFile = Path.GetFileName(filePaths[i]);
+                                Process process = new Process();
+                                process.StartInfo.FileName = workingDirectory + "\\" + fileName;
+                                process.StartInfo.Arguments = parameterString;
+                                process.StartInfo.UseShellExecute = false;
+                                process.StartInfo.RedirectStandardOutput = true;
+                                process.OutputDataReceived += new DataReceivedEventHandler((sender, e) =>
+                                {
+                                    if (!String.IsNullOrEmpty(e.Data))
+                                    {
+                                        outputStream.WriteLine(e.Data);
+                                    }
+                                });
 
-                    //fullVerifyString = fullVerifyString + " " + onlyFile;
-                    //}
-                    //*#*#* DEBUG INFO 
+                                process.Start();
+
+                                int processID = process.Id;
+
+                                process.BeginOutputReadLine();
+
+                //                process.WaitForExit();
+                  //              process.Close();
+
+                                outputStream.Close();
+                */
+                //*#*#*# DEBUG AREA
 
 
-                    // Gets proper process ID and returns it
+
+
+                // Start cmd.exe process that launches proper exe
+            Process process = Process.Start(startInfo);
+            if (waitForExit)
+                process.WaitForExit();
+
+            // Give it a second to completely start
+            Thread.Sleep(2000);
+
+            if (startInfo.Arguments.Contains("dotnet Ambrosia.dll") == false)
+            {
+                //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
+                Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
+
+                //*#*#* DEBUG INFO 
+                Thread.Sleep(2000);
+
+                fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":TRUE ";
+                if (File.Exists(LogOutputDirFileName) == false)
+                {
+                    fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":FALSE ";
+                }
+                else
+                {
+                    fullVerifyString = fullVerifyString + " Processforapp Length:" + processesforapp.Length.ToString();
+
                     if (processesforapp.Length == 0)
                     {
-                        FailureSupport(fileToExecute);
-                        Assert.Fail("<LaunchProcess> Failure! Process. Working Dir:" + workingDirectory + " File to execute:" + startInfo.FileName + " Arguments:" + startInfo.Arguments + " failed to start.  FullVerifyString:" + fullVerifyString);
-                        return 0;
+                        StreamReader fileReader = new StreamReader(LogOutputDirFileName);
+                        string fileContents = fileReader.ReadToEnd();
+                        fullVerifyString = fullVerifyString + " LogOutput Contents:" + fileContents;
                     }
 
-                    fullVerifyString = fullVerifyString + " GET PROCESSID";
-
-
-                    processID = processesforapp[0].Id;
-                    var processStart = processesforapp[0].StartTime;
-
-                    // make sure to get most recent one as that is safe to know that is one we just created
-                    for (int i = 1; i <= processesforapp.Length - 1; i++)
-                    {
-                        if (processStart < processesforapp[i].StartTime)
-                        {
-                            processStart = processesforapp[i].StartTime;
-                            processID = processesforapp[i].Id;
-                        }
-                    }
-
-                    // Kill the process id for the cmd that launched the window so it isn't lingering
-//*#*#*#*#                    KillProcess(process.Id);
+                    long logFileSize = new FileInfo(LogOutputDirFileName).Length;
+                    fullVerifyString = fullVerifyString + " LogOutput Size:" + logFileSize.ToString();
+                    fullVerifyString = fullVerifyString + " STOP CONTENTS";
 
                 }
+                fullVerifyString = fullVerifyString + " FULL STOP";
+
+                fullVerifyString = fullVerifyString + " PROCESSES START";
+
+                for (int i = 0; i <= processesforapp.Length - 1; i++)
+                {
+                    string processName = processesforapp[i].ProcessName;
+
+                    fullVerifyString = fullVerifyString + " " + processName;
+                }
+                fullVerifyString = fullVerifyString + " PROCESSES END";
 
 
-                fullVerifyString = fullVerifyString + " Return PROCESS ID" + processID.ToString();
+                // Kills the calling cmd 
+    //               KillProcessByName("cmd");  // sometimes processes hang
 
 
-                return processID;
+                //string[] filePaths = Directory.GetFiles(workingDirectory);
+
+                //for (int i = 0; i <= filePaths.Length - 1; i++)
+                //{
+                //string onlyFile = Path.GetFileName(filePaths[i]);
+
+                //fullVerifyString = fullVerifyString + " " + onlyFile;
+                //}
+                //*#*#* DEBUG INFO 
+
+
+                // Gets proper process ID and returns it
+                if (processesforapp.Length == 0)
+                {
+                    FailureSupport(fileToExecute);
+                    Assert.Fail("<LaunchProcess> Failure! Process. Working Dir:" + workingDirectory + " File to execute:" + startInfo.FileName + " Arguments:" + startInfo.Arguments + " failed to start.  FullVerifyString:" + fullVerifyString);
+                    return 0;
+                }
+
+                fullVerifyString = fullVerifyString + " GET PROCESSID";
+
+
+                processID = processesforapp[0].Id;
+                var processStart = processesforapp[0].StartTime;
+
+                // make sure to get most recent one as that is safe to know that is one we just created
+                for (int i = 1; i <= processesforapp.Length - 1; i++)
+                {
+                    if (processStart < processesforapp[i].StartTime)
+                    {
+                        processStart = processesforapp[i].StartTime;
+                        processID = processesforapp[i].Id;
+                    }
+                }
+
+                // Kill the process id for the cmd that launched the window so it isn't lingering
+                KillProcess(process.Id);
+
+            }
+
+            fullVerifyString = fullVerifyString + " Return PROCESS ID" + processID.ToString();
+
+
+            return processID;
 
             }
             catch (Exception e)
