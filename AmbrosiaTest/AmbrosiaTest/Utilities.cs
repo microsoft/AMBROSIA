@@ -315,36 +315,38 @@ namespace AmbrosiaTest
                     //               KillProcessByName("cmd");  // sometimes processes hang
 
 
-                    // Gets proper process ID and returns it
-                    if (processesforapp.Length == 0)
-                    {
-                        FailureSupport(fileToExecute);
-                        Assert.Fail("<LaunchProcess> Failure! Process. Working Dir:" + workingDirectory + " File to execute:" + startInfo.FileName + " Arguments:" + startInfo.Arguments + " failed to start.  FullVerifyString:" + fullVerifyString);
-                        return 0;
-                    }
-
                     fullVerifyString = fullVerifyString + " GET PROCESSID";
 
-
-                    processID = processesforapp[0].Id;
-                    var processStart = processesforapp[0].StartTime;
-
-                    // make sure to get most recent one as that is safe to know that is one we just created
-                    for (int i = 1; i <= processesforapp.Length - 1; i++)
+                    // Gets proper process ID and returns it -- just warn that it didn't find it right away as it might have been too fast
+                    if (processesforapp.Length == 0)
                     {
-                        if (processStart < processesforapp[i].StartTime)
+                        //*#*#*#                        FailureSupport(fileToExecute);
+                        //#*#*#                         Assert.Fail("<LaunchProcess> Failure! Process. Working Dir:" + workingDirectory + " File to execute:" + startInfo.FileName + " Arguments:" + startInfo.Arguments + " failed to start.  FullVerifyString:" + fullVerifyString);
+                        //#*#*                        return 0;
+                        LogDebugInfo("WARNING - Process for:" + fileName + " was not found. Maybe stopped before actually shown as running.");
+                    }
+                    else
+                    {
+
+                        processID = processesforapp[0].Id;
+                        var processStart = processesforapp[0].StartTime;
+
+                        // make sure to get most recent one as that is safe to know that is one we just created
+                        for (int i = 1; i <= processesforapp.Length - 1; i++)
                         {
-                            processStart = processesforapp[i].StartTime;
-                            processID = processesforapp[i].Id;
+                            if (processStart < processesforapp[i].StartTime)
+                            {
+                                processStart = processesforapp[i].StartTime;
+                                processID = processesforapp[i].Id;
+                            }
                         }
                     }
 
-                    LogDebugInfo("Kill CMD Process: "+process.Id.ToString());
+                    LogDebugInfo("Kill CMD Process: " + process.Id.ToString());
 
 
                     // Kill the process id for the cmd that launched the window so it isn't lingering
                     KillProcess(process.Id);
-
                 }
 
                 fullVerifyString = fullVerifyString + " Return PROCESS ID " + processID.ToString();
@@ -646,7 +648,7 @@ namespace AmbrosiaTest
             {
                 // Don't want to pop exception because if not there, then that is ok most of time this is just clean up any way
                 //Assert.Fail("<KillProcess> Failure! Exception:" + e.Message);
-                string logInfo = "<KillProcess> Exception:" + e.Message;
+                string logInfo = "<KillProcess> WARNING:" + e.Message;
                 LogDebugInfo(logInfo);
             }
         }
