@@ -323,7 +323,7 @@ namespace AmbrosiaTest
                         //*#*#*#                        FailureSupport(fileToExecute);
                         //#*#*#                         Assert.Fail("<LaunchProcess> Failure! Process. Working Dir:" + workingDirectory + " File to execute:" + startInfo.FileName + " Arguments:" + startInfo.Arguments + " failed to start.  FullVerifyString:" + fullVerifyString);
                         //#*#*                        return 0;
-                        LogDebugInfo("WARNING - Process for:" + fileName + " was not found. Maybe stopped before actually shown as running.");
+                        LogDebugInfo("*** WARNING - Process for:" + fileName + " was not found. Maybe stopped before actually shown as running.");
                     }
                     else
                     {

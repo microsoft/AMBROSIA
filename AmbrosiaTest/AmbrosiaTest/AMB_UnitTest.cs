@@ -168,7 +168,7 @@ namespace AmbrosiaTest
 
         //** Basic end to end test where something dies and restart it and works still
         [TestMethod]
-        //[TestCategory("ADO")]
+        [TestCategory("ADO")]
         public void UnitTest_BasicRestartEndtoEnd_Test()
         {
             Utilities MyUtils = new Utilities();
@@ -450,7 +450,7 @@ namespace AmbrosiaTest
 
         //** Basic end to end test for the InProc TCP feature with minimal rounds and message size of 1GB ... could make it smaller and it would be faster.
         [TestMethod]
-        //[TestCategory("ADO")]
+        [TestCategory("ADO")]
         public void UnitTest_BasicInProcTCPEndtoEnd_Test()
         {
             Utilities MyUtils = new Utilities();
