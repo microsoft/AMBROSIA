@@ -239,20 +239,21 @@ namespace AmbrosiaTest
             // Give it a second to completely start
             Thread.Sleep(2000);
 
-            if (startInfo.Arguments.Contains("dotnet Ambrosia.dll") == false)
-            {
+                if (startInfo.Arguments.Contains("dotnet Ambrosia.dll") == false)
+                {
 
 
                     //#*#* DEBUG AREA TO LIST ALL PROCESSES 
-                    string AllProcessList = "All Processes START: ";
+                    string AllProcessList = "*** Launching: *** "+ fileName + Environment.NewLine;
+                    AllProcessList = AllProcessList+ "*** All Processes START *** " + Environment.NewLine;
                     Process[] allprocesses = Process.GetProcesses();
                     for (int i = 0; i <= allprocesses.Length - 1; i++)
                     {
                         string processName2 = allprocesses[i].ProcessName;
 
-                        AllProcessList = AllProcessList + allprocesses[i].ProcessName+ Environment.NewLine;
+                        AllProcessList = AllProcessList + allprocesses[i].ProcessName + " ("+ allprocesses[i].Id.ToString()+")"+Environment.NewLine;
                     }
-                    AllProcessList = AllProcessList +  " All Processes STOP: ";
+                    AllProcessList = AllProcessList + "*** All Processes STOP *** ";
                     LogDebugInfo(AllProcessList);
                     //*#*#*# DEBUG AREA
 
@@ -260,91 +261,98 @@ namespace AmbrosiaTest
                     //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
                     Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
 
-                //*#*#* DEBUG INFO 
-                Thread.Sleep(2000);
+                    //*#*#* DEBUG INFO 
+                    Thread.Sleep(2000);
 
-                fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":TRUE ";
-                if (File.Exists(LogOutputDirFileName) == false)
-                {
-                    fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":FALSE ";
-                }
-                else
-                {
-                    fullVerifyString = fullVerifyString + " Processforapp Length:" + processesforapp.Length.ToString();
+                    /*#*#*# DEBUG AREA
+                    fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":TRUE ";
+                    if (File.Exists(LogOutputDirFileName) == false)
+                    {
+                        fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":FALSE ";
+                    }
+                    else
+                    {
+                        fullVerifyString = fullVerifyString + " Processforapp Length:" + processesforapp.Length.ToString();
 
+                        if (processesforapp.Length == 0)
+                        {
+                            StreamReader fileReader = new StreamReader(LogOutputDirFileName);
+                            string fileContents = fileReader.ReadToEnd();
+                            fullVerifyString = fullVerifyString + " LogOutput Contents:" + fileContents;
+                        }
+
+                        long logFileSize = new FileInfo(LogOutputDirFileName).Length;
+                        fullVerifyString = fullVerifyString + " LogOutput Size:" + logFileSize.ToString();
+                        fullVerifyString = fullVerifyString + " STOP CONTENTS";
+
+                    }
+                    fullVerifyString = fullVerifyString + " FULL STOP";
+                    */ 
+
+                    fullVerifyString = fullVerifyString + " PROCESSES START";
+
+                    for (int i = 0; i <= processesforapp.Length - 1; i++)
+                    {
+                        string processName = processesforapp[i].ProcessName;
+
+                        fullVerifyString = fullVerifyString + " " + processName;
+                    }
+                    fullVerifyString = fullVerifyString + " PROCESSES END";
+                    //*#*#*# DEBUG AREA
+
+
+                    //string[] filePaths = Directory.GetFiles(workingDirectory);
+
+                    //for (int i = 0; i <= filePaths.Length - 1; i++)
+                    //{
+                    //string onlyFile = Path.GetFileName(filePaths[i]);
+
+                    //fullVerifyString = fullVerifyString + " " + onlyFile;
+                    //}
+                    //*#*#*# DEBUG AREA
+
+                    // Kills the calling cmd 
+                    //               KillProcessByName("cmd");  // sometimes processes hang
+
+
+                    // Gets proper process ID and returns it
                     if (processesforapp.Length == 0)
                     {
-                        StreamReader fileReader = new StreamReader(LogOutputDirFileName);
-                        string fileContents = fileReader.ReadToEnd();
-                        fullVerifyString = fullVerifyString + " LogOutput Contents:" + fileContents;
+                        FailureSupport(fileToExecute);
+                        Assert.Fail("<LaunchProcess> Failure! Process. Working Dir:" + workingDirectory + " File to execute:" + startInfo.FileName + " Arguments:" + startInfo.Arguments + " failed to start.  FullVerifyString:" + fullVerifyString);
+                        return 0;
                     }
 
-                    long logFileSize = new FileInfo(LogOutputDirFileName).Length;
-                    fullVerifyString = fullVerifyString + " LogOutput Size:" + logFileSize.ToString();
-                    fullVerifyString = fullVerifyString + " STOP CONTENTS";
-
-                }
-                fullVerifyString = fullVerifyString + " FULL STOP";
-
-                fullVerifyString = fullVerifyString + " PROCESSES START";
-
-                for (int i = 0; i <= processesforapp.Length - 1; i++)
-                {
-                    string processName = processesforapp[i].ProcessName;
-
-                    fullVerifyString = fullVerifyString + " " + processName;
-                }
-                fullVerifyString = fullVerifyString + " PROCESSES END";
+                    fullVerifyString = fullVerifyString + " GET PROCESSID";
 
 
-                // Kills the calling cmd 
-    //               KillProcessByName("cmd");  // sometimes processes hang
+                    processID = processesforapp[0].Id;
+                    var processStart = processesforapp[0].StartTime;
 
-
-                //string[] filePaths = Directory.GetFiles(workingDirectory);
-
-                //for (int i = 0; i <= filePaths.Length - 1; i++)
-                //{
-                //string onlyFile = Path.GetFileName(filePaths[i]);
-
-                //fullVerifyString = fullVerifyString + " " + onlyFile;
-                //}
-                //*#*#* DEBUG INFO 
-
-
-                // Gets proper process ID and returns it
-                if (processesforapp.Length == 0)
-                {
-                    FailureSupport(fileToExecute);
-                    Assert.Fail("<LaunchProcess> Failure! Process. Working Dir:" + workingDirectory + " File to execute:" + startInfo.FileName + " Arguments:" + startInfo.Arguments + " failed to start.  FullVerifyString:" + fullVerifyString);
-                    return 0;
-                }
-
-                fullVerifyString = fullVerifyString + " GET PROCESSID";
-
-
-                processID = processesforapp[0].Id;
-                var processStart = processesforapp[0].StartTime;
-
-                // make sure to get most recent one as that is safe to know that is one we just created
-                for (int i = 1; i <= processesforapp.Length - 1; i++)
-                {
-                    if (processStart < processesforapp[i].StartTime)
+                    // make sure to get most recent one as that is safe to know that is one we just created
+                    for (int i = 1; i <= processesforapp.Length - 1; i++)
                     {
-                        processStart = processesforapp[i].StartTime;
-                        processID = processesforapp[i].Id;
+                        if (processStart < processesforapp[i].StartTime)
+                        {
+                            processStart = processesforapp[i].StartTime;
+                            processID = processesforapp[i].Id;
+                        }
                     }
+
+                    LogDebugInfo("Kill CMD Process: "+process.Id.ToString());
+
+
+                    // Kill the process id for the cmd that launched the window so it isn't lingering
+                    KillProcess(process.Id);
+
                 }
 
-                // Kill the process id for the cmd that launched the window so it isn't lingering
-                KillProcess(process.Id);
+                fullVerifyString = fullVerifyString + " Return PROCESS ID " + processID.ToString();
 
-            }
-
-            fullVerifyString = fullVerifyString + " Return PROCESS ID" + processID.ToString();
+                LogDebugInfo("Return "+fileName+" Process ID: " + processID.ToString());
 
 
-            return processID;
+                return processID;
 
             }
             catch (Exception e)
@@ -848,8 +856,8 @@ namespace AmbrosiaTest
                 ambServiceLogPath = "..\\..\\"+ambrosiaLogDir + "\\";
             }
 */
-            // used to get log file
-            string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_0";  // client is always 0 so don't use + CurrentVersion;
+                    // used to get log file
+                    string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_0";  // client is always 0 so don't use + CurrentVersion;
             string ambrosiaServerLogDir = ambrosiaLogDir + "\\" + testName + "server_" + CurrentVersion;
 
             string startingClientChkPtVersionNumber = "1";
