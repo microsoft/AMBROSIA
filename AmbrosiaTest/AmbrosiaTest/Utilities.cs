@@ -84,9 +84,6 @@ namespace AmbrosiaTest
         //*********
         public string baseAmbrosiaPath = "";
 
-        // Used to store ongoing debug string to verify debug info
-        public string fullVerifyString = "";
-
         // Since every test uses this, set the base directory in constructor
         public Utilities()
         {
@@ -95,41 +92,6 @@ namespace AmbrosiaTest
             int AmbrosiaTestLoc = currentDir.IndexOf("AmbrosiaTest");
             baseAmbrosiaPath = currentDir.Substring(0, AmbrosiaTestLoc);  
         }
-
-//*#*#* DEBUG *#*#*#*
-        public string currentLogFile = "";
-//*#*#* DEBUG *#*#*#*
-
-
-
-
-//*#*#*# DEBUG AREA
-        void process_WriteDataReceivedToFile(object sender, DataReceivedEventArgs e)
-        {
-            Console.WriteLine(e.Data + "\n");
-
-
-            string logDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
-
-            try
-            {
-                if (e.Data != null)
-                {
-                    if (!Directory.Exists(logDir))
-                        Directory.CreateDirectory(logDir);
-                    
-                    File.AppendAllText(logDir + @"\"+ currentLogFile, e.Data.ToString());
-
-                }
-            }
-            catch
-            {
-
-            }
-
-        }
-//*#*#*# DEBUG AREA
-
 
 
         // Returns the Process ID of the process so you then can something with it
@@ -149,13 +111,8 @@ namespace AmbrosiaTest
             try
             {
 
-                string TestLogDir = baseAmbrosiaPath+ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+                string TestLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
                 string LogOutputDirFileName = TestLogDir + "\\" + testOutputLogFile;
-
-
-                //#*#* DEBUG *#*#*# Public string that is set here but used in the DataReceivedEventHandler
-                currentLogFile = testOutputLogFile;
-
 
                 int processID = 999;
 
@@ -169,82 +126,27 @@ namespace AmbrosiaTest
                     WorkingDirectory = workingDirectory,
                     FileName = "cmd.exe",
                     Arguments = "/C " + fileName + " " + parameterString + " > " + LogOutputDirFileName + " 2>&1 exit 0"
-                    //FileName = workingDirectory+"\\"+fileName,
-                    //Arguments = parameterString
                 };
 
-
-                //*#*#*# DEBUG AREA -- 
-                /*
-                                Process process = new Process();
-
-                                process.EnableRaisingEvents = true;
-                                process.OutputDataReceived += new DataReceivedEventHandler(process_WriteDataReceivedToFile);
-                                process.StartInfo.FileName = workingDirectory + "\\" + fileName;
-                                process.StartInfo.Arguments = parameterString;
-                                process.StartInfo.UseShellExecute = false;
-                                process.StartInfo.WorkingDirectory = workingDirectory;
-                                process.StartInfo.RedirectStandardError = true;
-                                process.StartInfo.RedirectStandardOutput = true;
-
-                                // Log the info to debug before process is started
-                                string logInfo = "<LaunchProcess> " + fileName + " " + parameterString;
-                                LogDebugInfo(logInfo);
-
-                                process.Start();
-                                process.BeginErrorReadLine();
-                                process.BeginOutputReadLine();
-                */
-
-
-                //*#*#*# DEBUG AREA
-                //** This works for files that end 
-                /*
-                                var outputStream = new StreamWriter(LogOutputDirFileName);
-
-                                Process process = new Process();
-                                process.StartInfo.FileName = workingDirectory + "\\" + fileName;
-                                process.StartInfo.Arguments = parameterString;
-                                process.StartInfo.UseShellExecute = false;
-                                process.StartInfo.RedirectStandardOutput = true;
-                                process.OutputDataReceived += new DataReceivedEventHandler((sender, e) =>
-                                {
-                                    if (!String.IsNullOrEmpty(e.Data))
-                                    {
-                                        outputStream.WriteLine(e.Data);
-                                    }
-                                });
-
-                                process.Start();
-
-                                int processID = process.Id;
-
-                                process.BeginOutputReadLine();
-
-                //                process.WaitForExit();
-                  //              process.Close();
-
-                                outputStream.Close();
-                */
-                //*#*#*# DEBUG AREA
-
-
-
+                // Log the info to debug
+                string logInfo = "<LaunchProcess> " + fileName + " " + parameterString;
+                LogDebugInfo(logInfo);
 
                 // Start cmd.exe process that launches proper exe
-            Process process = Process.Start(startInfo);
-            if (waitForExit)
-                process.WaitForExit();
+                Process process = Process.Start(startInfo);
 
-            // Give it a second to completely start
-            Thread.Sleep(2000);
+                if (waitForExit)
+                    process.WaitForExit();
+
+                // Give it a second to completely start
+                Thread.Sleep(2000);
 
                 if (startInfo.Arguments.Contains("dotnet Ambrosia.dll") == false)
                 {
 
-
                     //#*#* DEBUG AREA TO LIST ALL PROCESSES 
-                    string AllProcessList = "*** Launching: *** "+ fileName + Environment.NewLine;
+                    /*
+                    string AllProcessList = "*** <LaunchProcess> Launching: *** " + fileName + Environment.NewLine;
                     AllProcessList = AllProcessList+ "*** All Processes START *** " + Environment.NewLine;
                     Process[] allprocesses = Process.GetProcesses();
                     for (int i = 0; i <= allprocesses.Length - 1; i++)
@@ -255,6 +157,7 @@ namespace AmbrosiaTest
                     }
                     AllProcessList = AllProcessList + "*** All Processes STOP *** ";
                     LogDebugInfo(AllProcessList);
+                    */
                     //*#*#*# DEBUG AREA
 
 
@@ -262,60 +165,7 @@ namespace AmbrosiaTest
                     Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
 
                     //*#*#* DEBUG INFO 
-                    Thread.Sleep(2000);
-
-                    /*#*#*# DEBUG AREA
-                    fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":TRUE ";
-                    if (File.Exists(LogOutputDirFileName) == false)
-                    {
-                        fullVerifyString = "LogOutputDirFileName " + LogOutputDirFileName + ":FALSE ";
-                    }
-                    else
-                    {
-                        fullVerifyString = fullVerifyString + " Processforapp Length:" + processesforapp.Length.ToString();
-
-                        if (processesforapp.Length == 0)
-                        {
-                            StreamReader fileReader = new StreamReader(LogOutputDirFileName);
-                            string fileContents = fileReader.ReadToEnd();
-                            fullVerifyString = fullVerifyString + " LogOutput Contents:" + fileContents;
-                        }
-
-                        long logFileSize = new FileInfo(LogOutputDirFileName).Length;
-                        fullVerifyString = fullVerifyString + " LogOutput Size:" + logFileSize.ToString();
-                        fullVerifyString = fullVerifyString + " STOP CONTENTS";
-
-                    }
-                    fullVerifyString = fullVerifyString + " FULL STOP";
-                    */ 
-
-                    fullVerifyString = fullVerifyString + " PROCESSES START";
-
-                    for (int i = 0; i <= processesforapp.Length - 1; i++)
-                    {
-                        string processName = processesforapp[i].ProcessName;
-
-                        fullVerifyString = fullVerifyString + " " + processName;
-                    }
-                    fullVerifyString = fullVerifyString + " PROCESSES END";
-                    //*#*#*# DEBUG AREA
-
-
-                    //string[] filePaths = Directory.GetFiles(workingDirectory);
-
-                    //for (int i = 0; i <= filePaths.Length - 1; i++)
-                    //{
-                    //string onlyFile = Path.GetFileName(filePaths[i]);
-
-                    //fullVerifyString = fullVerifyString + " " + onlyFile;
-                    //}
-                    //*#*#*# DEBUG AREA
-
-                    // Kills the calling cmd 
-                    //               KillProcessByName("cmd");  // sometimes processes hang
-
-
-                    fullVerifyString = fullVerifyString + " GET PROCESSID";
+                    //*#*#* Thread.Sleep(2000);
 
                     // Gets proper process ID and returns it -- just warn that it didn't find it right away as it might have been too fast
                     if (processesforapp.Length == 0)
@@ -323,7 +173,7 @@ namespace AmbrosiaTest
                         //*#*#*#                        FailureSupport(fileToExecute);
                         //#*#*#                         Assert.Fail("<LaunchProcess> Failure! Process. Working Dir:" + workingDirectory + " File to execute:" + startInfo.FileName + " Arguments:" + startInfo.Arguments + " failed to start.  FullVerifyString:" + fullVerifyString);
                         //#*#*                        return 0;
-                        LogDebugInfo("*** WARNING - Process for:" + fileName + " was not found. Maybe stopped before actually shown as running.");
+                        LogDebugInfo("*** <LaunchProcess> WARNING - Process for:" + fileName + " was not found. Maybe stopped before actually shown as running.");
                     }
                     else
                     {
@@ -342,16 +192,14 @@ namespace AmbrosiaTest
                         }
                     }
 
-                    LogDebugInfo("Kill CMD Process: " + process.Id.ToString());
+                    LogDebugInfo("<LaunchProcess> Kill parent cmd.exe Process: " + process.Id.ToString());
 
 
                     // Kill the process id for the cmd that launched the window so it isn't lingering
                     KillProcess(process.Id);
                 }
 
-                fullVerifyString = fullVerifyString + " Return PROCESS ID " + processID.ToString();
-
-                LogDebugInfo("Return "+fileName+" Process ID: " + processID.ToString());
+                LogDebugInfo("<LaunchProcess> Return " + fileName + " Process ID: " + processID.ToString());
 
 
                 return processID;
@@ -360,7 +208,7 @@ namespace AmbrosiaTest
             catch (Exception e)
             {
                 FailureSupport("EmptyProcess");
-                Assert.Fail("<LaunchProcess> Failure! Exception:" + e.Message + " Verify String:" + fullVerifyString);
+                Assert.Fail("<LaunchProcess> Failure! Exception:" + e.Message);
                 return 0;
             }
         }
@@ -440,11 +288,11 @@ namespace AmbrosiaTest
                 if (checkForDoneString)
                 {
 
-                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for '" + doneString + "' string AND the extra string:" + extraStringToFind + " in log file:" + logFile + " but did not find one or both after waiting:" + maxDelay.ToString() + " minutes. "+ fullVerifyString);
+                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for '" + doneString + "' string AND the extra string:" + extraStringToFind + " in log file:" + logFile + " but did not find one or both after waiting:" + maxDelay.ToString() + " minutes. ");
                 }
                 else
                 {
-                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for string:" + extraStringToFind + " in log file:" + logFile + " but did not find it after waiting:" + maxDelay.ToString() + " minutes. "+ fullVerifyString);
+                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for string:" + extraStringToFind + " in log file:" + logFile + " but did not find it after waiting:" + maxDelay.ToString() + " minutes. ");
                 }
             }
 
@@ -484,7 +332,7 @@ namespace AmbrosiaTest
                 }
 
                 // For some reason, the powershell script does NOT work if called from bin/x64/debug directory. Setting working directory to origin fixes it
-                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest\AmbrosiaTest";
+                string scriptWorkingDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestRootDirectory"];
                 string fileName = "pwsh.exe";
                 string parameters = "-file CleanUpAzure.ps1 " + nameOfObjects + "*";
                 bool waitForExit = false;
