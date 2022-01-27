@@ -241,8 +241,24 @@ namespace AmbrosiaTest
 
             if (startInfo.Arguments.Contains("dotnet Ambrosia.dll") == false)
             {
-                //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
-                Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
+
+
+                    //#*#* DEBUG AREA TO LIST ALL PROCESSES 
+                    string AllProcessList = "All Processes START: ";
+                    Process[] allprocesses = Process.GetProcesses();
+                    for (int i = 0; i <= allprocesses.Length - 1; i++)
+                    {
+                        string processName2 = allprocesses[i].ProcessName;
+
+                        AllProcessList = AllProcessList + allprocesses[i].ProcessName+ Environment.NewLine;
+                    }
+                    AllProcessList = AllProcessList +  " All Processes STOP: ";
+                    LogDebugInfo(AllProcessList);
+                    //*#*#*# DEBUG AREA
+
+
+                    //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
+                    Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
 
                 //*#*#* DEBUG INFO 
                 Thread.Sleep(2000);
@@ -353,8 +369,6 @@ namespace AmbrosiaTest
             for (int i = 0; i < maxTimeLoops; i++)
             {
 
-                fullVerifyString = "CONTENTS START:";
-
                 // This file is being written to when this is called so need to do it a bit fancier
                 FileStream logFileStream = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 StreamReader logFileReader = new StreamReader(logFileStream);
@@ -362,7 +376,6 @@ namespace AmbrosiaTest
                 while (!logFileReader.EndOfStream)
                 {
                     string line = logFileReader.ReadLine();
-                    fullVerifyString = fullVerifyString + " "+line;  // used for debugging to verify contents - will show up in the FAIL statement if it fails - most useful in Azure Dev Ops debugging
 
                     // Looking for "DONE"
                     if (line.Contains(doneString))
@@ -406,9 +419,6 @@ namespace AmbrosiaTest
                     TruncateAmbrosiaLogDir(testName);
                 }
             }
-
-            fullVerifyString = fullVerifyString + " CONTENTS STOP";  
-
 
             // made it here so we know it either DONE was not found or the DONE was found but the extra string was not found
             // only pop assert if asked to do that
