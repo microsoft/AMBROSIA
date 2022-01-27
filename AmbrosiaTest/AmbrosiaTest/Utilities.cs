@@ -28,12 +28,10 @@ namespace AmbrosiaTest
         public string AMB_Version { get; set; }
         public string AMB_UpgradeToVersion { get; set; }
         public string AMB_ReplicaNumber { get; set; }
-
     }
 
     // These are the different modes of what the AMB is called 
     public enum AMB_ModeConsts { RegisterInstance, AddReplica, DebugInstance };
-
 
 
 
@@ -144,35 +142,12 @@ namespace AmbrosiaTest
                 if (startInfo.Arguments.Contains("dotnet Ambrosia.dll") == false)
                 {
 
-                    //#*#* DEBUG AREA TO LIST ALL PROCESSES 
-                    /*
-                    string AllProcessList = "*** <LaunchProcess> Launching: *** " + fileName + Environment.NewLine;
-                    AllProcessList = AllProcessList+ "*** All Processes START *** " + Environment.NewLine;
-                    Process[] allprocesses = Process.GetProcesses();
-                    for (int i = 0; i <= allprocesses.Length - 1; i++)
-                    {
-                        string processName2 = allprocesses[i].ProcessName;
-
-                        AllProcessList = AllProcessList + allprocesses[i].ProcessName + " ("+ allprocesses[i].Id.ToString()+")"+Environment.NewLine;
-                    }
-                    AllProcessList = AllProcessList + "*** All Processes STOP *** ";
-                    LogDebugInfo(AllProcessList);
-                    */
-                    //*#*#*# DEBUG AREA
-
-
                     //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
                     Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
-
-                    //*#*#* DEBUG INFO 
-                    //*#*#* Thread.Sleep(2000);
 
                     // Gets proper process ID and returns it -- just warn that it didn't find it right away as it might have been too fast
                     if (processesforapp.Length == 0)
                     {
-                        //*#*#*#                        FailureSupport(fileToExecute);
-                        //#*#*#                         Assert.Fail("<LaunchProcess> Failure! Process. Working Dir:" + workingDirectory + " File to execute:" + startInfo.FileName + " Arguments:" + startInfo.Arguments + " failed to start.  FullVerifyString:" + fullVerifyString);
-                        //#*#*                        return 0;
                         LogDebugInfo("*** <LaunchProcess> WARNING - Process for:" + fileName + " was not found. Maybe stopped before actually shown as running.");
                     }
                     else
@@ -192,15 +167,14 @@ namespace AmbrosiaTest
                         }
                     }
 
-                    LogDebugInfo("<LaunchProcess> Kill parent cmd.exe Process: " + process.Id.ToString());
+                    //*** DEBUG *** LogDebugInfo("<LaunchProcess> Kill parent cmd.exe Process: " + process.Id.ToString());
 
 
                     // Kill the process id for the cmd that launched the window so it isn't lingering
                     KillProcess(process.Id);
                 }
 
-                LogDebugInfo("<LaunchProcess> Return " + fileName + " Process ID: " + processID.ToString());
-
+                //*** DEBUG *** LogDebugInfo("<LaunchProcess> Return " + fileName + " Process ID: " + processID.ToString());
 
                 return processID;
 
