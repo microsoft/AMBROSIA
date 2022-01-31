@@ -553,7 +553,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyTestOutputFileToCmpFile(string testOutputLogFile, bool JSTest = false, bool TTDTest = false)
+        public void VerifyTestOutputFileToCmpFile(string testOutputLogFile, bool JSTest = false, bool TTDTest = false, string originalTestName = "")
         {
 
             // Give it a second to get all ready to be verified - helps timing issues
@@ -562,7 +562,15 @@ namespace AmbrosiaTest
             string testLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             string logOutputDirFileName = testLogDir + "\\" + testOutputLogFile;
             string cmpLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestCMPDirectory"];
-            string cmpDirFile = cmpLogDir + "\\" + testOutputLogFile.Replace(".log", ".cmp");
+            string cmpFile = testOutputLogFile.Replace(".log", ".cmp");
+
+            // special case where unit tests are creating unique test names
+            if (originalTestName != "")
+                cmpFile = cmpFile.Remove(originalTestName.Length, 3);  // removes the 3 digit unique number
+
+            string cmpDirFile = cmpLogDir + "\\" + cmpFile;
+
+
 
             // TTD tests have different files so need modify file to do proper match
             if (TTDTest)
@@ -636,7 +644,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false, bool checkForDoneString = true, string ambrosiaLogDir = "")
+        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false, bool checkForDoneString = true, string ambrosiaLogDir = "", string originalTestName = "")
         {
             string currentDir = Directory.GetCurrentDirectory();
 
@@ -650,6 +658,11 @@ namespace AmbrosiaTest
             {
                 optionalMultiClientStartingPoint = "0";
             }
+
+            // Used for Unit Tests where unique names are used to avoid collision
+            if (originalTestName == "")
+                 originalTestName = testName;
+
 
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
             string serverName = testName + "server";
@@ -672,16 +685,8 @@ namespace AmbrosiaTest
             }
 
             // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
-/*  *#*#* DELETE *#*#*#
-            if (Directory.Exists(ambrosiaLogDir) ==false)
-            {
-                ambrosiaLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
-                ambrosiaLogDirFromPTI = "..\\..\\" + ambrosiaLogDir+"\\";   // feels like there has to be better way of determining this - used for TTD
-                ambServiceLogPath = "..\\..\\"+ambrosiaLogDir + "\\";
-            }
-*/
-                    // used to get log file
-                    string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_0";  // client is always 0 so don't use + CurrentVersion;
+            // used to get log file
+            string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_0";  // client is always 0 so don't use + CurrentVersion;
             string ambrosiaServerLogDir = ambrosiaLogDir + "\\" + testName + "server_" + CurrentVersion;
 
             string startingClientChkPtVersionNumber = "1";
@@ -829,20 +834,28 @@ namespace AmbrosiaTest
             }
 
             // wait until done running
-            bool pass = WaitForProcessToFinish(logOutputFileName_ClientJob_Verify, numBytes.ToString(), 15, false, testName, true, checkForDoneString);
-            pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, testName, true, checkForDoneString);
+            bool pass = WaitForProcessToFinish(logOutputFileName_ClientJob_Verify, numBytes.ToString(), 15, false, originalTestName, true, checkForDoneString);
+            pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, originalTestName, true, checkForDoneString);
             
 
             // MTFs don't check cmp files because they change from run to run 
             if (checkCmpFile)
             {
                 // verify new log files to cmp files
-                VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Verify);
-                VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Verify);
+                if (originalTestName == testName)
+                {
+                    VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Verify);
+                    VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Verify);
+                }
+                else
+                {
+                    VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Verify, false, false, originalTestName);
+                    VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Verify, false, false, originalTestName);
+                }
             }
 
             // Test Time Travel Debugging on the Log Files from PTI job and PTI server - don't do for MTF as not needed for TTD handled by other tests also cmp files change too much
-            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion, checkCmpFile, checkForDoneString);
+            VerifyTimeTravelDebugging(originalTestName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion, checkCmpFile, checkForDoneString);
 
         }
 
@@ -1464,8 +1477,15 @@ namespace AmbrosiaTest
             }
         }
 
-        //** Separate from TestCleanup as want it to be as quick as possible
-        public void UnitTestCleanup()
+        //*******************************************************************
+        //* Separate from TestCleanup as want it to be as quick as possible
+        //*
+        //* NOTE: Unit tests are different than other tests as they run as part of Azure Dev Ops CI. 
+        //*     Because of that, the name needs to be unique on each machine. Can't have Linux test CI and Windows CI using same name as
+        //*     they could delete the other test meta data in Azure. Use a 4 digit random number for each test run
+        //*     and put the unique number at the beginning of the test name so the clean up can just delete all with that unique number
+        //*******************************************************************
+        public void UnitTestCleanup(string uniqueTestIdentifier)
         {
             // If failures in queue then do not want to do anything (init, run test, clean up) 
             if (CheckStopQueueFlag())
@@ -1477,9 +1497,20 @@ namespace AmbrosiaTest
             StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            CleanupAzureTables("unitendtoend"); // all end to end tests
+            //            CleanupAzureTables("unitendtoend"); // all end to end tests
+            //          Thread.Sleep(2000);
+            //        CleanupAzureTables("unittest"); // all unit tests
+            //      Thread.Sleep(2000);
+
+            CleanupAzureTables("unitendtoendtest"+uniqueTestIdentifier); 
             Thread.Sleep(2000);
-            CleanupAzureTables("unittest"); // all unit tests
+            CleanupAzureTables("unitendtoendrestarttest" + uniqueTestIdentifier); 
+            Thread.Sleep(2000);
+            CleanupAzureTables("unittestinproctcp" + uniqueTestIdentifier); 
+            Thread.Sleep(2000);
+            CleanupAzureTables("unittestactiveactivekillprimary"); 
+            Thread.Sleep(2000);
+            CleanupAzureTables("unittestinprocpipe"); 
             Thread.Sleep(2000);
             CleanupAzureTables("VssAdministrator"); // Azure Dev Ops left overs
             Thread.Sleep(2000);
