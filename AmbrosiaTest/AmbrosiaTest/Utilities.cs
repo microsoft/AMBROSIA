@@ -123,7 +123,7 @@ namespace AmbrosiaTest
                     CreateNoWindow = false,
                     WorkingDirectory = workingDirectory,
                     FileName = "cmd.exe",
-                    Arguments = "/C " + fileName + " " + parameterString + " > " + LogOutputDirFileName + " 2>&1 exit 0"
+                    Arguments = "/C " + fileName + " " + parameterString + " > " + LogOutputDirFileName + " 2>&1"
                 };
 
                 // Log the info to debug

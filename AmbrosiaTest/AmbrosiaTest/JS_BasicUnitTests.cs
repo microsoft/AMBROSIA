@@ -76,6 +76,7 @@ namespace AmbrosiaTest
         //** Basic End to End that is NOT bidirectional
         //** A zero value is flag to take default value
         [TestMethod]
+        [TestCategory("JSADO")]
         public void JS_PTI_BasicEndToEnd_Test()
         {
             Utilities MyUtils = new Utilities();
