@@ -551,16 +551,6 @@ namespace AmbrosiaTest
                 argString = argString + " -sin=" + serverInstanceName;
             }
 
-            // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
-/*  *#*#*# DELETE *#*#*
-            if (Directory.Exists(ambrosiaBaseLogDir) == false)
-            {
-                ambrosiaBaseLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
-                ambrosiaLogDirFromPTI = "..\\..\\" + ambrosiaBaseLogDir + "\\";   // feels like there has to be better way of determining this - used for TTD
-                ambServiceLogPath = "..\\..\\" + ambrosiaBaseLogDir + "\\";
-            }
-*/
-
             // used to get log file
             string ambrosiaFullLogDir = ambrosiaBaseLogDir + "\\" + testName + strLogFileInstanceRole + "_0";
             string startingChkPtVersionNumber = "1";
