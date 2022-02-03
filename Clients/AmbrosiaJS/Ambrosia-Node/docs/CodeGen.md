@@ -183,14 +183,11 @@ Automatically publishing types and methods from an annotated TypeScript source f
 1. When using automatic (input source driven) code-gen, all published entities (functions / type aliases / enums) need to be in a single file. Namespaces can be used to help organize the code, although names must still be unique across namespaces.
 2. Types to be published can only be expressed as type aliases, not interfaces or classes. This is because:
     - The nature/capability of a published type most closely matches TypeScript's Type Alias construct. 
-    - Type Aliases and Interfaces are approximately equivalent in expressiveness (see **[here](https://www.typescriptlang.org/docs/handbook/advanced-types.html#type-aliases)**). For example, the intersection operator (`|`) in a Type Alias is the equivalent of the `extends` keyword in an Interface.
+    - Type Aliases and Interfaces are approximately equivalent in expressiveness (see **[here](https://www.typescriptlang.org/docs/handbook/advanced-types.html#type-aliases)**). For example, the intersection operator (`&`) in a Type Alias is the equivalent of the `extends` keyword in an Interface.
     - TypeScript does not provide a built-in way to rehydrate class instances from JSON.
 
-    <div style="margin-top:10px; margin-bottom: 10px">
-
-    **Note:** The consumer-side file (`ConsumerInterface.g.ts`) actually generates a minimal "data-only" class for a published complex type to make it easier to create (by using constructor syntax) as a parameter for a published method call. You can see this being done for the `Digits` type in the **[Quick Walkthrough](#code-generation-a-quick-walkthrough)**.
+    **Note:** The consumer-side file (`ConsumerInterface.g.ts`) actually generates a minimal "data-only" class for a published complex type to make it easier to create (by using constructor syntax) as a parameter for a published method call. You can see this being done in the generated code for the `Digits` type in the **[Quick Walkthrough](#code-generation-a-quick-walkthrough)**.
     
-    </div>
 3. Type aliases cannot contain optional members (for example, `middleInitial?: string`), or contain generics (other than for built-in types, for example, `Map<string, number>`).
 4. Enums cannot contain expressions or computed values, only assigned (or omitted) integer values.
 5. Unlike in TypeScript, all type aliases must be declared before any function that references them (publishing from source occurs in the lexical order of the input file). Forward references between type aliases are allowed, subject to the prior restriction.
