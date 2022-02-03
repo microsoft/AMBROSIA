@@ -10,11 +10,16 @@ namespace AmbrosiaTest
     [TestClass]
     public class JS_BasicUnitTests
     {
+
+        public string uniqueTestNameID = "000";
+
         //************* Init Code *****************
         // NOTE: Make sure all names be "Azure Safe". No capital letters and no underscore.
         [TestInitialize()]
         public void Initialize()
         {
+            Random rand = new Random();
+
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
@@ -23,6 +28,10 @@ namespace AmbrosiaTest
 
             // Set config file back to the way it was 
             JSUtils.JS_RestoreJSConfigFile();
+
+            // create three digit number that will be used to make the test name unique
+            uniqueTestNameID = rand.Next(100, 999).ToString();
+
         }
         //************* Init Code *****************
 
@@ -53,8 +62,8 @@ namespace AmbrosiaTest
             bool bidi = true;
 
             string logTriggerSize = "1024";  // just set a test to have 1024 which is the default of C#
-
-            string testName = "jsptibidiendtoendtest";
+            string originaltestName = "jsptibidiendtoendtest"; 
+            string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
             string logOutputFileName_TestApp = testName + "_TestApp.log";
 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
@@ -93,7 +102,8 @@ namespace AmbrosiaTest
 
             string logTriggerSize = "256";  // set a test to have 256 which is different from 1024 which is set in the BasieEndToEndBiDi
 
-            string testName = "jsptiendtoendtest";
+            string originaltestName = "jsptiendtoendtest"; 
+            string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
             string logOutputFileName_TestApp = testName + "_TestApp.log";
 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, testName);
@@ -134,7 +144,9 @@ namespace AmbrosiaTest
             int messagesSent = 5120;
             bool bidi = false;
 
-            string testName = "jsptirestartendtoendtest";
+            string originaltestName = "jsptirestartendtoendtest"; 
+            string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
+
             string logOutputFileName_TestApp = testName + "_TestApp.log";
             string logOutputFileNameRestarted_TestApp = testName + "_TestApp_Restarted.log";
 
@@ -180,16 +192,16 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            int numRounds = 6;
-            long totalBytes = 6442450944;  
-            long totalEchoBytes = 6442450944;
+            int numRounds = 4;
+            long totalBytes = 4294967296;  
+            long totalEchoBytes = 4294967296;
             int bytesPerRound = 0;
             int maxMessageSize = 0;
             int batchSizeCutoff = 0;
-            int messagesSent = 1032192;
             bool bidi = true;
 
-            string testName = "jsptirestartendtoendbiditest";
+            string originaltestName = "jsptirestartendtoendbiditest"; 
+            string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
             string logOutputFileName_TestApp = testName + "_TestApp.log";
             string logOutputFileNameRestarted_TestApp = testName + "_TestApp_Restarted.log";
 
@@ -199,8 +211,8 @@ namespace AmbrosiaTest
             // Start it once
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
-            // Give it 15 seconds to do something before killing it
-            Thread.Sleep(15000);
+            // Give it 10 seconds to do something before killing it
+            Thread.Sleep(10000);
             Application.DoEvents();
 
             // Kill it 
@@ -216,7 +228,7 @@ namespace AmbrosiaTest
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "Bytes received: " + totalBytes.ToString(), 15, false, testName, true); // number of bytes processed
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of bytes (" + totalBytes.ToString() + ") have been received", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "SUCCESS: The expected number of echoed bytes (" + totalEchoBytes.ToString() + ") have been received", 1, false, testName, true);
-            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete (" + messagesSent.ToString() + " messages sent)", 1, false, testName, true);
+            pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "All rounds complete", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "[IC] Connected!", 1, false, testName, true);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileNameRestarted_TestApp, "round #" + numRounds.ToString(), 1, false, testName, true);
 
@@ -231,11 +243,12 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testName = "jsptitwoproctest";
+            string originaltestName = "jsptitwoproctest"; 
+            string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
 
-            int numRounds = 4;
-            long totalBytes = 4294967296;
-            long totalEchoBytes = 4294967296;
+            int numRounds = 3;
+            long totalBytes = 3221225472;
+            long totalEchoBytes = 3221225472;
             int bytesPerRound = 0;
             int maxMessageSize = 0;
             int batchSizeCutoff = 0;
@@ -284,16 +297,18 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testName = "jsptitwoproctestbidi";
+            string originaltestName = "jsptitwoproctestbidi"; 
+            string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
 
-            int numRounds = 4;
-            long totalBytes = 4294967296;
-            long totalEchoBytes = 4294967296;
+            int numRounds = 3;
+            long totalBytes = 3221225472;
+            long totalEchoBytes = 3221225472;
             int bytesPerRound = 0;
             int maxMessageSize = 0;
             int batchSizeCutoff = 0;
-            int messagesSent = 245760;
+            int messagesSent = 114688;
             bool bidi = true;
+
             string clientInstanceName = testName + "client";
             string serverInstanceName = testName + "server";
 
@@ -322,7 +337,6 @@ namespace AmbrosiaTest
             // Verify integrity of Ambrosia logs by replaying server and client side of things (do both since bidi)
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true,"",JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
             JSUtils.JS_VerifyTimeTravelDebugging(testName, numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, true, "", JSUtils.JSPTI_ServerInstanceRole);
-
         }
 
 
@@ -344,7 +358,8 @@ namespace AmbrosiaTest
 
             string logTriggerSize = "256";  
 
-            string testName = "jsptiendtoendtestpostmeth";
+            string originaltestName = "jsptiendtoendtestpostmeth"; 
+            string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
             string logOutputFileName_TestApp = testName + "_TestApp.log";
             string logOutputFileName_TTDVerify = testName + "__VerifyTTD_1.log";
 
@@ -389,7 +404,9 @@ namespace AmbrosiaTest
             int batchSizeCutoff = 0;
             bool bidi = false;
 
-            string testName = "jsptirestartendtoendpostmeth";
+            string originaltestName = "jsptirestartendtoendpostmeth"; 
+            string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
+
             string logOutputFileName_TestApp = testName + "_TestApp.log";
             string logOutputFileNameRestarted_TestApp = testName + "_TestApp_Restarted.log";
             string logOutputFileName_TTDVerify = testName + "__VerifyTTD_1.log";
@@ -437,7 +454,8 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
             JS_Utilities JSUtils = new JS_Utilities();
 
-            string testName = "jsptitwoprocpostmeth";
+            string originaltestName = "jsptitwoprocpostmeth"; 
+            string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
 
             int numRounds = 4;
             long totalBytes = 4294967296;
@@ -495,7 +513,9 @@ namespace AmbrosiaTest
             int batchSizeCutoff = 0;
             bool bidi = false;
 
-            string testName = "jsptirestartpostmeth";
+            string originaltestName = "jsptirestartpostmeth"; 
+            string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
+
             string clientInstanceName = testName + "client";
             string serverInstanceName = testName + "server";
             string logOutputClientFileName_TestApp = testName + "Client_TestApp.log";
