@@ -17,6 +17,11 @@ namespace AmbrosiaTest
     [TestClass]
     public class AMB_UnitTest
     {
+
+        public string uniqueTestNameID = "000";
+
+        private TestContext testContextInstance;
+
         //************* Init Code *****************
         // NOTE: Need this bit of code at the top of every "[TestClass]" (per .cs test file) to get context \ details of the current test running
         // NOTE: Make sure all names be "Azure Safe". No capital letters and no underscore.
@@ -27,14 +32,12 @@ namespace AmbrosiaTest
 
             Utilities MyUtils = new Utilities();
             MyUtils.TestInitialize();
+
+            // create three digit number that will be used to make the test name unique
             uniqueTestNameID = rand.Next(100,999).ToString();
         }
         //************* Init Code *****************
 
-
-        public string uniqueTestNameID = "000";
-
-        private TestContext testContextInstance;
 
         /// <summary>
         ///Gets or sets the test context which provides
