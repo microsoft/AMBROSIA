@@ -19,7 +19,7 @@ namespace AmbrosiaTest
             JS_Utilities JSUtils = new JS_Utilities();
 
             // generic Ambrosia init 
-            MyUtils.TestInitialize();
+            MyUtils.TestInitialize(true);
 
             // Set config file back to the way it was 
             JSUtils.JS_RestoreJSConfigFile();

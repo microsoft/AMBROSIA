@@ -476,10 +476,12 @@ namespace AmbrosiaTest
         }
 
         //*********************************************************************
-        // Makes sure all dependent files exist as well as connection strings etc
-        //
+        //* Makes sure all dependent files exist as well as connection strings etc
+        //*
+        //* Have a flag on whether JS test or not as require different PTI checks for JS vs C# LB tests
+        //*
         //*********************************************************************
-        public void VerifyTestEnvironment()
+        public void VerifyTestEnvironment(bool JSTest = false)
         {
 
             // used in PT and PTI - set here by default and change below if need to
@@ -498,6 +500,7 @@ namespace AmbrosiaTest
                 Assert.Fail("<VerifyTestEnvironment> Cmp directory does not exist. Expecting:" + cmpLogDir);
 
 
+            // Verify needed Ambrosia components 
             if (NetFrameworkTestRun)
             {
                 // File is in same directory as test because part of AMB build
@@ -526,18 +529,23 @@ namespace AmbrosiaTest
                 current_framework = NetCoreFramework;
             }
 
-            // Don't need AmbrosiaLibCS.exe as part of tests
-            // string AmbrosiaLibCSExe = "AmbrosiaLibCS.dll";  
-            // if (File.Exists(AmbrosiaLibCSExe) == false)
-            //     Assert.Fail("<VerifyTestEnvironment> Missing AmbrosiaLibcs dll. Expecting:" + AmbrosiaLibCSExe);
+            // PTI Verfication 
+            if (JSTest)
+            {
+                string perfTestJSFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + "//App//Out//main.js";
+                if (File.Exists(perfTestJSFile) == false)
+                    Assert.Fail("<VerifyTestEnvironment> Missing JS PTI main.js Expecting:" + perfTestJSFile);
+            }
+            else
+            {
+                string perfTestJobFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
+                if (File.Exists(perfTestJobFile) == false)
+                    Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
 
-            string perfTestJobFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
-            if (File.Exists(perfTestJobFile) == false)
-                Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
-
-            string perfTestServerFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
-            if (File.Exists(perfTestServerFile) == false)
-                Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
+                string perfTestServerFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
+                if (File.Exists(perfTestServerFile) == false)
+                    Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
+            }
 
             string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
             if (connectionString == null)
@@ -1664,7 +1672,13 @@ namespace AmbrosiaTest
         }
 
 
-        public void TestInitialize()
+        // ****************************
+        // * Basic Init called at beginning of each Test that is Ambrosia related
+        //*
+        //* Have parameter for JS tests as they have their own Test Evironment to verify
+        //* 
+        // ****************************
+        public void TestInitialize(bool JSTest = false)
         {
 
             // If failures in queue then do not want to do anything (init, run test, clean up) 
@@ -1675,9 +1689,9 @@ namespace AmbrosiaTest
             }
 
             // Verify environment
-            VerifyTestEnvironment();
+            VerifyTestEnvironment(JSTest);
 
-            // Make sure azure tables etc are cleaned up - there is a lag when cleaning up Azure so could cause issues with test
+            // Make sure azure tables etc are cleaned up - there is a lag when cleaning up Azure so could cause issues with tests if do it before every test so don't do
             //            Cleanup();
 
             // Make sure nothing running from previous test
