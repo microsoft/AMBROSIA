@@ -379,6 +379,7 @@ namespace AmbrosiaTest
                 JS_UpdateJSConfigFile(JSConfig_icCraPort, "2510", JSPTI_ClientInstanceRole);
                 JS_UpdateJSConfigFile(JSConfig_icReceivePort, "2010", JSPTI_ClientInstanceRole);
                 JS_UpdateJSConfigFile(JSConfig_icSendPort, "2011", JSPTI_ClientInstanceRole);
+                JS_UpdateJSConfigFile(JSConfig_useNetCore, useNetCore.ToString(), JSPTI_ClientInstanceRole);
 
                 //*** Copy from The Gold Config to Server Config ***
                 if (Directory.Exists(PTIPath + JSPTI_ServerPath+"\\") == false)
@@ -392,6 +393,7 @@ namespace AmbrosiaTest
                 JS_UpdateJSConfigFile(JSConfig_icCraPort, "2500", JSPTI_ServerInstanceRole);
                 JS_UpdateJSConfigFile(JSConfig_icReceivePort, "2000", JSPTI_ServerInstanceRole);
                 JS_UpdateJSConfigFile(JSConfig_icSendPort, "2001", JSPTI_ServerInstanceRole);
+                JS_UpdateJSConfigFile(JSConfig_useNetCore, useNetCore.ToString(), JSPTI_ServerInstanceRole);
             }
             catch (Exception e)
             {
