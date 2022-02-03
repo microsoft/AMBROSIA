@@ -357,7 +357,6 @@ namespace AmbrosiaTest
                 }
 
                 string ambrosiaLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-
                 if (Directory.Exists(ambrosiaLogDir))
                 {
                     Directory.Delete(ambrosiaLogDir, true);
@@ -390,25 +389,29 @@ namespace AmbrosiaTest
 
                 // job IC output file and any blob log files
                 string PTI_Job_Dir = baseAmbrosiaPath+ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ CurrentFramework;
-                var jobdir = new DirectoryInfo(PTI_Job_Dir);
-                foreach (var file in jobdir.EnumerateFiles(InProcICOutputFile))
+                if (Directory.Exists(PTI_Job_Dir))
                 {
-                    file.Delete();
+                    var jobdir = new DirectoryInfo(PTI_Job_Dir);
+                    foreach (var file in jobdir.EnumerateFiles(InProcICOutputFile))
+                    {
+                        file.Delete();
+                    }
+                    // Delete the folders from inproc
+                    DeleteDirectoryUsingWildCard(PTI_Job_Dir, "job_");
                 }
-
-                // Delete the folders from inproc
-                DeleteDirectoryUsingWildCard(PTI_Job_Dir, "job_");
 
                 // server IC output file and any blob log files 
                 string PTI_Server_Dir = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + CurrentFramework;
-                var serverdir = new DirectoryInfo(PTI_Server_Dir);
-                foreach (var file in serverdir.EnumerateFiles(InProcICOutputFile))
+                if (Directory.Exists(PTI_Server_Dir))
                 {
-                    file.Delete();
+                    var serverdir = new DirectoryInfo(PTI_Server_Dir);
+                    foreach (var file in serverdir.EnumerateFiles(InProcICOutputFile))
+                    {
+                        file.Delete();
+                    }
+                    // Delete the folders from inproc 
+                    DeleteDirectoryUsingWildCard(PTI_Server_Dir, "server_");
                 }
-                // Delete the folders from inproc 
-                DeleteDirectoryUsingWildCard(PTI_Server_Dir, "server_");
-
 
                 // Give it a second to make sure - had timing issues where wasn't fully deleted by time got here
                 Thread.Sleep(1000);
@@ -419,6 +422,7 @@ namespace AmbrosiaTest
                     FailureSupport("");
                     Assert.Fail("<CleanupAmbrosiaLogFiles> Unable to delete PTI Log Dir:" + PTIAmbrosiaLogDir);
                 }
+
 
             }
             catch (Exception e)
