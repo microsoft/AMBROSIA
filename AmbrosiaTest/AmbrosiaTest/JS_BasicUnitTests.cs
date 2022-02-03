@@ -77,7 +77,6 @@ namespace AmbrosiaTest
         //** Basic End to End that is NOT bidirectional
         //** A zero value is flag to take default value
         [TestMethod]
-        [TestCategory("JSADO")]
         public void JS_PTI_BasicEndToEnd_Test()
         {
             Utilities MyUtils = new Utilities();
@@ -121,7 +120,6 @@ namespace AmbrosiaTest
 
         //** Basic End to End that is NOT bidirectional and that is stopped and restarted 
         [TestMethod]
-        [TestCategory("JSADO")]
         public void JS_PTI_BasicRestartEndToEnd_Test()
         {
             Utilities MyUtils = new Utilities();
@@ -176,6 +174,7 @@ namespace AmbrosiaTest
 
         //** Basic End to End that is bidirectional and that is stopped and restarted 
         [TestMethod]
+        [TestCategory("JSADO")]
         public void JS_PTI_BasicRestartEndToEnd_BiDi_Test()
         {
             Utilities MyUtils = new Utilities();
@@ -227,7 +226,6 @@ namespace AmbrosiaTest
 
         //** Basic End to End that is NOT bidirectional where Client and Server are in separate Procs
         [TestMethod]
-        [TestCategory("JSADO")]
         public void JS_PTI_BasicTwoProc_Test()
         {
             Utilities MyUtils = new Utilities();
