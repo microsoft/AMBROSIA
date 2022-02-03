@@ -115,9 +115,9 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
   - Enter the `AZURE_STORAGE_CONN_STRING` value in the 'Connection string' box (the 'Display name' will then auto-populate).
 
 12&#41; Run the Node.js LB (smoke test)
-- In VS Code, open \Ambrosia-Node\ambrosiaConfig.json and set the `"icBinFolder"` setting to `""` and `"autoRegister"` to `true`. Also, edit the `"icLogFolder"` to point to suitable folder on your local machine (the folder will be created if it doesn't exist).
+- In VS Code, open \Ambrosia-Node\ambrosiaConfig.json and set the `"icBinFolder"` setting to `""` and `"autoRegister"` to `true`. Also, edit the `"icLogFolder"` to point to a  suitable folder on your local machine (the folder will be created if it doesn't exist).
   > If you used step 1a instead of 1b, then set `"icBinFolder"` to `"[YourRepoPath]\AMBROSIA\ImmortalCoordinator\bin\x64\Release;[YourRepoPath]\AMBROSIA\Ambrosia\Ambrosia\bin\x64\Release"` (these folders will only exists after you do a 'Release' build of Ambrosia.sln).<br/>
-  Note that The `"icBinFolder"` overrides the `AMBROSIATOOLS` environment variable, and can contain multiple paths (separated by a semicolon).
+  Note that the `"icBinFolder"` overrides the `AMBROSIATOOLS` environment variable, and can contain multiple paths (separated by a semicolon).
 - You should now be able to build and run (F5 in VS Code) the Node.js LB, although – on the first run – you will be prompted to let the app through the Windows Firewall (the IC opens 3 ports).
   - If you're not using VS Code (or just want a scriptable build)...
     - Build the Node.js LB by running `"npx tsc -p .\tsconfig.json '--incremental false'"` from the \AmbrosiaJS\Ambrosia-Node folder.
