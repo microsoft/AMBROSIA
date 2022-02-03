@@ -6,16 +6,16 @@ Even though the Node.js LB is written in TypeScript, it contains a significant a
 **At publish time…**
 
 1) To check that the types are serializable by the LB's [custom] serializer.
-2) To check the structure of the types when publishing "manually" (see diagram below) by calling `publishType()` / `publishMethod()` / `publishPostMethod()` directly (not via code-gen), since types are passed to these methods as strings.
+2) To check the structure of the types when publishing "manually" (see diagram below) by calling `publishType()` / `publishMethod()` / `publishPostMethod()` directly, since types are passed to these methods as strings.
 
 **At runtime…**
 
-1) To improve the debugging experience. For post methods, type errors are returned to the caller (as errors) via the caller's `PostResultDispatcher`. The feedback helps the caller understand if they are calling a method incorrectly. Further, the errors are also written to the output log to provide insights to the publisher about API misuse.
+1) To improve the debugging experience. For post methods, type errors are returned to the caller (as errors) via the caller's `PostResultDispatcher`. This feedback helps the caller understand if they are calling a method incorrectly. Further, the errors are also written to the output log to provide insights to the publisher about API misuse.
 2) The caller may be using an outdated `ConsumerInterface.g.ts`, or may not be using this generated file at all (which opens them up to making type errors). The client may not even be using TypeScript (instead preferring to just call the transpiled .js files directly to use the API), which further increases the risk of introducing a type error when calling a method.
 3) Even when using TypeScript, design-time type safety can be easily defeated by simply casting to "any".
 4) JavaScript's "truthy" / "falsey" behavior and automatic type coercion can lead to subtle, hard-to-find bugs.  Doing runtime type checking helps find these, and other type-related bugs, more quickly (see the example below).
 
-At publish time, type checking happens in the publish APIs (`publishType`, `publishMethod`, and `publishPostMethod`) as represented by the "Publish entities" boxes below. Doing type checking at this level - rather than at the Abstract Syntax Tree (AST) level - enables type checking to happen regardless of the publishing path used ("automatically" by code-gen, or "manually" by API calls).
+At publish time, type checking happens in the publish APIs (`publishType`, `publishMethod`, and `publishPostMethod`) as represented by the "Publish entities" boxes below. Doing type checking at this level - rather than at the Abstract Syntax Tree (AST) level - enables type checking to happen regardless of the publishing path used ("automatically" from an annotated source file, or "manually" by API calls).
 
 <div align="center">
   <img alt="Code generation diagram" src="images/CodeGen.png" width="720"/>
