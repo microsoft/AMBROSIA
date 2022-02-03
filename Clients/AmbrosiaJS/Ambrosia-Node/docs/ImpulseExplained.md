@@ -29,7 +29,7 @@ However, the same is not true of the Fork messages. Since – as can be seen –
 
 This crucial difference is why Impulse messages are only recoverable on a “best effort” basis (ie. only if they make it to the log), whereas Fork messages are _always_ guaranteed to be recoverable.
 
-&#x00B9; _Non-system messages are Remote Procedure Calls (RPCs), and are the application method calls that one instance makes to another instance, including to itself._
+&#x00B9; _Messages are Remote Procedure Calls (RPCs), and are the application method calls that one instance makes to another instance, including to itself. These application messages are distinct from system messages (like `TakeCheckpoint`) which are sent by the IC to the LB._
 
 <br/>
 
@@ -44,7 +44,7 @@ When it comes to Impulses, there are two kinds of coding errors to avoid:
 
 These coding mistakes are essentially two sides of the same coin.
 
-For example, it would be a mistake for the deterministic `Fork1` handler to make a [non-deterministic] web-service call, even if it used a self-call `Impulse2` to log/apply the web-service call result (the `Impulse2` handler would update app state with the result). During recovery this would lead to a deterministic message (`Fork1`) sending an Impulse message (`Impulse2`), which is invalid. One solution would be to acquire _all_ required non-deterministic data first, then pass it in the original Impulse message.
+For example, in the diagram above, it would be a mistake for the deterministic `Fork1` handler to make a [non-deterministic] web-service call, even if it used a self-call `Impulse2` to log/apply the web-service call result (the `Impulse2` handler would update app state with the result). During recovery this would lead to a deterministic message (`Fork1`) sending an Impulse message (`Impulse2`), which is invalid. One solution would be to acquire _all_ required non-deterministic data first, then pass it in the original Impulse message.
 
 <br/>
 
