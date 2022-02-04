@@ -22,8 +22,8 @@ source Scripts/ci_common_defs.sh
 echo "Executing a native Windows, non-Docker build."
 export AMBROSIA_ROOT=`pwd`
 export PATH="$PATH:$AMBROSIA_ROOT/bin"
-
-./build_dotnetcore_bindist.sh
+# Do we need this - builds core so shouldn't need it?
+#./build_dotnetcore_bindist.sh  
 
 # Build PTI
 # ----------------------------------------
