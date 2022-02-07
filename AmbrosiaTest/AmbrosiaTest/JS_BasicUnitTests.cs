@@ -252,7 +252,7 @@ namespace AmbrosiaTest
             int bytesPerRound = 0;
             int maxMessageSize = 0;
             int batchSizeCutoff = 0;
-            int messagesSent = 245760;
+            int messagesSent = 114688;
             bool bidi = false;
             string clientInstanceName = testName+"client";
             string serverInstanceName = testName+"server";

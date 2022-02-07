@@ -830,9 +830,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "2", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "3110", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "3000", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "3001", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "6110", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "6000", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "6001", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_activeCode, "VCurrent", JSUtils.JSPTI_ServerInstanceRole);
@@ -852,7 +852,7 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "0", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1110", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1610", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1000", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1001", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
