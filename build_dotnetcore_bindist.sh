@@ -43,7 +43,7 @@ CONF="${AMBROSIA_DOTNET_CONF}"
 function buildit() {
     dir=$1
     shift
-    dotnet publish --no-self-contained -o $dir -c $CONF -f $FMWK -r $PLAT $*
+    dotnet publish --no-self-contained -o $dir -c $CONF -f $FMWK $*
 }
 
 
