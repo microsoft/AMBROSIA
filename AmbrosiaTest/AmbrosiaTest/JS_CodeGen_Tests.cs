@@ -25,7 +25,7 @@ namespace AmbrosiaTest
         public void Initialize()
         {
             Utilities MyUtils = new Utilities();
-            MyUtils.TestInitialize();
+            MyUtils.TestInitialize(true);
         }
         //************* Init Code *****************
 

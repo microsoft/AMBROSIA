@@ -28,12 +28,10 @@ namespace AmbrosiaTest
         public string AMB_Version { get; set; }
         public string AMB_UpgradeToVersion { get; set; }
         public string AMB_ReplicaNumber { get; set; }
-
     }
 
     // These are the different modes of what the AMB is called 
     public enum AMB_ModeConsts { RegisterInstance, AddReplica, DebugInstance };
-
 
 
 
@@ -108,65 +106,75 @@ namespace AmbrosiaTest
                 fileToExecute = "dotnet.exe";
             }
 
-            string TestLogDir = baseAmbrosiaPath+ConfigurationManager.AppSettings["TestLogOutputDirectory"];
-            string LogOutputDirFileName = TestLogDir + "\\" + testOutputLogFile;
-
-            // Use ProcessStartInfo class
-            ProcessStartInfo startInfo = new ProcessStartInfo()
-            {
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                WindowStyle = ProcessWindowStyle.Normal,
-                CreateNoWindow = false,
-                WorkingDirectory = workingDirectory,
-                FileName = "cmd.exe",
-                Arguments = "/C " + fileName + " " + parameterString + " > " + LogOutputDirFileName + " 2>&1"
-            };
-
-            // Log the info to debug
-            string logInfo = "<LaunchProcess> " + fileName + " " + parameterString;
-            LogDebugInfo(logInfo);
-
             try
             {
+
+                string TestLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
+                string LogOutputDirFileName = TestLogDir + "\\" + testOutputLogFile;
+
+                int processID = 999;
+
+                // Use ProcessStartInfo class
+                ProcessStartInfo startInfo = new ProcessStartInfo()
+                {
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    WindowStyle = ProcessWindowStyle.Normal,
+                    CreateNoWindow = false,
+                    WorkingDirectory = workingDirectory,
+                    FileName = "cmd.exe",
+                    Arguments = "/C " + fileName + " " + parameterString + " > " + LogOutputDirFileName + " 2>&1"
+                };
+
+                // Log the info to debug
+                string logInfo = "<LaunchProcess> " + fileName + " " + parameterString;
+                LogDebugInfo(logInfo);
+
                 // Start cmd.exe process that launches proper exe
                 Process process = Process.Start(startInfo);
+
                 if (waitForExit)
                     process.WaitForExit();
 
                 // Give it a second to completely start
                 Thread.Sleep(2000);
 
-                int processID = 999;
-
                 if (startInfo.Arguments.Contains("dotnet Ambrosia.dll") == false)
                 {
+
                     //Figure out the process ID for the program ... process id from process.start is the process ID for cmd.exe
                     Process[] processesforapp = Process.GetProcessesByName(fileToExecute.Remove(fileToExecute.Length - 4));
 
+                    // Gets proper process ID and returns it -- just warn that it didn't find it right away as it might have been too fast
                     if (processesforapp.Length == 0)
                     {
-                        FailureSupport(fileToExecute);
-                        Assert.Fail("<LaunchProcess> Failure! Process " + fileToExecute + " failed to start.");
-                        return 0;
+                        LogDebugInfo("*** <LaunchProcess> WARNING - Process for:" + fileName + " was not found. Maybe stopped before actually shown as running.");
                     }
-
-                    processID = processesforapp[0].Id;
-                    var processStart = processesforapp[0].StartTime;
-
-                    // make sure to get most recent one as that is safe to know that is one we just created
-                    for (int i = 1; i <= processesforapp.Length - 1; i++)
+                    else
                     {
-                        if (processStart < processesforapp[i].StartTime)
+
+                        processID = processesforapp[0].Id;
+                        var processStart = processesforapp[0].StartTime;
+
+                        // make sure to get most recent one as that is safe to know that is one we just created
+                        for (int i = 1; i <= processesforapp.Length - 1; i++)
                         {
-                            processStart = processesforapp[i].StartTime;
-                            processID = processesforapp[i].Id;
+                            if (processStart < processesforapp[i].StartTime)
+                            {
+                                processStart = processesforapp[i].StartTime;
+                                processID = processesforapp[i].Id;
+                            }
                         }
                     }
+
+                    //*** DEBUG *** LogDebugInfo("<LaunchProcess> Kill parent cmd.exe Process: " + process.Id.ToString());
+
 
                     // Kill the process id for the cmd that launched the window so it isn't lingering
                     KillProcess(process.Id);
                 }
+
+                //*** DEBUG *** LogDebugInfo("<LaunchProcess> Return " + fileName + " Process ID: " + processID.ToString());
 
                 return processID;
 
@@ -253,11 +261,12 @@ namespace AmbrosiaTest
                 // If times out without string hit - then pop exception
                 if (checkForDoneString)
                 {
-                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for '" + doneString + "' string AND the extra string:" + extraStringToFind + " in log file:" + logFile + " but did not find one or both after waiting:" + maxDelay.ToString() + " minutes.");
+
+                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for '" + doneString + "' string AND the extra string:" + extraStringToFind + " in log file:" + logFile + " but did not find one or both after waiting:" + maxDelay.ToString() + " minutes. ");
                 }
                 else
                 {
-                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for string:" + extraStringToFind + " in log file:" + logFile + " but did not find it after waiting:" + maxDelay.ToString() + " minutes.");
+                    Assert.Fail("<WaitForProcessToFinish> Failure! Looking for string:" + extraStringToFind + " in log file:" + logFile + " but did not find it after waiting:" + maxDelay.ToString() + " minutes. ");
                 }
             }
 
@@ -297,7 +306,7 @@ namespace AmbrosiaTest
                 }
 
                 // For some reason, the powershell script does NOT work if called from bin/x64/debug directory. Setting working directory to origin fixes it
-                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest\AmbrosiaTest";
+                string scriptWorkingDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestRootDirectory"];
                 string fileName = "pwsh.exe";
                 string parameters = "-file CleanUpAzure.ps1 " + nameOfObjects + "*";
                 bool waitForExit = false;
@@ -318,11 +327,11 @@ namespace AmbrosiaTest
         {
             try
             {
-                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest\AmbrosiaTest";
-                string fileName = "powershell.exe";
-                string parameters = "-file CheckAmbrosiaStatus.ps1 " + nameOfObjects + "*";
-                bool waitForExit = false;
-                string testOutputLogFile = "AmbrosiaStatus_" + nameOfObjects + ".log";
+//                string scriptWorkingDir = @"..\..\..\..\..\AmbrosiaTest\AmbrosiaTest";
+  //              string fileName = "powershell.exe";
+      //          string parameters = "-file CheckAmbrosiaStatus.ps1 " + nameOfObjects + "*";
+    //            bool waitForExit = false;
+        //        string testOutputLogFile = "AmbrosiaStatus_" + nameOfObjects + ".log";
 
                 //*#*# -- remove this for now as it gets stuck and it hasn't been used
                 //*#*#   int powerShell_PID = LaunchProcess(scriptWorkingDir, fileName, parameters, waitForExit, testOutputLogFile);
@@ -348,7 +357,6 @@ namespace AmbrosiaTest
                 }
 
                 string ambrosiaLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
-
                 if (Directory.Exists(ambrosiaLogDir))
                 {
                     Directory.Delete(ambrosiaLogDir, true);
@@ -381,25 +389,29 @@ namespace AmbrosiaTest
 
                 // job IC output file and any blob log files
                 string PTI_Job_Dir = baseAmbrosiaPath+ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"]+ CurrentFramework;
-                var jobdir = new DirectoryInfo(PTI_Job_Dir);
-                foreach (var file in jobdir.EnumerateFiles(InProcICOutputFile))
+                if (Directory.Exists(PTI_Job_Dir))
                 {
-                    file.Delete();
+                    var jobdir = new DirectoryInfo(PTI_Job_Dir);
+                    foreach (var file in jobdir.EnumerateFiles(InProcICOutputFile))
+                    {
+                        file.Delete();
+                    }
+                    // Delete the folders from inproc
+                    DeleteDirectoryUsingWildCard(PTI_Job_Dir, "job_");
                 }
-
-                // Delete the folders from inproc
-                DeleteDirectoryUsingWildCard(PTI_Job_Dir, "job_");
 
                 // server IC output file and any blob log files 
                 string PTI_Server_Dir = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + CurrentFramework;
-                var serverdir = new DirectoryInfo(PTI_Server_Dir);
-                foreach (var file in serverdir.EnumerateFiles(InProcICOutputFile))
+                if (Directory.Exists(PTI_Server_Dir))
                 {
-                    file.Delete();
+                    var serverdir = new DirectoryInfo(PTI_Server_Dir);
+                    foreach (var file in serverdir.EnumerateFiles(InProcICOutputFile))
+                    {
+                        file.Delete();
+                    }
+                    // Delete the folders from inproc 
+                    DeleteDirectoryUsingWildCard(PTI_Server_Dir, "server_");
                 }
-                // Delete the folders from inproc 
-                DeleteDirectoryUsingWildCard(PTI_Server_Dir, "server_");
-
 
                 // Give it a second to make sure - had timing issues where wasn't fully deleted by time got here
                 Thread.Sleep(1000);
@@ -410,6 +422,7 @@ namespace AmbrosiaTest
                     FailureSupport("");
                     Assert.Fail("<CleanupAmbrosiaLogFiles> Unable to delete PTI Log Dir:" + PTIAmbrosiaLogDir);
                 }
+
 
             }
             catch (Exception e)
@@ -461,16 +474,18 @@ namespace AmbrosiaTest
             {
                 // Don't want to pop exception because if not there, then that is ok most of time this is just clean up any way
                 //Assert.Fail("<KillProcess> Failure! Exception:" + e.Message);
-                string logInfo = "<KillProcess> Exception:" + e.Message;
+                string logInfo = "<KillProcess> WARNING:" + e.Message;
                 LogDebugInfo(logInfo);
             }
         }
 
         //*********************************************************************
-        // Makes sure all dependent files exist as well as connection strings etc
-        //
+        //* Makes sure all dependent files exist as well as connection strings etc
+        //*
+        //* Have a flag on whether JS test or not as require different PTI checks for JS vs C# LB tests
+        //*
         //*********************************************************************
-        public void VerifyTestEnvironment()
+        public void VerifyTestEnvironment(bool JSTest = false)
         {
 
             // used in PT and PTI - set here by default and change below if need to
@@ -489,6 +504,7 @@ namespace AmbrosiaTest
                 Assert.Fail("<VerifyTestEnvironment> Cmp directory does not exist. Expecting:" + cmpLogDir);
 
 
+            // Verify needed Ambrosia components 
             if (NetFrameworkTestRun)
             {
                 // File is in same directory as test because part of AMB build
@@ -517,18 +533,23 @@ namespace AmbrosiaTest
                 current_framework = NetCoreFramework;
             }
 
-            // Don't need AmbrosiaLibCS.exe as part of tests
-            // string AmbrosiaLibCSExe = "AmbrosiaLibCS.dll";  
-            // if (File.Exists(AmbrosiaLibCSExe) == false)
-            //     Assert.Fail("<VerifyTestEnvironment> Missing AmbrosiaLibcs dll. Expecting:" + AmbrosiaLibCSExe);
+            // PTI Verfication 
+            if (JSTest)
+            {
+                string perfTestJSFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSPTIDirectory"] + "//App//Out//main.js";
+                if (File.Exists(perfTestJSFile) == false)
+                    Assert.Fail("<VerifyTestEnvironment> Missing JS PTI main.js Expecting:" + perfTestJSFile);
+            }
+            else
+            {
+                string perfTestJobFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
+                if (File.Exists(perfTestJobFile) == false)
+                    Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
 
-            string perfTestJobFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestJobExeWorkingDirectory"] + current_framework + "\\job.exe";
-            if (File.Exists(perfTestJobFile) == false)
-                Assert.Fail("<VerifyTestEnvironment> Missing PTI job.exe. Expecting:" + perfTestJobFile);
-
-            string perfTestServerFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
-            if (File.Exists(perfTestServerFile) == false)
-                Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
+                string perfTestServerFile = baseAmbrosiaPath + ConfigurationManager.AppSettings["PerfTestServerExeWorkingDirectory"] + current_framework + "\\server.exe";
+                if (File.Exists(perfTestServerFile) == false)
+                    Assert.Fail("<VerifyTestEnvironment> Missing PTI server.exe. Expecting:" + perfTestServerFile);
+            }
 
             string connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONN_STRING");
             if (connectionString == null)
@@ -544,7 +565,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyTestOutputFileToCmpFile(string testOutputLogFile, bool JSTest = false, bool TTDTest = false)
+        public void VerifyTestOutputFileToCmpFile(string testOutputLogFile, bool JSTest = false, bool TTDTest = false, string originalTestName = "")
         {
 
             // Give it a second to get all ready to be verified - helps timing issues
@@ -553,7 +574,15 @@ namespace AmbrosiaTest
             string testLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             string logOutputDirFileName = testLogDir + "\\" + testOutputLogFile;
             string cmpLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestCMPDirectory"];
-            string cmpDirFile = cmpLogDir + "\\" + testOutputLogFile.Replace(".log", ".cmp");
+            string cmpFile = testOutputLogFile.Replace(".log", ".cmp");
+
+            // special case where unit tests are creating unique test names
+            if (originalTestName != "")
+                cmpFile = cmpFile.Remove(originalTestName.Length, 3);  // removes the 3 digit unique number
+
+            string cmpDirFile = cmpLogDir + "\\" + cmpFile;
+
+
 
             // TTD tests have different files so need modify file to do proper match
             if (TTDTest)
@@ -627,7 +656,7 @@ namespace AmbrosiaTest
         //
         // Assumption:  Test Output logs are .log and the cmp is the same file name but with .cmp extension
         //*********************************************************************
-        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false, bool checkForDoneString = true, string ambrosiaLogDir = "")
+        public void VerifyAmbrosiaLogFile(string testName, long numBytes, bool checkCmpFile, bool startWithFirstFile, string CurrentVersion, string optionalNumberOfClient = "", bool asyncTest = false, bool checkForDoneString = true, string ambrosiaLogDir = "", string originalTestName = "")
         {
             string currentDir = Directory.GetCurrentDirectory();
 
@@ -641,6 +670,11 @@ namespace AmbrosiaTest
             {
                 optionalMultiClientStartingPoint = "0";
             }
+
+            // Used for Unit Tests where unique names are used to avoid collision
+            if (originalTestName == "")
+                 originalTestName = testName;
+
 
             string clientJobName = testName + "clientjob" + optionalMultiClientStartingPoint;
             string serverName = testName + "server";
@@ -663,14 +697,6 @@ namespace AmbrosiaTest
             }
 
             // if not in standard log place, then must be in InProc log location which is relative to PTI - safe assumption
-/*  *#*#* DELETE *#*#*#
-            if (Directory.Exists(ambrosiaLogDir) ==false)
-            {
-                ambrosiaLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
-                ambrosiaLogDirFromPTI = "..\\..\\" + ambrosiaLogDir+"\\";   // feels like there has to be better way of determining this - used for TTD
-                ambServiceLogPath = "..\\..\\"+ambrosiaLogDir + "\\";
-            }
-*/
             // used to get log file
             string ambrosiaClientLogDir = ambrosiaLogDir + "\\" + testName + "clientjob" + optionalMultiClientStartingPoint + "_0";  // client is always 0 so don't use + CurrentVersion;
             string ambrosiaServerLogDir = ambrosiaLogDir + "\\" + testName + "server_" + CurrentVersion;
@@ -820,20 +846,28 @@ namespace AmbrosiaTest
             }
 
             // wait until done running
-            bool pass = WaitForProcessToFinish(logOutputFileName_ClientJob_Verify, numBytes.ToString(), 15, false, testName, true, checkForDoneString);
-            pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, testName, true, checkForDoneString);
+            bool pass = WaitForProcessToFinish(logOutputFileName_ClientJob_Verify, numBytes.ToString(), 15, false, originalTestName, true, checkForDoneString);
+            pass = WaitForProcessToFinish(logOutputFileName_Server_Verify, numBytes.ToString(), 15, false, originalTestName, true, checkForDoneString);
             
 
             // MTFs don't check cmp files because they change from run to run 
             if (checkCmpFile)
             {
                 // verify new log files to cmp files
-                VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Verify);
-                VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Verify);
+                if (originalTestName == testName)
+                {
+                    VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Verify);
+                    VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Verify);
+                }
+                else
+                {
+                    VerifyTestOutputFileToCmpFile(logOutputFileName_Server_Verify, false, false, originalTestName);
+                    VerifyTestOutputFileToCmpFile(logOutputFileName_ClientJob_Verify, false, false, originalTestName);
+                }
             }
 
             // Test Time Travel Debugging on the Log Files from PTI job and PTI server - don't do for MTF as not needed for TTD handled by other tests also cmp files change too much
-            VerifyTimeTravelDebugging(testName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion, checkCmpFile, checkForDoneString);
+            VerifyTimeTravelDebugging(originalTestName, numBytes, clientJobName, serverName, ambrosiaLogDirFromPTI, startingClientChkPtVersionNumber, startingServerChkPtVersionNumber, optionalNumberOfClient, CurrentVersion, checkCmpFile, checkForDoneString);
 
         }
 
@@ -1455,8 +1489,15 @@ namespace AmbrosiaTest
             }
         }
 
-        //** Separate from TestCleanup as want it to be as quick as possible
-        public void UnitTestCleanup()
+        //*******************************************************************
+        //* Separate from TestCleanup as want it to be as quick as possible
+        //*
+        //* NOTE: Unit tests are different than other tests as they run as part of Azure Dev Ops CI. 
+        //*     Because of that, the name needs to be unique on each machine. Can't have Linux test CI and Windows CI using same name as
+        //*     they could delete the other test meta data in Azure. Use a 4 digit random number for each test run
+        //*     and put the unique number at the beginning of the test name so the clean up can just delete all with that unique number
+        //*******************************************************************
+        public void UnitTestCleanup(string uniqueTestIdentifier)
         {
             // If failures in queue then do not want to do anything (init, run test, clean up) 
             if (CheckStopQueueFlag())
@@ -1468,9 +1509,22 @@ namespace AmbrosiaTest
             StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            CleanupAzureTables("unitendtoend"); // all end to end tests
+            //            CleanupAzureTables("unitendtoend"); // all end to end tests
+            //          Thread.Sleep(2000);
+            //        CleanupAzureTables("unittest"); // all unit tests
+            //      Thread.Sleep(2000);
+
+            CleanupAzureTables("unitendtoendtest"+uniqueTestIdentifier); 
             Thread.Sleep(2000);
-            CleanupAzureTables("unittest"); // all unit tests
+            CleanupAzureTables("unitendtoendrestarttest" + uniqueTestIdentifier); 
+            Thread.Sleep(2000);
+            CleanupAzureTables("unittestinproctcp" + uniqueTestIdentifier); 
+            Thread.Sleep(2000);
+            CleanupAzureTables("unittestactiveactivekillprimary"); 
+            Thread.Sleep(2000);
+            CleanupAzureTables("unittestinprocpipe"); 
+            Thread.Sleep(2000);
+            CleanupAzureTables("VssAdministrator"); // Azure Dev Ops left overs
             Thread.Sleep(2000);
         }
 
@@ -1614,7 +1668,7 @@ namespace AmbrosiaTest
             KillProcessByName("MSBuild");
             KillProcessByName("dotnet");
             //KillProcessByName("cmd");  // sometimes processes hang
-            KillProcessByName("node");
+            //KillProcessByName("node");  // Azure Dev Ops uses Node so killing it here affects that
 
 
             // Give it a few second to clean things up a bit more
@@ -1622,7 +1676,13 @@ namespace AmbrosiaTest
         }
 
 
-        public void TestInitialize()
+        // ****************************
+        // * Basic Init called at beginning of each Test that is Ambrosia related
+        //*
+        //* Have parameter for JS tests as they have their own Test Evironment to verify
+        //* 
+        // ****************************
+        public void TestInitialize(bool JSTest = false)
         {
 
             // If failures in queue then do not want to do anything (init, run test, clean up) 
@@ -1633,9 +1693,9 @@ namespace AmbrosiaTest
             }
 
             // Verify environment
-            VerifyTestEnvironment();
+            VerifyTestEnvironment(JSTest);
 
-            // Make sure azure tables etc are cleaned up - there is a lag when cleaning up Azure so could cause issues with test
+            // Make sure azure tables etc are cleaned up - there is a lag when cleaning up Azure so could cause issues with tests if do it before every test so don't do
             //            Cleanup();
 
             // Make sure nothing running from previous test
