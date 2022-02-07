@@ -20,7 +20,7 @@ FMWK="${AMBROSIA_DOTNET_FRAMEWORK:-netcoreapp3.1}"
 CONF="${AMBROSIA_DOTNET_CONF:-Release}"
 
 # Use a non-absolute directory here to prevent collisions:
-BUILDIT_WITH_CONF_FMWK="dotnet publish -o publish -c $CONF -f $FMWK"
+BUILDIT_WITH_CONF_FMWK="dotnet publish -o publish -c $CONF -f $FMWK -r $PLAT"
 BUILDIT="dotnet publish -o publish -r $PLAT"
 
 
