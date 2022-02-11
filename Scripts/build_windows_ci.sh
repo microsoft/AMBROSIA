@@ -22,12 +22,12 @@ source Scripts/ci_common_defs.sh
 echo "Executing a native Windows, non-Docker build."
 export AMBROSIA_ROOT=`pwd`
 export PATH="$PATH:$AMBROSIA_ROOT/bin"
-./build_dotnetcore_bindist.sh  
+./build_ci_core.sh  
 
 # Build PTI
 # ----------------------------------------
 cd "$AMBROSIA_ROOT"/InternalImmortals/PerformanceTestInterruptible
-./build_dotnetcore.sh
+./build_pti_ci.sh
 
 # ----------------------------------------
 echo
