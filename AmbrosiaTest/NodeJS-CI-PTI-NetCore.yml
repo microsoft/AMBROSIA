@@ -1,0 +1,207 @@
+# Variable 'AMBROSIA_DOTNET_CONF' was defined in the Variables tab
+# Variable 'AMBROSIA_DOTNET_FRAMEWORK' was defined in the Variables tab
+# Variable 'AZURE_STORAGE_CONN_STRING' was defined in the Variables tab
+# Variable 'Configuration' was defined in the Variables tab
+# Variable 'Platform' was defined in the Variables tab
+name: $(date:yyyyMMdd)$(rev:.r)
+jobs:
+- job: Phase_1
+  displayName: Test Run
+  cancelTimeoutInMinutes: 1
+  pool:
+    vmImage: windows-2019
+  steps:
+  - checkout: self
+    clean: true
+  - task: NuGetToolInstaller@0
+    displayName: Use NuGet 5.8.0
+    inputs:
+      versionSpec: 5.8.0
+  - task: NodeTool@0
+    displayName: Use Node 14.17.5
+    inputs:
+      versionSpec: 14.17.5
+  - task: Npm@1
+    displayName: npm install
+    inputs:
+      workingDir: Clients/AmbrosiaJS/Ambrosia-Node
+      verbose: false
+  - task: PowerShell@2
+    displayName: Install packages (including TypeScript) for build
+    inputs:
+      targetType: inline
+      script: >
+        npm install --production=false -g
+      pwsh: true
+      workingDirectory: Clients/AmbrosiaJS/Ambrosia-Node
+  - task: BatchScript@1
+    displayName: Run script SetEnvVars.cmd
+    inputs:
+      filename: AmbrosiaTest/AmbrosiaTest/SetEnvVars.cmd
+      arguments: '"$(AZURE_STORAGE_CONN_STRING)"'
+      modifyEnvironment: true
+  - task: PowerShell@2
+    displayName: Install Powershell Azure for cleanup scripts
+    inputs:
+      targetType: inline
+      filePath: AmbrosiaTest/AmbrosiaTest/CleanUpAzure.ps1
+      arguments: unitendtoend*
+      script: >-
+        Install-Module Az.Storage -Force -AllowClobber
+
+        Install-Module AzTable -Force -AllowClobber
+
+        Install-Module Az.Resources -Force -AllowClobber
+
+        Import-Module AzTable -Force
+      pwsh: true
+  - task: PowerShell@2
+    displayName: PowerShell Script Turn on NetCore Tests
+    inputs:
+      targetType: inline
+      script: >
+        # Line in Utilities.cs is what turns on NetCore so setting it to FALSE runs NET Core
+
+        ((Get-Content -path Utilities.cs -Raw) -replace 'public bool NetFrameworkTestRun = true','public bool NetFrameworkTestRun = false') | Set-Content -Path Utilities.cs -Encoding 'utf8'
+      pwsh: true
+      workingDirectory: AmbrosiaTest/AmbrosiaTest
+  - task: PowerShell@2
+    displayName: Build Node JS Package
+    inputs:
+      filePath: Clients/AmbrosiaJS/Ambrosia-Node/build.ps1
+      pwsh: true
+      workingDirectory: Clients/AmbrosiaJS/Ambrosia-Node
+  - task: CopyFiles@2
+    displayName: Copy Node JS package from build location to test location
+    inputs:
+      SourceFolder: Clients/AmbrosiaJS/Ambrosia-Node
+      Contents: '*.tgz'
+      TargetFolder: AmbrosiaTest/JSTest
+  - task: CopyFiles@2
+    displayName: Copy Node JS package from build location to JS PTI
+    inputs:
+      SourceFolder: Clients/AmbrosiaJS/Ambrosia-Node
+      Contents: '*.tgz'
+      TargetFolder: Clients/AmbrosiaJS/PTI-Node/App
+  - task: PowerShell@2
+    displayName: Install Node JS Package to Test Environment
+    inputs:
+      targetType: inline
+      script: >-
+        # In ADO environment - clean env so we know there is only one tgz file created by the build
+
+        $files = Get-ChildItem -Filter *.tgz
+
+        npm install $files.Name
+      pwsh: true
+      workingDirectory: AmbrosiaTest/JSTest
+  - task: PowerShell@2
+    displayName: Install Node JS Package to JS PTI
+    inputs:
+      targetType: inline
+      script: >-
+        # In ADO environment - clean env so we know there is only one tgz file created by the build
+
+        $files = Get-ChildItem -Filter *.tgz
+
+        npm install $files.Name
+      pwsh: true
+      workingDirectory: Clients/AmbrosiaJS/PTI-Node/App
+  - task: PowerShell@2
+    displayName: Build JS PTI
+    inputs:
+      targetType: inline
+      script: >
+        npx tsc -p .\tsconfig.json '--incremental false'
+      pwsh: true
+      workingDirectory: Clients/AmbrosiaJS/PTI-Node/App
+  - task: NuGetCommand@2
+    displayName: NuGet restore AmbrosiaTest
+    inputs:
+      solution: AmbrosiaTest/AmbrosiaTest.sln
+  - task: VSBuild@1
+    displayName: Build solution AmbrosiaTest
+    inputs:
+      solution: AmbrosiaTest/AmbrosiaTest.sln
+      vsVersion: 16.0
+      platform: $(Platform)
+      configuration: $(Configuration)
+      clean: true
+      msbuildArchitecture: x64
+  - task: NuGetCommand@2
+    displayName: NuGet restore Immort Coord
+    inputs:
+      solution: ImmortalCoordinator/ImmortalCoordinator.csproj
+  - task: NuGetCommand@2
+    displayName: NuGet restore Ambrosia
+    inputs:
+      solution: Ambrosia/Ambrosia.sln
+  - task: NuGetCommand@2
+    displayName: NuGet restore AmbrosiaCS
+    inputs:
+      solution: Clients/CSharp/AmbrosiaCS/AmbrosiaCS.sln
+  - task: VSBuild@1
+    displayName: Build solution Ambrosia.sln
+    inputs:
+      solution: Ambrosia/Ambrosia.sln
+      vsVersion: 16.0
+      platform: $(Platform)
+      configuration: $(Configuration)
+      clean: true
+      msbuildArchitecture: x64
+  - task: VSBuild@1
+    displayName: 'Build solution AmbrosiaCS.sln '
+    inputs:
+      solution: Clients/CSharp/AmbrosiaCS/AmbrosiaCS.sln
+      vsVersion: 16.0
+      platform: $(Platform)
+      configuration: $(Configuration)
+      clean: true
+      msbuildArchitecture: x64
+  - task: CopyFiles@2
+    displayName: 'Copy Ambrosia to NetCore 3.1  in AmbrosiaTest '
+    inputs:
+      SourceFolder: Ambrosia/Ambrosia/bin/x64/Release/netcoreapp3.1
+      Contents: '*.*'
+      TargetFolder: AmbrosiaTest/AmbrosiaTest/bin/x64/Release/netcoreapp3.1
+  - task: CopyFiles@2
+    displayName: 'Copy Immortal Coord to NetCore 3.1 in AmbrosiaTest '
+    inputs:
+      SourceFolder: ImmortalCoordinator/bin/x64/Release/netcoreapp3.1
+      Contents: '*.*'
+      TargetFolder: AmbrosiaTest/AmbrosiaTest/bin/x64/Release/netcoreapp3.1
+  - task: CopyFiles@2
+    displayName: Copy AmbrosiaCS to NetCore 3.1 in Ambrosia to AmbrosiaTest
+    inputs:
+      SourceFolder: Clients/CSharp/AmbrosiaCS/bin/x64/Release/netcoreapp3.1
+      Contents: '*.*'
+      TargetFolder: AmbrosiaTest/AmbrosiaTest/bin/x64/Release/netcoreapp3.1
+  - task: VisualStudioTestPlatformInstaller@1
+    displayName: Visual Studio Test Platform Installer
+    inputs:
+      versionSelector: latestStable
+  - task: VSTest@2
+    displayName: VsTest - Run JSADO Unit Tests
+    continueOnError: True
+    inputs:
+      testAssemblyVer2: AmbrosiaTest.dll
+      searchFolder: AmbrosiaTest/AmbrosiaTest/bin/x64/Release
+      testFiltercriteria: TestCategory=JSADO
+      testRunTitle: VS Tests categorized as ADO
+      platform: $(Platform)
+      configuration: $(Configuration)
+      failOnMinTestsNotRun: true
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+    condition: succeededOrFailed()
+    continueOnError: True
+    inputs:
+      SourceFolder: AmbrosiaTest/Log
+      TargetFolder: $(Build.ArtifactStagingDirectory)
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipeline Artifact
+    condition: succeededOrFailed()
+    inputs:
+      path: $(Build.ArtifactStagingDirectory)
+      artifactName: LogDir
+...
