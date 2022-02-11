@@ -720,8 +720,9 @@ namespace AmbrosiaTest
                 return;
             }
 
+            // Comment this out because the Stop all processes can kill others if there are parallel test runs in the CIs - only for ADO CIs
             // Stop all running processes that hung or were left behind
-            MyUtils.StopAllAmbrosiaProcesses();
+            // MyUtils.StopAllAmbrosiaProcesses();
 
             Thread.Sleep(2000);
 
