@@ -1505,8 +1505,9 @@ namespace AmbrosiaTest
                 return;
             }
 
+            // Comment this out because the Stop all processes can kill others if there are parallel test runs in the CIs - only for ADO CIs
             // Stop all running processes that hung or were left behind
-            StopAllAmbrosiaProcesses();
+            //StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             //            CleanupAzureTables("unitendtoend"); // all end to end tests
