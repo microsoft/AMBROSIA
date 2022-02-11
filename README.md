@@ -1,10 +1,15 @@
 Ambrosia: Robust Distributed Programming Made Easy and Efficient
 =======================================================================
 
-Windows Build (net461/netcore3.1): [![Windows Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Win-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=40)
+Windows Build (netcore3.1): [![Windows Core Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-PTI-NetCore-YML?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=68)
+
+Windows Build (netframework 461): [![Windows Framework Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-PTI-NetFramework-YML?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=67)
 
 Linux Build (netcore3.1): [![Linux Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/Ambrosia-CI-Linux-Scripted?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=43)
 
+Node JS (netcore3.1): [![NodeJS Core Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/NodeJS-CI-PTI-NetCore-YML?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=69)
+
+Node JS (netframework 461): [![NodeJS Framework Build Status](https://msrfranklin.visualstudio.com/Franklin/_apis/build/status/NodeJS-CI-PTI-NetFramework-YML?branchName=master)](https://msrfranklin.visualstudio.com/Franklin/_build/latest?definitionId=70)
 
  [![Gitter](https://img.shields.io/badge/chat-on%20gitter-yellow.svg)](https://gitter.im/AMBROSIA-resilient-systems/)
 
