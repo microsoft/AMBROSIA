@@ -38,6 +38,17 @@ Most likely you won’t need to do, but there are advantages of running queue bu
 1. NOTE – **Test Logs** (output from test exes) is located at C:\AmbrosiaTest\Log  (configurable in app.config of AmbrosiaTest sln) 
 
 &nbsp;
+### **Running tests in Azure DevOps (ADO):**
+- ADO Pipeline configuration files (*.yml) are in \AmbrosiaTest directory
+- Ambrosia Core tests that run as part of the Ambrosia ADO CIs are categorized using  [TestCategory("ADO")]
+- Node JS tests that run as part of the Node JS ADO CIs are categorized using  [TestCategory("JSADO")]
+- Since ADO CIs can be ran in parallel and because they save to Azure using those test names, the CI tests have code to ensure a unique name (appends 3 digit random int to name). 
+  - Without this uniqueness, the cleanup code that deletes Ambrosia meta data could delete the meta data for another instance of that test running
+- Due to parallel runs, the clean up for these CI tests also do not do the standard clean up of "StopAllAmbrosiaProcesses" because it could affect other tests running at the same time
+- Any new tests that get these test categorizations will need naming uniqueness code and make sure clean up code doesn't stop all the ambrosia processes
+- Even with these measures to ensure stability when running the same test instances simultaneously, it is recommended to run one test instance at a time. We have seen inconsistent behavior when doing it that could be attributed to several things (Visual Studio, ADO etc)
+
+&nbsp;
 ### **Node.js Language Binding Test details:**
 **Notes:**  
 - Two types of Node.JS tests
