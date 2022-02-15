@@ -1,8 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Configuration;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AmbrosiaTest
 {
@@ -125,7 +121,7 @@ namespace AmbrosiaTest
                             MyUtils.KillProcess(clientJobProcessID);
                             MyUtils.KillProcess(ImmCoordProcessID1);
 
-                            Thread.Sleep(2000);
+                            MyUtils.TestDelay(2000);
 
                             // restart ImmCoord and job.exe
                             ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
@@ -138,7 +134,7 @@ namespace AmbrosiaTest
                             MyUtils.KillProcess(serverProcessID);
                             MyUtils.KillProcess(ImmCoordProcessID2);
 
-                            Thread.Sleep(2000);
+                            MyUtils.TestDelay(2000);
 
                             // Restart ImmCoord and server
                             ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2);
@@ -152,7 +148,7 @@ namespace AmbrosiaTest
                             MyUtils.KillProcess(ImmCoordProcessID1);
                             MyUtils.KillProcess(ImmCoordProcessID2);
 
-                            Thread.Sleep(2000);
+                            MyUtils.TestDelay(2000);
 
                             ImmCoordProcessID1 = MyUtils.StartImmCoord(clientJobName, 1500, logOutputFileName_ImmCoord1);
                             clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", numRounds.ToString(), logOutputFileName_ClientJob);

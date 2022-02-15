@@ -1,9 +1,5 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
-using System.Configuration;
-using System.IO;
 
 namespace AmbrosiaTest
 {
@@ -157,8 +153,7 @@ namespace AmbrosiaTest
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
             // Give it 2 seconds where it tries to connect but doesn't
-            Thread.Sleep(2000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(2000);
 
             // Kill it 
             MyUtils.StopAllAmbrosiaProcesses();
@@ -212,8 +207,7 @@ namespace AmbrosiaTest
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
             // Give it 10 seconds to do something before killing it
-            Thread.Sleep(10000);
-            Application.DoEvents();
+            MyUtils.TestDelay(10000);
 
             // Kill it 
             MyUtils.StopAllAmbrosiaProcesses();
@@ -418,8 +412,7 @@ namespace AmbrosiaTest
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp,0,false,"","",true);
 
             // Give it 20 seconds where it tries to connect but doesn't
-            Thread.Sleep(20000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(20000);
 
             // Kill it 
             MyUtils.StopAllAmbrosiaProcesses();
@@ -533,8 +526,7 @@ namespace AmbrosiaTest
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName,true);
 
             // Give it 20 seconds where it tries to connect but doesn't
-            Thread.Sleep(20000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(20000);
 
             // Kill client
             MyUtils.KillProcess(clientProcessID);

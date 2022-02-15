@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Configuration;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
-using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -113,7 +109,7 @@ namespace AmbrosiaTest
                     if (UsingSrcTestFile)
                     {
                         // just give a breath for file to close 
-                        Thread.Sleep(500);
+                        MyUtils.TestDelay(500);
 
                         string TestLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
                         string outputFile = TestLogDir + "\\" + testOutputLogFile;
@@ -190,8 +186,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(2000);
 
             return processID;
         }
@@ -318,8 +313,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             return processID;
         }
@@ -597,8 +591,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(3000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(3000);
 
             bool pass = true;
 
@@ -657,13 +650,13 @@ namespace AmbrosiaTest
             // Stop all running processes that hung or were left behind
             MyUtils.StopAllAmbrosiaProcesses();
 
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             MyUtils.CleanupAzureTables("jsptisavetoblob");
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptiblob");  //** Covers all the generic blob tests
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
         }
 
         //** Clean up all the left overs from JS tests that are related to JS Restarts
@@ -680,9 +673,9 @@ namespace AmbrosiaTest
             // Stop all running processes that hung or were left behind
             MyUtils.StopAllAmbrosiaProcesses();
 
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptirestart");  //** covers all the generic restart tests
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
         }
 
 
@@ -699,11 +692,11 @@ namespace AmbrosiaTest
 
             // Stop all running processes that hung or were left behind
             MyUtils.StopAllAmbrosiaProcesses();
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptiactiveactive"); //** Covers all the generic active active tests
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptiupgradeactiveactiveprimary");
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
         }
 
@@ -724,17 +717,17 @@ namespace AmbrosiaTest
             // Stop all running processes that hung or were left behind
             // MyUtils.StopAllAmbrosiaProcesses();
 
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             MyUtils.CleanupAzureTables("jsptibidiendtoendtest");
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptiendtoendtest");
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptirestart");
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptitwoproc");
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
         }
 
         //** Clean up all the left overs from JS tests that are related to JS Hosting Mode tests (JS_HostingMode.cs)
@@ -751,11 +744,11 @@ namespace AmbrosiaTest
             // Stop all running processes that hung or were left behind
             MyUtils.StopAllAmbrosiaProcesses();
 
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             MyUtils.CleanupAzureTables("jsptihostmode"); //** covers the generic host mode tests
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
         }
 
 
@@ -772,27 +765,27 @@ namespace AmbrosiaTest
 
             // Stop all running processes that hung or were left behind
             MyUtils.StopAllAmbrosiaProcesses();
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             MyUtils.CleanupAzureTables("jsptigiant"); // all "Giant" tests
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptibidifmstest");
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptifmstest");
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptideletefilelog"); // all delete file tests
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptiautoregexittest");
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptimigrate"); // all migrate tests
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptiupgrade"); // all upgrade tests
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptimultipleclient"); // multi client
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptinoupgradeversiontest");
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
         }
 
     }

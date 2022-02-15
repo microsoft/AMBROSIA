@@ -1,12 +1,5 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
-using System.Collections.Generic;
-using System.Linq;
-using System.Diagnostics;
 using System.Configuration;
 
 namespace AmbrosiaTest
@@ -93,7 +86,6 @@ namespace AmbrosiaTest
             string ambrosiaLogDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"] + "\\";
             string byteSize = "1073741824";
 
-
             //AMB1 - Job
             string logOutputFileName_AMB1 = testName + "_AMB1.log";
             AMB_Settings AMB1 = new AMB_Settings
@@ -141,7 +133,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob, MyUtils.deployModeSecondProc);
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -242,8 +234,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
             // Give it 2 seconds to do something before killing it
-            Thread.Sleep(2000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(2000);
 
             //Kill Server at this point as well as ImmCoord2
             MyUtils.KillProcess(serverProcessID);
@@ -341,7 +332,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob,MyUtils.deployModeInProcManual,"1500");
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -486,12 +477,12 @@ namespace AmbrosiaTest
             //Server Call - primary
             string logOutputFileName_Server1 = testName + "_Server1.log";
             int serverProcessID1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1, 1, false);
-            Thread.Sleep(1000); // give a second to make it a primary
+            MyUtils.TestDelay(1000); // give a second to make it a primary
 
             //Server Call - checkpointer
             string logOutputFileName_Server2 = testName + "_Server2.log";
             int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
 
             //Server Call - active secondary
             string logOutputFileName_Server3 = testName + "_Server3.log";
@@ -503,15 +494,14 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("4001", "4000", clientJobName, serverName, "2500", "2", logOutputFileName_ClientJob);
 
             // Give it 3 seconds to do something before killing it
-            Thread.Sleep(3000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(3000);
 
             //Kill Primary Server (server1) at this point as well as ImmCoord1
             MyUtils.KillProcess(serverProcessID1);
             MyUtils.KillProcess(ImmCoordProcessID1);
 
             // at this point, server3 (active secondary) becomes primary 
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             //Restart server1 (ImmCoord1 and server) ... this will become active secondary now
             string logOutputFileName_ImmCoord1_Restarted = testName + "_ImmCoord1_Restarted.log";
@@ -600,7 +590,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob,MyUtils.deployModeInProc,"1500");
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
