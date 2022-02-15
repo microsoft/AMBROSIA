@@ -508,24 +508,24 @@ namespace AmbrosiaTest
             if (NetFrameworkTestRun)
             {
                 // File is in same directory as test because part of AMB build
-                string ImmCoordExe = currentDir+"\\" + NetFramework + "\\ImmortalCoordinator.exe";
+                string ImmCoordExe = currentDir+"\\ImmortalCoordinator.exe";
                 if (File.Exists(ImmCoordExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing ImmortalCoordinator.exe. Expecting:" + ImmCoordExe);
 
                 // File is in same directory as test 
-                string AMBExe = currentDir + "\\" + NetFramework + "\\Ambrosia.exe";
+                string AMBExe = currentDir + "\\Ambrosia.exe";
                 if (File.Exists(AMBExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing AMB exe. Expecting:" + AMBExe);
             }
             else  // .net core only has dll ...
             {
                 // File is in same directory as test because part of AMB build
-                string ImmCoordExe = currentDir + "\\" +NetCoreFramework+"\\ImmortalCoordinator.dll";
+                string ImmCoordExe = currentDir + "\\ImmortalCoordinator.dll";
                 if (File.Exists(ImmCoordExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing ImmortalCoordinator.dll. Expecting:" + ImmCoordExe);
 
                 // File is in same directory as test 
-                string AMBExe = currentDir + "\\" + NetCoreFramework + "\\Ambrosia.dll";
+                string AMBExe = currentDir + "\\Ambrosia.dll";
                 if (File.Exists(AMBExe) == false)
                     Assert.Fail("<VerifyTestEnvironment> Missing AMB dll. Expecting:" + AMBExe);
 
@@ -912,12 +912,11 @@ namespace AmbrosiaTest
 
             // Launch the AMB process with these values
             string currentDir = Directory.GetCurrentDirectory();
-            string workingDir = currentDir + "\\" + NetFramework + "\\";
+            string workingDir = currentDir + "\\";
             string fileNameExe = "ImmortalCoordinator.exe";
 
             if (NetFrameworkTestRun == false)
             {
-                workingDir = currentDir + "\\" + NetCoreFramework + "\\";
                 fileNameExe = "ImmortalCoordinator.dll";
             }
 
@@ -980,12 +979,11 @@ namespace AmbrosiaTest
 
             // Launch the AMB process with these values
             string currentDir = Directory.GetCurrentDirectory();
-            string workingDir = currentDir + "\\" + NetFramework + "\\";
+            string workingDir = currentDir + "\\";
             string fileNameExe = "Ambrosia.exe";
 
             if (NetFrameworkTestRun == false)
             {
-                workingDir = currentDir + "\\" + NetCoreFramework + "\\";
                 fileNameExe = "Ambrosia.dll";
             }
 
