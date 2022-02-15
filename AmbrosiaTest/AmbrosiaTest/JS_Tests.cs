@@ -1,7 +1,5 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
 using System.Configuration;
 using System.IO;
 
@@ -309,8 +307,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(3000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(3000);
 
             // Just make sure registered part ran and configured it
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_Register, "Ambrosia configuration loaded from 'ambrosiaConfig.json'", 1, false, testName, true, false);
@@ -476,8 +473,7 @@ namespace AmbrosiaTest
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Give it 5 seconds where it tries to connect 
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // DO NOT Kill both Client and Server 
             // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
@@ -496,8 +492,7 @@ namespace AmbrosiaTest
             clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Give it a sec or so to get client started up again
-            Thread.Sleep(2000);
-            Application.DoEvents();  
+            MyUtils.TestDelay(2000);
 
             serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
@@ -554,8 +549,7 @@ namespace AmbrosiaTest
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Give it 5 seconds where it tries to connect 
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // DO NOT Kill both Client and Server 
             // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
@@ -574,8 +568,7 @@ namespace AmbrosiaTest
             clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Give it 5 seconds where it tries to connect 
-            Thread.Sleep(5000);
-            Application.DoEvents();
+            MyUtils.TestDelay(5000);
 
             serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartedFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
@@ -681,8 +674,7 @@ namespace AmbrosiaTest
             JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileName_TestApp);
 
             // Give it 5 seconds where it tries to connect but doesn't
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // DO NOT Kill both app 
             // This is main part of test - get it to have Client and Server take over and run and orig Client and Server are stopped
@@ -742,7 +734,7 @@ namespace AmbrosiaTest
             MyUtils.StopAllAmbrosiaProcesses();
 
             // Give it an extra second to fully stop
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             //Set the Upgrade Version
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "11");
@@ -864,8 +856,7 @@ namespace AmbrosiaTest
             int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it 10 seconds to get some going 
-            Thread.Sleep(10000);
-            Application.DoEvents();  
+            MyUtils.TestDelay(10000);
 
             // Kill server
             MyUtils.KillProcess(serverProcessID);
@@ -931,7 +922,6 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_appVersion, "119", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "119", JSUtils.JSPTI_ServerInstanceRole);
 
-
             // Start it once - Launch the client and the server as separate procs 
             //*** NOTE - The first call (client in this case) starts 4 nodes and sometimes it doesn't give proper process id 
             //*** However, the second call only starts one node, so make sure Server is second so then know that PID is correct for killing it
@@ -939,8 +929,7 @@ namespace AmbrosiaTest
             int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it 10 seconds to get some going 
-            Thread.Sleep(10000);
-            Application.DoEvents();
+            MyUtils.TestDelay(10000);
 
             // Kill server
             MyUtils.KillProcess(serverProcessID);
@@ -1006,7 +995,7 @@ namespace AmbrosiaTest
             MyUtils.StopAllAmbrosiaProcesses();
 
             // Give it an extra second to stop
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Set the Upgrade Version
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "51");
@@ -1024,7 +1013,7 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ptiID2);
 
             // Give it an extra second to fully stop
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Restart it once and make sure it continues with the new version
             int ptiID3 = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputFileNameRestartedAgain_TestApp);

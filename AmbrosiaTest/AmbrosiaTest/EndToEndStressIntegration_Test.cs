@@ -1,8 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Configuration;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
 using System.IO;
 
 namespace AmbrosiaTest
@@ -178,7 +176,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, messageSize, numRounds, logOutputFileName_ClientJob);
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -278,8 +276,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
             // Give it 5seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             //Kill job at this point as well as ImmCoord1
             MyUtils.KillProcess(clientJobProcessID);
@@ -294,8 +291,7 @@ namespace AmbrosiaTest
             int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted);
 
             // Give it 5seconds to do something before killing it again
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             //Kill job at this point as well as ImmCoord1
             MyUtils.KillProcess(clientJobProcessID_Restarted);
@@ -400,8 +396,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
             // Give it 10 seconds to do something before killing it
-            Thread.Sleep(10000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(10000);
 
             //Kill Server at this point as well as ImmCoord2
             MyUtils.KillProcess(serverProcessID);
@@ -510,8 +505,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
             // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // Kill both Job (and ImmCoord) and Server (and ImmCoord)
             MyUtils.KillProcess(clientJobProcessID);
@@ -527,7 +521,7 @@ namespace AmbrosiaTest
             int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted);
 
             // just give a rest 
-            Thread.Sleep(3000);
+            MyUtils.TestDelay(3000);
 
             // Restart Server / ImmCoord2
             string logOutputFileName_ImmCoord2_Restarted = testName + "_ImmCoord2_Restarted.log";
@@ -624,8 +618,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
             // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // Kill both Job (and ImmCoord) and Server (and ImmCoord)
             MyUtils.KillProcess(clientJobProcessID);
@@ -641,7 +634,7 @@ namespace AmbrosiaTest
             int serverProcessID_Restarted = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Restarted, 1, false);
 
             // just give a rest 
-            Thread.Sleep(3000);
+            MyUtils.TestDelay(3000);
 
             // Restart Job / ImmCoord1
             string logOutputFileName_ImmCoord1_Restarted = testName + "_ImmCoord1_Restarted.log";
@@ -730,8 +723,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
             // Let is sit a bit before starting ImmCoords
-            Thread.Sleep(15000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(15000);
 
             //*** Now call ImmCoords
             //ImmCoord1
@@ -954,8 +946,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
             // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // kill Server 
             MyUtils.KillProcess(serverProcessID);
@@ -1116,12 +1107,12 @@ namespace AmbrosiaTest
             //Server Call - primary
             string logOutputFileName_Server1 = testName + "_Server1.log";
             int serverProcessID1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1, 1, false);
-            Thread.Sleep(1000); // give a second to make it a primary
+            MyUtils.TestDelay(1000); // give a second to make it a primary
 
             //Server Call - checkpointer
             string logOutputFileName_Server2 = testName + "_Server2.log";
             int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
 
             //Server Call - active secondary
             string logOutputFileName_Server3 = testName + "_Server3.log";
@@ -1132,8 +1123,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("4001", "4000", clientJobName, serverName, "2500", "2", logOutputFileName_ClientJob);
 
             // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             //** Do not kill any processes - since active / active, the various nodes will be killed after successfully updated
 
@@ -1423,7 +1413,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "10", logOutputFileName_ClientJob);
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -1520,7 +1510,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob(overrideJobSendPort.ToString(), overrideJobReceivePort.ToString(), clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob);
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -1625,8 +1615,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false);
 
             // Give it 2 seconds to do something before killing it
-            Thread.Sleep(2500);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(2500);
 
             // DO NOT Kill both Job (and ImmCoord) and Server (and ImmCoord)
             // This is main part of test - start Job and Server so it takes over and then Orig Job and Server stop then
@@ -1642,7 +1631,7 @@ namespace AmbrosiaTest
             int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted);
 
             // just give a rest 
-            Thread.Sleep(4000);
+            MyUtils.TestDelay(4000);
 
             // Restart Server / ImmCoord2
             string logOutputFileName_ImmCoord2_Restarted = testName + "_ImmCoord2_Restarted.log";
@@ -1717,7 +1706,7 @@ namespace AmbrosiaTest
             MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
 
             // Give it a couple seconds to register since connecting to Azure blobs
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //ImmCoord1
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
@@ -1728,14 +1717,14 @@ namespace AmbrosiaTest
             int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2, false, 9999, 0, 0, "", "", MyUtils.logTypeBlobs);
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob);
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -1811,7 +1800,7 @@ namespace AmbrosiaTest
             MyUtils.CallAMB(AMB2, logOutputFileName_AMB2, AMB_ModeConsts.RegisterInstance);
 
             // Give it a couple seconds to register since connecting to Azure blobs
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //ImmCoord1
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
@@ -1822,14 +1811,14 @@ namespace AmbrosiaTest
             int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2, false, 9999, 0, 0, "", "", MyUtils.logTypeFiles);
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Client Job Call
             string logOutputFileName_ClientJob = testName + "_ClientJob.log";
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob);
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -1918,7 +1907,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, messageSize, numRounds, logOutputFileName_ClientJob,"","","","","TRUE");  // makes fixed sized
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -2007,7 +1996,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, messageSize, numRounds, logOutputFileName_ClientJob);  
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             // Server Call
             string logOutputFileName_Server = testName + "_Server.log";
