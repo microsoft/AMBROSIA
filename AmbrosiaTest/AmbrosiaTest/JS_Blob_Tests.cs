@@ -1,10 +1,6 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Configuration;
 using System.IO;
-
 
 namespace AmbrosiaTest
 {

@@ -1,9 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
 using System.Configuration;
-
 
 namespace AmbrosiaTest
 {
@@ -101,7 +98,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob, MyUtils.deployModeInProc, "1500");
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -185,7 +182,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "1024", "1", logOutputFileName_ClientJob, MyUtils.deployModeSecondProc);
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -345,8 +342,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0,MyUtils.deployModeInProc, "2500");
 
             // Give it 3 seconds to do something before killing it
-            Thread.Sleep(3000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(3000);
 
             // DO NOT Kill both Job and Server 
             // This is main part of test - get it to have Job and Server take over and run
@@ -359,7 +355,7 @@ namespace AmbrosiaTest
             int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted,MyUtils.deployModeInProc,"3500");
 
             // just give a rest 
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             // Restart Server
             string logOutputFileName_Server_Restarted = testName + "_Server_Restarted.log";
@@ -434,7 +430,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "10", logOutputFileName_ClientJob,MyUtils.deployModeInProc,"1500");
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -511,7 +507,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "67108864", "5", logOutputFileName_ClientJob,MyUtils.deployModeInProc,"1500");
 
             // Give it a few seconds to start
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             //Server Call
             string logOutputFileName_Server = testName + "_Server.log";
@@ -592,8 +588,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0,MyUtils.deployModeInProc,"2500");
 
             // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // Kill both Job and Server 
             MyUtils.KillProcess(clientJobProcessID);
@@ -605,7 +600,7 @@ namespace AmbrosiaTest
             int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted,MyUtils.deployModeInProc,"1500");
 
             // just give a rest 
-            Thread.Sleep(3000);
+            MyUtils.TestDelay(3000);
 
             // Restart Server
             string logOutputFileName_Server_Restarted = testName + "_Server_Restarted.log";
@@ -682,8 +677,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0,MyUtils.deployModeInProc,"2500");
 
             // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // Kill both Job and Server
             MyUtils.KillProcess(clientJobProcessID);
@@ -695,7 +689,7 @@ namespace AmbrosiaTest
             int serverProcessID_Restarted = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server_Restarted, 1, false,0,MyUtils.deployModeInProc,"2500");
 
             // just give a rest 
-            Thread.Sleep(3000);
+            MyUtils.TestDelay(3000);
 
             // Restart Job
             string logOutputFileName_ClientJob_Restarted = testName + "_ClientJob_Restarted.log";
@@ -773,8 +767,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob, MyUtils.deployModeInProc, "1500");
 
             // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             //Kill job at this point
             MyUtils.KillProcess(clientJobProcessID);
@@ -784,8 +777,7 @@ namespace AmbrosiaTest
             int clientJobProcessID_Restarted = MyUtils.StartPerfClientJob("1001", "1000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob_Restarted,MyUtils.deployModeInProc,"1500");
 
             // Give it 5 seconds to do something before killing it again
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             //Kill job at this point 
             MyUtils.KillProcess(clientJobProcessID_Restarted);
@@ -869,8 +861,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0,MyUtils.deployModeInProc,"2500");
 
             // Give it 10 seconds to do something before killing it
-            Thread.Sleep(10000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(10000);
 
             //Kill Server at this point as well as ImmCoord2
             MyUtils.KillProcess(serverProcessID);
@@ -1206,8 +1197,7 @@ namespace AmbrosiaTest
             int serverProcessID = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server, 1, false,0,MyUtils.deployModeInProc,"2500");
 
             // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // kill Server 
             MyUtils.KillProcess(serverProcessID);

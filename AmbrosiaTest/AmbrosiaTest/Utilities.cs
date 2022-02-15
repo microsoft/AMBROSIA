@@ -3,10 +3,9 @@ using System.Diagnostics;
 using System.Configuration;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AmbrosiaTest
 {
@@ -137,7 +136,7 @@ namespace AmbrosiaTest
                     process.WaitForExit();
 
                 // Give it a second to completely start
-                Thread.Sleep(2000);
+                TestDelay(2000);
 
                 if (startInfo.Arguments.Contains("dotnet Ambrosia.dll") == false)
                 {
@@ -242,8 +241,7 @@ namespace AmbrosiaTest
                 logFileReader.Close();
                 logFileStream.Close();
 
-                Thread.Sleep(timeCheckInterval);
-                Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+                TestDelay(timeCheckInterval);
 
                 // Clean up Ambrosia logs if asked to - used in long MTF where logs persist - would run out of disk space quickly
                 if (truncateAmbrosiaLogs)
@@ -363,7 +361,7 @@ namespace AmbrosiaTest
                 }
 
                 // Give it a second to make sure - had timing issues where wasn't fully deleted by time got here
-                Thread.Sleep(1000);
+                TestDelay(1000);
 
                 // Double check to make sure it is deleted and not locked by something else
                 if (Directory.Exists(ambrosiaLogDir))
@@ -414,7 +412,7 @@ namespace AmbrosiaTest
                 }
 
                 // Give it a second to make sure - had timing issues where wasn't fully deleted by time got here
-                Thread.Sleep(1000);
+                TestDelay(1000);
 
                 // Double check to make sure it is deleted and not locked by something else
                 if (Directory.Exists(PTIAmbrosiaLogDir))
@@ -468,7 +466,7 @@ namespace AmbrosiaTest
                 p.Kill();
 
                 //** Give it a second to fully get rid of it
-                Thread.Sleep(1000);
+                TestDelay(1000);
             }
             catch (Exception e)
             {
@@ -569,7 +567,7 @@ namespace AmbrosiaTest
         {
 
             // Give it a second to get all ready to be verified - helps timing issues
-            Thread.Sleep(1000);
+            TestDelay(1000);
 
             string testLogDir = baseAmbrosiaPath + ConfigurationManager.AppSettings["TestLogOutputDirectory"];
             string logOutputDirFileName = testLogDir + "\\" + testOutputLogFile;
@@ -966,8 +964,7 @@ namespace AmbrosiaTest
             }
 
             // Give it some time to start
-            Thread.Sleep(6000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            TestDelay(6000);
 
             return processID;
         }
@@ -1100,8 +1097,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a bit to start
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            TestDelay(5000);
 
         }
 
@@ -1192,10 +1188,9 @@ namespace AmbrosiaTest
             // Give it a few seconds to start -- give extra time if starting IC as part of this too
             if (ICPort != "")
             {
-                Thread.Sleep(6000);
+                TestDelay(6000);
             }
-            Thread.Sleep(3000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            TestDelay(3000);
 
             return processID;
         }
@@ -1222,8 +1217,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(6000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            TestDelay(6000);
 
             return processID;
         }
@@ -1296,10 +1290,9 @@ namespace AmbrosiaTest
             // Give it a few seconds to start -- give extra time if starting IC as part of this too
             if (ICPort != "")
             {
-                Thread.Sleep(6000);
+                TestDelay(6000);
             }
-            Thread.Sleep(2000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            TestDelay(2000);
 
             return processID;
         }
@@ -1326,8 +1319,7 @@ namespace AmbrosiaTest
             }
 
             // Give it a few seconds to start
-            Thread.Sleep(6000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            TestDelay(6000);
 
             return processID;
         }
@@ -1503,28 +1495,27 @@ namespace AmbrosiaTest
                 return;
             }
 
-            // Comment this out because the Stop all processes can kill others if there are parallel test runs in the CIs - only for ADO CIs
             // Stop all running processes that hung or were left behind
-            //StopAllAmbrosiaProcesses();
+            StopAllAmbrosiaProcesses();
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             //            CleanupAzureTables("unitendtoend"); // all end to end tests
-            //          Thread.Sleep(2000);
+            //          MyUtils.TestDelay(2000);
             //        CleanupAzureTables("unittest"); // all unit tests
-            //      Thread.Sleep(2000);
+            //      MyUtils.TestDelay(2000);
 
             CleanupAzureTables("unitendtoendtest"+uniqueTestIdentifier); 
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("unitendtoendrestarttest" + uniqueTestIdentifier); 
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("unittestinproctcp" + uniqueTestIdentifier); 
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("unittestactiveactivekillprimary"); 
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("unittestinprocpipe"); 
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("VssAdministrator"); // Azure Dev Ops left overs
-            Thread.Sleep(2000);
+            TestDelay(2000);
         }
 
 
@@ -1542,39 +1533,39 @@ namespace AmbrosiaTest
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             CleanupAzureTables("killjobtest");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("basictest");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("killservertest");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("giant"); // all giant tests
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("doublekill");  // all double kill tests
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("mtf"); // all mtf tests
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("activeactive"); // all active active tests
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("startimmcoordlasttest");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("actactaddnotekillprimary");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("upgrade"); // all upgrade tests
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("migrateclient");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("multipleclientsperserver");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("overrideoptions");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("savelogto");  // all save log to ... tests
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("fixedmessagetest");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("nobiditest");
 
             // Give it a few second to clean things up a bit more
-            Thread.Sleep(5000);
+            TestDelay(5000);
         }
 
         public void InProcPipeTestCleanup()
@@ -1591,28 +1582,28 @@ namespace AmbrosiaTest
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             CleanupAzureTables("inprocpipe"); // all inproc pipe
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inprocbasictest");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inprocgiant"); // in proc giant
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inprocdoublekill"); // double kill tests
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inprockill"); // kill tests
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inprocmultipleclientsperserver");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inprocblob");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inprocfileblob");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inprocmigrateclient");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inprocupgrade"); // upgrade
-            Thread.Sleep(2000);
+            TestDelay(2000);
 
             // Give it a few second to clean things up a bit more
-            Thread.Sleep(5000);
+            TestDelay(5000);
         }
 
 
@@ -1630,24 +1621,24 @@ namespace AmbrosiaTest
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
             CleanupAzureTables("inproctcpclientonly");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inproctcpserveronly");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inprocclient"); // tcp client tests
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inproctcpkill");  // tcp kill tests
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inproctcpfileblob");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inproctcpblob");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inproctcpupgradeserver");
-            Thread.Sleep(2000);
+            TestDelay(2000);
             CleanupAzureTables("inproctcpmigrateclient");
-            Thread.Sleep(2000);
+            TestDelay(2000);
 
             // Give it a few second to clean things up a bit more
-            Thread.Sleep(5000);
+            TestDelay(5000);
         }
 
         public void StopAllAmbrosiaProcesses()
@@ -1671,7 +1662,7 @@ namespace AmbrosiaTest
 
 
             // Give it a few second to clean things up a bit more
-            Thread.Sleep(5000);
+            TestDelay(5000);
         }
 
 
@@ -1704,7 +1695,7 @@ namespace AmbrosiaTest
             CleanupAmbrosiaLogFiles();
 
             // Give it a few seconds to truly init everything - on 8 min test - 3 seconds is no biggie
-            Thread.Sleep(3000);
+            TestDelay(3000);
         }
 
         // ****************************
@@ -1719,6 +1710,15 @@ namespace AmbrosiaTest
 
             // Logs which processes are running and what is in the Azure files
             LogAmbrosiaCurrentStatus(objectName);
+        }
+
+        // ****************************
+        // * Have this utility just in case need to do something different for Framework vs NetCore - easiest to just put in one place
+        // * Also just in case have to handle differently.
+        // ****************************
+        public void TestDelay(int milliseconds)
+        {
+            Task.Delay(milliseconds).Wait(); // Wait milliseconds with blocking
         }
 
 
