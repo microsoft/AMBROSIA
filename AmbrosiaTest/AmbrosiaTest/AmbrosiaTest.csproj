@@ -1,15 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\MSTest.TestAdapter.1.2.0\build\net45\MSTest.TestAdapter.props" Condition="Exists('..\packages\MSTest.TestAdapter.1.2.0\build\net45\MSTest.TestAdapter.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	<TargetFramework>net461</TargetFramework>
+	<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{F9AA4F89-945C-4118-99CF-FDC7AA142601}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AmbrosiaTest</RootNamespace>
     <AssemblyName>AmbrosiaTest</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
@@ -17,8 +16,11 @@
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
-    <NuGetPackageImportStamp>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+	<NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+	<Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,7 +31,24 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -72,27 +91,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActiveActive_Test.cs" />
-    <Compile Include="AsyncTests.cs" />
-    <Compile Include="BasicEXECalls_Test.cs" />
-    <Compile Include="EndToEndStressIntegration_Test.cs" />
-    <Compile Include="AMB_UnitTest.cs" />
-    <Compile Include="InProc_Pipe_Test.cs" />
-    <Compile Include="InProc_TCP_Test.cs" />
-    <Compile Include="JS_CodeGen_Neg_Tests.cs" />
-    <Compile Include="JS_CodeGen_Tests.cs" />
-    <Compile Include="JS_BasicUnitTests.cs" />
-    <Compile Include="JS_Blob_Tests.cs" />
-    <Compile Include="JS_HostingMode_Tests.cs" />
-    <Compile Include="JS_ActiveActive_Tests.cs" />
-    <Compile Include="JS_Restart_Tests.cs" />
-    <Compile Include="MTF_Test.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="JS_Tests.cs" />
-    <Compile Include="Utilities.cs" />
-    <Compile Include="JS_Utilities.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
@@ -117,28 +115,15 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeCoverage">
-      <Version>17.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk">
-      <Version>17.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.TestPlatform.TestHost">
-      <Version>17.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="MSTest.TestAdapter">
-      <Version>2.2.8</Version>
-    </PackageReference>
-    <PackageReference Include="MSTest.TestFramework">
-      <Version>2.2.8</Version>
-    </PackageReference>
-    <PackageReference Include="Newtonsoft.Json">
-      <Version>13.0.1</Version>
-    </PackageReference>
-  </ItemGroup>
+	  <PackageReference Include="Microsoft.CodeCoverage" Version="17.0.0" />
+	  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+	  <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.0.0" />
+	  <PackageReference Include="MSTest.TestAdapter" Version="2.2.8" />
+	  <PackageReference Include="MSTest.TestFramework" Version="2.2.8" />
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>	
   <ItemGroup>
     <Folder Include="Cmp\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
