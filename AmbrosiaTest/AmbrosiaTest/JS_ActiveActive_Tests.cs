@@ -1,10 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
-using System.Configuration;
-using System.IO;
-
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AmbrosiaTest
 {
@@ -102,7 +96,7 @@ namespace AmbrosiaTest
             int serverPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Check Pointer
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
@@ -230,7 +224,7 @@ namespace AmbrosiaTest
             int serverPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Check Pointer
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
@@ -244,7 +238,7 @@ namespace AmbrosiaTest
             int serverChkPtProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerChkPtFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Secondary
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
@@ -362,7 +356,7 @@ namespace AmbrosiaTest
             int serverPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Check Pointer
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
@@ -376,7 +370,7 @@ namespace AmbrosiaTest
             int serverChkPtProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerChkPtFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Secondary
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
@@ -389,7 +383,7 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverSecondaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerSecondaryFileName_TestApp, 0, fixedMsgSize, JSUtils.JSPTI_ServerInstanceRole);
 
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Verify Servers are who they should be by checking output strings
             bool pass = MyUtils.WaitForProcessToFinish(logOutputServerChkPtFileName_TestApp, iMChkPointer, 5, false, testName, true, false);
@@ -491,7 +485,7 @@ namespace AmbrosiaTest
             int serverPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Check Pointer
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
@@ -505,7 +499,7 @@ namespace AmbrosiaTest
             int serverChkPtProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerChkPtFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Secondary
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
@@ -613,7 +607,7 @@ namespace AmbrosiaTest
             int clientPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientPrimaryFileName_TestApp, 0, fixedMsgSize, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Client Check Pointer 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
@@ -627,7 +621,7 @@ namespace AmbrosiaTest
             int clientChkPtrProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientChkPtFileName_TestApp, 0, fixedMsgSize, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Client Check Secondary 
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, clientInstanceName, JSUtils.JSPTI_ClientInstanceRole);
@@ -652,7 +646,7 @@ namespace AmbrosiaTest
             int serverPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Server Check Pointer
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
@@ -666,7 +660,7 @@ namespace AmbrosiaTest
             int serverChkPtProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerChkPtFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Server Secondary
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);
@@ -809,7 +803,7 @@ namespace AmbrosiaTest
             int serverPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it an extra second to start
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             // Start Check Pointer
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_instanceName, serverInstanceName, JSUtils.JSPTI_ServerInstanceRole);

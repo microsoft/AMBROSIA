@@ -1,10 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
-using System.Configuration;
-using System.IO;
-
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AmbrosiaTest
 {
@@ -115,8 +109,7 @@ namespace AmbrosiaTest
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Give it 5 seconds where it tries to connect but doesn't
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // Kill client
             MyUtils.KillProcess(clientProcessID);
@@ -175,8 +168,7 @@ namespace AmbrosiaTest
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Give it 15 seconds where it tries to connect but doesn't
-            Thread.Sleep(15000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(15000);
 
             // Kill client
             MyUtils.KillProcess(clientProcessID);
@@ -228,8 +220,7 @@ namespace AmbrosiaTest
             int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it 5 seconds where it tries to connect but doesn't
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // Kill server
             MyUtils.KillProcess(serverProcessID);
@@ -288,8 +279,7 @@ namespace AmbrosiaTest
             int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it 5 seconds where it tries to connect but doesn't
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // Kill server
             MyUtils.KillProcess(serverProcessID);
@@ -343,8 +333,7 @@ namespace AmbrosiaTest
             int clientProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputClientFileName_TestApp, 0, false, JSUtils.JSPTI_ClientInstanceRole, serverInstanceName);
 
             // Give it 5 seconds where it tries to connect but doesn't
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // Kill server and client
             MyUtils.StopAllAmbrosiaProcesses();
@@ -401,8 +390,7 @@ namespace AmbrosiaTest
             int serverProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
             // Give it 5 seconds where it tries to connect but doesn't
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             // Kill server and client
             MyUtils.StopAllAmbrosiaProcesses();

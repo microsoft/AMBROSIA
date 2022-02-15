@@ -1,8 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Configuration;
-using System.Threading;
-using System.Windows.Forms; // need this to handle threading issue on sleeps
 
 namespace AmbrosiaTest
 {
@@ -135,12 +133,12 @@ namespace AmbrosiaTest
             //Server Call - primary
             string logOutputFileName_Server1 = testName + "_Server1.log";
             int serverProcessID1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1,1,false);
-            Thread.Sleep(1000); // give a second to make it a primary
+            MyUtils.TestDelay(1000); // give a second to make it a primary
 
             //Server Call - checkpointer
             string logOutputFileName_Server2 = testName + "_Server2.log";
             int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
 
             //Server Call - active secondary
             string logOutputFileName_Server3 = testName + "_Server3.log";
@@ -151,8 +149,7 @@ namespace AmbrosiaTest
             int clientJobProcessID = MyUtils.StartPerfClientJob("4001", "4000", clientJobName, serverName, "65536","13",logOutputFileName_ClientJob);
 
             // Give it 10 seconds to do something before killing it
-            Thread.Sleep(10000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(10000);
 
             bool pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord2, iMChkPointer, 5, false, testName, true, false);
             pass = MyUtils.WaitForProcessToFinish(logOutputFileName_ImmCoord3, iMSecondary, 1, false, testName, true, false);
@@ -162,7 +159,7 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID1);
 
             // at this point, server3 (active secondary) becomes primary 
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             //Restart server1 (ImmCoord1 and server) ... this will become active secondary now
             string logOutputFileName_ImmCoord1_Restarted = testName + "_ImmCoord1_Restarted.log";
@@ -310,27 +307,26 @@ namespace AmbrosiaTest
             //Server Call - primary
             string logOutputFileName_Server1 = testName + "_Server1.log";
             int serverProcessID1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1, 1, false);
-            Thread.Sleep(1000); // give a second to make it a primary
+            MyUtils.TestDelay(1000); // give a second to make it a primary
 
             //Server Call - checkpointer
             string logOutputFileName_Server2 = testName + "_Server2.log";
             int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
 
             //Server Call - active secondary
             string logOutputFileName_Server3 = testName + "_Server3.log";
             int serverProcessID3 = MyUtils.StartPerfServer("3001", "3000", clientJobName, serverName, logOutputFileName_Server3, 1, false);
 
             // Give it 10 seconds to do something before killing it
-            Thread.Sleep(10000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(10000);
 
             //Kill check point Server (server2) and ImmCoord
             MyUtils.KillProcess(serverProcessID2);
             MyUtils.KillProcess(ImmCoordProcessID2);
 
             // at this point, there isn't a check point
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             //Restart server2 (ImmCoord2 and server) ... this will become check point again
             string logOutputFileName_ImmCoord2_Restarted = testName + "_ImmCoord2_Restarted.log";
@@ -476,27 +472,26 @@ namespace AmbrosiaTest
             //Server Call - primary
             string logOutputFileName_Server1 = testName + "_Server1.log";
             int serverProcessID1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1, 1, false);
-            Thread.Sleep(1000); // give a second to make it a primary
+            MyUtils.TestDelay(1000); // give a second to make it a primary
 
             //Server Call - checkpointer
             string logOutputFileName_Server2 = testName + "_Server2.log";
             int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
 
             //Server Call - active secondary
             string logOutputFileName_Server3 = testName + "_Server3.log";
             int serverProcessID3 = MyUtils.StartPerfServer("3001", "3000", clientJobName, serverName, logOutputFileName_Server3, 1, false);
 
             // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             //Kill active secondary (server3 and ImmCoord)
             MyUtils.KillProcess(serverProcessID3);
             MyUtils.KillProcess(ImmCoordProcessID3);
 
             // at this point, there isn't a check point
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             //Restart server3 (ImmCoord3 and server) ... this will become active secondary again
             string logOutputFileName_ImmCoord3_Restarted = testName + "_ImmCoord3_Restarted.log";
@@ -644,34 +639,33 @@ namespace AmbrosiaTest
             //Server Call - primary
             string logOutputFileName_Server1 = testName + "_Server1.log";
             int serverProcessID1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1, 1, false);
-            Thread.Sleep(1000); // give a second to make it a primary
+            MyUtils.TestDelay(1000); // give a second to make it a primary
 
             //Server Call - checkpointer
             string logOutputFileName_Server2 = testName + "_Server2.log";
             int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
 
             //Server Call - active secondary
             string logOutputFileName_Server3 = testName + "_Server3.log";
             int serverProcessID3 = MyUtils.StartPerfServer("3001", "3000", clientJobName, serverName, logOutputFileName_Server3, 1, false);
 
             // Give it 5 seconds to do something before killing it
-            Thread.Sleep(5000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(5000);
 
             //Kill check point Server (server2) and ImmCoord
             MyUtils.KillProcess(serverProcessID2);
             MyUtils.KillProcess(ImmCoordProcessID2);
 
             // at this point, there isn't a check point
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             //Now kill secondary Server (server3) and ImmCoord
             MyUtils.KillProcess(serverProcessID3);
             MyUtils.KillProcess(ImmCoordProcessID3);
 
             // at this point, there isn't a secondary
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             //Restart server2 (ImmCoord2 and server) ... this will become check point again because checkpoint has priority
             string logOutputFileName_ImmCoord2_Restarted = testName + "_ImmCoord2_Restarted.log";
@@ -878,34 +872,33 @@ namespace AmbrosiaTest
             //Server Call - primary
             string logOutputFileName_Server1 = testName + "_Server1.log";
             int serverProcessID1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1, 1, false);
-            Thread.Sleep(1000); // give a second to make it a primary
+            MyUtils.TestDelay(1000); // give a second to make it a primary
 
             //Server Call - checkpointer
             string logOutputFileName_Server2 = testName + "_Server2.log";
             int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
 
             //Server Call - active secondary
             string logOutputFileName_Server3 = testName + "_Server3.log";
             int serverProcessID3 = MyUtils.StartPerfServer("3001", "3000", clientJobName, serverName, logOutputFileName_Server3, 1, false);
 
             // Give it 10 seconds to do something before killing it
-            Thread.Sleep(10000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(10000);
 
             //Kill primary Server and ImmCoord
             MyUtils.KillProcess(serverProcessID1);
             MyUtils.KillProcess(ImmCoordProcessID1);
 
             // at this point, secondary is becoming primary server
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             //Now kill primary client and ImmCoord (ImmCoord4)
             MyUtils.KillProcess(clientJobProcessID1);
             MyUtils.KillProcess(ImmCoordProcessID4);
 
             // at this point, secondary client is becoming primary client
-            Thread.Sleep(1000);
+            MyUtils.TestDelay(1000);
 
             //Restart server1 (ImmCoord1 and server1) ... this will become secondary server
             string logOutputFileName_ImmCoord1_Restarted = testName + "_ImmCoord1_Restarted.log";
@@ -1081,14 +1074,14 @@ namespace AmbrosiaTest
             //Server 1
             string logOutputFileName_ImmCoord1 = testName + "_ImmCoord1.log";
             int ImmCoordProcessID1 = MyUtils.StartImmCoord(serverName, 1500, logOutputFileName_ImmCoord1,true, 0);
-            Thread.Sleep(1000); 
+            MyUtils.TestDelay(1000); 
             string logOutputFileName_Server1 = testName + "_Server1.log";
             int serverProcessID1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1, 1, false);
 
             //Server 2
             string logOutputFileName_ImmCoord2 = testName + "_ImmCoord2.log";
             int ImmCoordProcessID2 = MyUtils.StartImmCoord(serverName, 2500, logOutputFileName_ImmCoord2,true, 1);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
             string logOutputFileName_Server2 = testName + "_Server2.log";
             int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
 
@@ -1101,27 +1094,26 @@ namespace AmbrosiaTest
             //Client 1
             string logOutputFileName_ImmCoord4 = testName + "_ImmCoord4.log";
             int ImmCoordProcessID4 = MyUtils.StartImmCoord(clientJobName, 4500, logOutputFileName_ImmCoord4, true, 0);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
             string logOutputFileName_ClientJob1 = testName + "_ClientJob1.log";
             int clientJobProcessID1 = MyUtils.StartPerfClientJob("4001", "4000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob1);
 
             //Client 2
             string logOutputFileName_ImmCoord5 = testName + "_ImmCoord5.log";
             int ImmCoordProcessID5 = MyUtils.StartImmCoord(clientJobName, 5500, logOutputFileName_ImmCoord5,true, 1);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
             string logOutputFileName_ClientJob2 = testName + "_ClientJob2.log";
             int clientJobProcessID2 = MyUtils.StartPerfClientJob("5001", "5000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob2);
 
             //Client 3
             string logOutputFileName_ImmCoord6 = testName + "_ImmCoord6.log";
             int ImmCoordProcessID6 = MyUtils.StartImmCoord(clientJobName, 6500, logOutputFileName_ImmCoord6,true, 2);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
             string logOutputFileName_ClientJob3 = testName + "_ClientJob3.log";
             int clientJobProcessID3 = MyUtils.StartPerfClientJob("6001", "6000", clientJobName, serverName, "65536", "13", logOutputFileName_ClientJob3);
 
             // Give it 10 seconds to do something before killing it
-            Thread.Sleep(10000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(10000);
 
             //Kill all aspects - kill primary of each last
             MyUtils.KillProcess(serverProcessID2);
@@ -1143,7 +1135,7 @@ namespace AmbrosiaTest
             MyUtils.KillProcess(ImmCoordProcessID4);
 
             // at this point, the system is dead - restart 
-            Thread.Sleep(5000);
+            MyUtils.TestDelay(5000);
 
             //Restart servers
             string logOutputFileName_ImmCoord1_Restarted = testName + "_ImmCoord1_Restarted.log";
@@ -1318,12 +1310,12 @@ namespace AmbrosiaTest
             //Server Call - primary
             string logOutputFileName_Server1 = testName + "_Server1.log";
             int serverProcessID1 = MyUtils.StartPerfServer("1001", "1000", clientJobName, serverName, logOutputFileName_Server1, 1, false);
-            Thread.Sleep(1000); // give a second to make it a primary
+            MyUtils.TestDelay(1000); // give a second to make it a primary
 
             //Server Call - checkpointer
             string logOutputFileName_Server2 = testName + "_Server2.log";
             int serverProcessID2 = MyUtils.StartPerfServer("2001", "2000", clientJobName, serverName, logOutputFileName_Server2, 1, false);
-            Thread.Sleep(1000); // give a second
+            MyUtils.TestDelay(1000); // give a second
 
             //Server Call - active secondary
             string logOutputFileName_Server3 = testName + "_Server3.log";
@@ -1361,16 +1353,14 @@ namespace AmbrosiaTest
             int serverProcessID4 = MyUtils.StartPerfServer("4001", "4000", clientJobName, serverName, logOutputFileName_Server4, 1, false);
 
             // Give it 10 seconds to do something before killing it
-            Thread.Sleep(10000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(10000);
 
             //Kill Primary Server (server1) at this point as well as ImmCoord1
             MyUtils.KillProcess(serverProcessID1);
             MyUtils.KillProcess(ImmCoordProcessID1);
 
             // at this point, server3 (active secondary) becomes primary and server4 becomes active secondary
-            Thread.Sleep(10000);
-            Application.DoEvents();  // if don't do this ... system sees thread as blocked thread and throws message.
+            MyUtils.TestDelay(10000);
 
             //Kill new Primary Server (server3) at this point as well as ImmCoord3
             MyUtils.KillProcess(serverProcessID3);
@@ -1379,7 +1369,7 @@ namespace AmbrosiaTest
             // at this point, server4 which was active secondary to active secondary then became 
             // active secondary because server3 became primary
             // but when server3 (new primary) died, server4 became new primary
-            Thread.Sleep(2000);
+            MyUtils.TestDelay(2000);
 
             // Do nothing with Server1 and server3 as they were killed as part of the process
 
