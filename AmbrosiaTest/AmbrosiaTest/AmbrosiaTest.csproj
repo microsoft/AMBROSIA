@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-	<TargetFramework>net461</TargetFramework>
+	<TargetFrameworks>net461;netcoreapp3.1</TargetFrameworks>
 	<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{F9AA4F89-945C-4118-99CF-FDC7AA142601}</ProjectGuid>
