@@ -58,7 +58,7 @@ namespace AmbrosiaTest
             bool bidi = true;
 
             string logTriggerSize = "1024";  // just set a test to have 1024 which is the default of C#
-            string originaltestName = "jsptibidiendtoendtest"; 
+            string originaltestName = "jsptibiditest"; 
             string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
             string logOutputFileName_TestApp = testName + "_TestApp.log";
 
@@ -195,7 +195,7 @@ namespace AmbrosiaTest
             int batchSizeCutoff = 0;
             bool bidi = true;
 
-            string originaltestName = "jsptirestartendtoendbiditest"; 
+            string originaltestName = "jsptirestartbiditest"; 
             string testName = originaltestName + uniqueTestNameID;  // this is the version to make it unqiue so other CI tests don't affect it
             string logOutputFileName_TestApp = testName + "_TestApp.log";
             string logOutputFileNameRestarted_TestApp = testName + "_TestApp_Restarted.log";

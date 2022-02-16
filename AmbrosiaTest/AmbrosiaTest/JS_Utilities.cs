@@ -346,7 +346,8 @@ namespace AmbrosiaTest
                     useNetCore = true;
                 }
 
-                string icBinDirectory = Directory.GetCurrentDirectory() + "\\" + CurrentFramework;
+                //string icBinDirectory = Directory.GetCurrentDirectory() + "\\" + CurrentFramework;
+                string icBinDirectory = Directory.GetCurrentDirectory();
                 string logDirectory = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaLogDirectory"];
 
                 //*** Copy from The Gold Config to App Config ***
@@ -720,11 +721,11 @@ namespace AmbrosiaTest
             MyUtils.TestDelay(2000);
 
             // Clean up Azure - this is called after each test so put all test names in for azure tables
-            MyUtils.CleanupAzureTables("jsptibidiendtoendtest");
+            MyUtils.CleanupAzureTables("jsptibiditest");
             MyUtils.TestDelay(2000);
-            MyUtils.CleanupAzureTables("jsptiendtoendtest");
+            MyUtils.CleanupAzureTables("jsptitest");
             MyUtils.TestDelay(2000);
-            MyUtils.CleanupAzureTables("jsptirestart");
+            MyUtils.CleanupAzureTables("jsptirestart"); 
             MyUtils.TestDelay(2000);
             MyUtils.CleanupAzureTables("jsptitwoproc");
             MyUtils.TestDelay(2000);

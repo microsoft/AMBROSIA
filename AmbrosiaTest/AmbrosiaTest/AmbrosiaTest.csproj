@@ -16,10 +16,11 @@
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
-	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	<NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
 	<Platforms>AnyCPU;x64</Platforms>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -98,19 +99,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-	  <PackageReference Include="Microsoft.CodeCoverage" Version="17.0.0" />
-	  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-	  <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.0.0" />
+	  <PackageReference Include="Microsoft.CodeCoverage" Version="17.1.0" />
+	  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+	  <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.1.0" />
 	  <PackageReference Include="MSTest.TestAdapter" Version="2.2.8" />
 	  <PackageReference Include="MSTest.TestFramework" Version="2.2.8" />
-	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	  <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+	  <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Cmp\" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Configuration" />
-  </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
-
 </Project>
