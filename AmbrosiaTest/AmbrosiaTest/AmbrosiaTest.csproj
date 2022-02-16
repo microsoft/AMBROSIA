@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-	<TargetFrameworks>net461;netcoreapp3.1</TargetFrameworks>
+	<TargetFramework>net461</TargetFramework>
 	<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{F9AA4F89-945C-4118-99CF-FDC7AA142601}</ProjectGuid>
@@ -17,7 +17,6 @@
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
 	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-	<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 	<NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
 	<Platforms>AnyCPU;x64</Platforms>
@@ -75,22 +74,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Configuration">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Core">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Windows.Forms">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
@@ -121,9 +104,13 @@
 	  <PackageReference Include="MSTest.TestAdapter" Version="2.2.8" />
 	  <PackageReference Include="MSTest.TestFramework" Version="2.2.8" />
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-  </ItemGroup>	
+  </ItemGroup>
   <ItemGroup>
     <Folder Include="Cmp\" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+
 </Project>
