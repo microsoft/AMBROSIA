@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
+using System.Configuration;
 
 namespace AmbrosiaTest
 {
@@ -38,7 +39,7 @@ namespace AmbrosiaTest
             Utilities MyUtils = new Utilities();
 
             // get ambrosia-node source files
-            string AmbrosiaNodeDir = @"../../../../JSTest/node_modules/ambrosia-node/src/";
+            string AmbrosiaNodeDir = MyUtils.baseAmbrosiaPath + ConfigurationManager.AppSettings["AmbrosiaJSTestDirectory"]+ "\\node_modules\\ambrosia-node\\src\\";
 
             // loop through all the Ambrosia JS src files and generate them
             foreach (string currentSrcFile in Directory.GetFiles(AmbrosiaNodeDir, "*.ts"))
