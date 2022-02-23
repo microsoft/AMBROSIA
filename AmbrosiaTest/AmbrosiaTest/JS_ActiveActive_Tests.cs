@@ -89,9 +89,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "0", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1510", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1500", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1501", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "7510", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "7500", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "7501", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
@@ -136,9 +136,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "0", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1610", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1600", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1601", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "7610", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "7600", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "7601", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverRestartPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
@@ -217,9 +217,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "0", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1510", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1500", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1501", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "7510", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "7500", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "7501", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
@@ -267,9 +267,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "0", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1610", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1600", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1601", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "7610", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "7600", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "7601", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverRestartPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
@@ -639,9 +639,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "0", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1510", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1500", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1501", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "7510", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "7500", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "7501", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
@@ -697,9 +697,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "0", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1610", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1600", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1601", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "7610", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "7600", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "7601", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             int serverRestartPrimaryProcessID = JSUtils.StartJSPTI(numRounds, totalBytes, totalEchoBytes, bytesPerRound, maxMessageSize, batchSizeCutoff, bidi, logOutputServerRestartPrimaryFileName_TestApp, 0, false, JSUtils.JSPTI_ServerInstanceRole);
 
@@ -793,9 +793,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "0", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1510", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1500", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1501", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "7510", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "7500", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "7501", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_LBOpt_deleteLogs, "false", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_activeCode, "VCurrent", JSUtils.JSPTI_ServerInstanceRole);
@@ -846,9 +846,9 @@ namespace AmbrosiaTest
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_autoRegister, "false", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_isActiveActive, "true", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_replicaNumber, "0", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "1610", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "1000", JSUtils.JSPTI_ServerInstanceRole);
-            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "1001", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icCraPort, "7610", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icReceivePort, "7000", JSUtils.JSPTI_ServerInstanceRole);
+            JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_icSendPort, "7001", JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_logTriggerSizeinMB, logTriggerSize, JSUtils.JSPTI_ServerInstanceRole);
             JSUtils.JS_UpdateJSConfigFile(JSUtils.JSConfig_upgradeVersion, "120", JSUtils.JSPTI_ServerInstanceRole);
 
