@@ -50,7 +50,7 @@ To check that your environment is ready for developing an Ambrosia Node.js app:
         }
     }
     ````
-This program runs the built-in test app, which is typically only used by developers who are working on the Node.js LB itself, but which can also be used a kind of "Hello World" to check that the LB is operational. Because we set `"autoRegister": true`, the LB will automatically register an Immortal instance using the settings from `ambrosiaConfig.json`.  If you prefer, you can instead register the instance manually, which can be accomplished by running `ambrosia.exe` with the `RegisterInstance` verb (see **[here](https://github.com/microsoft/AMBROSIA/blob/master/Samples/HelloWorld/HOWTO-WINDOWS-TwoProc.md#registering-the-immortal-instances)**). If the app starts successfully, you will see output in the console similar to this:
+This program runs the built-in test app, which is typically only used by developers who are working on the Node.js LB itself, but which can also be used as a kind of "Hello World" to check that the LB is operational. Because we set `"autoRegister": true`, the LB will automatically register an Immortal instance using the settings from `ambrosiaConfig.json`.  If you prefer, you can instead register the instance manually, which can be accomplished by running `ambrosia.exe` with the `RegisterInstance` verb (see **[here](https://github.com/microsoft/AMBROSIA/blob/master/Samples/HelloWorld/HOWTO-WINDOWS-TwoProc.md#registering-the-immortal-instances)**). If the app starts successfully, you will see output in the console similar to this:
 
 <details>
 <summary style="font-style: italic">(Click to show/hide output)</summary>
