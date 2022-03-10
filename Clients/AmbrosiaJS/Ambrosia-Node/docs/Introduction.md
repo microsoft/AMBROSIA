@@ -2,7 +2,7 @@
 ## :helicopter: The Ambrosia Node.js Language Binding: An Overview
 ----
 ### :vertical_traffic_light: Getting Started
-The Ambrosia Node.js language binding enables you to write Ambrosia apps/services (**[Immortals](https://github.com/microsoft/AMBROSIA#ambrosia-concepts)**) for Node.js using TypeScript (4.4+). You consume it by installing an npm package (for example, `ambrosia-node-2.0.1.tgz`) in the folder where you're building your Ambrosia app. You obtain the package in one of two ways: either by building it locally, or by installing the pre-built package. To install the pre-built package see step 1b of the **[Developer Machine Setup Guide](DevMachineSetup.md)**. Otherwise, if you're developing the LB itself, see steps 7 and 12 of the **[Developer Machine Setup Guide](DevMachineSetup.md)** for how to build the Node.js LB.
+The Ambrosia Node.js language binding (LB) enables you to write Ambrosia apps/services (**[Immortals](https://github.com/microsoft/AMBROSIA#ambrosia-concepts)**) for Node.js using TypeScript (4.4+). You consume it by installing an npm package (for example, `ambrosia-node-2.0.1.tgz`) in the folder where you're building your Ambrosia app. You obtain the package in one of two ways: either by building it locally, or by installing the pre-built package. To install the pre-built package see step 1b of the **[Developer Machine Setup Guide](DevMachineSetup.md)**. Otherwise, if you're developing the LB itself, see steps 7 and 12 of the **[Developer Machine Setup Guide](DevMachineSetup.md)** for how to build the Node.js LB.
 
 The package includes a complete copy of the source code (in TypeScript) so that you can step right into the LB's code using the debugger (VS Code is recommended, which is the IDE that was used to develop the LB).
 
@@ -225,7 +225,7 @@ When using the Node.js LB, application state must derive from a special base cla
 
 The following describes the basic steps for creating a "Hello World" Node.js Ambrosia app:
 
-1) In a single .ts file (for example, myAPI.ts), define the first few methods that you want to be callable - either by other instances, or by the local instance (as a self-call). You only need one method to start (and it only needs to be a stub) with since you can add more methods over time as you continue development of the app. Self-calls are an important part of most Ambrosia apps, since this is how an app itself makes changes to app state in a deterministic way (further, there is no requirement that an Immortal instance has to talk to any instances other than itself).
+1) In a single .ts file (for example, myAPI.ts), define the first few methods that you want to be callable - either by other instances, or by the local instance (as a self-call). You only need one method to start (and it only needs to be a stub) since you can add more methods over time as you continue development of the app. Self-calls are an important part of most Ambrosia apps, since this is how an app makes changes to its app state in a deterministic way (further, there is no requirement that an Immortal instance has to talk to any instances other than itself).
 
 2) Decorate the methods (and types) you want to "publish" (ie. that you want to be available to be called by any instance) with an `@ambrosia` JSDoc tag, for example:
    ````TypeScript
@@ -239,8 +239,8 @@ The following describes the basic steps for creating a "Hello World" Node.js Amb
    }
    ````
 
-3) Create a main.ts file and add a `codeGen()` function that takes myAPI.ts as input. Set the `codeGen()` function as the entry-point for the program and run it. This will generate `PublisherFramework.g.ts` (used by the 'server' instance) and `ConsumerInterface.g.ts` (used by the 'client' instance):
-   > The ".g" in the file name simply denotes that its a generated file, so any manual edits will be lost at the next code-gen (see `FileGenOptions.mergeType`).<br/>
+3) Create a main.ts file and add a `codeGen()` function that takes myAPI.ts as input. Set the `codeGen()` function as the entry-point for the program and run it. This will generate `PublisherFramework.g.ts` (used by the 'server' instance) and `ConsumerInterface.g.ts` (used by the 'client' instance); in this example, we are creating an instance that - for simplicity - is both the server and the client (ie. it will only make self-calls).
+   > The ".g" in the file name simply denotes that its a generated file, so any manual edits will be lost at the next code-gen (see `FileGenOptions.mergeType`).
      See **[Code Generation for an Ambrosia Node.js App/Service](CodeGen.md)** for a deeper dive into code-gen.
 
    ````TypeScript
@@ -257,7 +257,7 @@ The following describes the basic steps for creating a "Hello World" Node.js Amb
    }
    ````
 
-4) Import `PublisherFramework.g.ts` into main.ts, and move the `State` namespace from `PublisherFramework.g.ts` to myAPI.ts (so that it can be augmented without risk of being overwritten by a subsequent code-gen). Re-run code-gen to fix up the [now broken] State references in `PublisherFramework.g.ts`. Eventually, you will need to implement the `// TODO` comments in the `AppState` class, but you can skip this for now.
+4) Import `PublisherFramework.g.ts` into main.ts, and move the `State` namespace from `PublisherFramework.g.ts` to myAPI.ts (so that it can be augmented without risk of being overwritten by a subsequent code-gen). Re-run code-gen to fix up the [now broken] `State` references in `PublisherFramework.g.ts`. Eventually, you will need to implement the `// TODO` comments in the `AppState` class, but you can skip this for now.
    ````TypeScript
    import * as Framework from "./PublisherFramework.g"; // This is a generated file
    ````
@@ -266,7 +266,7 @@ The following describes the basic steps for creating a "Hello World" Node.js Amb
    ````TypeScript
    // TODO: Add an exported [non-async] function 'onFirstStart(): void' to ./myAPI.ts, then (after the next code-gen) a call to it will be generated here
    ````
-   In you onFirstStart() handler, add a call to the generated wrapper (there will be 4 versions with suffixes `_Fork`, `_Impulse`, `_EnqueueFork`, and `_EnqueueImpulse`) for one of the published methods. Because we're making a self-call, this will require also importing `ConsumerInterface.g.ts`. Note that the `ConsumerInterface.g.ts` automatically includes a `setDestinationInstance()` method, and this must be called at least once before calling any of the published methods.
+   In your `onFirstStart()` handler, add a call to the generated wrapper (there will be 4 versions with suffixes `_Fork`, `_Impulse`, `_EnqueueFork`, and `_EnqueueImpulse`) for one of the published methods. Because we're making a self-call, this will require also importing `ConsumerInterface.g.ts`. Note that the `ConsumerInterface.g.ts` automatically includes a `setDestinationInstance()` method, and this must be called at least once before calling any of the published methods.
    ````TypeScript
    import * as Framework from "./PublisherFramework.g"; // This is a generated file
    import * as PublishedAPI from "./ConsumerInterface.g"; // This is a generated file
@@ -310,7 +310,7 @@ While this process may seem a little complicated at first, several of these step
 - Adding new published methods (and types used in published method parameters), then re-running code-gen.
 - Modifying the `State.AppState` class by adding/updating/removing members, then updating the constructor to handle initialization and re-instantiation from a restored checkpoint.
 
-Another example of this process is described in **[How the PTI App was Created](../../PTI-Node/ReadMe.md#bulb-how-the-pti-app-was-created)**. If desired, the PTI app code can be studied as a more complete (although still artificial) example of a working Ambrosia Node application.
+Another example of this process is described in **[How the PTI App was Created](../../PTI-Node/ReadMe.md#bulb-how-the-pti-app-was-created)**. The PTI app code can be studied as a more complete (although still artificial) example of a working Ambrosia Node application.
 
 &nbsp;
 ### :thought_balloon: Application Design Considerations
@@ -324,14 +324,14 @@ You can learn more about Impulse methods, Post methods, and message handling rul
 &nbsp;
 ### :twisted_rightwards_arrows: Command-Line Parameters
 
-After an app has called `Ambrosia.initializeAsync()` it can respond to any of the LB's command-line parameters, all of which are optional:
+When an app calls `Ambrosia.initializeAsync()` it will respond to any of the LB's command-line parameters, all of which are optional:
 
 Name | Description
 -|-
 `ambrosiaConfigFile=` | Specifies the name (and, optionally, the location) of the `ambrosiaConfig.json` file to use<br/>Note: If omitted, the LB will look in the current folder for `ambrosiaConfig.json`
 `autoRegister`&#x00B9; | During app startup, automatically registers (or re-registers) the `instanceName` specified in `ambrosiaConfig.json`<br/>Note: This is the same as setting "autoRegister" to true in `ambrosiaConfig.json`
 `registerInstance`&#x00B9; | Same as `autoRegister`, but the app immediately exits after registering<br/>Note: This is the same as setting "autoRegister" to "trueAndExit" in `ambrosiaConfig.json`
-`eraseInstance`&#x00B9; | After prompting for confirmation, completely erases all meta-data and checkpoints/logs for the `instanceName` specified in `ambrosiaConfig.json`; the app will immediately exit afterwards<br/>:warning: **Use with caution**
+`eraseInstance`&#x00B9; | After prompting for confirmation, completely and permanently deletes all meta-data and checkpoints/logs for the `instanceName` specified in `ambrosiaConfig.json`; the app will immediately exit afterwards<br/>:warning: **Use with caution**
 `eraseInstanceAndReplicas`&#x00B9; | Like `eraseInstance`, but repeated for all instance replicas too (see **[Demonstration of Using Active/Active with the Ambrosia Node.js Language Binding](../test/ActiveActive/ReadMe.md)**)<br/>:warning: **Use with caution**
 
 &#x00B9; For example usage, see **[Cleaning Up](../../PTI-Node/ReadMe.md#wastebasket-cleaning-up)** in the Performance Test Interruptible (PTI) documentation.<br/>
