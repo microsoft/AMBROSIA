@@ -7,17 +7,19 @@ The following describes how to setup, run, and test a basic **[active/active](ht
 2. Ensure that the Ambrosia `AZURE_STORAGE_CONN_STRING` environment variable (see **[here](https://github.com/microsoft/AMBROSIA/blob/master/Samples/HelloWorld/HOWTO-WINDOWS-TwoProc.md#storage-connection-string)**) has been set.
 3. If not already done, build the language binding by running `"npx tsc -p .\tsconfig.json '--incremental false'"` or by running `"build.ps1"`. &#x00B9;
 4. Reset any previous test runs (if this is the first test run then you can skip this step):<br/>
-   :warning:**Warning:** This command will erase the 'serverAA' instance and all its replicas. If you are already using the 'serverAA' name for a real Ambrosia app/service, then you will need to change the instance name in all the .\test\ActiveActive\ambrosiaConfig.json_replica<b>X</b>.json files.<br/>
+   > :warning:**Warning:** This command will erase the 'serverAA' instance and all its replicas. If you're already using the 'serverAA' name for a real Ambrosia app/service, then you'll need to change the instance name in all .\test\ActiveActive\ambrosiaConfig.json_replica<b>X</b>.json files.<br/>
+
     `node .\lib\Demo.js ambrosiaConfigFile=./test/ActiveActive/ambrosiaConfig_replica0.json eraseInstanceAndReplicas`<br/>
-    You will need to press the 'y' key when prompted, and then wait at least 30 seconds as instructed.
-5. Change `"autoRegister"` to `true` in ambrosiaConfig_replica<b>0</b>.json, ambrosiaConfig_replica<b>1</b>.json &#x00B2;, and ambrosiaConfig_replica<b>2</b>.json &#x00B2; in ./test/ActiveActive.<br/>
-   Be sure to save the files.
-6. Start 3 command prompts (for example, cmd.exe on Windows):<br/>
+
+    You'll need to press the 'y' key when prompted, and then wait at least 30 seconds as instructed.
+5. Change `"autoRegister"` to `true` in ambrosiaConfig_replica<b>0</b>.json, ambrosiaConfig_replica<b>1</b>.json &#x00B2;, and ambrosiaConfig_replica<b>2</b>.json &#x00B2; in ./test/ActiveActive. _Be sure to save the files_.
+6. Start 3 command prompts (for example, cmd.exe on Windows):
+
    From prompt 1 run: `node .\lib\Demo.js ambrosiaConfigFile=./test/ActiveActive/ambrosiaConfig_replica0.json` &#x00B3;<br/>
    From prompt 2 run: `node .\lib\Demo.js ambrosiaConfigFile=./test/ActiveActive/ambrosiaConfig_replica1.json` &#x00B3;<br/>
    From prompt 3 run: `node .\lib\Demo.js ambrosiaConfigFile=./test/ActiveActive/ambrosiaConfig_replica2.json` &#x00B3;<br/>
 
-_The following assumes that `"outputLoggingLevel"` is set to `"Verbose"` or higher (in ambrosiaConfig.json), and that the test was reset (see step #4)..._
+_The following assumes that `"outputLoggingLevel"` is set to `"Verbose"` or higher (in ambrosiaConfig.json), and that the test was reset (see step 4) prior to being run._
 
 - When instance 0 starts, it will report `"Local instance is now primary"` (and handles the initial 'TakeBecomingPrimaryCheckpoint' message).
 - When instance 1 starts, it will report `"[IC] I'm a checkpointer"`.
@@ -32,7 +34,7 @@ To end the test, press CTRL+C in each console window where an instance is still 
 
 <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u><br/>
 &#x00B9; Visual Studio Code is the recommended way to build and edit the Ambrosia Node language binding.<br/>
-&#x00B2; When `"replicaNumber"` is greater than 0, the instance will be registered as a replica (aka. a secondary).<br/>
+&#x00B2; When `"replicaNumber"` is greater than 0, the instance will be registered as a replica (aka. a secondary), instead of as a primary.<br/>
 &#x00B3; Note that in the config file `"isActiveActive"` is `true`, and a `"replicaNumber"` has been specified.<br/>
 
 &nbsp;
