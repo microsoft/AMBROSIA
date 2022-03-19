@@ -7,7 +7,7 @@ Programming with any Ambriosia language binding involves code generation, which 
 
 > _**Note:** The following example is contrived purely to demonstrate code generation; it is not representative of production quality code._
 
-Suppose we want to create an Immortal that exposes a `computePI` post method in its API. Such a method might have the following implementation in a file called `PI.ts`:
+Suppose we want to create an Immortal that exposes a `computePI` **[post](https://github.com/microsoft/AMBROSIA/blob/master/Clients/AmbrosiaJS/Ambrosia-Node/docs/ImpulseExplained.md#post-methods-rpc-calls-that-return-values)** method in its API. Such a method might have the following implementation in a file called `PI.ts`:
 
 ````TypeScript
 export namespace Published
@@ -57,7 +57,7 @@ The `@ambrosia` tag can include one or more comma-separated attributes depending
 | function, static method | `publish` (boolean), `version` (integer), `methodID`&#x00B9; (integer), `doRuntimeTypeChecking`&#x00B2; (boolean) |
 | type alias, enum | `publish` (boolean) |
 
-&#x00B9; If no `methodID` is specified the method will be considered to be a **[post](ImpulseExplained.md#post:-methods-(rpc-calls)-that-return-values)** method.<br/>
+&#x00B9; If no `methodID` is specified the method will be considered to be a **[post](https://github.com/microsoft/AMBROSIA/blob/master/Clients/AmbrosiaJS/Ambrosia-Node/docs/ImpulseExplained.md#post-methods-rpc-calls-that-return-values)** method.<br/>
 &#x00B2; See [Type Checking in the Ambrosia Node.js Language Binding](TypeChecking.md).
 
 The second step is to create a small code-gen program (in TypeScript) to do code generation:
@@ -84,7 +84,7 @@ async function codeGen()
 }
 ````
 
-This program will generate 2 files: `PublisherFramework.g.ts` and `ConsumerInterface.g.ts`. The former should be included by the Immortal that implements the API, and the latter should be included by an Immortal that wishes to use the `computePI` method.  For simplicity, let's assume that our Immortal wants to call its own methods, so our Immortal is both the publisher _and_ the consumer of the API.
+This program will generate 2 files: `PublisherFramework.g.ts` and `ConsumerInterface.g.ts`. The former should be included by the Immortal that implements the API, and the latter should be included by an Immortal that wishes to use the `computePI` method.  For simplicity, let's assume that our Immortal wants to call its own methods, so it is both the publisher _and_ the consumer of the API.
 
 On the publisher side, `PublisherFramework.g.ts` would be used like this:
 
@@ -114,7 +114,7 @@ async function main()
     }
 }
 ````
-> **Note:** `ConsumerInterface.g` is also being imported here _only_ because we are making self-calls, so our Immortal needs to handle the results of our own post methods.
+> **Note:** `ConsumerInterface.g` is also being imported here _only_ because we're making self-calls, so our Immortal needs to handle the results of our own post methods.
 
 And on the consumer side, `ConsumerInterface.g.ts` would be used like this
 
@@ -132,7 +132,7 @@ export namespace AppEventHandlers
     }
 }
 ````
-> **Note:** After writing the above "consumer side" code, `codeGen()` would need to be run again in order to hook up the `onBecomingPrimary()` event handler in `PublisherFramework.g.ts`.
+> **Note:** After writing the above "consumer side" code, `codeGen()` will need to be run again in order to hook up the `onBecomingPrimary()` event handler in `PublisherFramework.g.ts` (where you can see _all_ the available event handlers).
 
 Finally, to handle the result of the `computePI` method, we need to add code to the `postResultDispatcher` in `ConsumerInterface.g.ts`:
 
@@ -156,12 +156,13 @@ When the Immortal instance is started (for the first time), it will call the `co
 2021/08/26 19:39:09.143: pi = 3.14159
 ````
 
-That's it. Although we've glossed over many of the details, these are the broad strokes of how to do code generation. While it may seem a little complicated to begin with, you should find that because it's an iterative/repetitious process you quickly gain familiarity with it. 
+That's it. Although we've glossed over many of the details, these are the broad strokes of how to do code generation. While it may seem a little complicated to begin with, you should find that because it's an iterative process you quickly gain familiarity with it. 
 
 To get into more of the details of code-gen:
 - Review the `ConsumerInterface.g.ts` and `PublisherFramework.g.ts` files. In particular, look for the "`// TODO:`" comments in `PublisherFramework.g.ts`, since these call out places where you can/should take action.
 - Explore the IntelliSense (if using VS Code) for the `Meta.FileGenOptions` class, which is passed into the `Meta.emitTypeScriptFileFromSource()` call to control the behavior of code-gen.
 
+&nbsp;
 ### Code Generation: A Deeper Look
 
 Code generation can be done in two ways: either using a source file as input (strongly recommended, and as shown in the **[Quick Walkthrough](#code-generation-a-quick-walkthrough)**), or by calling the publish API's (`publishType`, `publishMethod`, `publishPostMethod`) directly:
@@ -175,7 +176,7 @@ Automatically publishing types and methods from an annotated TypeScript source f
 1. It's easier. Writing in free-form TypeScript is more familiar and faster than funneling code through the string parameters of the `publishX()` methods.
 2. The developer gets rich design-time support from the TypeScript compiler and the editor (eg. VS Code). For example, comments can be inline with the input source and therefore contextual, which enables the developer to have IntelliSense for their published types and methods.
 3. Because compiler support can now be leveraged, the types and methods can largely be verified before doing code-gen, speeding up the edit/compile/run cycle. Further, code-gen can leverage the TypeScript compiler to verify the generated .ts files (this second benefit also applies to the "manual" code-gen approach).
-4. Because the majority of the developer-provided code is located separately from the generated `PublisherFramework.g.ts`, there is less time spent resolving merges conflicts.
+4. Because the majority of the developer-provided code is located separately from the generated `PublisherFramework.g.ts`, there is less time spent resolving merge conflicts.
 
 &nbsp;
 ### Code Generation Restrictions
@@ -207,7 +208,7 @@ Because C# and TypeScript are very different in both their available language fa
 | Emits project/assembly to compile then reference in app | Emits source files (.ts) to be imported directly in app |
 | **[DataContract](https://docs.microsoft.com/en-us/dotnet/framework/wcf/feature-details/using-data-contracts)** for managing app state | No tooling support; app state must be explicitly managed by the developer&#x00B9; |
 | Annotated code can span multiple .cs files | Annotated code must be in a single .ts file, although namespaces can (and should) be used to help organize the code |
-| No restrictions on code that can be annotated | Only type aliases, enums (that use integers), functions, and static methods can be annotated ("published") |
+| Fewer restrictions on code that can be annotated: only async methods and methods with return values are not supported | Only type aliases, enums (that use integers), functions, and static methods can be annotated ("published"); async functions and static methods are not supported, but functions and static methods with return values are (see **[post](https://github.com/microsoft/AMBROSIA/blob/master/Clients/AmbrosiaJS/Ambrosia-Node/docs/ImpulseExplained.md#post-methods-rpc-calls-that-return-values)** methods)  |
 
 > &#x00B9; All app state <i>must</i> derive from the `Ambrosia.AmbrosiaAppState` class provided by the Node.js LB (which the LB uses to serialize internal LB state), otherwise `IC.start()` will throw an exception.
 
