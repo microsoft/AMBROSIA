@@ -7,7 +7,7 @@ In either case, if you're already familiar with Node.js development using TypeSc
 
 > **Note:** Windows 10 is assumed to be the target OS in all steps of this guide.
 
-1a&#41; If you want to be able to build/debug the Immortal Coordinator (IC), which is written in C#, you'll need to install Visual Studio 2019 (which **[requires](https://docs.microsoft.com/en-us/visualstudio/releases/2019/system-requirements)** Windows):
+1a&#41; If you want to be able to build/debug the Immortal Coordinator (IC), which is written in C#, you'll need to install Visual Studio 2019 (which **[requires Windows](https://docs.microsoft.com/en-us/visualstudio/releases/2019/system-requirements)**):
 
 - Install **[Visual Studio 2019](https://visualstudio.microsoft.com/vs/)**.
 - During the installation, select these workloads:
@@ -37,7 +37,7 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
   > **Note:** We used Node.js version **[14.17.5](https://nodejs.org/download/release/v14.17.5/)** (npm version 6.14.14), which will go end-of-life on 2023-04-30 (see node **[Releases](https://nodejs.org/en/about/releases/)**).<br/>
     Using this exact version of Node (and npm) is recommended.
 
-**4&#41;** Install Git
+**4&#41;** Install Git:
   - Visit https://git-scm.com/download/win and select the "64-bit Git for Windows setup".
   - During setup, use the following values. If an option is presented that's not specified below, accept the default.
     - Choose the default editor used by Git &#x2192; VSCode
@@ -52,14 +52,14 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
     - Configuring extra options &#x2192; Enable file system caching
     - Configure experimental options &#x2192; (None)
 
-5&#41; Clone Ambrosia from GitHub (if you haven't created an **[account](https://github.com/join)** on GitHub, you should do this first)
+5&#41; Clone Ambrosia from GitHub (if you haven't created an **[account](https://github.com/join)** on GitHub, you should do this first):
 - Visit https://github.com/microsoft/AMBROSIA.
 - Click the green "Code” button, then click the "Copy" button to get the URL (https://github.com/microsoft/AMBROSIA.git).
 - From the command line (opened AFTER installing Git), create a folder, eg. C:\src\Git, and CD to that folder. Then run this:<br/>
 ````git clone https://github.com/microsoft/AMBROSIA.git````
 - This only takes a few seconds and will create the AMBROSIA folder.
 
-6&#41; Setup your Git identity
+6&#41; Setup your Git identity:
 
 - From the C:\src\Git\AMBROSIA folder, run these commands (the first two set the values in C:\Users\(YourUserName)\.gitconfig, whereas the second two set the value for the current repo [in .git/config]):<br/>
 `git config --global user.email [YourGitHubEmailAddress]`<br/>
@@ -114,7 +114,7 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
   - Choose 'Connection string (Key or SAS)' and click 'Next'.
   - Enter the `AZURE_STORAGE_CONN_STRING` value in the 'Connection string' box (the 'Display name' will then auto-populate).
 
-12&#41; Run the Node.js LB (smoke test)
+12&#41; Run the Node.js LB (smoke test):
 - In VS Code, open \Ambrosia-Node\ambrosiaConfig.json and set the `"icBinFolder"` setting to `""` and `"autoRegister"` to `true`. Also, edit the `"icLogFolder"` to point to a  suitable folder on your local machine (the folder will be created if it doesn't exist).
 
   > If you used step 1a instead of 1b, then set `"icBinFolder"` to `"[YourRepoPath]\AMBROSIA\ImmortalCoordinator\bin\x64\Release;[YourRepoPath]\AMBROSIA\Ambrosia\Ambrosia\bin\x64\Release"` (these folders will only exists after you do a 'Release' build of Ambrosia.sln).<br/>
