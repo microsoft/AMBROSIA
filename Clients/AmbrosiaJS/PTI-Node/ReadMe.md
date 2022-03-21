@@ -2,7 +2,7 @@
 ## Performance Test Interruptible (PTI) for the Node.js Ambrosia Language Binding
 ----
 ## :arrow_forward: Getting Started
-PTI is a test application that demonstrates using Ambrosia for a basic task (essentially, repeatedly making a simple method call from a 'client' to a 'server' **[Immortal instance](https://github.com/microsoft/AMBROSIA#ambrosia-concepts)**). PTI is primarily used for smoke, performance, and recovery testing of the Immortal Coordinator (IC) and an Ambrosia language binding (LB) - which together form an Immortal instance. There's also a version of PTI for the C# language binding, but this document only concerns the version for the Node.js language binding which is written in TypeScript (4.4).
+PTI is a test application that demonstrates using Ambrosia for a basic task (essentially, repeatedly making a simple method call from a 'client' to a 'server' **[Immortal instance](https://github.com/microsoft/AMBROSIA#ambrosia-concepts)**). PTI is primarily used for smoke, performance, and recovery testing of the Immortal Coordinator (IC) and an Ambrosia language binding (LB) - which together form an Immortal instance. There's also a version of **[PTI for the C# language binding](https://github.com/microsoft/AMBROSIA/tree/master/InternalImmortals/PerformanceTestInterruptible)**, but this document only concerns the version for the Node.js language binding which is written in TypeScript (4.4).
 
 There are 3 folders under AmbrosiaJS\PTI:
 * App - Contains the PTI TypeScript application, and must be built - for example using **[Visual Studio Code](https://code.visualstudio.com/)** - before it can be used. &#x00B9;
@@ -11,28 +11,28 @@ There are 3 folders under AmbrosiaJS\PTI:
 
 **To build the PTI app:**
 1. Switch to the ..\Ambrosia-Node folder and run `".\build.ps1"`. This builds the Node.js LB npm package (ambrosia-node-x.x.x.tgz) which PTI uses. &#x00B2;
-2. Switch to the PTI-Node\App folder and run `"npm install ..\..\Ambrosia-Node\ambrosia-node-0.0.84.tgz"` (the current version number may by higher).
+2. Switch to the PTI-Node\App folder and run `"npm install ..\..\Ambrosia-Node\ambrosia-node-2.0.1.tgz"` (the current version number may by higher).
 3. Revert changes to the App\ambrosiaConfig.json file (these arise as a result of installing the ambrosia-node package). Alternatively, you can just copy ambrosiaConfig.json.old over ambrosiaConfig.json. 
 4. Build the PTI app (manually) from the PTI-Node\App folder by running `"npx tsc -p .\tsconfig.json '--incremental false'"`. &#x00B3;
 
-The PTI app is capable of running in 3 different roles: `Client`, `Server`, and `Combined`.  Which role the app runs in is specified via the "--instanceRole" command-line parameter. To see all available command-line parameters, specify "--help", eg. from the PTI-Node\App folder run `"node .\out\main.js --help"`. Note that which role a parameter applies to is called out in the displayed help syntax, as is the short-name version of each parameter (for example, you can specify "-ir" instead of  "--instanceRole").
+The PTI app is capable of running in 3 different roles: `Client`, `Server`, and `Combined`.  Which role the app runs in is specified via the "--instanceRole" command-line parameter. To see all available command-line parameters, specify "--help", eg. from the PTI-Node\App folder run `"node .\out\main.js --help"`. Note that which role a parameter applies to is called out in the displayed help syntax, as is the short-name of each parameter (for example, you can specify "-ir" instead of  "--instanceRole").
 
 Be aware that while the PTI app is configured via the command-line, the Node.js LB itself is configured via the `ambrosiaConfig.json` file. &#x2074; &#x2075;
 
 **To run your first PTI test:**
-1. Edit the `"icLogFolder"` &#x2076; and `"icBinFolder"` settings in `ambrosiaConfig.json`. Be sure to save the file.
+1. Edit the `"icLogFolder"` &#x2076; and (optionally) `"icBinFolder"` settings in `ambrosiaConfig.json`. Be sure to save the file.
 2. Set the `"autoRegister"` setting to `true` in `ambrosiaConfig.json`. Be sure to save the file.
 3. Set the Ambrosia `AZURE_STORAGE_CONN_STRING` environment variable (see **[here](https://github.com/microsoft/AMBROSIA/blob/master/Samples/HelloWorld/HOWTO-WINDOWS-TwoProc.md#storage-connection-string)**).
 4. From the PTI-Node\App folder, run this command:
-````PowerShell
-node .\out\main.js --instanceRole=Combined --fixedMessageSize --noHealthCheck --expectedFinalBytes=1073741824
-````
+    ````PowerShell
+    node .\out\main.js --instanceRole=Combined --fixedMessageSize --noHealthCheck --expectedFinalBytes=1073741824
+    ````
 5. If it was sucesssful, the last output message reported will be:<br/>
 `SUCCESS: The expected number of bytes (1073741824) have been received`
 
 > **Tip:** By default, the app will run with the minimal level of output (console) logging. If you run into problems, you can change the `"outputLoggingLevel"` setting in `ambrosiaConfig.json` from `"Minimal"` to `"Verbose"` to log additional output, which is often helpful when troubleshooting.  **Caution:** Additional logging will _significantly_ reduce performance, so `"Verbose"` should only be used when investigating problems, not when running tests.
 
-<br/><u>Footnotes</u><br/>
+<br/><i>Footnotes:</i><br/>
 &#x00B9; Visual Studio Code is the recommended way to build and edit PTI.<br/>
 &#x00B2; If you've recently built this package, you can skip this step.<br/>
 &#x00B3; Alternatively, using Visual Studio Code, open the PTI-Node\App folder and build.<br/>
@@ -44,7 +44,7 @@ node .\out\main.js --instanceRole=Combined --fixedMessageSize --noHealthCheck --
 
 ## :vertical_traffic_light: Running PTI
 
-PTI is an Ambrosia app, so it runs as an Ambrosia Immortal instance. As with all Ambrosia Immortal instances, before a PTI instance can run (in any role) it must be registered. This can be accomplished by setting the `"autoRegister"` parameter to `true` in ambrosiaConfig.json, which will cause registration to run automatically during the app's initialization (`"autoRegister"` will reset itself to `false` if registration succeeds). Alternatively, you can run `ambrosia.exe` with the `RegisterInstance` verb (see **[here](https://github.com/microsoft/AMBROSIA/blob/master/Samples/HelloWorld/HOWTO-WINDOWS-TwoProc.md#registering-the-immortal-instances)**). It's also necessary to set the Ambrosia `AZURE_STORAGE_CONN_STRING` environment variable (see **[here](https://github.com/microsoft/AMBROSIA/blob/master/Samples/HelloWorld/HOWTO-WINDOWS-TwoProc.md#storage-connection-string)**).
+PTI is an Ambrosia app, so it runs as an Ambrosia Immortal instance. As with all Ambrosia Immortal instances, before a PTI instance can run (in any role) it must be registered. This can be accomplished by setting the `"autoRegister"` parameter to `true` in ambrosiaConfig.json, which will cause registration to run automatically during the app's initialization (`"autoRegister"` will reset itself to `false` if registration succeeds). Alternatively, you can run `ambrosia.exe` with the `RegisterInstance` verb (see **[here](https://github.com/microsoft/AMBROSIA/blob/master/Samples/HelloWorld/HOWTO-WINDOWS-TwoProc.md#registering-the-immortal-instances)**). It's also necessary to set the Ambrosia `AZURE_STORAGE_CONN_STRING` environment variable (see **[here](https://github.com/microsoft/AMBROSIA/blob/master/Samples/HelloWorld/HOWTO-WINDOWS-TwoProc.md#storage-connection-string)**), or to set the `"icBinFolder"` setting in ambrosiaConfig.json.
 
 > :warning: A separate instance must be registered for <u>each</u> different role (`Client`, `Server`, and `Combined`) you use. If you want to run multiple instances in a given role, then each separate instance will also need to be registered. The instance name is stored in the `"instanceName"` setting in the ambrosiaConfig.json file. By default, PTI will look for this file in the current folder (eg. PTI-Node\App). However, you can also specify the `ambrosiaConfigFile=` command-line parameter to make the app use a different ambrosiaConfig.json file. Along with the `"instanceName"`, the config file also includes other per-instance registration settings such as: `"icLogFolder"`, `"icCraPort"`, `"icReceivePort"` and `"icSendPort"`.
 
@@ -100,7 +100,7 @@ autoRegister | Has the same effect as setting `"autoRegister"` to `true` in ambr
 
 ## :speech_balloon: PTI Explained
 
-The following is a deeper dive into what the PTI app does and how it works. Look in App\src and you will see that the app consists of 2 `.ts` files, and 2 generated `.g.ts` files (which were produced by "code-gen").
+The following is a deeper dive into what the PTI app does and how it works. Look in App\src and you will see that the app consists of 2 `.ts` files, and 2 generated `.g.ts` files (which were produced by "**[code-gen](https://github.com/microsoft/AMBROSIA/blob/master/Clients/AmbrosiaJS/Ambrosia-Node/docs/CodeGen.md)**").
 > :star: Unlike the C# LB, the Node.js LB doesn't have a separate tool for code-generation, rather it provides a simple code-gen API. Code-generation will be covered in more detail in the **[How the PTI App was Created](#bulb-how-the-pti-app-was-created)**.
 
 * `Main.ts` does command-line parsing/validation then starts the Immortal instance; it also handles code-generation for the "published" Ambrosia methods in `PTI.ts` (a "published" method is a method that is callable by an Ambrosia instance, allowing the method to participate in the guarantees provided by the Ambrosia runtime).
@@ -113,9 +113,9 @@ There are 5 published methods:
 * continueSendingMessages (`ClientAPI`)
 * doWorkEcho (`ClientAPI`)
 
-When the client receives the 'InitialMessage' (from the IC), the LB's `onFirstStart()` event handler is called and this makes the initial self-call to 'continueSendingMessages'. This method builds a batch of server 'doWork' method calls then adds a self-call of 'continueSendingMessages' to the batch as a kind of tail-recursion to continue making progress. It then sends the batch to the [local] IC, which sends the calls (as method-invocation messages) to the server and client instances. As the client completes each "round" of work, it asks the server to report its progress by calling the 'reportState' method. While the server runs, it periodically makes a self-call of the 'checkHealth' method as a "heartbeat" to demonstrate that it remains responsive to incoming messages.
+When the client receives the [system message] 'InitialMessage' (from the IC), the LB's `onFirstStart()` event handler is called and this makes the initial self-call to 'continueSendingMessages'. This method builds a batch of server 'doWork' method calls then adds a self-call of 'continueSendingMessages' to the batch as a kind of tail-recursion to continue making progress. It then sends the batch to the [local] IC, which sends the calls (as method-invocation messages) to the server and client instances. As the client completes each "round" of work, it asks the server to report its progress by calling the 'reportState' method. While the server runs, it (optionally) periodically makes a self-call of the 'checkHealth' method as a "heartbeat" to demonstrate that it remains responsive to incoming messages.
 
-The client sends 'doWork' messages in a series of "rounds". The default is 1 round and is controlled by the --numOfRounds command-line parameter. Each round consists of 1 or more batches, with each batch containing 1 or more 'doWork' messages that are of a fixed size. Before starting the next round, the client optionally adjusts the size of the 'doWork' messages by varying the size of the byte-array parameter (the payload) being passed, which is the method's only parameter. The server keeps track of the number and cumulative payload size of the 'doWork' messages received, with the latter being used to determine whether the test has succeeded (note that checking the integrity of the byte-array parameter received is _not_ part of the test). The --expectedFinalBytes parameter tells the server how many 'doWork' message payload bytes it should expect to receive. If --bidirectional is specified, the server will also "echo" the 'doWork' call back to the client by calling the client's 'doWorkEcho' method; the client can verify the echoed messages by specifying a value for --expectedEchoedBytes. To more thoroughly verify the payload of the 'doWork' message (or its "echo" on a client), add the --verifyPayload flag.
+The client sends 'doWork' messages in a series of "rounds". The default is 1 round and is controlled by the --numOfRounds command-line parameter. Each round consists of 1 or more batches, with each batch containing 1 or more 'doWork' messages that are of a fixed size. Before starting the next round, the client optionally adjusts the size of the 'doWork' messages by varying the size of the byte-array parameter (the payload) being passed, which is the method's only parameter. The server keeps track of the number and cumulative payload size of the 'doWork' messages received, with the latter being used to determine whether the test has succeeded. The --expectedFinalBytes parameter tells the server how many 'doWork' message payload bytes it should expect to receive. If --bidirectional is specified, the server will also "echo" the 'doWork' call back to the client by calling the client's 'doWorkEcho' method; the client can verify the echoed messages by specifying a value for --expectedEchoedBytes. To verify the payload of the 'doWork' message (or its "echo" on a client), add the --verifyPayload flag.
 
 The command-line parameters that control round/batch production are shown below, and the validation of these parameters (in `Main.ts`) ensures that they always specify a valid test configuration:
 
@@ -127,8 +127,8 @@ Client Parameter | Description (from "--help")
 --numOfRounds | The number of rounds (of size bytesPerRound) to work through; each round will use a [potentially] different message size; defaults to 1
 --bytesPerRound | The total number of message payload bytes that will be sent in a single round; defaults to 1 GB
 --batchSizeCutoff | Once the total number of message payload bytes queued reaches (or exceeds) this limit, then the batch will be sent; defaults to 10 MB
---maxMessageSize &#x00B9; | The maximum size (in bytes) of the message payload; must be a power of 2 (eg. 65536) and be at least 64; defaults to 64KB
-&#x2011;&#x2011;noDescendingSize | Disables descending (halving) the message size with after each round; instead, a random size [power of 2] between 64 and &#x2011;&#x2011;maxMessageSize will be used
+--maxMessageSize&#x00B9; | The maximum size (in bytes) of the message payload; must be a power of 2 (eg. 65536) and be at least 64; defaults to 64 KB
+&#x2011;&#x2011;noDescendingSize | Disables descending (halving) the message size with after each round; instead, a random size [always a power of 2] between 64 and &#x2011;&#x2011;maxMessageSize will be used
 --fixedMessageSize | All messages (in all rounds) will be of size --maxMessageSize; &#x2011;&#x2011;noDescendingSize (if also supplied) will be ignored
 </div>
 
@@ -145,7 +145,7 @@ node .\out\main.js -bpr=128 -mms=64 -bsc=128 -fms -bd -nhc
 
 In addition to creating simple/quick "smoke" tests like this, the ability to precisely control message production can be used to help narrow down the repro case for an issue. It also makes debugging easier, since when the number of messages involved is small a more detailed `"outputLoggingLevel"` can be specified without resulting in an enormous/unwieldy output log.
 
-Finally, the `"logTriggerSizeInMB"` in ambrosiaConfig.json is set to 256MB so that 4 checkpoints will be taken for every 1GB of messages sent. This allows testing recovery (from a checkpoint) after halting a participating instance before the test completes, even in the default case (1 round of 1 GB). This can be changed as needed to suit the needs of the test. Again, regarding recovery, be aware that the `"deleteLogs"` setting in ambrosiaConfig.json must be set to `"false"`.
+Finally, the `"logTriggerSizeInMB"` in ambrosiaConfig.json is set to 256MB so that 4 checkpoints will be taken for every 1GB of messages sent. This allows testing recovery (from a checkpoint) after halting a participating instance before the test completes, even in the default case (1 round of 1 GB). This can be changed as needed to suit the needs of the test. Again, to test recovery, be aware that the `"deleteLogs"` setting in ambrosiaConfig.json must be set to `"false"`.
 
 &nbsp;
 
@@ -156,57 +156,51 @@ While the C# and Node.js PTI apps both test very similar behavior, their differe
 1. The "--instanceRole" parameter effectively replaces job.exe and server.exe. Further, Node.js PTI supports a single-instanced `Combined` role that simplifies running the test at the expense of being able to test fewer recovery scenarios (the 'client' and 'server' will always terminate at the same time).
 
 2. There are several additional command-line parameters. Run with "--help" to see what each parameter does, which role they apply to, and (where applicable) what the default value is.
-<div style="margin-left:40px; margin-bottom:10px">
 
---instanceRole\
---bytesPerRound (fixed at 1GB in C# PTI)\
---batchSizeCutoff\
---fixedMessageSize\
---noHealthCheck\
---expectedFinalBytes\
---expectedEchoedBytes (specified for the client when --bidirectional is specified for the server)\
---includePostMethod\
---verifyPayload
+    --instanceRole\
+    --bytesPerRound (fixed at 1GB in C# PTI)\
+    --batchSizeCutoff\
+    --fixedMessageSize\
+    --noHealthCheck\
+    --expectedFinalBytes\
+    --expectedEchoedBytes (specified for the client when --bidirectional is specified for the server)\
+    --includePostMethod\
+    --verifyPayload
 
-A few command-line parameters also have slightly different semantics:
+    A few command-line parameters also have slightly different semantics:
 
-The --autoContinue parameter defaults to true (not false) and requires a "=true|false" value (unlike C# PTI).\
-The --notBidirectional parameter is replaced with --bidirectional, which defaults to false if not specified.\
-The --maxMessageSize can be no smaller than 64 bytes, whereas in C# PTI it can be as small as 16 bytes.\
-The --serverName parameter is replaced by --serverInstanceName &#x00B9;.\
-The --jobName and --numOfJobs parameters have no equivalent; multiple clients simply specify the same --serverInstanceName.
-</div>
+    The --autoContinue parameter defaults to true (not false) and requires a "=true|false" value (unlike C# PTI).\
+    The --notBidirectional parameter is replaced with --bidirectional, which defaults to false if not specified.\
+    The --maxMessageSize can be no smaller than 64 bytes&#x00B9;, whereas in C# PTI it can be as small as 16 bytes.\
+    The --serverName parameter is replaced by --serverInstanceName.\
+    The --jobName and --numOfJobs parameters have no equivalent; multiple clients simply specify the same --serverInstanceName.
 
 3. These job.exe/server.exe command-line parameters are supported via ambrosiaConfig.json rather than as PTI app parameters:
-<div style="margin-left:40px">
 
-Parameter Name | Equivalent (in ambrosiaConfig.json)
--|-
---receivePort | "icReceivePort"
---sendPort | "icSendPort"
---ICPort | "icCraPort"
---icDeploymentMode | "icHostingMode" &#x00B2;
---log | "icLogFolder"
---checkpoint | "debugStartCheckpoint"
-</div>
+    Parameter Name | Equivalent (in ambrosiaConfig.json)
+    -|-
+    --receivePort | "icReceivePort"
+    --sendPort | "icSendPort"
+    --ICPort | "icCraPort"
+    --icDeploymentMode | "icHostingMode" &#x00B2;
+    --log | "icLogFolder"
+    --checkpoint | "debugStartCheckpoint"
 
 4. These server.exe command-line parameters are supported via ambrosiaConfig.json rather than as PTI app parameters:
-<div style="margin-left:40px">
 
-Parameter Name | Equivalent (in ambrosiaConfig.json)
--|-
---upgrading | "upgradeVersion"
---currentVersion | "appVersion"
-</div>
+    Parameter Name | Equivalent (in ambrosiaConfig.json)
+    -|-
+    --upgrading | "upgradeVersion"
+    --currentVersion | "appVersion"
 
-&#x00B9; The client instance name is encoded into the first 64 bytes of the 'doWork' message payload (after the 4-byte call number and 1-byte instance name length), and so is limited to 59 bytes.<br/>
+&#x00B9; The client instance name is encoded into the first 64 bytes of the 'doWork' message payload (after the 4-byte call number and 1-byte instance name length), and so the client instance name is limited to 59 bytes.<br/>
 &#x00B2; The available icHostingMode's are not the same as the icDeploymentMode's; loosely, "SecondProc" (C#) corresponds to "Separated" (JS), and "InProcDeploy" corresponds to "Integrated".
 
 &nbsp;
 
 ## :bulb: How the PTI App was Created
 
-While not comprehensive, the following describes the "broad strokes" of how the PTI app was created, with an emphasis on the code-generation steps which are unique to the Node.js LB.
+While not comprehensive, the following describes the "broad strokes" of how the PTI app was created, with an emphasis on the code-generation steps which are unique to the Node.js LB. You can read more about code-gen **[here](https://github.com/microsoft/AMBROSIA/blob/master/Clients/AmbrosiaJS/Ambrosia-Node/docs/CodeGen.md)**.
 
 After installing the ambrosia-node npm package (see **[Getting Started](#arrow_forward-getting-started)**), `PTI.ts` was created. Stubs for the 5 methods to be "published" were written and annotated with a special `@ambrosia` JSDoc tag, like this:
 
@@ -237,14 +231,14 @@ import * as Framework from "./PublisherFramework.g"; // This is a generated file
 ````
 > **Note:** Only in the case where an Ambrosia app (or service) can be both a 'client' _and_ the 'server' is it necessary to import _both_ the consumer-side (client) and publisher-side (server) generated files. In the typical case, the server instance will only import `PublisherFramework.g.ts`, and clients of the instance will only import `ConsumerInterface.g.ts` (which they must obtain from the publisher of the server).
 
-The 5 stubbed methods were then implemented, since they now had access to the method wrappers (imported from `ConsumerInterface.g.ts`) necessary to call the published functions, eg:
+The 5 stubbed methods were then implemented, since they now had access to the method wrappers (imported from `ConsumerInterface.g.ts`) necessary to call the published functions, for example:
 
 ````TypeScript
 PublishedAPI.ClientAPI.continueSendingMessages_EnqueueFork(numRPCBytes, iterationWithinRound, startTimeOfRound);
 ````
 The generated `State` namespace in `PublisherFramework.g.ts` was manually moved to `PTI.ts` so that it could be augmented without risk of being overwritten by a subsequent code-gen, and code-gen was re-run. Code-gen will detect the move and not re-generate this namespace (in `PublisherFramework.g.ts`), and will automatically fix up the [now broken] `State` references in `PublisherFramework.g.ts`.
 
-Indeed, any time the name, type, or "shape" of any published entity (like a method) changes, code-gen must be re-run. Because of this, it's usually best to leave your `codeGen()` function in `Main.ts`, even after you switch over to using the app's normal `main()` entry-point. Depending on the changes that were made, it can be necessary to force code-gen to ignore errors in the input source file (`PTI.ts` in our case) by temporarily modifying the `fileOptions` parameter of `emitTypeScriptFileFromSource()` to include the `"ignoreTSErrorsInSourceFile: true"` option. Further, the changes may cause compilation errors in the existing PublisherFramework.g.ts and/or ConsumerInterface.g.ts (both of which your app may import) leading to this popup dialog (when running code-gen using VS Code): 
+Indeed, any time the name, type, or "shape" of any published entity (like a method) changes, code-gen must be re-run. Because of this, it's usually best to leave your `codeGen()` function in `Main.ts`, even after you switch over to using the app's normal `main()` entry-point. Depending on the changes that were made, it can sometimes be necessary to force code-gen to ignore errors in the input source file (`PTI.ts` in our case) by temporarily modifying the `fileOptions` parameter of `emitTypeScriptFileFromSource()` to include the `"ignoreTSErrorsInSourceFile: true"` option. Further, the changes may cause compilation errors in the existing PublisherFramework.g.ts and/or ConsumerInterface.g.ts (both of which your app may import) leading to this popup dialog (when running code-gen using VS Code): 
 
 <div align="center">
   <img alt="Compilation Errors Dialog" src="Images/CompilationErrors.png" width="600px"/>
