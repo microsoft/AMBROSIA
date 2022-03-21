@@ -3,7 +3,7 @@
 ----
 If you want to work on _developing_ the Node.js Language Binding (LB) itself, then the following setup steps are provided to help you get your developer workstation up and running.<br/>
 If you want to simply _use_ the the Node.js LB to build a new Ambrosia application/service, then only the **bold** numbered steps apply (1b, 2, 3, 4, 9, 10, 11).<br/>
-In either case, if you're already familiar with Node.js development using TypeScript, VS Code, and Git, then you likely already have your development environment setup and can skip most of the software installation steps. Just be aware that we've only tested the LB with Node.js version 14.17.5 (see step #3).<br/>
+In either case, if you're already familiar with Node.js development using TypeScript, VS Code, and Git, then you likely already have your development environment setup and can skip most of the software installation steps. Just be aware that we've only tested the LB with Node.js version 14.17.5 (see step 3).<br/>
 
 > **Note:** Windows 10 is assumed to be the target OS in all steps of this guide.
 
@@ -19,16 +19,16 @@ In either case, if you're already familiar with Node.js development using TypeSc
   - .Net Core cross-platform development
 - See **[here](https://github.com/Microsoft/AMBROSIA/tree/master/CONTRIBUTING)** for more information about building Ambrosia.
 
-**1b&#41;** If you don't want to build/debug the IC, you can just install the pre-built Ambrosia binaries:<br/>
+**1b&#41;** If you don't want to build/debug the IC, you can instead install the pre-built Ambrosia binaries:<br/>
 - Create a folder C:\ambrosia-win.
 - Visit https://github.com/microsoft/AMBROSIA/releases.
 - Click on Ambrosia-win-x64.zip and extract it to C:\ambrosia-win.
 
-Similarly, if you don't want to build the Node.js LB (which is consumed as an npm package), you can simply install the pre-built package (for example, ambrosia-node-2.0.1.tgz) from https://github.com/microsoft/AMBROSIA/releases, by running this command:
+Similarly, if you don't want to build the Node.js LB (which is consumed as an npm package), you can instead install the pre-built package (for example, ambrosia-node-2.0.1.tgz) from https://github.com/microsoft/AMBROSIA/releases, by running this command (from the folder where you will create your Node.js app):
 
 `npm install https://github.com/microsoft/AMBROSIA/releases/download/v2.0.0.0/ambrosia-node-2.0.1.tgz`
 
-> **Note:** If you don't already have npm installed, see step #3. Further, the ambrosia-node package by itself is **not** sufficient to create/run an Ambrosia app for Node.js: you also need the Ambrosia binaries for your OS (for example, by installing Ambrosia-win-x64.zip) from the _**same**_ version of Ambrosia. Finally, note that the package includes all the TypeScript source code for the LB, so you can "step into" the LB code (if needed) with your IDE even without cloning the Git repo.
+> **Note:** If you don't already have npm installed, see step 3. Further, the ambrosia-node package by itself is **not** sufficient to create/run an Ambrosia app for Node.js: you also need the Ambrosia binaries for your OS (for example, by installing Ambrosia-win-x64.zip) from the _**same**_ version of Ambrosia. Finally, note that the package includes all the TypeScript source code for the LB, so you can "step into" the LB code (if needed) with your IDE even without cloning the Git repo.
 
 **2&#41;** Install VS Code from https://code.visualstudio.com/download. Accept all the defaults.
 > **Note:** Also install PowerShell 7.0 (or later) from https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.2, since this is the terminal that we want VS Code to use.
@@ -102,7 +102,7 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
 - Click on the 'Show keys' button, and the click the 'Copy' icon next to the Primary 'Connection string'.
 - In Windows, search for 'Edit the system environment variables' and add the copied connection string as `AZURE_STORAGE_CONN_STRING`.
 
-**10&#41;** Create an `AMBROSIATOOLS` user environment variable that points to C:\ambrosia-win\x64\Release (created in step 1b). Afterwards, restart VS Code and any command prompts.
+**10&#41;** Create an `AMBROSIATOOLS` user environment variable that points to C:\ambrosia-win\x64\Release (created in step 1b). Afterwards, close any console/terminal windows then restart VS Code.
 > If you used step 1a instead of 1b, then set `AMBROSIATOOLS` to [YourRepoPath]\AMBROSIA\ImmortalCoordinator\bin\x64\Release (which will exist only _after_ you do a 'Release' build of Ambrosia.sln). However, this will not be sufficient to run the Node.js LB, so you will need to set `"icBinFolder"` (see step 12).
 
 **11&#41;** Install Azure Storage Explorer. This is optional, but is extremely useful for debugging instance registration issues.
@@ -116,12 +116,13 @@ Similarly, if you don't want to build the Node.js LB (which is consumed as an np
 
 12&#41; Run the Node.js LB (smoke test)
 - In VS Code, open \Ambrosia-Node\ambrosiaConfig.json and set the `"icBinFolder"` setting to `""` and `"autoRegister"` to `true`. Also, edit the `"icLogFolder"` to point to a  suitable folder on your local machine (the folder will be created if it doesn't exist).
+
   > If you used step 1a instead of 1b, then set `"icBinFolder"` to `"[YourRepoPath]\AMBROSIA\ImmortalCoordinator\bin\x64\Release;[YourRepoPath]\AMBROSIA\Ambrosia\Ambrosia\bin\x64\Release"` (these folders will only exists after you do a 'Release' build of Ambrosia.sln).<br/>
   Note that the `"icBinFolder"` overrides the `AMBROSIATOOLS` environment variable, and can contain multiple paths (separated by a semicolon).
 - You should now be able to build and run (F5 in VS Code) the Node.js LB, although – on the first run – you will be prompted to let the app through the Windows Firewall (the IC opens 3 ports).
   - If you're not using VS Code (or just want a scriptable build)...
     - Build the Node.js LB by running `"npx tsc -p .\tsconfig.json '--incremental false'"` from the \AmbrosiaJS\Ambrosia-Node folder.
-    - Alternatively, you can run `"./build.ps1"` (also from the \AmbrosiaJS\Ambrosia-Node folder) which will build the LB as part of building the ambrosia-node npm package (for example, `ambrosia-node-2.0.1.tgz`).
+    - Alternatively, you can run `"./build.ps1"` (also from the \AmbrosiaJS\Ambrosia-Node folder) which will build the LB as part of building the ambrosia-node npm package (for example, `ambrosia-node-2.0.1.tgz`). Note that this script also runs unit tests (to see the full script syntax, run `get-help ./build.ps1 -Full`).
     - You can then run the Node.js LB with `"node .\lib\Demo.js"` (which runs the built-in 'smoke test' app).
 
 &nbsp;
