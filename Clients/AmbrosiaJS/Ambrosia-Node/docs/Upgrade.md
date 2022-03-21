@@ -1,7 +1,7 @@
 <!-- Note: If using VS Code, install the "bierner.markdown-emoji" extension in order to see emoji's in the built-in MarkDown preview window. -->
 ## :arrows_counterclockwise: Upgrading a Node.js Ambrosia App/Service
 ----
-Once an app/service has been built using the Node.js LB, it may later become necessary to upgrade it. This document descibes how to upgrade a standalone Node.js LB instance. Upgrade of an **[active/active](https://github.com/microsoft/AMBROSIA/blob/master/CONTRIBUTING/AMBROSIA_client_network_protocol.md#activeactive)** configuration is not (yet) covered. You can read more about upgrades **[here](https://github.com/microsoft/AMBROSIA/blob/master/CONTRIBUTING/AMBROSIA_client_network_protocol.md#app-upgrade)**.
+Once an app/service has been built using the Node.js LB (and placed into production), it may later become necessary to upgrade it. This document descibes how to upgrade a standalone Node.js LB instance. Upgrade of an **[active/active](https://github.com/microsoft/AMBROSIA/blob/master/CONTRIBUTING/AMBROSIA_client_network_protocol.md#activeactive)** configuration is not (yet) covered. You can read more about upgrades **[here](https://github.com/microsoft/AMBROSIA/blob/master/CONTRIBUTING/AMBROSIA_client_network_protocol.md#app-upgrade)**.
 
 There are 3 types of upgrade:
 
@@ -117,8 +117,8 @@ Logs and checkpoints are only read (never written) during a "what-if" test, so i
 
 ### :rocket: Upgrade Using Only ambrosiaConfig.json
 
-With the goals of 'simplicity' and 'ease of use' in mind, the upgrade can largely be accomplished purely by making changes to the ambrosiaConfig.json file.
-No additional command-line tools are explicitly used (they are simply run under the covers as needed), which is made possible by specifying the path(s) to the tools using the `icBinFolder` setting in ambrosiaConfig.json (which can include a semi-colon separated list of paths).
+After the necessary code changes have been made, the upgrade itself can largely be accomplished purely by making changes to the ambrosiaConfig.json file.
+No additional command-line tools are explicitly used (they are simply run under the covers as needed), which is made possible by specifying the path(s) to the tools (ambrosia.exe) using either the `AMBROSIATOOLS` environment variable or the `icBinFolder` setting in ambrosiaConfig.json (which can include a semi-colon separated list of paths).
 
 **Preparing to test a "live" upgrade**
 
@@ -193,7 +193,7 @@ After you see the "Upgrade complete" message, observe that these ambrosiaConfig.
 
 5. The next time you restart the app, it will complete the final step in the upgrade which is to re-register the new `appVersion`.
 
-When you’re ready for the _next_ upgrade (or at anytime leading up to it), stop the instance, change `activeCode` to "VCurrent" and update the `IC.start()` call to use the handlers being assigned [as part of the previous upgrade] using `IC.upgrade()`.<br/><br/>
+When you’re ready for the _next_ upgrade (or at anytime leading up to it), stop the instance, change `activeCode` to "VCurrent" and update the `IC.start()` call to use the handlers being assigned [as part of the previous upgrade] by `IC.upgrade()`.<br/><br/>
 
 ### :raised_hand_with_fingers_splayed: "Manual" Upgrade
 
@@ -204,7 +204,7 @@ To manually do a upgrade of a standalone Node.js app instance:
 1) Stop the app.
 2) Replace the app with new app code that contains VCurrent and VNext code, can handle the `UpgradeState` and `UpgradeCode` app-events, and has had its upgrade pathway tested using the `debugTestUpgrade` setting (in ambrosiaConfig.json).
 3) Optionally, remove the following settings from ambrosiaConfig.json: `appVersion`, `deleteLogs`.
-4) Set `deleteLogs` to "false" (not needed if `deleteLogs` is omitted from ambrosiaConfig.json – see step #3).
+4) Set `deleteLogs` to "false" (not needed if `deleteLogs` is omitted from ambrosiaConfig.json – see step 3).
 5) Manually run "Ambrosia.exe RegisterInstance" to set the upgradeVersion, for example:<br/>
 ````PowerShell
 Ambrosia.exe RegisterInstance --instanceName=server --receivePort=2000 -sendPort=2001 --log=C:/logs/ --currentVersion=0 --upgradeVersion=1
@@ -215,7 +215,7 @@ Ambrosia.exe RegisterInstance --instanceName=server --receivePort=2000 -sendPort
 ````PowerShell
 Ambrosia.exe RegisterInstance --instanceName=server --receivePort=2000 -sendPort=2001 --log=C:/logs/ --currentVersion=1
 ````
-9) Set `appVersion` in ambrosiaConfig.json to the upgradeVersion (not needed if `appVersion` is omitted from ambrosiaConfig.json – see step #3).
+9) Set `appVersion` in ambrosiaConfig.json to the upgradeVersion (not needed if `appVersion` is omitted from ambrosiaConfig.json – see step 3).
 10) Set `activeCode` to "VNext" in ambrosiaConfig.json, or replace the app code with new app code that has the VNext code as the [now] VCurrent code.
 11) Start the app.
 
@@ -224,7 +224,7 @@ The additional upgrade assistance provided by the Node.js LB, is exactly that: a
 The motivation for providing the additional support for upgrade in the Node.js LB was to have a more automated end-to-end upgrade solution (for the standalone case at least) "out of the box". This can then be built upon with additional automation should you wish to write your own "upgrade orchestration service".
 <br/><br/>
 ### :vertical_traffic_light: Upgrade Orchestration
-As has been shown, upgrade is a multi-step process, and managing it at any kind of scale or frequency will require automating the process through the creation of an "upgrade orchestration manager". While there is limited support for authoring such a tool today (August 2021), we hope to deliver an "Immortal Lifecycle API" at some point in the future that will address this gap.
+As has been shown, upgrade is a multi-step process, and managing it at any kind of scale or frequency will require automating the process through the creation of an "upgrade orchestration manager". While there is limited support for authoring such a tool today (January 2022), we hope to deliver an "Immortal Lifecycle API" at some point in the future that will address this gap.
 
 Any upgrade orchestration service will need to be aware of LB differences. For example, the Node.js LB uses a .json file for configuration, but other LB's may also use the config file format (or config techniques) most appropriate for their target language/technology. While we don't restrict LB authors from deciding how to best serve their user base, we do expect each LB author to document the specifics of how upgrade is performed/managed using their LB (as we have done here for the Node.js LB).
 
