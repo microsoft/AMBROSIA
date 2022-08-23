@@ -3,13 +3,13 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.4" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.13.0" />
     <PackageReference Include="Microsoft.Ambrosia.LibCS" Version="2.0.0" />
     <PackageReference Include="Microsoft.CRA" Version="2020.9.24.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Remote.Linq" Version="5.8.2" />
     <PackageReference Include="Remote.Linq.Newtonsoft.Json" Version="5.8.2" />
     <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
