@@ -12,7 +12,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.7.0" />
     <PackageReference Include="Microsoft.CRA" Version="2020.9.24.1" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="15.8.168" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Remote.Linq" Version="5.8.2" />
     <PackageReference Include="Remote.Linq.Newtonsoft.Json" Version="5.8.2" />
     <PackageReference Include="System.CodeDom" Version="4.5.0" />
