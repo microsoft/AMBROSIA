@@ -3203,7 +3203,7 @@ namespace Ambrosia
                             if ((connectionResult1 != CRAErrorCode.Success) || (connectionResult2 != CRAErrorCode.Success) ||
                                 (connectionResult3 != CRAErrorCode.Success) || (connectionResult4 != CRAErrorCode.Success))
                             {
-                                Trace.TraceError("Error attaching " + ServiceName() + " to " + destination);
+                                Trace.TraceError("Error attaching " + ServiceName() + " to " + destination + "\nCRAResults:"+ " " + connectionResult1.ToString() + " " + connectionResult2.ToString() + " " + connectionResult3.ToString() + " " + connectionResult4.ToString());
                                 // BUGBUG in tests. Should exit here. Fix tests then delete above line and replace with this                               OnError(0, "Error attaching " + _serviceName + " to " + destination);
                             }
                         }
