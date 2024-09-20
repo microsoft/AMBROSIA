@@ -124,6 +124,7 @@ namespace Analytics
             }
         }
 
+        // Just a test to see if this is removed.
         public static TwitterConfig ReadTwitterInputConfig()
         {
             return new TwitterConfig
